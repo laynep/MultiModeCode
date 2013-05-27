@@ -1,0 +1,235 @@
+\documentclass[11pt]{article}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{fullpage}
+\usepackage{color}
+
+\newcommand{\mpl}{m_{\mathrm{pl}}}
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\pd}{\partial}
+\def\calD{{\cal D}}
+\def\bk{{\mathbf{k}}}
+\def\f {{\phi}}
+
+\setlength{\parskip}{1.5ex}
+\setlength{\parindent}{0pt}
+\def\tilC{{\tilde C}}
+\def\calR{{\cal R}}
+
+\title{Equations for Multifield Modecode v3.0}
+\author{Jiajun Xu}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+We start with the action for $N$ scalar fields $\phi^a$, $(a=1,2, \dots, N)$. 
+\begin{equation}
+S = \int \ud^4 x \sqrt{-g} \left[ \frac{1}{2} \gamma_{ab} \pd_\mu \phi^a \pd_\nu \phi^b - V(\f^a) \right]
+\end{equation}
+We will first write down equations for the general metric $\gamma_{ab}$, and then reduce to the canonical case $\gamma_{ab} =\delta_{ab}$. 
+
+The current stage of Multifield Modecode only deals with canonical fields. 
+
+\section{The Classical Background}
+
+\begin{equation}\label{bg_phi}
+\ddot{\f^a} + \Gamma^a_{bc} \dot{\f^b} \dot{\f^c} + 3H \dot\f^a + \gamma^{ab} \frac{\pd V}{\pd \f^b} = 0  ~.
+\end{equation}
+Introducing the covariant derivative
+\begin{equation}
+D \f^a = \ud \f^a + \Gamma^a_{bc}\dot{\f^b}\ud\f^c ~,
+\end{equation}
+we can rewrite the equation of motion
+\begin{eqnarray}
+\frac{D\f^a}{\ud t} + 3H \dot\f^a + \gamma^{ab} V_{; c} = 0 ~. 
+\end{eqnarray}
+where we have $V_{;c} \equiv D V / d \f^c = \pd V/\pd \phi^c$, and
+\[
+\Gamma^a_{bc} = \frac{1}{2} \gamma^{ad}\left( \gamma_{db, c} + \gamma_{dc,b} - \gamma_{bc, d} \right)
+\]
+
+We define the inflaton velocity
+\[
+{\dot\f}_0^2 \equiv \gamma_{ab} {\dot\f}^a {\dot\f}^b ~. 
+\]
+The Friedmann equations gives
+\begin{eqnarray}\label{fr_1}
+3H^2\mpl^2 &=& \frac{1}{2} {\dot\f}_0^2 + V ~, \\ 
+2\dot{H} \mpl^2 &=& - {\dot\f}_0^2 ~. \label{fr_2}
+\end{eqnarray}
+
+We can regard the composite field $\phi_0$ as the clock of multifield inflation. It is the classical field defined along the 
+inflaton trajectory, and represents the length of the classical path. 
+
+\section{The Mode Equation}
+
+Let $Q^a_\bk$ denote the scalar field perturbation in flat gauge, the mode equation reads \cite{Sasaki:1995aw}
+\begin{equation}
+\frac{D^2 Q_\bk^a}{\ud t^2} + 3H \frac{D Q_\bk^a}{\ud t} + \frac{k^2}{a^2} Q^a_\bk + {C^a}_b Q^b_\bk = 0
+\end{equation}
+\begin{equation}
+{C^a}_b = \gamma^{ac}V_{;c;b} - {\dot\f_0}^2 {R^a}_{bcd} T^c T^d + 2\epsilon \frac{H}{\dot\f_0} (T^a V_{;b} + T^b V_{;a}) + 2\epsilon(3-\epsilon) H^2 T^a T_b
+\end{equation}
+Here $T^a$ is the unit tangent vector along the inflaton trajectory
+$T^a \equiv \dot{\f}^a/\dot{\f}_0$.
+
+\section{The Canonical Case (what's actually coded in )}
+
+The equations simplify significantly in the canonical case. The background equation becomes 
+\begin{equation}
+\ddot{\phi}_I + 3H \dot{\phi}_I + \frac{\pd V}{\pd \phi_I} = 0  
+\end{equation}
+\begin{equation}\label{eq_H}
+3H^2 \mpl^2 = \sum_I \dot{\phi}_I^2 + V(\phi_I)
+\end{equation}
+\begin{equation}
+2\dot{H} \mpl^2 = -\sum_I \dot{\phi}_I^2
+\end{equation}
+
+For the mode equation, we have
+\begin{equation}
+\frac{d^2 Q_I}{\ud t^2} + 3H \frac{d Q_I}{\ud t} + \frac{k^2}{a^2} Q_I + \sum_J C_{IJ} Q_J = 0
+\end{equation}
+where
+\begin{equation}
+C_{IJ} = \pd_I\pd_J V + \frac{1}{H \mpl^2} \left( \dot{\phi}_I \pd_J V + \dot{\phi}_J \pd_I V \right)
++ (3-\epsilon) \frac{\dot{\phi}_I\dot{\phi}_J}{\mpl^2}
+\end{equation}
+
+In practice, it is more convenient to evolve the equation in e-folds. We define $\alpha \equiv \ln a(t)$ and set $\mpl = 1$. 
+Then the equations in variable $\alpha$ are 
+\begin{equation}\label{eq_bk}
+\frac{\ud^2 \phi_I}{\ud \alpha^2 } + (3 -\epsilon) \frac{\ud \phi_I}{\ud \alpha} + \frac{1}{H^2}\frac{\pd V}{\pd \phi_I} = 0  
+\end{equation}
+\begin{equation}
+\frac{d^2 Q_I}{\ud \alpha^2} + (3-\epsilon) \frac{d Q_I}{\ud \alpha} + \frac{k^2}{a^2H^2} Q_I + \sum_J \tilC_{IJ} Q_J = 0
+\end{equation}
+\begin{equation}\label{cij}
+\tilC_{IJ} = \frac{\pd_I\pd_J V}{H^2} + \frac{1}{H^2} \left(\frac{\ud \phi_I}{\ud \alpha} \pd_J V  +  \frac{\ud \phi_J}{\ud \alpha} \pd_I V \right)
++ (3-\epsilon) \frac{\ud \phi_I}{\ud \alpha} \frac{\ud \phi_J}{\ud \alpha}
+\end{equation}
+
+\section{Numerical Schemes}
+
+\subsection{The Background Equation}
+
+Solving the background equation is relatively straightforward. One start with Eq.(\ref{eq_bk}), and supplement it with Eq.(\ref{eq_H}). The two equations we solve simultaneously are 
+\begin{equation}
+H^2 = \frac{V(\phi_I)}{3 - \frac{1}{2}\sum_I \left(\frac{\ud \phi_I}{\ud \alpha}\right)^2} ~,
+\end{equation}
+\begin{equation}
+\frac{\ud^2 \phi_I}{\ud \alpha^2 } + (3 -\epsilon) \frac{\ud \phi_I}{\ud \alpha} + \frac{1}{H^2}\frac{\pd V}{\pd \phi_I} = 0  ~.
+\end{equation}
+The initial $\phi_I$ and $\ud \phi_I/\ud \alpha$ have to be specified at the beginning. And the integration ends when $\epsilon = 1$ or when $\phi_I$'s satisfy certain conditions that signal the end of inflation. 
+
+\subsection{The Perturbation Modes}
+
+To solve the perturbation equations, it is usually convenient to work with the variable $u_I \equiv a Q_I$, so that specifying initial conditions is straightforward. 
+
+The mode equation for $u_I$ is 
+\begin{equation}
+\frac{d^2 u_I}{\ud \alpha^2} + (1-\epsilon) \frac{d u_I}{\ud \alpha} + \left(\frac{k^2}{a^2H^2} - 2 + \epsilon \right) u_I + \sum_J \tilC_{IJ} u_J = 0
+\end{equation}
+with $\tilC_{IJ}$ given in Eq.(\ref{cij}). 
+
+Each perturbation mode $u_I(\bk)$ can be expanded using $N$ harmonic oscillators $a_J(\bk)$ \cite{Salopek:1988qh}, 
+\begin{equation}
+u_I(\bk, \alpha) = \sum_J \psi_{IJ}(\bk, \alpha) a_J(\bk) ~,
+\end{equation}
+with 
+\begin{equation}
+[ a_J(\bk), a^\dagger_I(\bk')] = (2\pi)^2 \delta_{IJ} \delta^{(3)}(\bk - \bk')
+\end{equation}
+
+The mode matrix $\psi_{IJ}$ evolves according to 
+\begin{equation}
+{\color{blue}
+\frac{d^2 \psi_{IJ}}{\ud \alpha^2} + (1-\epsilon) \frac{d \psi_{IJ}}{\ud \alpha} + \left(\frac{k^2}{a^2H^2} - 2 + \epsilon \right) \psi_{IJ} + \sum_L \tilC_{IL} \psi_{LJ} = 0 ~. \label{mmeq} }
+\end{equation}
+
+For modes deep in the horizon, $\psi_{IJ}$ obeys the free wave equation (in conformal time $\tau$)
+\begin{equation}
+\frac{\ud^2 \psi_{IJ}}{\ud \tau^2} + k^2 \psi_{IJ} = 0 ~. 
+\end{equation}
+We assume that the mode matrix is initially diagonal at $\tau = -\infty$, 
+\begin{eqnarray}
+\psi_{IJ} = \frac{1}{\sqrt{2k}}\left( C_1 e^{ik\tau} + C_2 e^{-ik\tau} \right) \delta_{IJ}
+\end{eqnarray}
+
+Translating to e-fold time, the initial conditions can be set by
+\begin{equation}
+{\color{blue}
+ \psi_{IJ}\Big|_{\alpha=0} = \frac{1}{\sqrt{2k}}\, (C_1 + C_2)\, \delta_{IJ} ~, 
+\quad\quad 
+\frac{\ud \psi_{IJ}}{\ud \alpha}\Big|_{\alpha=0} = \frac{i}{aH}\sqrt{\frac{k}{2}}\,(C_1 - C_2)\,\delta_{IJ} ~. }
+\end{equation}
+The convention coded in is $C_1 = 0$, $C_2 = 1$, but can be easily generalized to non Bunch-Davis cases. 
+
+{\color{blue} Eq.(\ref{mmeq}) is the main equation to evolve to get the power spectrum. }
+
+Although $u_I$'s are convenient to use for short wavelength modes, they grow with the scale factor after the modes exit the horizon. So once the mode is outside the horizon, the $Q_I$ variables are easier to deal with numerically. The code can perform a switch from $u_I$ to $Q_I$ by matching boundary conditions at certain time $\alpha^*$, i.e.
+\begin{equation}
+u_I\Big|_{\alpha^*} = e^{\alpha^*} Q_I \Big|_{\alpha^*} ~, \quad \quad 
+\frac{\ud u_I}{\ud \alpha}\Big|_{\alpha^*} = e^{\alpha^*} \left(Q_I + \frac{\ud Q_I}{\ud \alpha}\right)\Big|_{\alpha^*}
+\end{equation}
+
+
+\section{The Power Spectrum}
+
+After solving the background and perturbation equations numerically. We have the trajectory of the inflaton field 
+\[
+(\phi_1(\alpha), \phi_2(\alpha), \dots, \phi_N(\alpha) ) ~,
+\]
+plus the perturbations
+\[
+(Q_1, Q_2, \dots, Q_N) ~. 
+\]
+
+Unlike the single field case, now the power spectrum takes the matrix form. Suppose inflation ends at e-fold time $\alpha_e$, then
+\begin{equation}
+{\color{blue}
+P_Q^{IJ} (k) = \frac{k^3}{2\pi^2} \sum_L \frac{\psi_{IL}\psi^*_{JL}}{a^2}
+}
+\end{equation}
+
+The adiabatic perturbation spectrum is the projection along the inflaton direction, define a field vector
+\begin{equation}
+\omega_\zeta = \left( \frac{\dot{\phi_1}}{\dot{\phi_0}},\, \frac{\dot{\phi_2}}{\dot{\phi_0}},\, \dots,\, \frac{\dot{\phi_N}}{\dot{\phi_0}} \right)
+\end{equation}
+The adiabatic power spectrum is given by
+\begin{equation}
+{\color{blue}
+P_\zeta(k) = \frac{H^2}{\dot{\phi_0}^2} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ}
+}
+\end{equation}
+
+Note that $\omega_\zeta^I$ is just a projection of the perturbation modes to the inflaton direction at the end of inflation. However, each mode $Q_I$ evolves non-trivially, as they are coupled to each other. The coupling is turned on each time the classical trajectory of inflaton is bended. In other words, we have already included the conversion between entropic and adiabatic modes during the course of inflation by evolving each mode $Q_I$ towards the end of inflation. 
+
+Similarly, one can project out iso-curvature spectrum. Suppose the iso-curvature direction is specified by a unit field vector $(s_1, s_2, \dots, s_N)$, then the iso-curvature spectrum is 
+\begin{equation}
+P_s (k) = \sum_{IJ} s^I s^J P_Q^{IJ}
+\end{equation}
+
+
+\begin{thebibliography}{}
+
+%\cite{Sasaki:1995aw}
+\bibitem{Sasaki:1995aw}
+  M.~Sasaki and E.~D.~Stewart,
+  ``A General Analytic Formula For The Spectral Index Of The Density
+  Perturbations Produced During Inflation,''
+  Prog.\ Theor.\ Phys.\  {\bf 95}, 71 (1996)
+  [arXiv:astro-ph/9507001].
+
+%\cite{Salopek:1988qh}
+\bibitem{Salopek:1988qh} 
+  D.~S.~Salopek, J.~R.~Bond and J.~M.~Bardeen,
+  ``Designing Density Fluctuation Spectra in Inflation,''
+  Phys.\ Rev.\ D {\bf 40}, 1753 (1989).
+
+\end{thebibliography}
+
+\end{document}
