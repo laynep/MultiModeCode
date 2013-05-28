@@ -96,7 +96,7 @@ program test_mmodpk
   write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
   write(*, e2_fmt) "n_t =", log(pt2/pt1)/dlnk/2.d0, '(', -2*epsilon, ')'
 
-  return
+  !return
 
 
 !!$  ! \exp(\sum_i \lambda_i \phi_i)
