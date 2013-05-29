@@ -61,24 +61,31 @@ CONTAINS
 
     INTEGER*4 :: i,j
     DOUBLE PRECISION :: accuracy,h1,hmin,x1,x2 
-    COMPLEX(KIND=DP), DIMENSION(4*num_inflaton+4) :: y 
+    COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y 
+    double precision :: identity(num_inflaton**2)
     DOUBLE PRECISION, INTENT(IN) :: kin
     DOUBLE PRECISION, INTENT(OUT) :: pow, powt, powz
     DOUBLE PRECISION :: dum, ah, alpha_ik, dalpha, dh
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p_ik,delphi
 
     !     Set initial conditions
-    !
+    !     x = alpha     e-folds
+    ![ LP: ] Background
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
-    !     y(2n+1:3n) = u               dydx(2n+1:3n)=du/dalpha
-    !     y(3n+1:4n) = du/dalpha       dydx(3n+1:4n)=d^2u/dalpha^2
-    !     y(4n+1) = v                  dydx(4n+1)=dv/dalpha
-    !     y(4n+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
-    !     y(4n+3) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    ![ LP: ] Mode matrix ptb, psi_IJ
+    ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
+    ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
+    !     y(2n+1:2n+n**2) = psi               dydx(2n+1:3n)=dpsi/dalpha
+    !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
+    ![ LP: ] Tensors
+    !     y(2n+2n**2+1) = v                  dydx(4n+1)=dv/dalpha
+    !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
+    ! --- u_zeta is the adiabatic mode ignoring coupings to other modes, used to compare with the full zeta perturbation
+    !! --- full_zeta - u_zeta gives the super-horizon evolution 
+    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
-    !! u_zeta is the adiabatic mode ignoring coupings to other modes, used to compare with the full zeta perturbation
-    !! full_zeta - u_zeta gives the super-horizon evolution 
 
     k=kin*Mpc2Mpl
 
@@ -119,14 +126,24 @@ CONTAINS
        STOP
     ENDIF
 
+    ![ LP: ] Set the initial conditions.
+    ![ LP: ] Make an identity vector analog of identity matrix
+    call make_identity(identity)
+
+
+    ![ LP: ] Background - from previous evolution
     y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
     y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
-    y(2*num_inflaton+1:3*num_inflaton) = (1.d0, 0)  !cmplx(1/sqrt(2*k))               
-    y(3*num_inflaton+1:4*num_inflaton) = cmplx(0., -k/exp(ah))               
-    y(4*num_inflaton+1) = (1.d0, 0) !cmplx(1/sqrt(2*k))               
-    y(4*num_inflaton+2) = cmplx(0., -k/exp(ah))  
-    y(4*num_inflaton+3) = (1.d0, 0) !cmplx(1/sqrt(2*k))               
-    y(4*num_inflaton+4) = cmplx(0., -k/exp(ah))  
+    ![ LP: ] mode matrix - diagonalize
+    y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
+    y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+           cmplx(0., -k/exp(ah))*identity
+    ![ LP: ] tensors - ???
+    y(2*num_inflaton+2*num_inflaton**2+1) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+    y(2*num_inflaton+2*num_inflaton**2+2) = cmplx(0., -k/exp(ah))  
+    ![ LP: ] u_zeta - ???
+    y(2*num_inflaton+2*num_inflaton**2+3) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+    y(2*num_inflaton+2*num_inflaton**2+4) = cmplx(0., -k/exp(ah))  
 
     !     Call the integrator
     !
@@ -139,10 +156,6 @@ CONTAINS
     !MULTIFIELD, need to evolve towards the end of inflation
     x2 = lna(nactual_bg) + 5.d0
     !END MULTIFIELD
-
-    !dbg
-    !print*, x1, x2
-    !end dbg
 
     h1=0.05 !guessed start stepsize
     accuracy=1.0d-9 !4.0d-2 !2!6 !has a big impact on the speed of the code
@@ -163,6 +176,25 @@ CONTAINS
 
 
     RETURN
+
+    contains
+
+      ![ LP: ] A "packed" identity vector analog of identity matrix.
+      subroutine make_identity(identityvector)
+
+        double precision, dimension(:), intent(out) :: identityvector
+        integer :: i, j
+
+        identityvector=0d0
+
+        do i=1,num_inflaton; do j=1, num_inflaton
+          if (i==j) then
+            identityvector((i-1)*num_inflaton+j)=1d0
+          end if
+        end do; end do
+
+      end subroutine make_identity
+
   END SUBROUTINE evolve
 
 END MODULE access_modpk

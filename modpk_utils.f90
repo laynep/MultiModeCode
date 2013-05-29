@@ -7,8 +7,15 @@ MODULE modpk_utils
      module procedure rkck_c
   END INTERFACE
 
+  interface hacked_matrixmul
+     !module procedure hacked_matrixmul_CC
+     module procedure hacked_matrixmul_DC
+     !module procedure hacked_matrixmul_DD
+  end interface
+
 CONTAINS
 
+  ![ LP: ] Background derivatives y'=f(y)
   SUBROUTINE bderivs(x,y,yprime)
     USE modpkparams
     USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getHdot
@@ -66,6 +73,7 @@ CONTAINS
   END SUBROUTINE bderivs
 
 
+  ![ LP: ] Full y (back+mode matrix+tensor) derivatives y'=f(y)
   SUBROUTINE derivs(x,y,yprime)
     USE modpkparams
     USE internals
@@ -81,7 +89,7 @@ CONTAINS
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp, Vp
     DOUBLE PRECISION, DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
 
-    COMPLEX(KIND=DP), DIMENSION(num_inflaton) :: u, du               ! scalar perturbations
+    COMPLEX(KIND=DP), DIMENSION(num_inflaton**2) :: psi, dpsi        ! scalar ptb mode matrix
     COMPLEX(KIND=DP) :: v, dv                                        ! tensor perturbations
     COMPLEX(KIND=DP) :: u_zeta, du_zeta
 
@@ -90,15 +98,18 @@ CONTAINS
     !     x = alpha
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
-    !     y(2n+1:3n) = u               dydx(2n+1:3n)=du/dalpha
-    !     y(3n+1:4n) = du/dalpha       dydx(3n+1:4n)=d^2u/dalpha^2
-    !     y(4n+1) = v                  dydx(4n+1)=dv/dalpha
-    !     y(4n+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
-    
+    !     y(2n+1:2n+n**2) = psi               dydx(2n+1:3n)=dpsi/dalpha
+    !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
+    !     y(2n+2n**2+1) = v                  dydx(4n+1)=dv/dalpha
+    !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
+    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
+
     p = dble(y(1:num_inflaton))
     delp = dble(y(num_inflaton+1:2*num_inflaton))
     dotphi = sqrt(dot_product(delp, delp))
 
+    ![ LP: ] Aliases to potential derivatives
     epsilon = getEps(p, delp)
     eta = geteta(p, delp)
     Vpp = d2Vdphi2(p)
@@ -118,42 +129,61 @@ CONTAINS
     hubble=getH(p,delp)
     dhubble=getHdot(p,delp)
     a=EXP(x)
-    
-    u  = y(2*num_inflaton+1 : 3*num_inflaton)
-    du = y(3*num_inflaton+1 : 4*num_inflaton)
-    v  = y(4*num_inflaton+1)
-    dv = y(4*num_inflaton+2)
-    u_zeta = y(4*num_inflaton+3)
-    du_zeta = y(4*num_inflaton+4)
 
-    yprime(1:num_inflaton) = cmplx(delp)
-    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
+    ![ LP: ] Alias y's into real variable names
+    psi  = y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+    dpsi = y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
+    v  = y(2*num_inflaton+2*num_inflaton**2+1)
+    dv  = y(2*num_inflaton+2*num_inflaton**2+2)
+    u_zeta = y(2*num_inflaton+2*num_inflaton**2+3)
+    du_zeta = y(2*num_inflaton+2*num_inflaton**2+4)
 
-    yprime(2*num_inflaton+1:3*num_inflaton) = du
-
+    ![ LP: ] Build the mass matrix, Cab
     if (potential_choice .eq. 7) then
-       Cab = 0.d0  ! for exponential potential 7, Cab is excatly zero, need to set this in order to prevent numerical error
+       Cab = 0.d0  ! exponential potential 7, Cab is excatly zero,prevents numerical error
     else
        forall (i=1:num_inflaton, j=1:num_inflaton) & 
             Cab(i,j) = Vpp(i,j) + 2*epsilon/dotphi * (delp(i)*Vp(j) + delp(j)*Vp(i))/dotphi &
             + 2*epsilon*(3-epsilon)*hubble**2 * delp(i)*delp(j)/dotphi**2
     end if
-        
-    yprime(3*num_inflaton+1:4*num_inflaton) = -(1. - epsilon)*du - (k/a_init/a/hubble)**2*u + (2. - epsilon)*u &
-         - matmul(Cab, u)/hubble**2
 
-    yprime(4*num_inflaton+1) = dv
-    yprime(4*num_inflaton+2) = -(1. - epsilon)*dv - (k/a_init/a/hubble)**2*v + (2. - epsilon)*v
+    ![ LP: ] -----------------------------
+    ![ LP: ] Set the RHS of y'(x) = f(y(x))
+    ![ LP: ] -----------------------------
 
-    yprime(4*num_inflaton+3) = du_zeta
+    ![ LP: ] background
+    yprime(1:num_inflaton) = cmplx(delp)
+    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
 
+    ![ LP: ] ptb matrix
+    yprime(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = dpsi
+
+    !yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+    !  -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
+    !  + (2. - epsilon)*psi - matmul(Cab, psi)/hubble**2
+    yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+      -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
+      + (2. - epsilon)*psi - hacked_matrixmul(Cab, psi)/hubble**2
+
+    ![ LP: ] tensors
+    yprime(2*num_inflaton+2*num_inflaton**2+1) = dv
+    yprime(2*num_inflaton+2*num_inflaton**2+2) = -(1. - epsilon)*dv - &
+      (k/a_init/a/hubble)**2*v + (2. - epsilon)*v
+
+    ![ LP: ] adiabatic ptb
+    yprime(2*num_inflaton+2*num_inflaton**2+3) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    yprime(4*num_inflaton+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
+    yprime(2*num_inflaton+2*num_inflaton**2+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
          + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
+
     RETURN
+
   END SUBROUTINE derivs
 
+
+
+  ![ LP: ] Full y (back+mode matrix(in Q at horizon cross)+tensor) derivatives y'=f(y)
   SUBROUTINE qderivs(x,y,yprime)
     USE modpkparams
     USE internals
@@ -168,9 +198,9 @@ CONTAINS
     DOUBLE PRECISION :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp, Vp  
     DOUBLE PRECISION, DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
- 
-    COMPLEX(KIND=DP), DIMENSION(num_inflaton) :: q, dq            ! scalar perturbations
-    COMPLEX(KIND=DP) :: qt, dqt                                   ! tensor perturbations
+
+    COMPLEX(KIND=DP), DIMENSION(num_inflaton**2) :: q_ptb, dq_ptb     ! scalar ptb matrix
+    COMPLEX(KIND=DP) :: q_tensor, dq_tensor                           ! tensor perturbations
     COMPLEX(KIND=DP) :: u_zeta, du_zeta
 
     integer :: i, j
@@ -178,15 +208,18 @@ CONTAINS
     !     x = alpha
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
-    !     y(2n+1:3n) = q               dydx(2n+1:3n)=dq/dalpha
-    !     y(3n+1:4n) = dq/dalpha       dydx(3n+1:4n)=d^2q/dalpha^2
-    !     y(4n+1) = qt                 dydx(4n+1)=dqt/dalpha
-    !     y(4n+2) = dqt/dalpha         dydx(4n+2)=d^2qt/dalpha^2
-    
+    !     y(2n+1:2n+n**2) = q_ptb               dydx(2n+1:3n)=dq_ptb/dalpha
+    !     y(2n+n**2+1:2n+2n**2) = dq_ptb/dalpha       dydx(3n+1:4n)=d^2q_ptb/dalpha^2
+    !     y(2n+2n**2+1) = q_tensor                  dydx(4n+1)=dq_tensor/dalpha
+    !     y(2n+2n**2+2) = dq_tensor/dalpha          dydx(4n+2)=d^2q_tensor/dalpha^2
+    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
+
     p = dble(y(1:num_inflaton))
     delp = dble(y(num_inflaton+1:2*num_inflaton))
     dotphi = sqrt(dot_product(delp, delp))
 
+    ![ LP: ] Aliases to potential derivatives
     epsilon = getEps(p, delp)
     eta = geteta(p, delp)
     Vpp = d2Vdphi2(p)
@@ -206,19 +239,16 @@ CONTAINS
     hubble=getH(p,delp)
     dhubble=getHdot(p,delp)
     a=EXP(x)
-    
-    q  = y(2*num_inflaton+1 : 3*num_inflaton)
-    dq = y(3*num_inflaton+1 : 4*num_inflaton)
-    qt  = y(4*num_inflaton+1)
-    dqt = y(4*num_inflaton+2)
-    u_zeta = y(4*num_inflaton+3)
-    du_zeta = y(4*num_inflaton+4)
- 
-    yprime(1:num_inflaton) = cmplx(delp)
-    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
 
-    yprime(2*num_inflaton+1:3*num_inflaton) = dq
-    
+    ![ LP: ] Alias y's into real variable names
+    q_ptb  = y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+    dq_ptb = y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
+    q_tensor  = y(2*num_inflaton+2*num_inflaton**2+1)
+    dq_tensor = y(2*num_inflaton+2*num_inflaton**2+2)
+    u_zeta = y(2*num_inflaton+2*num_inflaton**2+3)
+    du_zeta = y(2*num_inflaton+2*num_inflaton**2+4)
+
+    ![ LP: ] Build the mass matrix, Cab
     if (potential_choice .eq. 7) then
        Cab = 0.d0  ! for exponential potential 7, Cab is excatly zero, need to set this in order to prevent numerical error
     else
@@ -227,17 +257,29 @@ CONTAINS
             + 2*epsilon*(3-epsilon)*hubble**2 * delp(i)*delp(j)/dotphi**2
     end if
 
-    yprime(3*num_inflaton+1:4*num_inflaton) = -(3. - epsilon)*dq - (k/a_init/a/hubble)**2*q  &
-         - matmul(Cab, q)/hubble**2
+    ![ LP: ] -----------------------------
+    ![ LP: ] Set the RHS of y'(x) = f(y(x))
+    ![ LP: ] -----------------------------
 
-    yprime(4*num_inflaton+1) = dqt
-    yprime(4*num_inflaton+2) = -(3. - epsilon)*dqt - (k/a_init/a/hubble)**2*qt
+    ![ LP: ] background
+    yprime(1:num_inflaton) = cmplx(delp)
+    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
+
+    ![ LP: ] ptb matrix in Q_IJ
+    yprime(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = dq_ptb
+    yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+      -(3. - epsilon)*dq_ptb - (k/a_init/a/hubble)**2*q_ptb -&
+      hacked_matrixmul(Cab, q_ptb)/hubble**2
+
+    ![ LP: ] tensors
+    yprime(2*num_inflaton+2*num_inflaton**2+1) = dq_tensor
+    yprime(2*num_inflaton+2*num_inflaton**2+2) = -(3. - epsilon)*dq_tensor - (k/a_init/a/hubble)**2*q_tensor
 
     !! below is the same as in SUBROUTINE derivs
-    yprime(4*num_inflaton+3) = du_zeta
+    ![ LP: ] adiabatic ptb
+    yprime(2*num_inflaton+2*num_inflaton**2+3) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    
-    yprime(4*num_inflaton+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
+    yprime(2*num_inflaton+2*num_inflaton**2+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
          + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
     RETURN
@@ -581,5 +623,107 @@ CONTAINS
     deallocate(p)
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END FUNCTION reallocate_rm
+
+
+  ![ LP: ] This takes a matrix A and multiplies it by a matrix B that is in the
+  !form of a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
+  !Returns a "hacked" vector...
+
+  ![ LP: ] If you want to fix this, then change structure of y's to an array
+  !and use matrix multiplication C*psi
+
+  ![ LP: ] This is the ugliest piece of code I've ever written.
+
+  ![ LP: ] A=double, B=double
+!  function hacked_matrixmul_DD(A,B)
+!    implicit none
+!
+!    double precision, dimension(:,:), intent(in) :: A
+!    double precision, dimension(:,:) :: temp_matrix
+!    double precision, dimension (:), intent(in) :: B
+!    double precision, dimension (:) :: hacked_matrixmul_DD
+!    integer :: i, j
+!
+!    if (size(b) .ne. size(a,1)*size(a,2)) then
+!      print*, "MULTIFIELD MODPK: Arrays don't conform."
+!      stop
+!    end if
+!
+!    ![ LP: ] B vector to matrix
+!    do i=1,size(A,2); do j=1,size(A,1)
+!      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
+!    end do; end do
+!
+!    temp_matrix = matmul(A,temp_matrix)
+!
+!    ![ LP: ] Temp matrix to hacked matrix-vector
+!    do i=1,size(A,2); do j=1,size(A,1)
+!       hacked_matrixmul_DD((i-1)*size(a,2)+j) =temp_matrix(i,j)
+!    end do; end do
+!
+!  end function hacked_matrixmul_DD
+
+  ![ LP: ] A=double, B=complex
+  function hacked_matrixmul_DC(A,B) result(hacked_matrix)
+    implicit none
+
+    double precision, dimension(:,:), intent(in) :: A
+    complex(kind=dp), dimension(:,:), allocatable :: temp_matrix
+    complex(kind=dp), dimension(:), intent(in) :: B
+    complex(kind=dp), dimension(:), allocatable :: hacked_matrix
+    integer :: i, j
+
+    if (size(b) .ne. size(a,1)*size(a,2)) then
+      print*, "MULTIFIELD MODPK: Arrays don't conform."
+      stop
+    end if
+
+    allocate(hacked_matrix(size(B)))
+    allocate(temp_matrix(size(a,1),size(a,2)))
+
+    ![ LP: ] B vector to matrix
+    do i=1,size(A,2); do j=1,size(A,1)
+      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
+    end do; end do
+
+    temp_matrix = matmul(A,temp_matrix)
+
+    ![ LP: ] Temp matrix to hacked matrix-vector
+    do i=1,size(A,2); do j=1,size(A,1)
+       hacked_matrix((i-1)*size(a,2)+j) =temp_matrix(i,j)
+    end do; end do
+
+    deallocate(temp_matrix)
+
+  end function hacked_matrixmul_DC
+
+  ![ LP: ] A=complex, B=complex
+!  function hacked_matrixmul_CC(A,B)
+!    implicit none
+!
+!    complex(kind=8), dimension(:,:), intent(in) :: A
+!    complex(kind=8), dimension(:,:) :: temp_matrix
+!    complex(kind=8), dimension (:), intent(in) :: B
+!    complex(kind=8), dimension (:) :: hacked_matrixmul_CC
+!    integer :: i, j
+!
+!    if (size(b) .ne. size(a,1)*size(a,2)) then
+!      print*, "MULTIFIELD MODPK: Arrays don't conform."
+!      stop
+!    end if
+!
+!    ![ LP: ] B vector to matrix
+!    do i=1,size(A,2); do j=1,size(A,1)
+!      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
+!    end do; end do
+!
+!    temp_matrix = matmul(A,temp_matrix)
+!
+!    ![ LP: ] Temp matrix to hacked matrix-vector
+!    do i=1,size(A,2); do j=1,size(A,1)
+!       hacked_matrixmul_CC((i-1)*size(a,2)+j) =temp_matrix(i,j)
+!    end do; end do
+!
+!  end function hacked_matrixmul_CC
 
 END MODULE modpk_utils

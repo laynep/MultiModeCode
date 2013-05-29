@@ -316,6 +316,7 @@ CONTAINS
     RETURN
   END FUNCTION geteta
 
+![ LP: ] CHECK; add cross correlations into powerspectrum
   FUNCTION powerspectrum(u, dphi, a)
     USE internals
     DOUBLE PRECISION :: powerspectrum

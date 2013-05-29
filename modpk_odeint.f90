@@ -171,6 +171,7 @@ CONTAINS
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE odeint_r
 
+  ![ LP: ] Only called for ptb mode eqns
   SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmin, derivs, qderivs, rkqs_c)
     USE ode_path
     USE internals
@@ -205,7 +206,7 @@ CONTAINS
 
        SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,hdid,hnext,derivs)
          USE modpkparams
-         IMPLICIT NONE         
+         IMPLICIT NONE
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: dydx,yscal
          DOUBLE PRECISION, INTENT(INOUT) :: x
@@ -222,7 +223,7 @@ CONTAINS
          END INTERFACE
        END SUBROUTINE rkqs_c
     END INTERFACE
-    
+
     DOUBLE PRECISION, PARAMETER :: TINY=1.0d-40
     INTEGER*4, PARAMETER :: MAXSTP=10000
     INTEGER*4 :: nstp,i
@@ -242,7 +243,7 @@ CONTAINS
     IF (save_steps) THEN
        xsav=x-2.d0*dxsav
        ALLOCATE(xp(256))
-       !MULTIFIELD      
+       !MULTIFIELD
        ALLOCATE(yp(2*SIZE(ystart),SIZE(xp)))  !! store real and imiganary seperately
        !END MULTIFIELD
     END IF
@@ -253,8 +254,10 @@ CONTAINS
     DO nstp=1,MAXSTP
 
        IF (use_q) THEN
+          ![ LP: ] super-h use Q
           CALL qderivs(x, y, dydx)
        ELSE
+          ![ LP: ] sub-h use psi
           CALL derivs(x, y, dydx)
        END IF
 
@@ -263,9 +266,9 @@ CONTAINS
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
-       
+
        IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
-              
+
        IF (use_q) THEN
           CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,qderivs)
        ELSE
@@ -286,11 +289,12 @@ CONTAINS
           WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
           WRITE(*, *) 'x1, x, x2 :', x, x1, x2
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP       
+          STOP
           RETURN
        END IF
 
        !MULTIFIELD
+       ![ LP: ] OK
        p = DBLE(y(1:num_inflaton))
        delp = DBLE(y(num_inflaton+1 : 2*num_inflaton))
        dotphi = sqrt(dot_product(delp, delp))
@@ -298,25 +302,31 @@ CONTAINS
        !END MULTIFIELD
 
        IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
-       
-       IF(ode_ps_output) THEN           
+
+       IF(ode_ps_output) THEN
           IF(k .LT. a_init*EXP(x)*getH(p, delp)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
              !MULTIFIELD
              IF (use_q) THEN
-                pow_ik=powerspectrum(y(2*num_inflaton+1:3*num_inflaton)*scalefac/a_switch, delp, scalefac) 
-                powt_ik=tensorpower(y(4*num_inflaton+1)*scalefac/a_switch, scalefac) 
+![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
+                pow_ik=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
+                  *scalefac/a_switch, delp, scalefac)
+                powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1) &
+                  *scalefac/a_switch, scalefac)
              ELSE
-                pow_ik=powerspectrum(y(2*num_inflaton+1:3*num_inflaton), delp, scalefac) 
-                powt_ik=tensorpower(y(4*num_inflaton+1), scalefac) 
+![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
+                pow_ik=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
+                  delp, scalefac)
+                powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1), scalefac)
              END IF
 
              if (compute_zpower) then  !! compute only once upon horizon exit
-                powz_ik = zpower(y(4*num_inflaton+3), dotphi, scalefac)
+![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
+                powz_ik = zpower(y(2*num_inflaton+2*num_inflaton**2+3), dotphi, scalefac)
                 compute_zpower = .false.
              end if
-                
+
              ! for single field, end mode evolution when the mode is frozen out of the horizon
-             ! for multifield, need to evolve the modes until the end of inflation to include superhorizon evolution             
+             ! for multifield, need to evolve the modes until the end of inflation to include superhorizon evolution
              IF (num_inflaton .EQ. 1) infl_ended = .TRUE.  
              !END MULTIFIELD
           END IF
@@ -349,12 +359,19 @@ CONTAINS
           IF (infl_ended) THEN
              IF (use_q) THEN
                 ytmp(:) = y(:)
+                ![ LP: ] bckgrd
                 ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
-                ystart(2*num_inflaton+1:3*num_inflaton) = ytmp(2*num_inflaton+1:3*num_inflaton)*scalefac/a_switch
-                ystart(3*num_inflaton+1:4*num_inflaton) = ytmp(3*num_inflaton+1:4*num_inflaton)*scalefac/a_switch &
-                     + ystart(2*num_inflaton+1:3*num_inflaton)
-                ystart(4*num_inflaton+1) = ytmp(4*num_inflaton+1)*scalefac/a_switch
-                ystart(4*num_inflaton+2) = ytmp(4*num_inflaton+2)*scalefac/a_switch + ystart(4*num_inflaton+1)
+
+                ![ LP: ] ptbs
+                ystart(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
+                  ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)*scalefac/a_switch
+                ystart(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+                  ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)&
+                  *scalefac/a_switch + ystart(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+
+                ![ LP: ] tensors
+                ystart(2*num_inflaton+2*num_inflaton**2+1) = ytmp(2*num_inflaton+2*num_inflaton**2+1)*scalefac/a_switch
+                ystart(2*num_inflaton+2*num_inflaton**2+2) = ytmp(2*num_inflaton+2*num_inflaton**2+2)*scalefac/a_switch + ystart(4*num_inflaton+1)
              ELSE
                 ystart(:) = y(:)
              END IF
@@ -368,13 +385,18 @@ CONTAINS
           !only apply the switch on y(1:4*num_inflaton+2)
           use_q = .TRUE.
           a_switch = scalefac
-          !set intial condition in (Q*a_swtich)
+          !set intial condition in (Q*a_switch)
           ytmp(:) = y(:)
-          y(2*num_inflaton+1:3*num_inflaton) = ytmp(2*num_inflaton+1:3*num_inflaton)
-          y(3*num_inflaton+1:4*num_inflaton) = ytmp(3*num_inflaton+1:4*num_inflaton) & 
-               - y(2*num_inflaton+1:3*num_inflaton)
-          y(4*num_inflaton+1) = ytmp(4*num_inflaton+1)
-          y(4*num_inflaton+2) = ytmp(4*num_inflaton+2) - y(4*num_inflaton+1)
+
+          y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
+            ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+          y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+            ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) & 
+            - y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+
+          y(2*num_inflaton+2*num_inflaton**2+1) = ytmp(2*num_inflaton+2*num_inflaton**2+1)
+          y(2*num_inflaton+2*num_inflaton**2+2) = ytmp(2*num_inflaton+2*num_inflaton**2+2) &
+            - y(2*num_inflaton+2*num_inflaton**2+1)
        END IF
 
        IF (ode_underflow) RETURN
@@ -387,14 +409,15 @@ CONTAINS
     PRINT*,'too many steps in odeint'
     PRINT*,'x =', x, 'h =', h 
     ode_underflow=.TRUE.
-  
+
   CONTAINS
-  
+
     SUBROUTINE save_a_step
       USE modpkparams
       IMPLICIT NONE
 
       COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: ytmp
+      COMPLEX(KIND=DP), DIMENSION(num_inflaton**2) :: ptb_tmp, dptb_tmp
 
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
@@ -402,20 +425,27 @@ CONTAINS
          yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))  
       END IF
       xp(kount) = x
-      
+
       IF (use_q) THEN  ! convert from (a_switch*Q) to v
          ytmp(:) = y(:)
-         ytmp(2*num_inflaton+1:3*num_inflaton) = ytmp(2*num_inflaton+1:3*num_inflaton)*scalefac/a_switch
-         ytmp(3*num_inflaton+1:4*num_inflaton) = ytmp(3*num_inflaton+1:4*num_inflaton)*scalefac/a_switch &
-              + ytmp(2*num_inflaton+1:3*num_inflaton)
-         ytmp(4*num_inflaton+1) = ytmp(4*num_inflaton+1)*scalefac/a_switch
-         ytmp(4*num_inflaton+2) = ytmp(4*num_inflaton+2)*scalefac/a_switch + ytmp(4*num_inflaton+1)          
+         ptb_tmp =ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+         dptb_tmp =ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
+
+         ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
+           ptb_tmp*scalefac/a_switch
+         ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+           dptb_tmp*scalefac/a_switch + ptb_tmp
+
+         ytmp(2*num_inflaton+2*num_inflaton**2+1) = &
+           ytmp(4*2*num_inflaton+2*num_inflaton**2+1)*scalefac/a_switch
+         ytmp(2*num_inflaton+2*num_inflaton**2+2) = &
+           ytmp(4*2*num_inflaton+2*num_inflaton**2+2)*scalefac/a_switch + ytmp(4*num_inflaton+1)
       END IF
 
       yp(1:size(yp,1)/2,kount) = dble(ytmp(:))
-      yp(size(yp,1)/2+1:size(yp,1),kount) = dble(ytmp(:)*(0,-1))         
+      yp(size(yp,1)/2+1:size(yp,1),kount) = dble(ytmp(:)*(0,-1))
       xsav=x
-                  
+
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   
