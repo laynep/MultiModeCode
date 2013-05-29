@@ -316,21 +316,60 @@ CONTAINS
     RETURN
   END FUNCTION geteta
 
-![ LP: ] CHECK; Add cross correlations into powerspectrum
-  pure FUNCTION powerspectrum(psi, dphi, a)
-    USE internals
-    DOUBLE PRECISION :: powerspectrum
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: dphi
-    COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: psi
-    DOUBLE PRECISION, INTENT(IN) :: a
-    DOUBLE PRECISION :: zeta2
+  ![ LP: ] Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
+  !adiabatic P(k), and isocurv P(k); includes cross correlations
+  !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given psi, dphi/dalpha, a
+  subroutine powerspectrum(psi, dphi, a, power_matrix, power_adiab, power_isocurv)
+    use internals
+    double precision, dimension(:,:), intent(out) :: power_matrix
+    double precision, intent(out) :: power_adiab
+    double precision, intent(out), optional :: power_isocurv
 
-    !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given psi, dphi/dalpha, a
+    double precision, dimension(:), intent(in) :: dphi
+    ![ LP: ] Hacked matrix to vect
+    complex(kind=dp), dimension(:), intent(in) :: psi
+    double precision, intent(in) :: a
 
-    zeta2 = dot_product(abs(psi**2)*dphi, dphi)/dot_product(dphi, dphi)**2/a**2
-    powerspectrum = zeta2/(2*k) * (k**3)/(2*PI**2)
+    ![ LP: ] size(dphi)=num_inflaton
+    complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix
+    double precision, dimension(size(dphi)) :: omega_z![ LP: ] proj along adiab dir
+    double precision, dimension(size(dphi)) :: s_iso![ LP: ] proj along isoc dir
+    double precision :: zeta2, phi_dot_0_scaled
+    integer :: numb_infl
+    integer :: i, j
 
-  END FUNCTION powerspectrum
+    numb_infl=size(dphi)
+
+    ![ LP: ] Convert hacked vector to matrix
+    do i=1,numb_infl; do j=1, numb_infl
+      psi_matrix(i,j) = psi((i-1)*numb_infl+j)
+    end do; end do
+
+    ![ LP: ] Make projection vector along adiabatic and isocurv directions
+    ![ LP: ] NB: phi_dot_0_scaled = sqrt(2*epsilon_H), i.e., (Hubble eps)
+    phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
+    omega_z = dphi/phi_dot_0_scaled
+
+    if (present(power_isocurv)) then
+      power_isocurv=0d0
+      print*, "isocurv power not working yet"
+      stop
+      !s_iso = XXX
+    end if
+
+    power_matrix = (k**3/2.0d0/(pi**2)/a**2)*matmul(psi_matrix,conjg(psi_matrix))
+
+    power_adiab = 0d0
+    !power_isocurv = 0d0
+    ![ LP: ] Project power spectra
+    do i=1,numb_infl; do j=1,numb_infl
+      power_adiab = power_adiab + omega_z(i)*omega_z(j)*power_matrix(i,j)
+      !power_isocurv = power_isocurv + s_iso(i)*s_iso(j)*power_matrix(i,j)
+    end do; end do
+    power_adiab = (1d0/phi_dot_0_scaled**2)*power_adiab
+    !power_isocurv = (1d0/phi_dot_0_scaled**2)*power_isocurv
+
+  end subroutine powerspectrum
 
 
   pure FUNCTION tensorpower(v, a)

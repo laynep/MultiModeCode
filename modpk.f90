@@ -47,7 +47,9 @@ CONTAINS
     RETURN
   END SUBROUTINE total_efold
 
-  SUBROUTINE evolve(kin, pow_adiabatic, pow_isocurvature, powt, powz)
+![ LP: ] CHECK; Need to calculate pow_isocurvature, but not ready yet.
+  !SUBROUTINE evolve(kin, pow_adiabatic, pow_isocurvature, powt, powz)
+  SUBROUTINE evolve(kin, pow_adiabatic, powt, powz)
     USE modpk_odeint
     USE ode_path
     USE modpkparams
@@ -64,10 +66,13 @@ CONTAINS
     COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y 
     double precision :: identity(num_inflaton**2)
     DOUBLE PRECISION, INTENT(IN) :: kin
-    DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
+![ LP: ] CHECK; Need to calculate pow_isocurvature, but not ready yet.
+    !DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
+    DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic,  powt, powz
+
 
     ![ LP: ] Upgrade pow --> pow(I,J)
-    double precision, dimension(:,:) :: power_matrix
+    !double precision, dimension(:,:), allocatable :: power_matrix
 
     DOUBLE PRECISION :: dum, ah, alpha_ik, dalpha, dh
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p_ik,delphi
@@ -176,15 +181,16 @@ CONTAINS
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
     nactual_mode = kount  ! update nactual after evolving the modes
-    
+
     IF(.NOT. ode_underflow) THEN 
        !power_matrix = pow_ptb_ij
        powt = powt_ik
        powz = powz_ik
        pow_adiabatic = pow_adiab_ik
-       pow_isocurvature = pow_isocurv_ik
+       !pow_isocurvature = pow_isocurv_ik
     ELSE
-       pow=0.
+       pow_adiabatic = 0d0
+       !pow_isocurvature = 0d0
        powt=0.
        pk_bad=1
     ENDIF

@@ -294,7 +294,6 @@ CONTAINS
        END IF
 
        !MULTIFIELD
-       ![ LP: ] OK
        p = DBLE(y(1:num_inflaton))
        delp = DBLE(y(num_inflaton+1 : 2*num_inflaton))
        dotphi = sqrt(dot_product(delp, delp))
@@ -307,21 +306,25 @@ CONTAINS
           IF(k .LT. a_init*EXP(x)*getH(p, delp)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
              !MULTIFIELD
              IF (use_q) THEN
-![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
-                pow_ptb_ij=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
-                  *scalefac/a_switch, delp, scalefac)
+                ![ LP: ] w/out isocurv calculation
+                call powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
+                    *scalefac/a_switch, delp, scalefac, pow_ptb_ij,pow_adiab_ik)
+                ![ LP: ] with isocurv calculation --- not working yet
+                !call powerspectrum(pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik, &
+                !  y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
+                !    *scalefac/a_switch, delp, scalefac)
 
                 powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1) &
                   *scalefac/a_switch, scalefac)
              ELSE
-![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
-                pow_ptb_ij=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
-                  delp, scalefac)
+                call powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
+                    delp, scalefac, pow_ptb_ij,pow_adiab_ik)
+
                 powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1), scalefac)
              END IF
 
              if (compute_zpower) then  !! compute only once upon horizon exit
-![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
+                ![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
                 powz_ik = zpower(y(2*num_inflaton+2*num_inflaton**2+3), dotphi, scalefac)
                 compute_zpower = .false.
              end if
@@ -333,6 +336,7 @@ CONTAINS
           END IF
        END IF
 
+![ LP: ] CHECK;  check for adiabaticity?
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
              IF(getEps(p, delp) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.

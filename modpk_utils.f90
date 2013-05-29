@@ -533,6 +533,10 @@ CONTAINS
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END FUNCTION locate
 
+  ![ LP: ] Polynomial interpolation
+  ![ LP: ] Given array XA and YA (of same length) and given a value X, returns
+  !value Y such that if P(x) is a polynomial st P(XA_i)=YA_i, then Y=P(X) ---
+  !and an error estimate DY
   SUBROUTINE polint(xa,ya,x,y,dy)
     IMPLICIT NONE
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: xa,ya
