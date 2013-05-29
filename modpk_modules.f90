@@ -62,9 +62,14 @@ END MODULE modpkparams
 
 
 MODULE internals
+  use modpkparams, only : num_inflaton
   IMPLICIT NONE
   REAL, PARAMETER :: PI=3.141592653589793238462643383279502884197
-  DOUBLE PRECISION :: h_ik, pow_ik, powt_ik, powz_ik
+  DOUBLE PRECISION :: h_ik, powt_ik, powz_ik
+  !MULTIFIELD
+  double precision :: pow_adiab_ik, pow_isocurv_ik
+  double precision, dimension(:,:), allocatable :: pow_ptb_ij
+  !END MULTIFIELD
   DOUBLE PRECISION :: k, a_ik
 END MODULE internals
 

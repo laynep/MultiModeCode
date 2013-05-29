@@ -316,42 +316,36 @@ CONTAINS
     RETURN
   END FUNCTION geteta
 
-![ LP: ] CHECK; add cross correlations into powerspectrum
-  FUNCTION powerspectrum(u, dphi, a)
+![ LP: ] CHECK; Add cross correlations into powerspectrum
+  pure FUNCTION powerspectrum(psi, dphi, a)
     USE internals
     DOUBLE PRECISION :: powerspectrum
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: dphi
-    COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: u 
+    COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: psi
     DOUBLE PRECISION, INTENT(IN) :: a
     DOUBLE PRECISION :: zeta2
-    
-    !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given u, dphi/dalpha, a
 
-    zeta2 = dot_product(abs(u**2)*dphi, dphi)/dot_product(dphi, dphi)**2/a**2
+    !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given psi, dphi/dalpha, a
+
+    zeta2 = dot_product(abs(psi**2)*dphi, dphi)/dot_product(dphi, dphi)**2/a**2
     powerspectrum = zeta2/(2*k) * (k**3)/(2*PI**2)
 
-    !DEBUG
-    print*, "powerspectrum", powerspectrum 
-    !END MULTIFIELD
-
-    RETURN
   END FUNCTION powerspectrum
 
 
-  FUNCTION tensorpower(v, a)
+  pure FUNCTION tensorpower(v, a)
     USE internals
     DOUBLE PRECISION :: tensorpower
     DOUBLE PRECISION, INTENT(IN) :: a
-    COMPLEX(KIND=DP) :: v
+    COMPLEX(KIND=DP), intent(in) :: v
 
     !MULTIFIELD: Calculates P_h(k) given v, a
     tensorpower = abs(v)**2/(2*k) / a**2 * (k**3)*4./(PI**2)/(M_Pl**2)
     !END MULTIFIELD
 
-    RETURN
   END FUNCTION tensorpower
 
-  FUNCTION zpower(u_zeta, dsigma, a)
+  pure FUNCTION zpower(u_zeta, dsigma, a)
     USE internals
     DOUBLE PRECISION :: zpower
     DOUBLE PRECISION, INTENT(IN) :: dsigma

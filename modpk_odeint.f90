@@ -308,13 +308,14 @@ CONTAINS
              !MULTIFIELD
              IF (use_q) THEN
 ![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
-                pow_ik=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
+                pow_ptb_ij=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
                   *scalefac/a_switch, delp, scalefac)
+
                 powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1) &
                   *scalefac/a_switch, scalefac)
              ELSE
 ![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
-                pow_ik=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
+                pow_ptb_ij=powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
                   delp, scalefac)
                 powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1), scalefac)
              END IF

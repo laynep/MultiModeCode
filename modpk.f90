@@ -47,7 +47,7 @@ CONTAINS
     RETURN
   END SUBROUTINE total_efold
 
-  SUBROUTINE evolve(kin, pow, powt, powz)
+  SUBROUTINE evolve(kin, pow_adiabatic, pow_isocurvature, powt, powz)
     USE modpk_odeint
     USE ode_path
     USE modpkparams
@@ -64,7 +64,11 @@ CONTAINS
     COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y 
     double precision :: identity(num_inflaton**2)
     DOUBLE PRECISION, INTENT(IN) :: kin
-    DOUBLE PRECISION, INTENT(OUT) :: pow, powt, powz
+    DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
+
+    ![ LP: ] Upgrade pow --> pow(I,J)
+    double precision, dimension(:,:) :: power_matrix
+
     DOUBLE PRECISION :: dum, ah, alpha_ik, dalpha, dh
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p_ik,delphi
 
@@ -73,19 +77,28 @@ CONTAINS
     ![ LP: ] Background
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
+
     ![ LP: ] Mode matrix ptb, psi_IJ
     ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
     ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
     !     y(2n+1:2n+n**2) = psi               dydx(2n+1:3n)=dpsi/dalpha
     !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
+
     ![ LP: ] Tensors
     !     y(2n+2n**2+1) = v                  dydx(4n+1)=dv/dalpha
     !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
+
     ! --- u_zeta is the adiabatic mode ignoring coupings to other modes, used to compare with the full zeta perturbation
     !! --- full_zeta - u_zeta gives the super-horizon evolution 
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
+
+    ![ LP: ] Make the powerspectrum array.
+    if (allocated(pow_ptb_ij)) then
+      deallocate(pow_ptb_ij)
+    end if
+    allocate(pow_ptb_ij(num_inflaton,num_inflaton))
 
     k=kin*Mpc2Mpl
 
@@ -165,9 +178,11 @@ CONTAINS
     nactual_mode = kount  ! update nactual after evolving the modes
     
     IF(.NOT. ode_underflow) THEN 
-       pow = pow_ik
+       !power_matrix = pow_ptb_ij
        powt = powt_ik
        powz = powz_ik
+       pow_adiabatic = pow_adiab_ik
+       pow_isocurvature = pow_isocurv_ik
     ELSE
        pow=0.
        powt=0.
