@@ -131,12 +131,12 @@ CONTAINS
     a=EXP(x)
 
     ![ LP: ] Alias y's into real variable names
-    psi  = y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
-    dpsi = y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
-    v  = y(2*num_inflaton+2*num_inflaton**2+1)
-    dv  = y(2*num_inflaton+2*num_inflaton**2+2)
-    u_zeta = y(2*num_inflaton+2*num_inflaton**2+3)
-    du_zeta = y(2*num_inflaton+2*num_inflaton**2+4)
+    psi  = y(index_ptb_y:index_ptb_vel_y-1)
+    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+    v  = y(index_tensor_y)
+    dv  = y(index_tensor_y+1)
+    u_zeta = y(index_uzeta_y)
+    du_zeta = y(index_uzeta_y+1)
 
     ![ LP: ] Build the mass matrix, Cab
     if (potential_choice .eq. 7) then
@@ -156,24 +156,26 @@ CONTAINS
     yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
 
     ![ LP: ] ptb matrix
-    yprime(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = dpsi
+    yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
 
+    !OLD
     !yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
     !  -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
     !  + (2. - epsilon)*psi - matmul(Cab, psi)/hubble**2
-    yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+
+    yprime(index_ptb_vel_y:index_tensor_y-1) = &
       -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
       + (2. - epsilon)*psi - hacked_matrixmul(Cab, psi)/hubble**2
 
     ![ LP: ] tensors
-    yprime(2*num_inflaton+2*num_inflaton**2+1) = dv
-    yprime(2*num_inflaton+2*num_inflaton**2+2) = -(1. - epsilon)*dv - &
+    yprime(index_tensor_y) = dv
+    yprime(index_tensor_y+1) = -(1. - epsilon)*dv - &
       (k/a_init/a/hubble)**2*v + (2. - epsilon)*v
 
     ![ LP: ] adiabatic ptb
-    yprime(2*num_inflaton+2*num_inflaton**2+3) = du_zeta
+    yprime(index_uzeta_y) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    yprime(2*num_inflaton+2*num_inflaton**2+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
+    yprime(index_uzeta_y+1) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
          + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
 
@@ -241,12 +243,12 @@ CONTAINS
     a=EXP(x)
 
     ![ LP: ] Alias y's into real variable names
-    q_ptb  = y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
-    dq_ptb = y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
-    q_tensor  = y(2*num_inflaton+2*num_inflaton**2+1)
-    dq_tensor = y(2*num_inflaton+2*num_inflaton**2+2)
-    u_zeta = y(2*num_inflaton+2*num_inflaton**2+3)
-    du_zeta = y(2*num_inflaton+2*num_inflaton**2+4)
+    q_ptb  = y(index_ptb_y:index_ptb_vel_y-1)
+    dq_ptb = y(index_ptb_vel_y:index_tensor_y-1)
+    q_tensor  = y(index_tensor_y)
+    dq_tensor = y(index_tensor_y+1)
+    u_zeta = y(index_uzeta_y)
+    du_zeta = y(index_uzeta_y+1)
 
     ![ LP: ] Build the mass matrix, Cab
     if (potential_choice .eq. 7) then
@@ -266,20 +268,20 @@ CONTAINS
     yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
 
     ![ LP: ] ptb matrix in Q_IJ
-    yprime(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = dq_ptb
-    yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
+    yprime(index_ptb_y:index_ptb_vel_y-1) = dq_ptb
+    yprime(index_ptb_vel_y:index_tensor_y-1) = &
       -(3. - epsilon)*dq_ptb - (k/a_init/a/hubble)**2*q_ptb -&
       hacked_matrixmul(Cab, q_ptb)/hubble**2
 
     ![ LP: ] tensors
-    yprime(2*num_inflaton+2*num_inflaton**2+1) = dq_tensor
-    yprime(2*num_inflaton+2*num_inflaton**2+2) = -(3. - epsilon)*dq_tensor - (k/a_init/a/hubble)**2*q_tensor
+    yprime(index_tensor_y) = dq_tensor
+    yprime(index_tensor_y+1) = -(3. - epsilon)*dq_tensor - (k/a_init/a/hubble)**2*q_tensor
 
     !! below is the same as in SUBROUTINE derivs
     ![ LP: ] adiabatic ptb
-    yprime(2*num_inflaton+2*num_inflaton**2+3) = du_zeta
+    yprime(index_uzeta_y) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    yprime(2*num_inflaton+2*num_inflaton**2+4) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
+    yprime(index_uzeta_y+1) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
          + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
     RETURN

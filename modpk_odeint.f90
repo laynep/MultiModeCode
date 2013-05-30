@@ -260,7 +260,8 @@ CONTAINS
           ![ LP: ] sub-h use psi
           CALL derivs(x, y, dydx)
        END IF
-
+       ![ LP: ] CHECK; what is yscal?? Does it need to change with adding mode
+       !matrix?
        ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
        yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
 
@@ -307,25 +308,25 @@ CONTAINS
              !MULTIFIELD
              IF (use_q) THEN
                 ![ LP: ] w/out isocurv calculation
-                call powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
+                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
                     *scalefac/a_switch, delp, scalefac, pow_ptb_ij,pow_adiab_ik)
                 ![ LP: ] with isocurv calculation --- not working yet
                 !call powerspectrum(pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik, &
                 !  y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
                 !    *scalefac/a_switch, delp, scalefac)
 
-                powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1) &
+                powt_ik=tensorpower(y(index_tensor_y) &
                   *scalefac/a_switch, scalefac)
              ELSE
-                call powerspectrum(y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2), &
+                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1), &
                     delp, scalefac, pow_ptb_ij,pow_adiab_ik)
 
-                powt_ik=tensorpower(y(2*num_inflaton+2*num_inflaton**2+1), scalefac)
+                powt_ik=tensorpower(y(index_tensor_y), scalefac)
              END IF
 
              if (compute_zpower) then  !! compute only once upon horizon exit
-                ![ LP: ]  CHECK; need to update powerspectrum to include cross-terms
-                powz_ik = zpower(y(2*num_inflaton+2*num_inflaton**2+3), dotphi, scalefac)
+![ LP: ]  CHECK; update powerspectrum to include cross-terms?
+                powz_ik = zpower(y(index_uzeta_y), dotphi, scalefac)
                 compute_zpower = .false.
              end if
 
@@ -368,15 +369,18 @@ CONTAINS
                 ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
 
                 ![ LP: ] ptbs
-                ystart(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
-                  ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)*scalefac/a_switch
-                ystart(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
-                  ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)&
-                  *scalefac/a_switch + ystart(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+                ystart(index_ptb_y:index_ptb_vel_y-1) = &
+                  ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
+                ystart(index_ptb_vel_y:index_tensor_y-1) = &
+                  ytmp(index_ptb_vel_y:index_tensor_y-1)&
+                  *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
 
                 ![ LP: ] tensors
-                ystart(2*num_inflaton+2*num_inflaton**2+1) = ytmp(2*num_inflaton+2*num_inflaton**2+1)*scalefac/a_switch
-                ystart(2*num_inflaton+2*num_inflaton**2+2) = ytmp(2*num_inflaton+2*num_inflaton**2+2)*scalefac/a_switch + ystart(4*num_inflaton+1)
+                ystart(index_tensor_y) =&
+                  ytmp(index_tensor_y)*scalefac/a_switch
+                ystart(index_tensor_y+1) =&
+                  ytmp(index_tensor_y+1)*scalefac/a_switch&
+                  + ystart(index_tensor_y)
              ELSE
                 ystart(:) = y(:)
              END IF
@@ -393,15 +397,14 @@ CONTAINS
           !set intial condition in (Q*a_switch)
           ytmp(:) = y(:)
 
-          y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
-            ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
-          y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
-            ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) & 
-            - y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
+          y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
+          y(index_ptb_vel_y:index_tensor_y-1) = &
+            ytmp(index_ptb_vel_y:index_tensor_y-1) & 
+            - y(index_ptb_y:index_ptb_vel_y-1)
 
-          y(2*num_inflaton+2*num_inflaton**2+1) = ytmp(2*num_inflaton+2*num_inflaton**2+1)
-          y(2*num_inflaton+2*num_inflaton**2+2) = ytmp(2*num_inflaton+2*num_inflaton**2+2) &
-            - y(2*num_inflaton+2*num_inflaton**2+1)
+          y(index_tensor_y) = ytmp(index_tensor_y)
+          y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
+            - y(index_tensor_y)
        END IF
 
        IF (ode_underflow) RETURN
@@ -433,18 +436,16 @@ CONTAINS
 
       IF (use_q) THEN  ! convert from (a_switch*Q) to v
          ytmp(:) = y(:)
-         ptb_tmp =ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2)
-         dptb_tmp =ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2)
+         ptb_tmp =ytmp(index_ptb_y:index_ptb_vel_y-1)
+         dptb_tmp =ytmp(index_ptb_vel_y:index_tensor_y-1)
 
-         ytmp(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = &
-           ptb_tmp*scalefac/a_switch
-         ytmp(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
-           dptb_tmp*scalefac/a_switch + ptb_tmp
+         ytmp(index_ptb_y:index_ptb_vel_y-1) = ptb_tmp*scalefac/a_switch
+         ytmp(index_ptb_vel_y:index_tensor_y-1) = dptb_tmp*scalefac/a_switch + ptb_tmp
 
-         ytmp(2*num_inflaton+2*num_inflaton**2+1) = &
-           ytmp(4*2*num_inflaton+2*num_inflaton**2+1)*scalefac/a_switch
-         ytmp(2*num_inflaton+2*num_inflaton**2+2) = &
-           ytmp(4*2*num_inflaton+2*num_inflaton**2+2)*scalefac/a_switch + ytmp(4*num_inflaton+1)
+         ytmp(index_tensor_y) = &
+           ytmp(index_tensor_y)*scalefac/a_switch
+         ytmp(index_tensor_y+1) = &
+           ytmp(index_tensor_y+1)*scalefac/a_switch + ytmp(index_tensor_y)
       END IF
 
       yp(1:size(yp,1)/2,kount) = dble(ytmp(:))

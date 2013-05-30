@@ -78,14 +78,15 @@ CONTAINS
     DOUBLE PRECISION, DIMENSION(num_inflaton) :: p_ik,delphi
 
     !     Set initial conditions
+    ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
+    ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
+
     !     x = alpha     e-folds
     ![ LP: ] Background
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
 
     ![ LP: ] Mode matrix ptb, psi_IJ
-    ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
-    ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
     !     y(2n+1:2n+n**2) = psi               dydx(2n+1:3n)=dpsi/dalpha
     !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
 
@@ -98,6 +99,11 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
+    ![ LP: ] Set aliases for indices for above
+    index_ptb_y = 2*num_inflaton+1
+    index_ptb_vel_y = 2*num_inflaton+1+num_inflaton**2
+    index_tensor_y = 2*num_inflaton+2*num_inflaton**2+1
+    index_uzeta_y = index_tensor_y + 2
 
     ![ LP: ] Make the powerspectrum array.
     if (allocated(pow_ptb_ij)) then
@@ -153,15 +159,14 @@ CONTAINS
     y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
     y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
     ![ LP: ] mode matrix - diagonalize
-    y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
-    y(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
-           cmplx(0., -k/exp(ah))*identity
-    ![ LP: ] tensors - ???
-    y(2*num_inflaton+2*num_inflaton**2+1) = (1.d0, 0) !cmplx(1/sqrt(2*k))
-    y(2*num_inflaton+2*num_inflaton**2+2) = cmplx(0., -k/exp(ah))  
-    ![ LP: ] u_zeta - ???
-    y(2*num_inflaton+2*num_inflaton**2+3) = (1.d0, 0) !cmplx(1/sqrt(2*k))
-    y(2*num_inflaton+2*num_inflaton**2+4) = cmplx(0., -k/exp(ah))  
+    y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
+    y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
+    ![ LP: ] tensors
+    y(index_tensor_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+    y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
+    ![ LP: ] u_zeta
+    y(index_uzeta_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+    y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
 
     !     Call the integrator
     !
@@ -176,7 +181,7 @@ CONTAINS
     !END MULTIFIELD
 
     h1=0.05 !guessed start stepsize
-    accuracy=1.0d-9 !4.0d-2 !2!6 !has a big impact on the speed of the code
+    accuracy=1.0d-6 !4.0d-2 !2!6 !has a big impact on the speed of the code
     hmin=0.0 !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)

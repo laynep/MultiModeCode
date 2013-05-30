@@ -69,11 +69,10 @@ MODULE internals
   ![ LP: ] MULTIFIELD
   double precision :: pow_adiab_ik, pow_isocurv_ik
   double precision, dimension(:,:), allocatable :: pow_ptb_ij
+  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y
   !END MULTIFIELD
   DOUBLE PRECISION :: k, a_ik
 
-  !DEBUG
-  integer :: index_field_y, index_ptb_y, index_tensor_y, index_uzeta_y
 
 END MODULE internals
 
