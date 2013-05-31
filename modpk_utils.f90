@@ -7,11 +7,9 @@ MODULE modpk_utils
      module procedure rkck_c
   END INTERFACE
 
-  interface hacked_matrixmul
-     !module procedure hacked_matrixmul_CC
-     module procedure hacked_matrixmul_DC
-     !module procedure hacked_matrixmul_DD
-  end interface
+  ![ LP: ] Local variable; if true, then switch to using Q variable
+  logical, private :: using_q_superh=.false.
+  !private :: using_q_superh
 
 CONTAINS
 
@@ -20,13 +18,13 @@ CONTAINS
     USE modpkparams
     USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getHdot
     USE camb_interface, ONLY : pk_bad
-    DOUBLE PRECISION, INTENT(IN) :: x
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y
-    DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: yprime
+    real(dp), INTENT(IN) :: x
+    real(dp), DIMENSION(:), INTENT(IN) :: y
+    real(dp), DIMENSION(:), INTENT(OUT) :: yprime
 
     !MULTIFIELD
-    DOUBLE PRECISION, DIMENSION(size(y)/2) :: p, delp
-    DOUBLE PRECISION :: hubble,dhubble
+    real(dp), DIMENSION(size(y)/2) :: p, delp
+    real(dp) :: hubble,dhubble
     !END MULTIFIEND
 
     integer :: i
@@ -79,19 +77,19 @@ CONTAINS
     USE internals
     USE potential, ONLY: pot, dVdphi, d2Vdphi2, getH, getHdot, getEps, getEta
     IMPLICIT NONE
-    DOUBLE PRECISION, INTENT(IN) :: x
+    real(dp), INTENT(IN) :: x
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: yprime
 
     ! background quantity
-    DOUBLE PRECISION :: hubble, dhubble, a, epsilon, dotphi, eta
-    DOUBLE PRECISION :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
-    DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp, Vp
-    DOUBLE PRECISION, DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
+    real(dp) :: hubble, dhubble, a, epsilon, dotphi, eta
+    real(dp) :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
+    real(dp), DIMENSION(num_inflaton) :: phi, delphi, Vp
+    real(dp), DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
 
-    COMPLEX(KIND=DP), DIMENSION(num_inflaton**2) :: psi, dpsi        ! scalar ptb mode matrix
-    COMPLEX(KIND=DP) :: v, dv                                        ! tensor perturbations
-    COMPLEX(KIND=DP) :: u_zeta, du_zeta
+    COMPLEX(DP), DIMENSION(num_inflaton,num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
+    COMPLEX(DP) :: v, dv                                        ! tensor perturbations
+    COMPLEX(DP) :: u_zeta, du_zeta
 
     integer :: i, j
 
@@ -105,209 +103,142 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
-    p = dble(y(1:num_inflaton))
-    delp = dble(y(num_inflaton+1:2*num_inflaton))
-    dotphi = sqrt(dot_product(delp, delp))
+    phi = dble(y(1:num_inflaton))
+    delphi = dble(y(num_inflaton+1:2*num_inflaton))
+    dotphi = sqrt(dot_product(delphi, delphi))
 
     ![ LP: ] Aliases to potential derivatives
-    epsilon = getEps(p, delp)
-    eta = geteta(p, delp)
-    Vpp = d2Vdphi2(p)
-    Vp = dVdphi(p)
-    Vzz = dot_product(delp, matmul(Vpp, delp))/dotphi**2
-    Vz = dot_product(Vp, delp)/dotphi
+    epsilon = getEps(phi, delphi)
+    eta = geteta(phi, delphi)
+    Vpp = d2Vdphi2(phi)
+    Vp = dVdphi(phi)
+    Vzz = dot_product(delphi, matmul(Vpp, delphi))/dotphi**2
+    Vz = dot_product(Vp, delphi)/dotphi
     grad_V = sqrt(dot_product(Vp, Vp))
 
-    IF(dot_product(delp, delp) .GT. 6.d0) THEN
-       WRITE(*,*) 'MODPK: H is imaginary:',x,p,delp
+    IF(dot_product(delphi, delphi) .GT. 6.d0) THEN
+       WRITE(*,*) 'MODPK: H is imaginary:',x,phi,delphi
        WRITE(*,*) 'MODPK: QUITTING'
        write(*,*) 'vparams: ', (vparams(i, :), i=1, size(vparams,1))
        if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
        STOP
     END IF
 
-    hubble=getH(p,delp)
-    dhubble=getHdot(p,delp)
+    hubble=getH(phi,delphi)
+    dhubble=getHdot(phi,delphi)
     a=EXP(x)
 
     ![ LP: ] Alias y's into real variable names
-    psi  = y(index_ptb_y:index_ptb_vel_y-1)
-    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+    ![ LP: ] NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
+    psi = convert_hacked_vector_to_matrix(y(index_ptb_y:index_ptb_vel_y-1))
+    dpsi = convert_hacked_vector_to_matrix(y(index_ptb_vel_y:index_tensor_y-1))
     v  = y(index_tensor_y)
     dv  = y(index_tensor_y+1)
     u_zeta = y(index_uzeta_y)
     du_zeta = y(index_uzeta_y+1)
 
     ![ LP: ] Build the mass matrix, Cab
-    if (potential_choice .eq. 7) then
-       Cab = 0.d0  ! exponential potential 7, Cab is excatly zero,prevents numerical error
-    else
-       forall (i=1:num_inflaton, j=1:num_inflaton) & 
-            Cab(i,j) = Vpp(i,j) + 2*epsilon/dotphi * (delp(i)*Vp(j) + delp(j)*Vp(i))/dotphi &
-            + 2*epsilon*(3-epsilon)*hubble**2 * delp(i)*delp(j)/dotphi**2
-    end if
+    call build_mass_matrix(Cab)
 
     ![ LP: ] -----------------------------
     ![ LP: ] Set the RHS of y'(x) = f(y(x))
     ![ LP: ] -----------------------------
 
     ![ LP: ] background
-    yprime(1:num_inflaton) = cmplx(delp)
-    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
+    yprime(1:num_inflaton) = cmplx(delphi)
+    yprime(num_inflaton+1:2*num_inflaton) =&
+      cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble))
 
     ![ LP: ] ptb matrix
-    yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
-
-    !OLD
-    !yprime(2*num_inflaton+num_inflaton**2+1:2*num_inflaton+2*num_inflaton**2) = &
-    !  -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
-    !  + (2. - epsilon)*psi - matmul(Cab, psi)/hubble**2
-
-    yprime(index_ptb_vel_y:index_tensor_y-1) = &
-      -(1. - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
-      + (2. - epsilon)*psi - hacked_matrixmul(Cab, psi)/hubble**2
+    yprime(index_ptb_y:index_ptb_vel_y-1) = &
+      convert_matrix_to_hacked_vector(dpsi)
+    if (using_q_superh) then
+      yprime(index_ptb_vel_y:index_tensor_y-1) = convert_matrix_to_hacked_vector(&
+        -(3.0e0_dp - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi -&
+        matmul(Cab, psi)/hubble**2)
+    else
+      yprime(index_ptb_vel_y:index_tensor_y-1) = convert_matrix_to_hacked_vector(&
+        -(1.0e0_dp - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
+        + (2.0e0_dp - epsilon)*psi - matmul(Cab, psi)/hubble**2)
+    end if
 
     ![ LP: ] tensors
     yprime(index_tensor_y) = dv
-    yprime(index_tensor_y+1) = -(1. - epsilon)*dv - &
-      (k/a_init/a/hubble)**2*v + (2. - epsilon)*v
+    if (using_q_superh) then
+      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv - (k/a_init/a/hubble)**2*v
+    else
+      yprime(index_tensor_y+1) = -(1.0e0_dp - epsilon)*dv - &
+        (k/a_init/a/hubble)**2*v + (2.0e0_dp - epsilon)*v
+    end if
 
     ![ LP: ] adiabatic ptb
     yprime(index_uzeta_y) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    yprime(index_uzeta_y+1) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
-         + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
-
+    yprime(index_uzeta_y+1) = -(1.0e0_dp - epsilon)*du_zeta -&
+      (k/a_init/a/hubble)**2*u_zeta &
+      + (2.0e0_dp + 5.0e0_dp*epsilon - 2.0e0_dp*epsilon**2 + &
+      2.0e0_dp*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
     RETURN
+
+    contains
+
+      subroutine build_mass_matrix(mass_matrix)
+
+        real(dp), dimension(num_inflaton, num_inflaton), intent(out) :: mass_matrix
+
+        if (potential_choice .eq. 7) then
+          ! for exponential potential 7, Cab is excatly zero, need to set this in order to prevent numerical error
+          mass_matrix = 0e0_dp
+        else
+           forall (i=1:num_inflaton, j=1:num_inflaton) & 
+                mass_matrix(i,j) = Vpp(i,j) + 2e0_dp*epsilon/dotphi * &
+                (delphi(i)*Vp(j) + delphi(j)*Vp(i))/dotphi &
+                + 2e0_dp*epsilon*(3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)/dotphi**2
+        end if
+
+      end subroutine build_mass_matrix
 
   END SUBROUTINE derivs
 
-
-
   ![ LP: ] Full y (back+mode matrix(in Q at horizon cross)+tensor) derivatives y'=f(y)
-  SUBROUTINE qderivs(x,y,yprime)
-    USE modpkparams
-    USE internals
-    USE potential, ONLY: pot, dVdphi, d2Vdphi2, getH, getHdot, getEps, getEta
-    IMPLICIT NONE
-    DOUBLE PRECISION, INTENT(IN) :: x
-    COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
-    COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: yprime
+  subroutine qderivs(x,y,yprime)
+    use modpkparams
+    implicit none
+    real(dp), intent(in) :: x
+    complex(kind=dp), dimension(:), intent(in) :: y
+    complex(kind=dp), dimension(:), intent(out) :: yprime
 
-    ! background quantity
-    DOUBLE PRECISION :: hubble, dhubble, a, epsilon, dotphi, eta
-    DOUBLE PRECISION :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
-    DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp, Vp  
-    DOUBLE PRECISION, DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
+    using_q_superh=.true.
 
-    COMPLEX(KIND=DP), DIMENSION(num_inflaton**2) :: q_ptb, dq_ptb     ! scalar ptb matrix
-    COMPLEX(KIND=DP) :: q_tensor, dq_tensor                           ! tensor perturbations
-    COMPLEX(KIND=DP) :: u_zeta, du_zeta
+    call derivs(x,y,yprime)
 
-    integer :: i, j
+    using_q_superh=.false.
 
-    !     x = alpha
-    !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
-    !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
-    !     y(2n+1:2n+n**2) = q_ptb               dydx(2n+1:3n)=dq_ptb/dalpha
-    !     y(2n+n**2+1:2n+2n**2) = dq_ptb/dalpha       dydx(3n+1:4n)=d^2q_ptb/dalpha^2
-    !     y(2n+2n**2+1) = q_tensor                  dydx(4n+1)=dq_tensor/dalpha
-    !     y(2n+2n**2+2) = dq_tensor/dalpha          dydx(4n+2)=d^2q_tensor/dalpha^2
-    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
-    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
-
-    p = dble(y(1:num_inflaton))
-    delp = dble(y(num_inflaton+1:2*num_inflaton))
-    dotphi = sqrt(dot_product(delp, delp))
-
-    ![ LP: ] Aliases to potential derivatives
-    epsilon = getEps(p, delp)
-    eta = geteta(p, delp)
-    Vpp = d2Vdphi2(p)
-    Vp = dVdphi(p)
-    Vzz = dot_product(delp, matmul(Vpp, delp))/dotphi**2
-    Vz = dot_product(Vp, delp)/dotphi
-    grad_V = sqrt(dot_product(Vp, Vp))
-
-    IF(dot_product(delp, delp) .GT. 6.d0) THEN
-       WRITE(*,*) 'MODPK: H is imaginary:',x,p,delp
-       WRITE(*,*) 'MODPK: QUITTING'
-       write(*,*) 'vparams: ', (vparams(i, :), i=1, size(vparams,1))
-       if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
-       STOP
-    END IF
-
-    hubble=getH(p,delp)
-    dhubble=getHdot(p,delp)
-    a=EXP(x)
-
-    ![ LP: ] Alias y's into real variable names
-    q_ptb  = y(index_ptb_y:index_ptb_vel_y-1)
-    dq_ptb = y(index_ptb_vel_y:index_tensor_y-1)
-    q_tensor  = y(index_tensor_y)
-    dq_tensor = y(index_tensor_y+1)
-    u_zeta = y(index_uzeta_y)
-    du_zeta = y(index_uzeta_y+1)
-
-    ![ LP: ] Build the mass matrix, Cab
-    if (potential_choice .eq. 7) then
-       Cab = 0.d0  ! for exponential potential 7, Cab is excatly zero, need to set this in order to prevent numerical error
-    else
-       forall (i=1:num_inflaton, j=1:num_inflaton) & 
-            Cab(i,j) = Vpp(i,j) + 2*epsilon/dotphi * (delp(i)*Vp(j) + delp(j)*Vp(i))/dotphi &
-            + 2*epsilon*(3-epsilon)*hubble**2 * delp(i)*delp(j)/dotphi**2
-    end if
-
-    ![ LP: ] -----------------------------
-    ![ LP: ] Set the RHS of y'(x) = f(y(x))
-    ![ LP: ] -----------------------------
-
-    ![ LP: ] background
-    yprime(1:num_inflaton) = cmplx(delp)
-    yprime(num_inflaton+1:2*num_inflaton) = cmplx(-((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble))
-
-    ![ LP: ] ptb matrix in Q_IJ
-    yprime(index_ptb_y:index_ptb_vel_y-1) = dq_ptb
-    yprime(index_ptb_vel_y:index_tensor_y-1) = &
-      -(3. - epsilon)*dq_ptb - (k/a_init/a/hubble)**2*q_ptb -&
-      hacked_matrixmul(Cab, q_ptb)/hubble**2
-
-    ![ LP: ] tensors
-    yprime(index_tensor_y) = dq_tensor
-    yprime(index_tensor_y+1) = -(3. - epsilon)*dq_tensor - (k/a_init/a/hubble)**2*q_tensor
-
-    !! below is the same as in SUBROUTINE derivs
-    ![ LP: ] adiabatic ptb
-    yprime(index_uzeta_y) = du_zeta
-    thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
-    yprime(index_uzeta_y+1) = -(1. - epsilon)*du_zeta - (k/a_init/a/hubble)**2*u_zeta &
-         + (2 + 5*epsilon - 2*epsilon**2 + 2*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
-
-    RETURN
-  END SUBROUTINE qderivs
+  end subroutine qderivs
 
 
   SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,hnext,derivs)
     USE ode_path
     IMPLICIT NONE
-    DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: y
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: dydx,yscal
-    DOUBLE PRECISION, INTENT(INOUT) :: x
-    DOUBLE PRECISION, INTENT(IN) :: htry,eps
-    DOUBLE PRECISION, INTENT(OUT) :: hdid,hnext
+    real(dp), DIMENSION(:), INTENT(INOUT) :: y
+    real(dp), DIMENSION(:), INTENT(IN) :: dydx,yscal
+    real(dp), INTENT(INOUT) :: x
+    real(dp), INTENT(IN) :: htry,eps
+    real(dp), INTENT(OUT) :: hdid,hnext
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
+         use modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y
-         DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: dydx
+         real(dp), INTENT(IN) :: x
+         real(dp), DIMENSION(:), INTENT(IN) :: y
+         real(dp), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
     END INTERFACE
     INTEGER*4 :: ndum
-    DOUBLE PRECISION :: errmax,h,htemp,xnew
-    DOUBLE PRECISION, DIMENSION(size(y)) :: yerr,ytemp
-    DOUBLE PRECISION, PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
+    real(dp) :: errmax,h,htemp,xnew
+    real(dp), DIMENSION(size(y)) :: yerr,ytemp
+    real(dp), PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
          ERRCON=1.89e-4
     if (size(y)==size(dydx) .and. size(dydx)==size(yscal)) then
        ndum = size(y)
@@ -346,26 +277,26 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: y
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: yscal, dydx
-    DOUBLE PRECISION, INTENT(INOUT) :: x
-    DOUBLE PRECISION, INTENT(IN) :: htry,eps
-    DOUBLE PRECISION, INTENT(OUT) :: hdid,hnext
+    real(dp), INTENT(INOUT) :: x
+    real(dp), INTENT(IN) :: htry,eps
+    real(dp), INTENT(OUT) :: hdid,hnext
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
          USE modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(dp), INTENT(IN) :: x
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
     END INTERFACE
 
     INTEGER*4 :: ndum
-    DOUBLE PRECISION :: errmax,h,htemp,xnew
+    real(dp) :: errmax,h,htemp,xnew
     COMPLEX(KIND=DP), DIMENSION(size(y)) :: yerr,ytemp
-    DOUBLE PRECISION, PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
+    real(dp), PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
          ERRCON=1.89e-4
 
-    DOUBLE PRECISION :: yerr_r(2*size(y)), yscal_r(2*size(yscal))
+    real(dp) :: yerr_r(2*size(y)), yscal_r(2*size(yscal))
 
     if (size(y)==size(dydx) .and. size(dydx)==size(yscal)) then
        ndum = size(y)
@@ -410,20 +341,21 @@ CONTAINS
 
   SUBROUTINE rkck_r(y,dydx,x,h,yout,yerr,derivs)
     IMPLICIT NONE
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y,dydx
-    DOUBLE PRECISION, INTENT(IN) :: x,h
-    DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: yout,yerr
+    real(dp), DIMENSION(:), INTENT(IN) :: y,dydx
+    real(dp), INTENT(IN) :: x,h
+    real(dp), DIMENSION(:), INTENT(OUT) :: yout,yerr
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
+         use modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y
-         DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: dydx
+         real(dp), INTENT(IN) :: x
+         real(dp), DIMENSION(:), INTENT(IN) :: y
+         real(dp), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
     END INTERFACE
     INTEGER*4 :: ndum
-    DOUBLE PRECISION, DIMENSION(size(y)) :: ak2,ak3,ak4,ak5,ak6,ytemp
-    DOUBLE PRECISION, PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
+    real(dp), DIMENSION(size(y)) :: ak2,ak3,ak4,ak5,ak6,ytemp
+    real(dp), PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
          A6=0.875d0,B21=0.2d0,B31=3.0d0/40.0d0,B32=9.0d0/40.0d0,&
          B41=0.3d0,B42=-0.9d0,B43=1.2d0,B51=-11.0d0/54.0d0,&
          B52=2.5d0,B53=-70.0d0/27.0d0,B54=35.0d0/27.0d0,&
@@ -459,20 +391,20 @@ CONTAINS
     USE modpkparams
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y, dydx
-    DOUBLE PRECISION, INTENT(IN) :: x,h
+    real(dp), INTENT(IN) :: x,h
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: yout,yerr
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
          USE modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(dp), INTENT(IN) :: x
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
     END INTERFACE
     INTEGER*4 :: ndum
     COMPLEX(KIND=DP), DIMENSION(size(y)) :: ytemp, ak2,ak3,ak4,ak5,ak6
-    DOUBLE PRECISION, PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
+    real(dp), PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
          A6=0.875d0,B21=0.2d0,B31=3.0d0/40.0d0,B32=9.0d0/40.0d0,&
          B41=0.3d0,B42=-0.9d0,B43=1.2d0,B51=-11.0d0/54.0d0,&
          B52=2.5d0,B53=-70.0d0/27.0d0,B54=35.0d0/27.0d0,&
@@ -507,8 +439,8 @@ CONTAINS
 
   FUNCTION locate(xx,x)
     IMPLICIT NONE
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: xx
-    DOUBLE PRECISION, INTENT(IN) :: x
+    real(dp), DIMENSION(:), INTENT(IN) :: xx
+    real(dp), INTENT(IN) :: x
     INTEGER*4 :: locate
     INTEGER*4 :: n,jl,jm,ju
     LOGICAL :: ascnd
@@ -541,12 +473,12 @@ CONTAINS
   !and an error estimate DY
   SUBROUTINE polint(xa,ya,x,y,dy)
     IMPLICIT NONE
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: xa,ya
-    DOUBLE PRECISION, INTENT(IN) :: x
-    DOUBLE PRECISION, INTENT(OUT) :: y,dy
+    real(dp), DIMENSION(:), INTENT(IN) :: xa,ya
+    real(dp), INTENT(IN) :: x
+    real(dp), INTENT(OUT) :: y,dy
     INTEGER*4 :: m,n,ns
     INTEGER*4, DIMENSION(1) :: imin
-    DOUBLE PRECISION, DIMENSION(size(xa)) :: c,d,den,ho,absho
+    real(dp), DIMENSION(size(xa)) :: c,d,den,ho,absho
     if (size(xa)==size(ya)) then
        n=size(xa)
     else
@@ -585,9 +517,9 @@ CONTAINS
   SUBROUTINE array_polint(xa, ya, x, y, dy)
     IMPLICIT NONE
 
-    DOUBLE PRECISION, INTENT(IN) :: xa(:), ya(:,:)
-    DOUBLE PRECISION, INTENT(IN) :: x
-    DOUBLE PRECISION, INTENT(OUT) :: y(size(ya(:,1))),dy(size(ya(:,1)))
+    real(dp), INTENT(IN) :: xa(:), ya(:,:)
+    real(dp), INTENT(IN) :: x
+    real(dp), INTENT(OUT) :: y(size(ya(:,1))),dy(size(ya(:,1)))
     INTEGER :: i
 
     do i = 1, size(ya(:,1))
@@ -598,7 +530,7 @@ CONTAINS
   !END MULTIFIELD
 
   FUNCTION reallocate_rv(p,n)
-    DOUBLE PRECISION, DIMENSION(:), POINTER :: p, reallocate_rv
+    real(dp), DIMENSION(:), POINTER :: p, reallocate_rv
     INTEGER*4, INTENT(IN) :: n
     INTEGER*4 :: nold,ierr
     allocate(reallocate_rv(n),stat=ierr)  !! allocate memeory of size n at new address to be returned
@@ -614,7 +546,7 @@ CONTAINS
   END FUNCTION reallocate_rv
 
   FUNCTION reallocate_rm(p,n,m)
-    DOUBLE PRECISION, DIMENSION(:,:), POINTER :: p, reallocate_rm
+    real(dp), DIMENSION(:,:), POINTER :: p, reallocate_rm
     INTEGER*4, INTENT(IN) :: n,m
     INTEGER*4 :: nold,mold,ierr
     allocate(reallocate_rm(n,m),stat=ierr)
@@ -631,105 +563,43 @@ CONTAINS
   END FUNCTION reallocate_rm
 
 
-  ![ LP: ] This takes a matrix A and multiplies it by a matrix B that is in the
+  ![ LP: ] Take a "hacked" vector, i.e., a matrix B that is in the
   !form of a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
-  !Returns a "hacked" vector...
+  !Returns the matrix form. NB: the vector must be a representation of a square
+  !matrix.
 
-  ![ LP: ] If you want to fix this, then change structure of y's to an array
-  !and use matrix multiplication C*psi
+  function convert_hacked_vector_to_matrix(matrix_as_vector) &
+    result(real_matrix)
 
-  ![ LP: ] This is the ugliest piece of code I've ever written.
+    complex(dp), dimension(:), intent(in) :: matrix_as_vector
+    complex(dp), dimension(:,:), allocatable :: real_matrix
+    integer :: n, i, j
 
-  ![ LP: ] A=double, B=double
-!  function hacked_matrixmul_DD(A,B)
-!    implicit none
-!
-!    double precision, dimension(:,:), intent(in) :: A
-!    double precision, dimension(:,:) :: temp_matrix
-!    double precision, dimension (:), intent(in) :: B
-!    double precision, dimension (:) :: hacked_matrixmul_DD
-!    integer :: i, j
-!
-!    if (size(b) .ne. size(a,1)*size(a,2)) then
-!      print*, "MULTIFIELD MODPK: Arrays don't conform."
-!      stop
-!    end if
-!
-!    ![ LP: ] B vector to matrix
-!    do i=1,size(A,2); do j=1,size(A,1)
-!      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
-!    end do; end do
-!
-!    temp_matrix = matmul(A,temp_matrix)
-!
-!    ![ LP: ] Temp matrix to hacked matrix-vector
-!    do i=1,size(A,2); do j=1,size(A,1)
-!       hacked_matrixmul_DD((i-1)*size(a,2)+j) =temp_matrix(i,j)
-!    end do; end do
-!
-!  end function hacked_matrixmul_DD
+    n=int(sqrt(real(size(matrix_as_vector))))
+    allocate(real_matrix(n,n))
 
-  ![ LP: ] A=double, B=complex
-  function hacked_matrixmul_DC(A,B) result(hacked_matrix)
-    implicit none
-
-    double precision, dimension(:,:), intent(in) :: A
-    complex(kind=dp), dimension(:,:), allocatable :: temp_matrix
-    complex(kind=dp), dimension(:), intent(in) :: B
-    complex(kind=dp), dimension(:), allocatable :: hacked_matrix
-    integer :: i, j
-
-    if (size(b) .ne. size(a,1)*size(a,2)) then
-      print*, "MULTIFIELD MODPK: Arrays don't conform."
-      stop
-    end if
-
-    allocate(hacked_matrix(size(B)))
-    allocate(temp_matrix(size(a,1),size(a,2)))
-
-    ![ LP: ] B vector to matrix
-    do i=1,size(A,2); do j=1,size(A,1)
-      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
+    do i=1,n; do j=1,n
+      real_matrix(i,j) = matrix_as_vector((i-1)*n+j)
     end do; end do
 
-    temp_matrix = matmul(A,temp_matrix)
+  end function convert_hacked_vector_to_matrix
 
-    ![ LP: ] Temp matrix to hacked matrix-vector
-    do i=1,size(A,2); do j=1,size(A,1)
-       hacked_matrix((i-1)*size(a,2)+j) =temp_matrix(i,j)
+  ![ LP: ] Take a matrix and "hack" it into a vector, i.e.,
+  !a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
+  function convert_matrix_to_hacked_vector(matrix) &
+    result(hacked_vector)
+
+    complex(dp), dimension(:,:), intent(in) :: matrix
+    complex(dp), dimension(:), allocatable :: hacked_vector
+    integer :: n, i, j
+
+    n=size(matrix,1)*size(matrix,2)
+    allocate(hacked_vector(n))
+
+    do i=1,size(matrix,1); do j=1,size(matrix,2)
+      hacked_vector((i-1)*size(matrix,2)+j) = matrix(i,j)
     end do; end do
 
-    deallocate(temp_matrix)
-
-  end function hacked_matrixmul_DC
-
-  ![ LP: ] A=complex, B=complex
-!  function hacked_matrixmul_CC(A,B)
-!    implicit none
-!
-!    complex(kind=8), dimension(:,:), intent(in) :: A
-!    complex(kind=8), dimension(:,:) :: temp_matrix
-!    complex(kind=8), dimension (:), intent(in) :: B
-!    complex(kind=8), dimension (:) :: hacked_matrixmul_CC
-!    integer :: i, j
-!
-!    if (size(b) .ne. size(a,1)*size(a,2)) then
-!      print*, "MULTIFIELD MODPK: Arrays don't conform."
-!      stop
-!    end if
-!
-!    ![ LP: ] B vector to matrix
-!    do i=1,size(A,2); do j=1,size(A,1)
-!      temp_matrix(i,j)=B((i-1)*size(a,2)+j)
-!    end do; end do
-!
-!    temp_matrix = matmul(A,temp_matrix)
-!
-!    ![ LP: ] Temp matrix to hacked matrix-vector
-!    do i=1,size(A,2); do j=1,size(A,1)
-!       hacked_matrixmul_CC((i-1)*size(a,2)+j) =temp_matrix(i,j)
-!    end do; end do
-!
-!  end function hacked_matrixmul_CC
+  end function convert_matrix_to_hacked_vector
 
 END MODULE modpk_utils

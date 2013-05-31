@@ -14,11 +14,11 @@ CONTAINS
   SUBROUTINE backgrnd
     INTEGER*4 :: i,j, rescl_count
 
-    DOUBLE PRECISION :: phi_init_trial(size(phi_init))
-    DOUBLE PRECISION :: alpha_e,dalpha,V_end,dv,dh
-    DOUBLE PRECISION :: a_end_inst
-    DOUBLE PRECISION :: V_i, ph, alpha_pivot, bb(size(phi_init))
-    DOUBLE PRECISION :: Np_last
+    real(dp) :: phi_init_trial(size(phi_init))
+    real(dp) :: alpha_e,dalpha,V_end,dv,dh
+    real(dp) :: a_end_inst
+    real(dp) :: V_i, ph, alpha_pivot, bb(size(phi_init))
+    real(dp) :: Np_last
 
     CHARACTER(16) :: fmt = '(a25,es10.3)'
 
@@ -167,17 +167,17 @@ CONTAINS
     INTEGER*4, PARAMETER :: BNVAR=2
 
     !! MULTIFIELD
-    DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: phi_init_trial
-    DOUBLE PRECISION, DIMENSION(:) :: y(BNVAR*size(phi_init_trial)) 
+    real(dp), DIMENSION(:), INTENT(INOUT) :: phi_init_trial
+    real(dp), DIMENSION(:) :: y(BNVAR*size(phi_init_trial)) 
     !! END MUTLTIFIELD
 
-    DOUBLE PRECISION :: accuracy, h1, hmin, x1, x2
-    DOUBLE PRECISION :: alpha_e, dalpha, V_end, dv, ep 
-    DOUBLE PRECISION :: ph, alpha_pivot, aa(size(phi_init_trial)), bb(size(phi_init_trial))
-    DOUBLE PRECISION :: vv(nsteps) !!epsarr(nsteps), 
+    real(dp) :: accuracy, h1, hmin, x1, x2
+    real(dp) :: alpha_e, dalpha, V_end, dv, ep 
+    real(dp) :: ph, alpha_pivot, aa(size(phi_init_trial)), bb(size(phi_init_trial))
+    real(dp) :: vv(nsteps) !!epsarr(nsteps), 
 
-    DOUBLE PRECISION, DIMENSION(:) :: Vp(num_inflaton)    
-    DOUBLE PRECISION :: Vz, dotphi, thetaN, grad_V
+    real(dp), DIMENSION(:) :: Vp(num_inflaton)    
+    real(dp) :: Vz, dotphi, thetaN, grad_V
 
     CHARACTER(16) :: fmt = '(a25,es10.3)'
 
@@ -325,8 +325,8 @@ CONTAINS
   SUBROUTINE backgrnd_efold
     
     INTEGER*4, PARAMETER :: BNVAR=2
-    DOUBLE PRECISION, DIMENSION(:) :: y(BNVAR*num_inflaton)
-    DOUBLE PRECISION :: accuracy, h1, hmin, x1, x2
+    real(dp), DIMENSION(:) :: y(BNVAR*num_inflaton)
+    real(dp) :: accuracy, h1, hmin, x1, x2
 
 
     h_init=SQRT(pot(phi_init)/(6.d0*M_Pl**2) * &

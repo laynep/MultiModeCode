@@ -1,4 +1,5 @@
-    MODULE access_modpk
+MODULE access_modpk
+  use modpkparams, only : dp
   USE camb_interface
   IMPLICIT NONE
   PRIVATE
@@ -8,8 +9,8 @@
 ! Set to lower numbers for smoother potentials.
   INTEGER*4, PARAMETER, PUBLIC :: pkspline_n = 500
 
-  DOUBLE PRECISION, PARAMETER, PUBLIC :: pkspline_kmin = log(1.d-5), pkspline_kmax = log(5.d0)
-  DOUBLE PRECISION, PUBLIC :: pkspline_k(pkspline_n), pkspline_p(pkspline_n), &
+  real(dp), PARAMETER, PUBLIC :: pkspline_kmin = log(1.e-5_dp), pkspline_kmax = log(5.e0_dp)
+  real(dp), PUBLIC :: pkspline_k(pkspline_n), pkspline_p(pkspline_n), &
 	pkspline_p2der(pkspline_n), pkspline_pt(pkspline_n), &
 	pkspline_pt2der(pkspline_n)
 
@@ -21,7 +22,7 @@ CONTAINS
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
     IMPLICIT NONE
-    DOUBLE PRECISION :: k,klo,khi
+    real(dp) :: k,klo,khi
 
     k_start = 1.d2
     eval_ps = 5.d2
@@ -62,22 +63,16 @@ CONTAINS
     !!INTEGER*4, PARAMETER :: NVAR = 10
 
     INTEGER*4 :: i,j
-    DOUBLE PRECISION :: accuracy,h1,hmin,x1,x2 
-    COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y 
-    double precision :: identity(num_inflaton**2)
-    DOUBLE PRECISION, INTENT(IN) :: kin
-![ LP: ] CHECK; Need to calculate pow_isocurvature, but not ready yet.
-    !DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
-    DOUBLE PRECISION, INTENT(OUT) :: pow_adiabatic,  powt, powz
+    real(dp) :: accuracy,h1,hmin,x1,x2 
+    COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
+    real(dp), INTENT(IN) :: kin
+![ LP: ] CHECK; pow_isocurvature not ready yet.
+    !real(dp), INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
+    real(dp), INTENT(OUT) :: pow_adiabatic,  powt, powz
+    real(dp), dimension(:,:), allocatable :: power_matrix
+    real(dp) :: dum, ah, alpha_ik, dalpha, dh
+    real(dp), DIMENSION(num_inflaton) :: p_ik,delphi
 
-
-    ![ LP: ] Upgrade pow --> pow(I,J)
-    !double precision, dimension(:,:), allocatable :: power_matrix
-
-    DOUBLE PRECISION :: dum, ah, alpha_ik, dalpha, dh
-    DOUBLE PRECISION, DIMENSION(num_inflaton) :: p_ik,delphi
-
-    !     Set initial conditions
     ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
     ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
 
@@ -115,7 +110,7 @@ CONTAINS
 
     ah=LOG(k/k_start)     !! start where k = 100 aH, deep in the horizon, ah = log(aH)
     i= locate(aharr(1:nactual_bg), ah)
-    
+
     IF(i.eq.0.) THEN
        PRINT*,'MODPK: The background solution worked, but the k you requested is outside'
        PRINT*,'MODPK: the bounds of the background you solved for. Please reconsider'
@@ -127,7 +122,7 @@ CONTAINS
 
     ! nactual_bg here is set by the background evolution
     j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
-    
+
     !MULTIFIELD
     CALL array_polint(aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
     !END MULTIFIELD
@@ -151,22 +146,7 @@ CONTAINS
     ENDIF
 
     ![ LP: ] Set the initial conditions.
-    ![ LP: ] Make an identity vector analog of identity matrix
-    call make_identity(identity)
-
-
-    ![ LP: ] Background - from previous evolution
-    y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
-    y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
-    ![ LP: ] mode matrix - diagonalize
-    y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
-    y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
-    ![ LP: ] tensors
-    y(index_tensor_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
-    y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
-    ![ LP: ] u_zeta
-    y(index_uzeta_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
-    y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
+    call set_ic(y)
 
     !     Call the integrator
     !
@@ -182,22 +162,23 @@ CONTAINS
 
     h1=0.05 !guessed start stepsize
     accuracy=1.0d-6 !4.0d-2 !2!6 !has a big impact on the speed of the code
-    hmin=0.0 !minimum stepsize
+    !hmin=0.0 !minimum stepsize
+    hmin=1e-16_dp !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
     nactual_mode = kount  ! update nactual after evolving the modes
 
     IF(.NOT. ode_underflow) THEN 
-       !power_matrix = pow_ptb_ij
-       powt = powt_ik
-       powz = powz_ik
-       pow_adiabatic = pow_adiab_ik
-       !pow_isocurvature = pow_isocurv_ik
+      !power_matrix = pow_ptb_ij
+      powt = powt_ik
+      powz = powz_ik
+      pow_adiabatic = pow_adiab_ik
+      !pow_isocurvature = pow_isocurv_ik
     ELSE
-       pow_adiabatic = 0d0
-       !pow_isocurvature = 0d0
-       powt=0.
-       pk_bad=1
+      pow_adiabatic = 0d0
+      !pow_isocurvature = 0d0
+      powt=0.
+      pk_bad=1
     ENDIF
 
 
@@ -208,7 +189,7 @@ CONTAINS
       ![ LP: ] A "packed" identity vector analog of identity matrix.
       subroutine make_identity(identityvector)
 
-        double precision, dimension(:), intent(out) :: identityvector
+        real(dp), dimension(:), intent(out) :: identityvector
         integer :: i, j
 
         identityvector=0d0
@@ -220,6 +201,31 @@ CONTAINS
         end do; end do
 
       end subroutine make_identity
+
+      subroutine set_ic(y)
+
+        complex(dp), dimension(:), intent(out) :: y
+        real(dp), dimension(num_inflaton**2) :: identity
+
+        ![ LP: ] Make an identity vector analog of identity matrix
+        call make_identity(identity)
+
+        ![ LP: ] Background - from previous evolution
+        y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
+        y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
+        ![ LP: ] mode matrix - diagonalize, Bunch-Davies
+        y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
+        y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
+
+        ![ LP: ] tensors
+        y(index_tensor_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+        y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
+
+        ![ LP: ] u_zeta
+        y(index_uzeta_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+        y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
+
+      end subroutine set_ic
 
   END SUBROUTINE evolve
 

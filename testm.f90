@@ -41,7 +41,7 @@ program test_mmodpk
   array_fmt = '(a25,'//trim(ci)//'es10.3)'
   !! end code initialization
 
-  write(*, *) 'Testing single field with V(phi) = 1/2 m^2 phi^2'
+  write(*, *) 'Testing two field with V(phi) = 1/2 m_I^2 phi_I^2+1/2 m_J^2 phi_J^2'
 
   ! \sum_i m_i^2 \phi_i^2
  
@@ -65,7 +65,7 @@ program test_mmodpk
   open(1, file='phiarr.txt')
   i = 1
   do while ( lna(i+1) > 1e-8 )
-     PRINT*, lna(i), phiarr(:,i)
+     !PRINT*, lna(i), phiarr(:,i)
      write(1, *), lna(i), phiarr(:,i)
      i = i + 1
   end do

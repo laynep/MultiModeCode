@@ -1,4 +1,5 @@
 MODULE modpk_odeint
+  use modpkparams, only : dp
   IMPLICIT NONE
 
   INTERFACE odeint
@@ -19,44 +20,47 @@ CONTAINS
     USE modpk_utils, ONLY : reallocate_rv, reallocate_rm
 
     IMPLICIT NONE
-    DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: ystart
-    DOUBLE PRECISION, INTENT(IN) :: x1,x2,eps,h1,hmin
+    real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
+    real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
     !MULTIFIELD
-    DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp
+    real(dp), DIMENSION(num_inflaton) :: p, delp
     !END MULTIFIDLE
 
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
+         use modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y
-         DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: dydx
+         real(dp), INTENT(IN) :: x
+         real(dp), DIMENSION(:), INTENT(IN) :: y
+         real(dp), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
 
        SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,hnext,derivs)
+         use modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, DIMENSION(:), INTENT(INOUT) :: y
-         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: dydx,yscal
-         DOUBLE PRECISION, INTENT(INOUT) :: x
-         DOUBLE PRECISION, INTENT(IN) :: htry,eps
-         DOUBLE PRECISION, INTENT(OUT) :: hdid,hnext
+         real(dp), DIMENSION(:), INTENT(INOUT) :: y
+         real(dp), DIMENSION(:), INTENT(IN) :: dydx,yscal
+         real(dp), INTENT(INOUT) :: x
+         real(dp), INTENT(IN) :: htry,eps
+         real(dp), INTENT(OUT) :: hdid,hnext
          INTERFACE
             SUBROUTINE derivs(x,y,dydx)
+              use modpkparams
               IMPLICIT NONE
-              DOUBLE PRECISION, INTENT(IN) :: x
-              DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: y
-              DOUBLE PRECISION, DIMENSION(:), INTENT(OUT) :: dydx
+              real(dp), INTENT(IN) :: x
+              real(dp), DIMENSION(:), INTENT(IN) :: y
+              real(dp), DIMENSION(:), INTENT(OUT) :: dydx
             END SUBROUTINE derivs
          END INTERFACE
        END SUBROUTINE rkqs_r
     END INTERFACE
     
-    DOUBLE PRECISION, PARAMETER :: TINY=1.0d-30
+    real(dp), PARAMETER :: TINY=1.0d-30
     INTEGER*4, PARAMETER :: MAXSTP=10000
     INTEGER*4 :: nstp,i
-    DOUBLE PRECISION :: h,hdid,hnext,x,xsav
-    DOUBLE PRECISION, DIMENSION(SIZE(ystart)) :: dydx, y, yscal
-    DOUBLE PRECISION :: z, scalefac
+    real(dp) :: h,hdid,hnext,x,xsav
+    real(dp), DIMENSION(SIZE(ystart)) :: dydx, y, yscal
+    real(dp) :: z, scalefac
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -182,8 +186,8 @@ CONTAINS
 
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: ystart
-    DOUBLE PRECISION, INTENT(IN) :: x1,x2,eps,h1,hmin
-    DOUBLE PRECISION, DIMENSION(num_inflaton) :: p, delp  ! the classical field phi and dphi are real
+    real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
+    real(dp), DIMENSION(num_inflaton) :: phi, delphi  ! the classical field phi and dphi are real
     COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: ytmp
     LOGICAL :: use_q, compute_zpower
 
@@ -191,7 +195,7 @@ CONTAINS
        SUBROUTINE derivs(x, y, dydx)
          USE modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(dp), INTENT(IN) :: x
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE derivs
@@ -199,7 +203,7 @@ CONTAINS
        SUBROUTINE qderivs(x, y, dydx)
          USE modpkparams
          IMPLICIT NONE
-         DOUBLE PRECISION, INTENT(IN) :: x
+         real(dp), INTENT(IN) :: x
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: dydx
        END SUBROUTINE qderivs
@@ -209,14 +213,14 @@ CONTAINS
          IMPLICIT NONE
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: y
          COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: dydx,yscal
-         DOUBLE PRECISION, INTENT(INOUT) :: x
-         DOUBLE PRECISION, INTENT(IN) :: htry,eps
-         DOUBLE PRECISION, INTENT(OUT) :: hdid,hnext
+         real(dp), INTENT(INOUT) :: x
+         real(dp), INTENT(IN) :: htry,eps
+         real(dp), INTENT(OUT) :: hdid,hnext
          INTERFACE
             SUBROUTINE derivs(x, y, dydx)
               USE modpkparams
               IMPLICIT NONE
-              DOUBLE PRECISION, INTENT(IN) :: x
+              real(dp), INTENT(IN) :: x
               COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
               COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: dydx
             END SUBROUTINE derivs
@@ -224,12 +228,12 @@ CONTAINS
        END SUBROUTINE rkqs_c
     END INTERFACE
 
-    DOUBLE PRECISION, PARAMETER :: TINY=1.0d-40
+    real(dp), PARAMETER :: TINY=1.0d-40
     INTEGER*4, PARAMETER :: MAXSTP=10000
     INTEGER*4 :: nstp,i
-    DOUBLE PRECISION :: h,hdid,hnext,x,xsav
+    real(dp) :: h,hdid,hnext,x,xsav
     COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: dydx, y, yscal
-    DOUBLE PRECISION :: scalefac, hubble, a_switch, dotphi
+    real(dp) :: scalefac, hubble, a_switch, dotphi
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -260,8 +264,7 @@ CONTAINS
           ![ LP: ] sub-h use psi
           CALL derivs(x, y, dydx)
        END IF
-       ![ LP: ] CHECK; what is yscal?? Does it need to change with adding mode
-       !matrix?
+
        ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
        yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
 
@@ -295,21 +298,22 @@ CONTAINS
        END IF
 
        !MULTIFIELD
-       p = DBLE(y(1:num_inflaton))
-       delp = DBLE(y(num_inflaton+1 : 2*num_inflaton))
-       dotphi = sqrt(dot_product(delp, delp))
+       phi = DBLE(y(1:num_inflaton))
+       delphi = DBLE(y(num_inflaton+1 : 2*num_inflaton))
+       dotphi = sqrt(dot_product(delphi, delphi))
        scalefac = a_init*exp(x)
        !END MULTIFIELD
 
-       IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
+       IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
 
        IF(ode_ps_output) THEN
-          IF(k .LT. a_init*EXP(x)*getH(p, delp)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+          IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
              !MULTIFIELD
              IF (use_q) THEN
                 ![ LP: ] w/out isocurv calculation
                 call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
-                    *scalefac/a_switch, delp, scalefac, pow_ptb_ij,pow_adiab_ik)
+                    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
+
                 ![ LP: ] with isocurv calculation --- not working yet
                 !call powerspectrum(pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik, &
                 !  y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
@@ -319,7 +323,7 @@ CONTAINS
                   *scalefac/a_switch, scalefac)
              ELSE
                 call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1), &
-                    delp, scalefac, pow_ptb_ij,pow_adiab_ik)
+                    delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
 
                 powt_ik=tensorpower(y(index_tensor_y), scalefac)
              END IF
@@ -340,24 +344,24 @@ CONTAINS
 ![ LP: ] CHECK;  check for adiabaticity?
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
-             IF(getEps(p, delp) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.
+             IF(getEps(phi, delphi) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
-             IF(getEps(p, delp) .GT. 1 .AND. slowroll_start) THEN
+             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
                 PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
                 PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
                 PRINT*,'MODPK: reached. Please take another look at your inputs.'
                 PRINT*,'MODPK: QUITTING'
-                PRINT*,'EPSILON =', getEps(p, delp), 'phi =', p
+                PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
                 STOP
              ENDIF
 
              !MULTIFIELD
-             IF (SIZE(p) .EQ. 1) THEN
-                IF (phidot_sign(1).GT.0..AND.(p(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
-                IF (phidot_sign(1).LT.0..AND.(p(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
+             IF (SIZE(phi) .EQ. 1) THEN
+                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
+                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
              ELSE 
                 ! for multifield, determine the total field distance travelled
-                IF (SQRT(DOT_PRODUCT(p-phi_init, p-phi_init)) .GT. (delsigma+0.1)) infl_ended = .TRUE.
+                IF (SQRT(DOT_PRODUCT(phi-phi_init, phi-phi_init)) .GT. (delsigma+0.1)) infl_ended = .TRUE.
              END IF
              !END MULTIFIELD
           ENDIF
@@ -389,7 +393,7 @@ CONTAINS
           END IF
        ENDIF
 
-       IF (k .LT. a_init*exp(x)*getH(p, delp)/useq_ps .and. (.not. use_q)) THEN 
+       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN 
           !switch to the Q variable for super-horizon evolution
           !only apply the switch on y(1:4*num_inflaton+2)
           use_q = .TRUE.
@@ -454,7 +458,7 @@ CONTAINS
 
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
-  
+
   END SUBROUTINE odeint_c
 
 END MODULE modpk_odeint

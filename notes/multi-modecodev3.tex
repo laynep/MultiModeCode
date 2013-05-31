@@ -93,10 +93,11 @@ For the mode equation, we have
 \begin{equation}
 \frac{d^2 Q_I}{\ud t^2} + 3H \frac{d Q_I}{\ud t} + \frac{k^2}{a^2} Q_I + \sum_J C_{IJ} Q_J = 0
 \end{equation}
-where
+where the mass matrix is
 \begin{equation}
 C_{IJ} = \pd_I\pd_J V + \frac{1}{H \mpl^2} \left( \dot{\phi}_I \pd_J V + \dot{\phi}_J \pd_I V \right)
 + (3-\epsilon) \frac{\dot{\phi}_I\dot{\phi}_J}{\mpl^2}
+\label{eqn:massmatrix}
 \end{equation}
 
 In practice, it is more convenient to evolve the equation in e-folds. We define $\alpha \equiv \ln a(t)$ and set $\mpl = 1$. 
@@ -132,14 +133,15 @@ To solve the perturbation equations, it is usually convenient to work with the v
 The mode equation for $u_I$ is 
 \begin{equation}
 \frac{d^2 u_I}{\ud \alpha^2} + (1-\epsilon) \frac{d u_I}{\ud \alpha} + \left(\frac{k^2}{a^2H^2} - 2 + \epsilon \right) u_I + \sum_J \tilC_{IJ} u_J = 0
+\label{eqn:ptbmodeeqn}
 \end{equation}
-with $\tilC_{IJ}$ given in Eq.(\ref{cij}). 
+with $\tilC_{IJ}$ given in Eq.(\ref{cij}).
 
-Each perturbation mode $u_I(\bk)$ can be expanded using $N$ harmonic oscillators $a_J(\bk)$ \cite{Salopek:1988qh}, 
+Since the mass matrix Eq.~\eqref{eqn:massmatrix} is not necessarily diagonal, the perturbation equations~\eqref{eqn:ptbmodeeqn} mix the annihilation operators for all of the fields \cite{Salopek:1988qh}. We therefore need to expand each perturbation mode $u_I(\bk)$ using $N$ harmonic oscillators $a_J(\bk)$,
 \begin{equation}
 u_I(\bk, \alpha) = \sum_J \psi_{IJ}(\bk, \alpha) a_J(\bk) ~,
 \end{equation}
-with 
+with
 \begin{equation}
 [ a_J(\bk), a^\dagger_I(\bk')] = (2\pi)^2 \delta_{IJ} \delta^{(3)}(\bk - \bk')
 \end{equation}
