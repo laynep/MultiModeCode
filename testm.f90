@@ -52,10 +52,10 @@ program test_mmodpk
   k_pivot = 0.002
 
   potential_choice = 1
-  phi_init0 =(/ 10.31001, 12.93651/) !(/ 15., 15./) !Origionally this was 20*M_Pl
+  phi_init0 = (/ 10.31001, 12.93651/) !(/ 15., 15./) !Origionally this was 20*M_Pl
   !delsigma = 18*M_Pl
   ! phi_infl_end = phi_init0 - delsigma
-  vparams(1,:) =(/ -10.422895047377294, -10.422895047377294 + log10(81.0) /)  ! (/ -12., -12. /) !Origionally this was log(96*PI**2*As/(phi_infl_end(1)**2+4*N_pivot)**2)/log(10.d0)
+  vparams(1,:) = (/ -10.422895047377294, -10.422895047377294 + log10(81.0) /)  ! (/ -12., -12. /) !Origionally this was log(96*PI**2*As/(phi_infl_end(1)**2+4*N_pivot)**2)/log(10.d0)
 
   write(*, *), "vparams(1,:) =", vparams(1,:)
 
@@ -85,16 +85,22 @@ program test_mmodpk
   write(*, e_fmt) "log10(m^2) =", vparams(1,1)
   write(*, e_fmt) "N_pivot =", N_pivot
   write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', sqrt(4*N_pivot + phi_infl_end(1)**2), ')'
-  write(*, e2_fmt) "N_tot =", N_tot, '(', 0.25*(phi_init(1)**2 - phi_infl_end(1)**2), ')'
+  ! [JF] Need to look up this formatting confusion next time you have a book or the internet....
+  !write(*, *),  "phi_pivot =", phi_pivot ! [JF] This line should be replaced with the previous line.
+  ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
+  write(*, e2_fmt) "N_tot =", N_tot,'(', 0.25*dot_product(phi_init, phi_init), ')' !'(', 0.25*(dot_product(phi_init, phi_init) - dot_product(phi_infl_end, phi_infl_end)), ')'
 
   write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
+  write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
   write(*, *), ps2, pz2  
   write(*, e2_fmt) "Pt/Ps =", pt0/ps0, '(', 16*epsilon, ')'
 
   write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
+  write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-1/N_pivot,')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, e2_fmt) "n_t =", log(pt2/pt1)/dlnk/2.d0, '(', -2*epsilon, ')'
+  
 
   !return
 
