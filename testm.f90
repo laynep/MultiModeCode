@@ -87,13 +87,15 @@ program test_mmodpk
   write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', sqrt(4*N_pivot + phi_infl_end(1)**2), ')'
   write(*, e2_fmt) "N_tot =", N_tot, '(', 0.25*(phi_init(1)**2 - phi_infl_end(1)**2), ')'
 
-  write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
+  !write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
+  write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')'
+
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
-  write(*, *), ps2, pz2  
+  write(*, *), ps2, pz2
   write(*, e2_fmt) "Pt/Ps =", pt0/ps0, '(', 16*epsilon, ')'
 
-  write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
+  write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-(1.0/N_pivot),')'
   write(*, e2_fmt) "n_t =", log(pt2/pt1)/dlnk/2.d0, '(', -2*epsilon, ')'
 
   !return

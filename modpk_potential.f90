@@ -329,10 +329,6 @@ CONTAINS
     zeta2 = dot_product(abs(u**2)*dphi, dphi)/dot_product(dphi, dphi)**2/a**2
     powerspectrum = zeta2/(2*k) * (k**3)/(2*PI**2)
 
-    !DEBUG
-    print*, "powerspectrum", powerspectrum 
-    !END MULTIFIELD
-
     RETURN
   END FUNCTION powerspectrum
 
