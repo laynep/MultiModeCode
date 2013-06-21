@@ -22,7 +22,7 @@ CONTAINS
     !
     !     Returns V(phi) given phi, phi can be an array for multifield, 
     !     The code implement multifield potential in the form of V = \sum V(phi_i), 
-    !     More complicated form of potentials can be coutomized 
+    !     More complicated form of potentials can be customized 
     !
     real(dp) :: pot
     real(dp), INTENT(IN) :: phi(:)
@@ -32,7 +32,7 @@ CONTAINS
     select case(potential_choice)
     case(1) 
     ! MULTIFIELD
-       m2_V = 10.d0**(vparams(1,:))       
+       m2_V = 10.d0**(vparams(1,:))
        pot = 0.5*sum(m2_V*phi*phi)
     case(2)
        lambda = 10.d0**vparams(1,:)
@@ -247,9 +247,9 @@ CONTAINS
     !
     real(dp) :: getEps
     real(dp), INTENT(IN) :: phi(:), dphi(:)
-    
+
     !MULTIFIELD
-    getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)    
+    getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)
     !!getEps = 2.d0*(M_Pl**2)*(((getHdot(phi,dphi)/dphi)/getH(phi,dphi))**2)
     !END MULTIFIELD
     RETURN

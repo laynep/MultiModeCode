@@ -17,11 +17,11 @@ program test_mmodpk
   CHARACTER(len=2) :: ci
   integer :: i
   
-  DOUBLE PRECISION :: ps0, pt0, ps1, pt1, ps2, pt2, dlnk, x1, x2
-  DOUBLE PRECISION :: pz0, pz1, pz2
-  DOUBLE PRECISION :: epsilon, eta
-  DOUBLE PRECISION, PARAMETER :: As = 2.d-9
-  DOUBLE PRECISION, ALLOCATABLE :: lambda(:)
+  real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, dlnk, x1, x2
+  real(dp) :: pz0, pz1, pz2
+  real(dp) :: epsilon, eta
+  real(dp), PARAMETER :: As = 2.d-9
+  real(dp), ALLOCATABLE :: lambda(:)
   
   !! code initialization
   num_inflaton = 2
@@ -44,7 +44,7 @@ program test_mmodpk
   write(*, *) 'Testing two field with V(phi) = 1/2 m_I^2 phi_I^2+1/2 m_J^2 phi_J^2'
 
   ! \sum_i m_i^2 \phi_i^2
- 
+
   modpkoutput = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -66,7 +66,7 @@ program test_mmodpk
   i = 1
   do while ( lna(i+1) > 1e-8 )
      !PRINT*, lna(i), phiarr(:,i)
-     write(1, *), lna(i), phiarr(:,i)
+     write(1, *), lna(i), phiarr(:,i), dphiarr(:,I)
      i = i + 1
   end do
   close(1)
@@ -94,7 +94,7 @@ program test_mmodpk
   write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
-  write(*, *), ps2, pz2  
+  write(*, *), ps2, pz2
   write(*, e2_fmt) "Pt/Ps =", pt0/ps0, '(', 16*epsilon, ')'
 
   write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
