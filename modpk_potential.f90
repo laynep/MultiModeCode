@@ -384,6 +384,8 @@ CONTAINS
   end subroutine powerspectrum
 
 
+    !END MULTIFIELD
+
   pure FUNCTION tensorpower(v, a)
     USE internals
     real(dp) :: tensorpower
