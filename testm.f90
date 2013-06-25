@@ -66,7 +66,7 @@ program test_mmodpk
   i = 1
   do while ( lna(i+1) > 1e-8 )
      !PRINT*, lna(i), phiarr(:,i)
-     write(1, *), lna(i), phiarr(:,i), dphiarr(:,I)
+     write(1, *), lna(i), phiarr(:,i)
      i = i + 1
   end do
   close(1)
@@ -90,7 +90,7 @@ program test_mmodpk
   ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
   write(*, e2_fmt) "N_tot =", N_tot,'(', 0.25*dot_product(phi_init, phi_init), ')' !'(', 0.25*(dot_product(phi_init, phi_init) - dot_product(phi_infl_end, phi_infl_end)), ')'
 
-  write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
+  !write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
   write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1

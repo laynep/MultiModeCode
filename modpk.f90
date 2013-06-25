@@ -62,9 +62,9 @@ CONTAINS
 
     !!INTEGER*4, PARAMETER :: NVAR = 10
 
-    INTEGER*4 :: i,j
+    integer*4 :: i,j
     real(dp) :: accuracy,h1,hmin,x1,x2 
-    COMPLEX(KIND=DP), DIMENSION(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
+    complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
     real(dp), INTENT(IN) :: kin
 ![ LP: ] CHECK; pow_isocurvature not ready yet.
     !real(dp), INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
@@ -108,7 +108,7 @@ CONTAINS
 
     k=kin*Mpc2Mpl
 
-    ah=LOG(k/k_start)     !! start where k = 100 aH, deep in the horizon, ah = log(aH)
+    ah=LOG(k/k_start)     !! start where k = 100 aH, deep in the horizon, ah = log(aH), k_start=1d2
     i= locate(aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
@@ -153,7 +153,7 @@ CONTAINS
     ode_underflow = .false.
     ode_ps_output = .true.
     ode_infl_end = .true.
-    save_steps = .true. 
+    save_steps = .true.
     pk_bad = 0
 
     !MULTIFIELD, need to evolve towards the end of inflation
