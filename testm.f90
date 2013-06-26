@@ -56,6 +56,7 @@ program test_mmodpk
   !delsigma = 18*M_Pl
   ! phi_infl_end = phi_init0 - delsigma
   vparams(1,:) = (/ -10.422895047377294, -10.422895047377294 + log10(81.0) /) !(/ -12., -12., -12., -12. /)  ! (/ -12., -12. /) !Origionally this was log(96*PI**2*As/(phi_infl_end(1)**2+4*N_pivot)**2)/log(10.d0)
+  !vparams(1,:) = (/ -12, -12 /)
 
   write(*, *), "vparams(1,:) =", vparams(1,:)
 
@@ -90,13 +91,9 @@ program test_mmodpk
   ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
   write(*, e2_fmt) "N_tot =", N_tot,'(', 0.25*dot_product(phi_init, phi_init), ')' !'(', 0.25*(dot_product(phi_init, phi_init) - dot_product(phi_infl_end, phi_infl_end)), ')'
 
-<<<<<<< HEAD
-  write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
-  write(*, e2_fmt) "Ps =", ps0, '(', (N_pivot)*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-=======
   !write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
-  write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
->>>>>>> 6555f1ed8c18e814b7449659112fefe249db5178
+  !write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
+  write(*, e2_fmt) "Ps =", ps0, '(', (1./24./PI**2)*pot(phi_pivot)/epsilon, ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
   write(*, *), ps2, pz2
