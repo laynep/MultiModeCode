@@ -216,9 +216,14 @@ P_Q^{IJ} (k) = \frac{k^3}{2\pi^2} \sum_L Q_{IL}Q^*_{JL} =
 
 The adiabatic perturbation spectrum is the projection along the inflaton direction, define a field vector
 \begin{equation}
-\omega_\zeta = \left( \frac{\dot{\phi_1}}{\dot{\phi_0}},\, \frac{\dot{\phi_2}}{\dot{\phi_0}},\, \dots,\, \frac{\dot{\phi_N}}{\dot{\phi_0}} \right)
+\omega_\zeta = \left( \frac{\dot{\phi_1}}{\dot{\phi_0}},\, \frac{\dot{\phi_2}}{\dot{\phi_0}},\, \dots,\, \frac{\dot{\phi_N}}{\dot{\phi_0}} \right),
 \end{equation}
-The adiabatic power spectrum is given by
+where
+\begin{equation}
+  \zeta \equiv \Psi - H \frac{\delta \rho}{\dot \rho} = -H \frac{ \sum_I \delta \phi_I}{\sum_J \dot \phi_J \dot \phi_J} = -\frac{H}{\dot \phi_0}\sum_I \omega_\zeta^I \delta \phi_I
+  \label{eqn:XXX}
+\end{equation}
+is the curvature perturbation in flat gauge ($\Psi=0$) \lp{How do we argue that $\partial(\delta \phi_I)=0$?}.  The adiabatic, curvature power spectrum is then given by
 \begin{equation}
 {\color{blue}
   P_\zeta(k) = \frac{H^2}{\dot{\phi_0}^2} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ} = \frac{1}{2 \epsilon} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ}
