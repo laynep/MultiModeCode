@@ -22,7 +22,7 @@ program test_mmodpk
   real(dp) :: epsilon, eta
   real(dp), PARAMETER :: As = 2.d-9
   real(dp), ALLOCATABLE :: lambda(:)
-  
+
   !! code initialization
   num_inflaton = 2
 
@@ -93,7 +93,6 @@ program test_mmodpk
 
   !write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
   write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-  write(*, e2_fmt) "Ps =", ps0, '(', (1./24./PI**2)*pot(phi_pivot)/epsilon, ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
   write(*, *), ps2, pz2

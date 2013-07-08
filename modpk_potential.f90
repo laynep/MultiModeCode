@@ -346,8 +346,7 @@ CONTAINS
     end do; end do
 
     ![ LP: ] Make projection vector along adiabatic and isocurv directions
-    ![ LP: ] NB: phi_dot_0_scaled = sqrt(2*epsilon_H), i.e., (Hubble eps)
-    ![ LP: ] NB: phi_dot_0_scaled = phi_dot_0/H
+    ![ LP: ] NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
 
@@ -380,6 +379,10 @@ CONTAINS
     end do; end do
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !if (present(power_isocurv)) power_isocurv = (1e0_dp/phi_dot_0_scaled**2)*power_isocurv
+
+    !DEBUG
+    write(900,*),power_adiab
+    print*,power_adiab
 
   end subroutine powerspectrum
 
