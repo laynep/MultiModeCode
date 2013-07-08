@@ -73,7 +73,16 @@ program test_mmodpk
   close(1)
   PRINT*, "Done writing"
 
+    ![DEBUG] [JF]
+       PRINT*, "Writing powerspectrum solution to pow.txt"
+       open (unit = 2, file = "pow.txt", status = 'replace')
+       PRINT*, "Writing field correlation solution to powmatrix.txt"
+       open (unit = 3, file = "powmatrix.txt", status = 'replace')
   call evolve(k_pivot, ps0, pt0, pz0)
+    ![DEBUG] [JF]
+     close(2)
+     close(3)
+     PRINT*, "finished writing powerspec ralated things"
   dlnk = 0.05
   call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1)
   call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2)
@@ -93,7 +102,7 @@ program test_mmodpk
 
   !write(*, e2_fmt) "Ps =", ps0, '(', H_pivot**2/(8*PI**2*epsilon), ')'
   write(*, e2_fmt) "Ps =", ps0, '(', N_pivot*H_pivot**2/(4*PI**2), ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-  write(*, e2_fmt) "Ps =", ps0, '(', (1./24./PI**2)*pot(phi_pivot)/epsilon, ')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
+  write(*, e2_fmt) "Ps =", ps0, '(', (1./24./PI**2)*pot(phi_pivot)/epsilon, ')' 
   write(*, *), ps0, pz0
   write(*, *), ps1, pz1
   write(*, *), ps2, pz2

@@ -369,6 +369,9 @@ CONTAINS
     !power_matrix = (k**3/2.0e0_dp/pi**2/a**2)*power_matrix/(2e0_dp*k)
 
     power_matrix = (k**3/2.0e0_dp/(pi**2)/a**2)*matmul(psi_matrix,conjg(psi_matrix))/(2e0_dp*k)
+    !DEBUG [JF]
+    !print*, "power_matrix", power_matrix
+    write(3, *), Log(a)-Log(a_init), power_matrix
 
     power_adiab = 0e0_dp
     !if (present(power_isocurv)) power_isocurv = 0e0_dp
@@ -380,9 +383,16 @@ CONTAINS
     end do; end do
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !if (present(power_isocurv)) power_isocurv = (1e0_dp/phi_dot_0_scaled**2)*power_isocurv
-
+    
+    !DEBUG [JF]
+    !print*, "powerspectrum", power_adiab
+    !END MULTIFIELD
+  
+    !DEBUG [JF]
+     write(2, *), Log(a)-Log(a_init), power_adiab
+   
   end subroutine powerspectrum
-
+  
 
     !END MULTIFIELD
 

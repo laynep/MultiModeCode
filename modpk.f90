@@ -161,7 +161,7 @@ CONTAINS
     !END MULTIFIELD
 
     h1=0.05 !guessed start stepsize
-    accuracy=1.0d-6 !4.0d-2 !2!6 !has a big impact on the speed of the code
+    accuracy=1.0d-8 !4.0d-2 !2!6 !has a big impact on the speed of the code
     !hmin=0.0 !minimum stepsize
     hmin=1e-16_dp !minimum stepsize
 
