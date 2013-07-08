@@ -305,7 +305,8 @@ CONTAINS
        !END MULTIFIELD
 
        IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
-
+       
+      
        IF(ode_ps_output) THEN
           IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
              !MULTIFIELD
@@ -327,6 +328,7 @@ CONTAINS
 
                 powt_ik=tensorpower(y(index_tensor_y), scalefac)
              END IF
+
 
              if (compute_zpower) then  !! compute only once upon horizon exit
 ![ LP: ]  CHECK; update powerspectrum to include cross-terms?
@@ -421,6 +423,7 @@ CONTAINS
     PRINT*,'too many steps in odeint'
     PRINT*,'x =', x, 'h =', h 
     ode_underflow=.TRUE.
+
 
   CONTAINS
 

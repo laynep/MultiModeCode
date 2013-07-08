@@ -73,7 +73,16 @@ program test_mmodpk
   close(1)
   PRINT*, "Done writing"
 
+    ![DEBUG] [JF]
+       PRINT*, "Writing powerspectrum solution to pow.txt"
+       open (unit = 2, file = "pow.txt", status = 'replace')
+       PRINT*, "Writing field correlation solution to powmatrix.txt"
+       open (unit = 3, file = "powmatrix.txt", status = 'replace')
   call evolve(k_pivot, ps0, pt0, pz0)
+    ![DEBUG] [JF]
+     close(2)
+     close(3)
+     PRINT*, "finished writing powerspec ralated things"
   dlnk = 0.05
   call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1)
   call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2)
