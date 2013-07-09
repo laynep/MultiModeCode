@@ -171,6 +171,9 @@ CONTAINS
       xp(kount)=x
       yp(:,kount)=y(:)
       xsav=x
+      !!DEBUG
+      !write(314,*), "xp", xp
+      !write(315,*), "yp", yp
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE odeint_r

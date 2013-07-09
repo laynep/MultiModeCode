@@ -84,8 +84,9 @@ program test_mmodpk
      close(3)
      PRINT*, "finished writing powerspec ralated things"
   dlnk = 0.05
-  call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1)
-  call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2)
+  !DEBUG
+  !call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1)
+  !call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2)
 
   epsilon = getEps(phi_pivot, dphi_pivot)
   eta = geteta(phi_pivot, dphi_pivot)

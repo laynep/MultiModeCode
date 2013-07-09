@@ -9,7 +9,6 @@ MODULE modpk_utils
 
   ![ LP: ] Local variable; if true, then switch to using Q variable
   logical, private :: using_q_superh=.false.
-  !private :: using_q_superh
 
 CONTAINS
 
@@ -130,8 +129,12 @@ CONTAINS
 
     ![ LP: ] Alias y's into real variable names
     ![ LP: ] NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
+    !DEBUG
     psi = convert_hacked_vector_to_matrix(y(index_ptb_y:index_ptb_vel_y-1))
     dpsi = convert_hacked_vector_to_matrix(y(index_ptb_vel_y:index_tensor_y-1))
+    !psi = y(index_ptb_y:index_ptb_vel_y-1)
+    !dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+
     v  = y(index_tensor_y)
     dv  = y(index_tensor_y+1)
     u_zeta = y(index_uzeta_y)
@@ -185,6 +188,9 @@ CONTAINS
 
       subroutine build_mass_matrix(mass_matrix)
 
+        !DEBUG
+        integer :: ii, jj
+
         real(dp), dimension(num_inflaton, num_inflaton), intent(out) :: mass_matrix
 
         if (potential_choice .eq. 7) then
@@ -192,12 +198,34 @@ CONTAINS
           mass_matrix = 0e0_dp
         else
            forall (i=1:num_inflaton, j=1:num_inflaton) & 
-                mass_matrix(i,j) = Vpp(i,j) + 2e0_dp*epsilon/dotphi * &
-                (delphi(i)*Vp(j) + delphi(j)*Vp(i))/dotphi &
-                + 2e0_dp*epsilon*(3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)/dotphi**2
+                mass_matrix(i,j) = Vpp(i,j) +  &
+                (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
+                + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
         end if
+        !DEBUG
+        !write(314,*),log(a),((mass_matrix(ii,jj),ii=1,size(mass_matrix,1)),jj=1,size(mass_matrix,2))
 
       end subroutine build_mass_matrix
+
+      !DEBUG
+      !pure function dot(matrixA,matrixB)
+
+      !  real(dp), dimension(:,:), intent(in) :: matrixA
+      !  complex(dp), dimension(:,:), intent(in) :: matrixB
+      !  integer :: i, j, k
+      !  complex(dp), dimension(size(matrixA,1),size(matrixB,2)) :: dot
+
+      !  dot=0e0_dp
+
+      !  do i=1,size(matrixA,1);do j=1,size(matrixB,2)
+      !    do k=1,size(matrixA,2)
+      !      dot(i,j)=dot(i,j)+ matrixA(i,k)*matrixB(k,j)
+      !    end do
+      !  end do; end do
+
+
+
+      !end function dot
 
   END SUBROUTINE derivs
 

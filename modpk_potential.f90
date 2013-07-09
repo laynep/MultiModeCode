@@ -357,17 +357,11 @@ CONTAINS
       !s_iso = XXX
     end if
 
-    !power_matrix = 0e0_dp
-    !do i=1,numb_infl; do j=1,numb_infl; do ll=1,numb_infl
-    !  power_matrix(i,j) = power_matrix(i,j) +&
-    !    psi_matrix(i,ll)*conjg(psi_matrix(j,ll))
-    !end do; end do; end do
-    !power_matrix = (k**3/2.0e0_dp/(pi**2)/a**2)*power_matrix
+    power_matrix=0e0_dp
+    do i=1,numb_infl;do j=1, numb_infl; do ll=1,numb_infl
+      power_matrix(i,j) =power_matrix(i,j)+ (k**3/2.0e0_dp/(pi**2)/a**2)*psi_matrix(i,ll)*conjg(psi_matrix(j,ll))/(2e0_dp*k)
+    end do; end do; end do
 
-    !DEBUG
-    !power_matrix = (k**3/2.0e0_dp/pi**2/a**2)*power_matrix/(2e0_dp*k)
-
-    power_matrix = (k**3/2.0e0_dp/(pi**2)/a**2)*matmul(psi_matrix,conjg(psi_matrix))/(2e0_dp*k)
     !DEBUG [JF]
     !print*, "power_matrix", power_matrix
     write(3, *), Log(a)-Log(a_init), power_matrix
