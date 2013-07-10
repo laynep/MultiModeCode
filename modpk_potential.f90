@@ -382,7 +382,7 @@ CONTAINS
     !END MULTIFIELD
 
     !DEBUG [JF]
-     write(2, *), Log(a)-Log(a_init), power_adiab
+     write(20, *), Log(a)-Log(a_init), power_adiab
 
   end subroutine powerspectrum
 

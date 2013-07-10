@@ -86,7 +86,7 @@ CONTAINS
     real(dp), DIMENSION(num_inflaton) :: phi, delphi, Vp
     real(dp), DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
 
-    COMPLEX(DP), DIMENSION(num_inflaton,num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
+    COMPLEX(DP), DIMENSION(num_inflaton*num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
     COMPLEX(DP) :: v, dv                                        ! tensor perturbations
     COMPLEX(DP) :: u_zeta, du_zeta
 
@@ -129,11 +129,8 @@ CONTAINS
 
     ![ LP: ] Alias y's into real variable names
     ![ LP: ] NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
-    !DEBUG
-    psi = convert_hacked_vector_to_matrix(y(index_ptb_y:index_ptb_vel_y-1))
-    dpsi = convert_hacked_vector_to_matrix(y(index_ptb_vel_y:index_tensor_y-1))
-    !psi = y(index_ptb_y:index_ptb_vel_y-1)
-    !dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+    psi = y(index_ptb_y:index_ptb_vel_y-1)
+    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
 
     v  = y(index_tensor_y)
     dv  = y(index_tensor_y+1)
@@ -153,17 +150,18 @@ CONTAINS
       cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble))
 
     ![ LP: ] ptb matrix
-    yprime(index_ptb_y:index_ptb_vel_y-1) = &
-      convert_matrix_to_hacked_vector(dpsi)
+    yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
+
     if (using_q_superh) then
-      yprime(index_ptb_vel_y:index_tensor_y-1) = convert_matrix_to_hacked_vector(&
-        -(3.0e0_dp - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi -&
-        matmul(Cab, psi)/hubble**2)
+      yprime(index_ptb_vel_y:index_tensor_y-1) = -(3.0e0_dp - epsilon)*dpsi &
+        - (k/a_init/a/hubble)**2*psi &
+        -dot(Cab, psi)/hubble**2
     else
-      yprime(index_ptb_vel_y:index_tensor_y-1) = convert_matrix_to_hacked_vector(&
-        -(1.0e0_dp - epsilon)*dpsi - (k/a_init/a/hubble)**2*psi &
-        + (2.0e0_dp - epsilon)*psi - matmul(Cab, psi)/hubble**2)
+      yprime(index_ptb_vel_y:index_tensor_y-1) = -(1.0e0_dp - epsilon)*dpsi &
+        - (k/a_init/a/hubble)**2*psi &
+        + (2.0e0_dp - epsilon)*psi - dot(Cab, psi)/hubble**2
     end if
+
 
     ![ LP: ] tensors
     yprime(index_tensor_y) = dv
@@ -207,25 +205,31 @@ CONTAINS
 
       end subroutine build_mass_matrix
 
-      !DEBUG
-      !pure function dot(matrixA,matrixB)
+      ![ LP: ] Only works for square matrices
+      pure function dot(matrixA,hacked_vector) result(outvect)
 
-      !  real(dp), dimension(:,:), intent(in) :: matrixA
-      !  complex(dp), dimension(:,:), intent(in) :: matrixB
-      !  integer :: i, j, k
-      !  complex(dp), dimension(size(matrixA,1),size(matrixB,2)) :: dot
+        real(dp), dimension(:,:), intent(in) :: matrixA
+        complex(dp), dimension(size(matrixA,1),size(matrixA,2)) :: matrixB, &
+          matrixC
+        complex(dp), dimension(:), intent(in) :: hacked_vector
+        integer :: i, j, k, n
+        complex(dp), dimension(size(hacked_vector)) :: outvect
 
-      !  dot=0e0_dp
+        n=size(matrixA,1)
 
-      !  do i=1,size(matrixA,1);do j=1,size(matrixB,2)
-      !    do k=1,size(matrixA,2)
-      !      dot(i,j)=dot(i,j)+ matrixA(i,k)*matrixB(k,j)
-      !    end do
-      !  end do; end do
+        outvect=0e0_dp
+        matrixB=0e0_dp
+        matrixC=0e0_dp
 
+        matrixB=convert_hacked_vector_to_matrix(hacked_vector)
 
+        do i=1, n; do j=1,n; do k=1,n
+          matrixC(i,j) = matrixC(i,j) + matrixA(i,k)*matrixB(k,j)
+        end do; end do; end do
 
-      !end function dot
+        outvect = convert_matrix_to_hacked_vector(matrixC)
+
+      end function dot
 
   END SUBROUTINE derivs
 
@@ -596,7 +600,7 @@ CONTAINS
   !Returns the matrix form. NB: the vector must be a representation of a square
   !matrix.
 
-  function convert_hacked_vector_to_matrix(matrix_as_vector) &
+  pure function convert_hacked_vector_to_matrix(matrix_as_vector) &
     result(real_matrix)
 
     complex(dp), dimension(:), intent(in) :: matrix_as_vector
@@ -614,7 +618,7 @@ CONTAINS
 
   ![ LP: ] Take a matrix and "hack" it into a vector, i.e.,
   !a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
-  function convert_matrix_to_hacked_vector(matrix) &
+  pure function convert_matrix_to_hacked_vector(matrix) &
     result(hacked_vector)
 
     complex(dp), dimension(:,:), intent(in) :: matrix

@@ -145,7 +145,6 @@ CONTAINS
        STOP
     ENDIF
 
-    ![ LP: ] Set the initial conditions.
     call set_ic(y)
 
     !     Call the integrator
@@ -204,17 +203,18 @@ CONTAINS
 
       subroutine set_ic(y)
 
+        ![ LP: ] Note that ah=log(aH) and overall scaled by sqrt(2k)
+
         complex(dp), dimension(:), intent(out) :: y
         real(dp), dimension(num_inflaton**2) :: identity
 
-        ![ LP: ] Make an identity vector analog of identity matrix
+        ![ LP: ] Identity vector analog of identity matrix
         call make_identity(identity)
 
         ![ LP: ] Background - from previous evolution
         y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
         y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
         ![ LP: ] mode matrix - diagonalize, Bunch-Davies
-        ![ LP: ] Note that ah=log(aH)
         y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
         y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
 
