@@ -8,7 +8,7 @@ MODULE potential
 CONTAINS
 
   FUNCTION MySech(x)
-    DOUBLE PRECISION  :: x,MySech
+    real(dp)  :: x,MySech
 
     IF(ABS(x).GT.40.0) THEN
        MySech=0.0
@@ -22,17 +22,17 @@ CONTAINS
     !
     !     Returns V(phi) given phi, phi can be an array for multifield, 
     !     The code implement multifield potential in the form of V = \sum V(phi_i), 
-    !     More complicated form of potentials can be coutomized 
+    !     More complicated form of potentials can be customized 
     !
-    DOUBLE PRECISION :: pot
-    DOUBLE PRECISION, INTENT(IN) :: phi(:)
-    DOUBLE PRECISION :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
-    DOUBLE PRECISION :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp) :: pot
+    real(dp), INTENT(IN) :: phi(:)
+    real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
+    real(dp) :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
     
     select case(potential_choice)
     case(1) 
     ! MULTIFIELD
-       m2_V = 10.d0**(vparams(1,:))       
+       m2_V = 10.d0**(vparams(1,:))
        pot = 0.5*sum(m2_V*phi*phi)
     case(2)
        lambda = 10.d0**vparams(1,:)
@@ -69,10 +69,10 @@ CONTAINS
     !     Returns dV/dPhi given phi
     !
 
-    DOUBLE PRECISION, INTENT(IN) :: phi(:)
-    DOUBLE PRECISION :: dVdphi(size(phi))
-    DOUBLE PRECISION :: dphi(size(phi)), phiplus(size(phi))
-    DOUBLE PRECISION :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp), INTENT(IN) :: phi(:)
+    real(dp) :: dVdphi(size(phi))
+    real(dp) :: dphi(size(phi)), phiplus(size(phi))
+    real(dp) :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     integer :: i
 
     if (vnderivs) then
@@ -132,12 +132,12 @@ CONTAINS
     !     Returns d^2V/dPhi^2 given phi
     !
 
-    DOUBLE PRECISION, INTENT(IN) :: phi(:)
-    DOUBLE PRECISION :: d2VdPhi2(size(phi),size(phi))
-    DOUBLE PRECISION :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp), INTENT(IN) :: phi(:)
+    real(dp) :: d2VdPhi2(size(phi),size(phi))
+    real(dp) :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     integer :: i, j
 
-    DOUBLE PRECISION :: dphi,phiplus
+    real(dp) :: dphi,phiplus
 
     if (vnderivs) then
        !MULTIFIELD
@@ -192,12 +192,12 @@ CONTAINS
     !     either the user-specified value phi0 or something derived 
     !     from the potential parameters)
     !
-    DOUBLE PRECISION, INTENT(IN) :: phi0(:)
-    DOUBLE PRECISION :: initialphi(size(phi0))
+    real(dp), INTENT(IN) :: phi0(:)
+    real(dp) :: initialphi(size(phi0))
 
-    DOUBLE PRECISION :: phii(size(phi0))
-    DOUBLE PRECISION :: Ninit, finv, lambda, mu, phesq
-    DOUBLE PRECISION :: x1, x2
+    real(dp) :: phii(size(phi0))
+    real(dp) :: Ninit, finv, lambda, mu, phesq
+    real(dp) :: x1, x2
 
     
     Ninit = 70.d0
@@ -245,11 +245,11 @@ CONTAINS
     !     for single field, slowroll parameter epsilon_H = 2 M_pl^2 [(dH/dphi)/H]^2
     !     for canonical multi-field, 
     !
-    DOUBLE PRECISION :: getEps
-    DOUBLE PRECISION, INTENT(IN) :: phi(:), dphi(:)
-    
+    real(dp) :: getEps
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
+
     !MULTIFIELD
-    getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)    
+    getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)
     !!getEps = 2.d0*(M_Pl**2)*(((getHdot(phi,dphi)/dphi)/getH(phi,dphi))**2)
     !END MULTIFIELD
     RETURN
@@ -261,8 +261,8 @@ CONTAINS
     !
     !     Returns H given phi and dphi/dalpha
     !
-    DOUBLE PRECISION :: getH
-    DOUBLE PRECISION, INTENT(IN) :: phi(:), dphi(:)
+    real(dp) :: getH
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
 
     ! MULTIFIELD
     getH=SQRT(pot(phi)/3./M_Pl**2 / (1.0 - dot_product(dphi, dphi)/6.0/M_Pl**2))
@@ -275,8 +275,8 @@ CONTAINS
     !
     !     Returns dH/dalpha given phi and dphi/dalpha
     !
-    DOUBLE PRECISION :: getHdot
-    DOUBLE PRECISION, INTENT(IN) :: phi(:), dphi(:)
+    real(dp) :: getHdot
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
     ! MULTIFIELD
     getHdot = -dot_product(dphi, dphi) * getH(phi,dphi)/2./M_Pl**2
     ! END MULTIFIELD
@@ -289,8 +289,8 @@ CONTAINS
     !    Returns depsilon/dalpha given phi and dphi/dalpha
     !    Gets this by differentiating Peiris et al Eq A3 (2003)
     !
-    DOUBLE PRECISION :: getdepsdalpha, H, dHdalpha, eps
-    DOUBLE PRECISION, INTENT(IN) :: phi(:), dphi(:)
+    real(dp) :: getdepsdalpha, H, dHdalpha, eps
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
     
     H=getH(phi,dphi)
     dHdalpha=getHdot(phi,dphi)
@@ -307,50 +307,105 @@ CONTAINS
     !
     !    Return the eta parameter eta = deps/dalpha / eps
     !
-    DOUBLE PRECISION, INTENT(IN) :: phi(:), dphi(:)
-    DOUBLE PRECISION :: geteta, eps
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp) :: geteta, eps
 
     eps = getEps(phi, dphi)
     geteta = getdepsdalpha(phi, dphi) / eps
-    
+
     RETURN
   END FUNCTION geteta
 
-  FUNCTION powerspectrum(u, dphi, a)
+  ![ LP: ] Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
+  !adiabatic P(k), and isocurv P(k); includes cross correlations
+  !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given psi, dphi/dalpha, a
+  subroutine powerspectrum(psi, dphi, a, power_matrix, power_adiab, power_isocurv)
+    use internals
+    real(dp), dimension(:,:), intent(out) :: power_matrix
+    real(dp), intent(out) :: power_adiab
+    real(dp), intent(out), optional :: power_isocurv
+
+    real(dp), dimension(:), intent(in) :: dphi
+    ![ LP: ] Hacked matrix to vect
+    complex(kind=dp), dimension(:), intent(in) :: psi
+    real(dp), intent(in) :: a
+
+    ![ LP: ] size(dphi)=num_inflaton
+    complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix
+    real(dp), dimension(size(dphi)) :: omega_z![ LP: ] proj along adiab dir
+    real(dp), dimension(size(dphi)) :: s_iso![ LP: ] proj along isoc dir
+    real(dp) :: zeta2, phi_dot_0_scaled
+    integer :: numb_infl
+    integer :: i, j, ll
+
+    numb_infl=size(dphi)
+
+    ![ LP: ] Convert hacked vector to matrix
+    do i=1,numb_infl; do j=1, numb_infl
+      psi_matrix(i,j) = psi((i-1)*numb_infl+j)
+    end do; end do
+
+    ![ LP: ] Make projection vector along adiabatic and isocurv directions
+    ![ LP: ] NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
+    phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
+    omega_z = dphi/phi_dot_0_scaled
+
+    if (present(power_isocurv)) then
+      power_isocurv=0e0_dp
+      print*, "isocurv power not working yet"
+      stop
+      !s_iso = XXX
+    end if
+
+    power_matrix=0e0_dp
+    do i=1,numb_infl;do j=1, numb_infl; do ll=1,numb_infl
+      power_matrix(i,j) =power_matrix(i,j)+ (k**3/2.0e0_dp/(pi**2)/a**2)*psi_matrix(i,ll)*conjg(psi_matrix(j,ll))/(2e0_dp*k)
+    end do; end do; end do
+
+    !DEBUG [JF]
+    !print*, "power_matrix", power_matrix
+    write(3, *), Log(a)-Log(a_init), power_matrix
+
+    power_adiab = 0e0_dp
+    !if (present(power_isocurv)) power_isocurv = 0e0_dp
+    ![ LP: ] Project power spectra
+    do i=1,numb_infl; do j=1,numb_infl
+      power_adiab = power_adiab + omega_z(i)*omega_z(j)*power_matrix(i,j)
+      !if (present(power_isocurv)) power_isocurv = &
+      !power_isocurv + s_iso(i)*s_iso(j)*power_matrix(i,j)
+    end do; end do
+    power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
+    !if (present(power_isocurv)) power_isocurv = (1e0_dp/phi_dot_0_scaled**2)*power_isocurv
+
+    !DEBUG [JF]
+    !print*, "powerspectrum", power_adiab
+    !END MULTIFIELD
+
+    !DEBUG [JF]
+     write(20, *), Log(a)-Log(a_init), power_adiab
+
+  end subroutine powerspectrum
+
+
+    !END MULTIFIELD
+
+  pure FUNCTION tensorpower(v, a)
     USE internals
-    DOUBLE PRECISION :: powerspectrum
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: dphi
-    COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: u 
-    DOUBLE PRECISION, INTENT(IN) :: a
-    DOUBLE PRECISION :: zeta2
-    
-    !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given u, dphi/dalpha, a
-
-    zeta2 = dot_product(abs(u**2)*dphi, dphi)/dot_product(dphi, dphi)**2/a**2
-    powerspectrum = zeta2/(2*k) * (k**3)/(2*PI**2)
-
-    RETURN
-  END FUNCTION powerspectrum
-
-
-  FUNCTION tensorpower(v, a)
-    USE internals
-    DOUBLE PRECISION :: tensorpower
-    DOUBLE PRECISION, INTENT(IN) :: a
-    COMPLEX(KIND=DP) :: v
+    real(dp) :: tensorpower
+    real(dp), INTENT(IN) :: a
+    COMPLEX(KIND=DP), intent(in) :: v
 
     !MULTIFIELD: Calculates P_h(k) given v, a
     tensorpower = abs(v)**2/(2*k) / a**2 * (k**3)*4./(PI**2)/(M_Pl**2)
     !END MULTIFIELD
 
-    RETURN
   END FUNCTION tensorpower
 
-  FUNCTION zpower(u_zeta, dsigma, a)
+  pure FUNCTION zpower(u_zeta, dsigma, a)
     USE internals
-    DOUBLE PRECISION :: zpower
-    DOUBLE PRECISION, INTENT(IN) :: dsigma
-    DOUBLE PRECISION, INTENT(IN) :: a
+    real(dp) :: zpower
+    real(dp), INTENT(IN) :: dsigma
+    real(dp), INTENT(IN) :: a
     COMPLEX(KIND=DP), INTENT(IN) :: u_zeta
 
     zpower = abs(u_zeta**2)/dsigma**2/a**2 /(2*k) * (k**3)/(2*PI**2)

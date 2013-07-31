@@ -1,0 +1,203 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 8.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       157,          7]
+NotebookDataLength[      5664,        194]
+NotebookOptionsPosition[      4882,        163]
+NotebookOutlinePosition[      5290,        179]
+CellTagsIndexPosition[      5247,        176]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["ModeCode Engine", "Title",
+ CellChangeTimes->{{3.580777474856006*^9, 3.580777488476964*^9}, {
+  3.580778099501869*^9, 3.580778126205568*^9}}],
+
+Cell["\<\
+Multifield Background and Perturbation Solver\
+\>", "Subtitle",
+ CellChangeTimes->{3.580778121160605*^9}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"<<", "MultifieldFunctions.m`"}]], "Input",
+ CellChangeTimes->{{3.58077784132672*^9, 3.580777841482418*^9}, {
+  3.580777934858822*^9, 3.580777939410599*^9}, {3.580778421731896*^9, 
+  3.580778432890405*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"Get", "::", "noopen"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"Cannot open \[NoBreak]\\!\\(\\\"MultifieldFunctions.m`\\\"\
+\\)\[NoBreak]. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/message/General/noopen\\\", ButtonNote -> \
+\\\"Get::noopen\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.580778463541471*^9}],
+
+Cell[BoxData["$Failed"], "Output",
+ CellChangeTimes->{3.58077846354309*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Define Potential and Derivatives\
+\>", "Section",
+ CellChangeTimes->{{3.580777715109446*^9, 3.580777720094749*^9}}],
+
+Cell[TextData[StyleBox["Use ?(VectorQ[#, NumericQ] &) to let the function \
+know it\[CloseCurlyQuote]s supposed to accept vectors, not evaluate things \
+like V[\[Phi][\[Alpha]]] with \[Phi] as a scalar", "Text"]], "Text",
+ CellChangeTimes->{3.580777786322768*^9}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"m2", "=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"10", "^", 
+       RowBox[{"(", 
+        RowBox[{"-", "10.422895047377294"}], ")"}]}], ",", 
+      RowBox[{"10", "^", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"-", "10.422895047377294"}], "+", 
+         RowBox[{"Log10", "[", "81.0", "]"}]}], ")"}]}]}], "}"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"V", "[", "\[Phi]_", "]"}], ":=", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{"1.", "/", "2"}], ")"}], 
+    RowBox[{"m2", ".", 
+     RowBox[{"(", 
+      RowBox[{"\[Phi]", "*", "\[Phi]"}], ")"}]}]}]}], "   ", 
+  RowBox[{"(*", "Scalar", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dVd\[Phi]", "[", 
+    RowBox[{"\[Phi]_", "?", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"VectorQ", "[", 
+        RowBox[{"#", ",", " ", "NumericQ"}], "]"}], " ", "&"}], ")"}]}], 
+    "]"}], ":=", 
+   RowBox[{"m2", "*", "\[Phi]"}]}], "  ", 
+  RowBox[{"(*", "Vector", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"m2matrix", "[", 
+   RowBox[{"\[Phi]_", "?", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"VectorQ", "[", 
+       RowBox[{"#", ",", " ", "NumericQ"}], "]"}], " ", "&"}], ")"}]}], "]"}],
+   ":=", 
+  RowBox[{"{", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"m2", "[", 
+       RowBox[{"[", "1", "]"}], "]"}], ",", "0"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"0", ",", 
+      RowBox[{"m2", "[", 
+       RowBox[{"[", "2", "]"}], "]"}]}], "}"}]}], "}"}], " ", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"Hessian", " ", "matrix", " ", "for", " ", "V"}], ",", " ", 
+    RowBox[{
+     RowBox[{"ddV", "/", "d\[Phi]_id\[Phi]"}], "_j"}]}], "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.580777727679261*^9, 3.580777750277589*^9}, {
+  3.580777791029389*^9, 3.580777816916722*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Set Parameters and Initial Conditions\
+\>", "Section",
+ CellChangeTimes->{{3.580777500926058*^9, 3.580777505665777*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"\[Phi]0", "=", 
+   RowBox[{"{", 
+    RowBox[{"10.31001", ",", "12.93651"}], "}"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"d\[Phi]0", "=", 
+   RowBox[{
+    RowBox[{"-", 
+     RowBox[{"dVd\[Phi]", "[", "\[Phi]0", "]"}]}], "/", 
+    RowBox[{"(", 
+     RowBox[{"3", " ", 
+      RowBox[{"H2", "[", 
+       RowBox[{"\[Phi]0", ",", 
+        RowBox[{"{", 
+         RowBox[{"0.", ",", "0."}], "}"}]}], "]"}]}], ")"}]}]}], ";", 
+  RowBox[{"(*", 
+   RowBox[{"slow", " ", "roll", " ", 
+    RowBox[{"w", "/", "negligble"}], " ", "KE", " ", "contrib"}], 
+   "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.580777597634478*^9, 3.580777643664873*^9}, {
+  3.580777813569311*^9, 3.580777822351181*^9}}]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{740, 867},
+WindowMargins->{{Automatic, 317}, {Automatic, 32}},
+FrontEndVersion->"8.0 for Linux x86 (32-bit) (October 10, 2011)",
+StyleDefinitions->FrontEnd`FileName[{"Creative"}, "NaturalColor.nb", 
+  CharacterEncoding -> "UTF-8"]
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[579, 22, 147, 2, 70, "Title"],
+Cell[729, 26, 115, 3, 26, "Subtitle"],
+Cell[CellGroupData[{
+Cell[869, 33, 229, 4, 40, "Input"],
+Cell[1101, 39, 452, 10, 24, "Message"],
+Cell[1556, 51, 75, 1, 40, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1668, 57, 125, 3, 78, "Section"],
+Cell[1796, 62, 263, 3, 49, "Text"],
+Cell[2062, 67, 1889, 60, 136, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3988, 132, 130, 3, 78, "Section"],
+Cell[4121, 137, 733, 22, 79, "Input"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

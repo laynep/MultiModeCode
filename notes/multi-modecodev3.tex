@@ -17,6 +17,14 @@
 \def\tilC{{\tilde C}}
 \def\calR{{\cal R}}
 
+%Author comments.
+%===============
+\newcommand{\re}[1]{\textcolor{green}{[{\bf RE}: #1]}}
+\newcommand{\lp}[1]{\textcolor{red}{[{\bf LP}: #1]}}
+\newcommand{\jf}[1]{\textcolor{red}{[{\bf JF}: #1]}}
+\newcommand{\jx}[1]{\textcolor{red}{[{\bf JX}: #1]}}
+\newcommand{\hp}[1]{\textcolor{red}{[{\bf HP}: #1]}}
+
 \title{Equations for Multifield Modecode v3.0}
 \author{Jiajun Xu}
 \date{\today}
@@ -38,15 +46,15 @@ The current stage of Multifield Modecode only deals with canonical fields.
 \begin{equation}\label{bg_phi}
 \ddot{\f^a} + \Gamma^a_{bc} \dot{\f^b} \dot{\f^c} + 3H \dot\f^a + \gamma^{ab} \frac{\pd V}{\pd \f^b} = 0  ~.
 \end{equation}
-Introducing the covariant derivative
+Introducing the covariant derivative \lp{Need to clarify what this structure is... differential?}
 \begin{equation}
 D \f^a = \ud \f^a + \Gamma^a_{bc}\dot{\f^b}\ud\f^c ~,
 \end{equation}
 we can rewrite the equation of motion
 \begin{eqnarray}
-\frac{D\f^a}{\ud t} + 3H \dot\f^a + \gamma^{ab} V_{; c} = 0 ~. 
+\frac{D\f^a}{\ud t} + 3H \dot\f^a + \gamma^{ab} V_{; b} = 0 ~. 
 \end{eqnarray}
-where we have $V_{;c} \equiv D V / d \f^c = \pd V/\pd \phi^c$, and
+where we have $V_{;b} \equiv D V / d \f^b = \pd V/\pd \phi^b$, and
 \[
 \Gamma^a_{bc} = \frac{1}{2} \gamma^{ad}\left( \gamma_{db, c} + \gamma_{dc,b} - \gamma_{bc, d} \right)
 \]
@@ -74,7 +82,11 @@ Let $Q^a_\bk$ denote the scalar field perturbation in flat gauge, the mode equat
 {C^a}_b = \gamma^{ac}V_{;c;b} - {\dot\f_0}^2 {R^a}_{bcd} T^c T^d + 2\epsilon \frac{H}{\dot\f_0} (T^a V_{;b} + T^b V_{;a}) + 2\epsilon(3-\epsilon) H^2 T^a T_b
 \end{equation}
 Here $T^a$ is the unit tangent vector along the inflaton trajectory
-$T^a \equiv \dot{\f}^a/\dot{\f}_0$.
+$T^a \equiv \dot{\f}^a/\dot{\f}_0$ and
+\begin{equation}
+  \epsilon\equiv-\frac{\dot H}{H^2}=-\frac{1}{H}\frac{dH}{d\alpha}=\frac{1}{2}\sum_i \frac{d\phi_i}{d\alpha} \frac{d\phi_i}{d\alpha}.
+  \label{eqn:XXX}
+\end{equation}
 
 \section{The Canonical Case (what's actually coded in )}
 
@@ -93,10 +105,11 @@ For the mode equation, we have
 \begin{equation}
 \frac{d^2 Q_I}{\ud t^2} + 3H \frac{d Q_I}{\ud t} + \frac{k^2}{a^2} Q_I + \sum_J C_{IJ} Q_J = 0
 \end{equation}
-where
+where the mass matrix is
 \begin{equation}
 C_{IJ} = \pd_I\pd_J V + \frac{1}{H \mpl^2} \left( \dot{\phi}_I \pd_J V + \dot{\phi}_J \pd_I V \right)
 + (3-\epsilon) \frac{\dot{\phi}_I\dot{\phi}_J}{\mpl^2}
+\label{eqn:massmatrix}
 \end{equation}
 
 In practice, it is more convenient to evolve the equation in e-folds. We define $\alpha \equiv \ln a(t)$ and set $\mpl = 1$. 
@@ -132,16 +145,21 @@ To solve the perturbation equations, it is usually convenient to work with the v
 The mode equation for $u_I$ is 
 \begin{equation}
 \frac{d^2 u_I}{\ud \alpha^2} + (1-\epsilon) \frac{d u_I}{\ud \alpha} + \left(\frac{k^2}{a^2H^2} - 2 + \epsilon \right) u_I + \sum_J \tilC_{IJ} u_J = 0
+\label{eqn:ptbmodeeqn}
 \end{equation}
-with $\tilC_{IJ}$ given in Eq.(\ref{cij}). 
+with $\tilC_{IJ}$ given in Eq.(\ref{cij}).
 
-Each perturbation mode $u_I(\bk)$ can be expanded using $N$ harmonic oscillators $a_J(\bk)$ \cite{Salopek:1988qh}, 
+Since the mass matrix $m^2_{IJ} \equiv \pd_I\pd_J V$ is not necessarily diagonal, the perturbation equations~\eqref{eqn:ptbmodeeqn} mix the annihilation operators for all of the fields \cite{Salopek:1988qh}. We therefore need to expand each perturbation mode $u_I(\bk)$ and $u_I^\dagger(\bk)$ using $N$ harmonic oscillators $a_J(\bk)$,
 \begin{equation}
 u_I(\bk, \alpha) = \sum_J \psi_{IJ}(\bk, \alpha) a_J(\bk) ~,
 \end{equation}
-with 
+and
 \begin{equation}
-[ a_J(\bk), a^\dagger_I(\bk')] = (2\pi)^2 \delta_{IJ} \delta^{(3)}(\bk - \bk')
+u_I^\dagger(\bk, \alpha) = \sum_J \psi_{IJ}^*(\bk, \alpha) a_J^\dagger(\bk) ~,
+\end{equation}
+with \lp{Double-check factors of $\pi$.}
+\begin{equation}
+[ a_J(\bk), a^\dagger_I(\bk')] = (2\pi)^3 \delta_{IJ} \delta^{(3)}(\bk - \bk').
 \end{equation}
 
 The mode matrix $\psi_{IJ}$ evolves according to 
@@ -191,22 +209,28 @@ plus the perturbations
 Unlike the single field case, now the power spectrum takes the matrix form. Suppose inflation ends at e-fold time $\alpha_e$, then
 \begin{equation}
 {\color{blue}
-P_Q^{IJ} (k) = \frac{k^3}{2\pi^2} \sum_L \frac{\psi_{IL}\psi^*_{JL}}{a^2}
+P_Q^{IJ} (k) = \frac{k^3}{2\pi^2} \sum_L Q_{IL}Q^*_{JL} =
+\frac{k^3}{2\pi^2} \sum_L \frac{\psi_{IL}\psi^*_{JL}}{a^2}
 }
 \end{equation}
 
 The adiabatic perturbation spectrum is the projection along the inflaton direction, define a field vector
 \begin{equation}
-\omega_\zeta = \left( \frac{\dot{\phi_1}}{\dot{\phi_0}},\, \frac{\dot{\phi_2}}{\dot{\phi_0}},\, \dots,\, \frac{\dot{\phi_N}}{\dot{\phi_0}} \right)
+\omega_\zeta = \left( \frac{\dot{\phi_1}}{\dot{\phi_0}},\, \frac{\dot{\phi_2}}{\dot{\phi_0}},\, \dots,\, \frac{\dot{\phi_N}}{\dot{\phi_0}} \right),
 \end{equation}
-The adiabatic power spectrum is given by
+where
+\begin{equation}
+  \zeta \equiv \Psi - H \frac{\delta \rho}{\dot \rho} = -H \frac{ \sum_I \delta \phi_I}{\sum_J \dot \phi_J \dot \phi_J} = -\frac{H}{\dot \phi_0}\sum_I \omega_\zeta^I \delta \phi_I
+  \label{eqn:XXX}
+\end{equation}
+is the curvature perturbation in flat gauge ($\Psi=0$) \lp{How do we argue that $\partial(\delta \phi_I)=0$?}.  The adiabatic, curvature power spectrum is then given by
 \begin{equation}
 {\color{blue}
-P_\zeta(k) = \frac{H^2}{\dot{\phi_0}^2} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ}
+  P_\zeta(k) = \frac{H^2}{\dot{\phi_0}^2} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ} = \frac{1}{2 \epsilon} \sum_{IJ} \omega_\zeta^I \omega_\zeta^J P_Q^{IJ}
 }
 \end{equation}
 
-Note that $\omega_\zeta^I$ is just a projection of the perturbation modes to the inflaton direction at the end of inflation. However, each mode $Q_I$ evolves non-trivially, as they are coupled to each other. The coupling is turned on each time the classical trajectory of inflaton is bended. In other words, we have already included the conversion between entropic and adiabatic modes during the course of inflation by evolving each mode $Q_I$ towards the end of inflation. 
+Note that $\omega_\zeta^I$ is just a projection of the perturbation modes to the inflaton direction at the end of inflation. However, each mode $Q_I$ evolves non-trivially, as they are coupled to each other. The coupling is turned on each time the classical trajectory of inflaton bends. In other words, we have already included the conversion between entropic and adiabatic modes during the course of inflation by evolving each mode $Q_I$ towards the end of inflation. 
 
 Similarly, one can project out iso-curvature spectrum. Suppose the iso-curvature direction is specified by a unit field vector $(s_1, s_2, \dots, s_N)$, then the iso-curvature spectrum is 
 \begin{equation}
