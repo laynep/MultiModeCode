@@ -112,7 +112,7 @@ CONTAINS
     i= locate(aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
-       PRINT*,'MODPK: The background solution worked, but the k you requested is outside'
+       PRINT*,'MODPK: The background solution worked, but the k you requested', k,' is outside'
        PRINT*,'MODPK: the bounds of the background you solved for. Please reconsider'
        PRINT*,'MODPK: your phi_init and N_pivot combo.'
        PRINT*,'MODPK: QUITTING'

@@ -88,7 +88,12 @@ CONTAINS
           nbad=nbad+1
        END IF
 
-       IF ((x-x2)*(x2-x1) >= 0.0) THEN
+         !DEBUG
+       !IF ((x-x2)*(x2-x1) >= 0.0) THEN
+       IF ((x-x2)*(x2-x1) > 0.0d0) THEN
+print*, x, x2, x1, (x-x2)*(x2-x1)
+
+
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
           PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
@@ -158,6 +163,8 @@ CONTAINS
        h=hnext
     END DO
     PRINT*,'too many steps in odeint'
+    !DEBUG
+    print*, x
     ode_underflow=.TRUE.
     
   CONTAINS

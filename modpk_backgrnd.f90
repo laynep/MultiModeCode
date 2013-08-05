@@ -101,6 +101,7 @@ CONTAINS
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
           if (modpkoutput) write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
+          print*, "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
           pk_bad = 6
           return
        else if ((alpha_e - lna(1)) .gt. 2*N_pivot) then

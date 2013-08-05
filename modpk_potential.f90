@@ -28,6 +28,10 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:)
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
     real(dp) :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    !real(dp), dimension(size(phi)/2) :: lambda_waterfall, mass_waterfall, &
+    !  mass_infl, couple_water_infl
+    real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
+      mass_hybrid
     
     select case(potential_choice)
     case(1) 
@@ -54,7 +58,20 @@ CONTAINS
     case(7) !product of exponentials
        lambda = vparams(2, :)
        pot = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl)) 
-    ! END MULTIFIELD
+    case(8)
+       !Canonical two-field hybrid
+       if (size(phi) /= 2) then
+         print*, "Potential_choice", Potential_choice, "requires two fields."
+         print*, "Number of fields =", size(phi)
+         stop
+       end if
+       lambda_hybrid = vparams(1,1)
+       mass_hybrid = vparams(1,2)
+       mu_hybrid =vparams(1,3)
+       nu_hybrid =vparams(1,4)
+       pot = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
+         phi(2)**2/mu_hybrid**2 +&
+         phi(1)**2*phi(2)**2/nu_hybrid**4)
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -74,6 +91,9 @@ CONTAINS
     real(dp) :: dphi(size(phi)), phiplus(size(phi))
     real(dp) :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     integer :: i
+
+    real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
+      mass_hybrid
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -115,6 +135,17 @@ CONTAINS
        case(7) 
           lambda = vparams(2,:)
           dVdphi = lambda*vparams(1,1)*M_Pl**3 * exp(dot_product(lambda, phi/M_Pl))
+       case(8)
+          !Canonical two-field hybrid
+          lambda_hybrid = vparams(1,1)
+          mass_hybrid = vparams(1,2)
+          mu_hybrid =vparams(1,3)
+          nu_hybrid =vparams(1,4)
+
+          dVdphi(1) = (lambda_hybrid**4)*(4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)*phi(1)/mass_hybrid**2 +&
+            2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
+          dVdphi(2) = (lambda_hybrid**4)*(2.0_dp*phi(2)/mu_hybrid**2 +&
+            2.0_dp*phi(1)**2*phi(2)/nu_hybrid**4)
        !END MULTIFIELD
        case default
           write(*,*) 'MODPK: Need to set dVdphi in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
@@ -138,6 +169,9 @@ CONTAINS
     integer :: i, j
 
     real(dp) :: dphi,phiplus
+    !  mass_infl, couple_water_infl
+    real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
+      mass_hybrid
 
     if (vnderivs) then
        !MULTIFIELD
@@ -175,6 +209,24 @@ CONTAINS
           lambda = vparams(2, :)
           forall (i=1:size(phi), j=1:size(phi)) d2Vdphi2(i,j) = &
                lambda(i)*lambda(j)*vparams(1,1)*M_Pl**2 *exp(dot_product(lambda, phi/M_Pl))
+       case(8)
+          !Canonical two-field hybrid
+          lambda_hybrid = vparams(1,1)
+          mass_hybrid = vparams(1,2)
+          mu_hybrid =vparams(1,3)
+          nu_hybrid =vparams(1,4)
+
+          d2Vdphi2(1,1) = (lambda_hybrid**4)*(4.0_dp*(2.0_dp*phi(1)/mass_hybrid**2)*phi(1)/mass_hybrid**2 +&
+          4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)/mass_hybrid**2 +&
+            2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
+
+          d2Vdphi2(2,1) = (lambda_hybrid**4)*(4.0_dp*phi(1)*phi(2)/nu_hybrid**4)
+
+          d2Vdphi2(1,2) = d2Vdphi2(2,1)
+
+          d2Vdphi2(2,2) = (lambda_hybrid**4)*(2.0_dp/mu_hybrid**2 +&
+            2.0_dp*phi(1)**2/nu_hybrid**4)
+
        case default
           write(*,*) 'MODPK: Need to set d2Vdphi2 in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
