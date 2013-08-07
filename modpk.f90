@@ -49,8 +49,8 @@ CONTAINS
   END SUBROUTINE total_efold
 
 ![ LP: ] CHECK; Need to calculate pow_isocurvature, but not ready yet.
-  !SUBROUTINE evolve(kin, pow_adiabatic, pow_isocurvature, powt, powz)
-  SUBROUTINE evolve(kin, pow_adiabatic, powt, powz)
+  !SUBROUTINE evolve(kin, pow_adiabatic, powt, powz)
+  SUBROUTINE evolve(kin, pow_adiabatic, powt, powz, pow_isocurvature)
     USE modpk_odeint
     USE ode_path
     USE modpkparams
@@ -66,8 +66,7 @@ CONTAINS
     real(dp) :: accuracy,h1,hmin,x1,x2 
     complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
     real(dp), INTENT(IN) :: kin
-![ LP: ] CHECK; pow_isocurvature not ready yet.
-    !real(dp), INTENT(OUT) :: pow_adiabatic, pow_isocurvature, powt, powz
+    real(dp), INTENT(OUT), optional :: pow_isocurvature
     real(dp), INTENT(OUT) :: pow_adiabatic,  powt, powz
     real(dp), dimension(:,:), allocatable :: power_matrix
     real(dp) :: dum, ah, alpha_ik, dalpha, dh
@@ -159,10 +158,9 @@ CONTAINS
     x2 = lna(nactual_bg) + 5.d0
     !END MULTIFIELD
 
-    h1=0.05 !guessed start stepsize
-    accuracy=1.0d-8 !4.0d-2 !2!6 !has a big impact on the speed of the code
-    !hmin=0.0 !minimum stepsize
-    hmin=1e-16_dp !minimum stepsize
+    h1=0.1 !guessed start stepsize
+    accuracy=1.0d-6 !has a big impact on the speed of the code
+    hmin=1e-30_dp !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
     nactual_mode = kount  ! update nactual after evolving the modes
@@ -172,10 +170,10 @@ CONTAINS
       powt = powt_ik
       powz = powz_ik
       pow_adiabatic = pow_adiab_ik
-      !pow_isocurvature = pow_isocurv_ik
+      pow_isocurvature = pow_isocurv_ik
     ELSE
       pow_adiabatic = 0d0
-      !pow_isocurvature = 0d0
+      pow_isocurvature = 0d0
       powt=0.
       pk_bad=1
     ENDIF

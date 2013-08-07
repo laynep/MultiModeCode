@@ -232,10 +232,16 @@ is the curvature perturbation in flat gauge ($\Psi=0$) \lp{How do we argue that 
 
 Note that $\omega_\zeta^I$ is just a projection of the perturbation modes to the inflaton direction at the end of inflation. However, each mode $Q_I$ evolves non-trivially, as they are coupled to each other. The coupling is turned on each time the classical trajectory of inflaton bends. In other words, we have already included the conversion between entropic and adiabatic modes during the course of inflation by evolving each mode $Q_I$ towards the end of inflation. 
 
-Similarly, one can project out iso-curvature spectrum. Suppose the iso-curvature direction is specified by a unit field vector $(s_1, s_2, \dots, s_N)$, then the iso-curvature spectrum is 
+Similarly, one can project out iso-curvature spectrum.  Given the adiabatic unit vector $\omega_\zeta$ we can construct an isocurvature basis spanned by $N-1$ vectors $s_i$ in terms of the $N$ field space unit vectors $\hat \phi_i$ as
 \begin{equation}
-P_s (k) = \sum_{IJ} s^I s^J P_Q^{IJ}
+  s_i = \frac{\hat \phi_i - (\hat \phi_i \cdot \omega_\zeta) \omega_\zeta}{|\hat \phi_i - (\hat \phi_i \cdot \omega_\zeta) \omega_\zeta|}.
+  \label{eqn:XXX}
 \end{equation}
+There are then $N-1$ iso-curvature spectra given by
+\begin{equation}
+  P_{\alpha}^S (k) = \sum_{IJ} s_\alpha^I s_\alpha^J P_Q^{IJ}.
+\end{equation}
+This gives 
 
 \section{Lit Review}
 
@@ -257,6 +263,10 @@ P_s (k) = \sum_{IJ} s^I s^J P_Q^{IJ}
   \item \emph{Relevant}: Shows that typical $\delta N$ expansion to first order isn't enough in the case of hybrid inflation with mildly tachyonic directions where the isocurvature modes source the curvature perturbations.  Analytical and numerical techniques in double-quadratic and double-quartic turns. \cite{Avgoustidis:2011em}
 
   \item \emph{Relevant}: Numerical calculations using Pyflation of curvature and isocurvature power spectra in double-quadratic, hybrid, product exponential \cite{Huston:2011fr}
+
+  \item \emph{Relevant}: Numerical calculations with different mass heirarchies.  Calculates damping of entropy mades after horizon exit in variety of models and categorizes SR quantities by what effect they have on the power spectrum. \cite{Peterson:2010np}
+
+  \item \emph{Relevant}: Isocurvature perturbation stuff \cite{Huston:2011fr,Gordon:2000hv}
 
   \item Analytical turning \cite{Achucarro:2010da}
 

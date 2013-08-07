@@ -1,0 +1,24 @@
+#NAMELISTS
+
+&init
+  num_inflaton=2
+  potential_choice=1
+  modpkoutput = .true.
+  slowroll_infl_end = .true.
+  instreheat = .false.
+/
+
+&params
+  N_pivot = 55
+  k_pivot = 0.002
+  dlnk = 0.05
+
+  phi_init0 = 12.0,12.0
+  vparams= -10.0,-10.0
+/
+
+#MISC STUFF
+
+  vparams= -10.0,-8.0
+  phi_init0=10.31001, 12.93651
+  vparams = -10.422895047377294, -8.5144100284986442

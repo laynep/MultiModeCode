@@ -379,13 +379,21 @@ CONTAINS
 
     real(dp), dimension(:), intent(in) :: dphi
     ![ LP: ] Hacked matrix to vect
-    complex(kind=dp), dimension(:), intent(in) :: psi
+    complex(dp), dimension(:), intent(in) :: psi
     real(dp), intent(in) :: a
 
     ![ LP: ] size(dphi)=num_inflaton
     complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix
-    real(dp), dimension(size(dphi)) :: omega_z![ LP: ] proj along adiab dir
-    real(dp), dimension(size(dphi)) :: s_iso![ LP: ] proj along isoc dir
+    real(dp), dimension(size(dphi)-1) :: pk_iso_vect
+
+    ![ LP: ] proj along adiab dir
+    real(dp), dimension(size(dphi)) :: omega_z
+    ![ LP: ] proj along field dirs
+    real(dp), dimension(size(dphi)) :: phi_hat
+    ![ LP: ] proj along isocurv dirs
+    real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso![ LP: ] proj along isoc dir
+    real(dp) :: s_iso_norm
+    real(dp), parameter :: div_zero_tol=1e-32_dp
     real(dp) :: zeta2, phi_dot_0_scaled
     integer :: numb_infl
     integer :: i, j, ll
@@ -402,11 +410,60 @@ CONTAINS
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
 
+    !Build the entropic unit vects
     if (present(power_isocurv)) then
-      power_isocurv=0e0_dp
-      print*, "isocurv power not working yet"
-      stop
-      !s_iso = XXX
+
+      s_iso = 0e0_dp
+      do i=1,size(s_iso,1)
+        phi_hat = 0e0_dp
+        phi_hat(i) = 1e0_dp
+
+        !s_iso(i,:) = phi_hat(:) - 
+        !if (i>1) then
+        !  do j=1,i
+        !    s_iso(i,:) = s_iso(i,:) -&
+        !      dot_product(s_iso(i,:),s_iso(j,:))*s_iso(j,:)
+        !  end do
+        !end if
+
+        s_iso(i,:) = phi_hat(:) - dot_product(phi_hat,omega_z)*omega_z(:)
+        if (i>1) then
+          do j=1,i
+            s_iso(i,:) = s_iso(i,:) -&
+              dot_product(s_iso(i,:),s_iso(j,:))*s_iso(j,:)
+          end do
+        end if
+
+        s_iso_norm = sqrt(dot_product(s_iso(i,:),s_iso(i,:)))
+
+        if (abs(s_iso_norm) > div_zero_tol) then
+          s_iso(i,:) = s_iso(i,:)/s_iso_norm
+        else
+          !DEBUG
+          print*, "s_iso is zero"
+          !stop
+        end if
+      end do
+
+      !DEBUG
+      !s_iso(1,2) = 1e0_dp
+      !s_iso(1,1) = -omega_z(2)/omega_z(1)
+      !s_iso(1,:) = s_iso(1,:)/sqrt(dot_product(s_iso(1,:),s_iso(1,:)))
+
+
+!DEBUG
+!print*, "omega_z.omega_z", dot_product(omega_z,omega_z)
+!print*, "phi_hat.phi_hat", dot_product(phi_hat,phi_hat)
+phi_hat = (/1,0/)
+phi_hat = (phi_hat - dot_product(phi_hat,omega_z)*omega_z)
+phi_hat = phi_hat/sqrt(dot_product(phi_hat,phi_hat))
+!print*, "s_iso", s_iso
+!print*, "s_iso_alg", phi_hat
+!print*, "omega_z", omega_z
+!print*, "dot_prod adiab & entr", dot_product(omega_z,s_iso(1,:))
+!print*, "dot_prod adiab & entr_alg", dot_product(omega_z,phi_hat)
+!stop
+
     end if
 
     power_matrix=0e0_dp
@@ -418,23 +475,54 @@ CONTAINS
     !print*, "power_matrix", power_matrix
     write(3, *), Log(a)-Log(a_init), power_matrix
 
+    !Adiabatic power spectrum
     power_adiab = 0e0_dp
-    !if (present(power_isocurv)) power_isocurv = 0e0_dp
-    ![ LP: ] Project power spectra
     do i=1,numb_infl; do j=1,numb_infl
       power_adiab = power_adiab + omega_z(i)*omega_z(j)*power_matrix(i,j)
-      !if (present(power_isocurv)) power_isocurv = &
-      !power_isocurv + s_iso(i)*s_iso(j)*power_matrix(i,j)
     end do; end do
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
-    !if (present(power_isocurv)) power_isocurv = (1e0_dp/phi_dot_0_scaled**2)*power_isocurv
+
+    !Isocurvature power spectra
+    if (present(power_isocurv)) then
+
+      !Vector of iso-spectra
+      pk_iso_vect = 0e0_dp
+      do i=1,size(s_iso,1); do j=1, numb_infl; do ll=1,numb_infl
+        pk_iso_vect(i) = pk_iso_vect(i) + &
+          s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
+      end do; end do; end do
+      pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
+
+      !DEBUG
+      power_isocurv=0e0_dp
+      !power_isocurv = sqrt(dot_product(pk_iso_vect,pk_iso_vect))
+      power_isocurv = sum(pk_iso_vect)
+!DEBUG
+!print*,"power_isocurv", power_isocurv
+!print*, "pk_iso_vect", pk_iso_vect
+!stop
+
+    end if
 
     !DEBUG [JF]
-    !print*, "powerspectrum", power_adiab
-    !END MULTIFIELD
+    !if (.not. present(power_isocurv)) then
+    !  print*, "no power_isocurv"
+    !  print*, power_adiab
+    !  stop
+    !end if
+    write(20, *), Log(a)-Log(a_init), power_adiab, power_isocurv
 
-    !DEBUG [JF]
-     write(20, *), Log(a)-Log(a_init), power_adiab
+    contains
+
+      !Projection of v orthogonally onto line spanned by u
+      function projection(v,u) result(proj)
+
+        real(dp), dimension(:), intent(in) :: v, u
+        real(dp), dimension(size(v)) :: proj
+
+        proj = u*(dot_product(v,u)/dot_product(u,u))
+
+      end function projection
 
   end subroutine powerspectrum
 

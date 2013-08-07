@@ -322,26 +322,30 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
              !MULTIFIELD
              IF (use_q) THEN
                 ![ LP: ] w/out isocurv calculation
-                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
-                    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
+                !call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
+                !    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
 
-                ![ LP: ] with isocurv calculation --- not working yet
-                !call powerspectrum(pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik, &
-                !  y(2*num_inflaton+1:2*num_inflaton+num_inflaton**2) &
-                !    *scalefac/a_switch, delp, scalefac)
+                ![ LP: ] with isocurv calculation
+                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
+                    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik)
 
                 powt_ik=tensorpower(y(index_tensor_y) &
                   *scalefac/a_switch, scalefac)
              ELSE
                 call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1), &
-                    delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
+                    delphi, scalefac, pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik)
 
                 powt_ik=tensorpower(y(index_tensor_y), scalefac)
              END IF
+!DEBUG
+!print*, "Power spectra:"
+!print*, "Isocurv pk", pow_isocurv_ik
+!write(10,*),  pow_isocurv_ik, pow_adiab_ik
+!print*, "Curv pk", pow_adiab_ik
+!stop
 
 
              if (compute_zpower) then  !! compute only once upon horizon exit
-![ LP: ]  CHECK; update powerspectrum to include cross-terms?
                 powz_ik = zpower(y(index_uzeta_y), dotphi, scalefac)
                 compute_zpower = .false.
              end if
@@ -353,7 +357,8 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
           END IF
        END IF
 
-![ LP: ] CHECK;  check for adiabaticity?
+!DEBUG
+![ LP: ] CHECK for adiabaticity?
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
              IF(getEps(phi, delphi) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.
