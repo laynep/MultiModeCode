@@ -368,9 +368,8 @@ CONTAINS
     RETURN
   END FUNCTION geteta
 
-  ![ LP: ] Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
+  ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
   !adiabatic P(k), and isocurv P(k); includes cross correlations
-  !MULTIFIELD: Calculates the adiabatic perturbation P_R(k) given psi, dphi/dalpha, a
   subroutine powerspectrum(psi, dphi, a, power_matrix, power_adiab, power_isocurv)
     use internals
     real(dp), dimension(:,:), intent(out) :: power_matrix
@@ -378,105 +377,41 @@ CONTAINS
     real(dp), intent(out), optional :: power_isocurv
 
     real(dp), dimension(:), intent(in) :: dphi
-    ![ LP: ] Hacked matrix to vect
+    ! Hacked matrix to vect
     complex(dp), dimension(:), intent(in) :: psi
     real(dp), intent(in) :: a
 
-    ![ LP: ] size(dphi)=num_inflaton
+    ! size(dphi)=num_inflaton
     complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix
     real(dp), dimension(size(dphi)-1) :: pk_iso_vect
 
-    ![ LP: ] proj along adiab dir
+    !proj along adiab dir
     real(dp), dimension(size(dphi)) :: omega_z
-    ![ LP: ] proj along field dirs
-    real(dp), dimension(size(dphi)) :: phi_hat
-    ![ LP: ] proj along isocurv dirs
-    real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso![ LP: ] proj along isoc dir
-    real(dp) :: s_iso_norm
-    real(dp), parameter :: div_zero_tol=1e-32_dp
+    !proj along isocurv dirs
+    real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso
+    real(dp), parameter :: div_zero_tol=1e-20_dp
+
     real(dp) :: zeta2, phi_dot_0_scaled
     integer :: numb_infl
     integer :: i, j, ll
 
     numb_infl=size(dphi)
 
-    ![ LP: ] Convert hacked vector to matrix
+    ! Convert hacked vector to matrix
     do i=1,numb_infl; do j=1, numb_infl
       psi_matrix(i,j) = psi((i-1)*numb_infl+j)
     end do; end do
 
-    ![ LP: ] Make projection vector along adiabatic and isocurv directions
-    ![ LP: ] NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
+    ! Make projection vector along adiabatic and isocurv directions
+    ! NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
 
-    !Build the entropic unit vects
-    if (present(power_isocurv)) then
-
-      s_iso = 0e0_dp
-      do i=1,size(s_iso,1)
-        phi_hat = 0e0_dp
-        phi_hat(i) = 1e0_dp
-
-        !DEBUG
-        !ISO PROJ NOT WORKING YET
-
-        !s_iso(i,:) = phi_hat(:) - 
-        !if (i>1) then
-        !  do j=1,i
-        !    s_iso(i,:) = s_iso(i,:) -&
-        !      dot_product(s_iso(i,:),s_iso(j,:))*s_iso(j,:)
-        !  end do
-        !end if
-
-        s_iso(i,:) = phi_hat(:) - dot_product(phi_hat,omega_z)*omega_z(:)
-        if (i>1) then
-          do j=1,i
-            s_iso(i,:) = s_iso(i,:) -&
-              dot_product(s_iso(i,:),s_iso(j,:))*s_iso(j,:)
-          end do
-        end if
-
-        s_iso_norm = sqrt(dot_product(s_iso(i,:),s_iso(i,:)))
-
-        if (abs(s_iso_norm) > div_zero_tol) then
-          s_iso(i,:) = s_iso(i,:)/s_iso_norm
-        else
-          !DEBUG
-          print*, "s_iso is zero"
-          !stop
-        end if
-      end do
-
-      !DEBUG
-      !s_iso(1,2) = 1e0_dp
-      !s_iso(1,1) = -omega_z(2)/omega_z(1)
-      !s_iso(1,:) = s_iso(1,:)/sqrt(dot_product(s_iso(1,:),s_iso(1,:)))
-
-
-!DEBUG
-!print*, "omega_z.omega_z", dot_product(omega_z,omega_z)
-!print*, "phi_hat.phi_hat", dot_product(phi_hat,phi_hat)
-phi_hat = (/1,0/)
-phi_hat = (phi_hat - dot_product(phi_hat,omega_z)*omega_z)
-phi_hat = phi_hat/sqrt(dot_product(phi_hat,phi_hat))
-!print*, "s_iso", s_iso
-!print*, "s_iso_alg", phi_hat
-!print*, "omega_z", omega_z
-!print*, "dot_prod adiab & entr", dot_product(omega_z,s_iso(1,:))
-!print*, "dot_prod adiab & entr_alg", dot_product(omega_z,phi_hat)
-!stop
-
-    end if
 
     power_matrix=0e0_dp
     do i=1,numb_infl;do j=1, numb_infl; do ll=1,numb_infl
       power_matrix(i,j) =power_matrix(i,j)+ (k**3/2.0e0_dp/(pi**2)/a**2)*psi_matrix(i,ll)*conjg(psi_matrix(j,ll))/(2e0_dp*k)
     end do; end do; end do
-
-    !DEBUG [JF]
-    !print*, "power_matrix", power_matrix
-    write(3, *), Log(a)-Log(a_init), power_matrix
 
     !Adiabatic power spectrum
     power_adiab = 0e0_dp
@@ -486,7 +421,10 @@ phi_hat = phi_hat/sqrt(dot_product(phi_hat,phi_hat))
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
 
     !Isocurvature power spectra
-    if (present(power_isocurv)) then
+    if (present(power_isocurv) .and. numb_infl>1) then
+
+      !Build the entropic unit vects
+      call build_isocurv_basis()
 
       !Vector of iso-spectra
       pk_iso_vect = 0e0_dp
@@ -508,29 +446,111 @@ phi_hat = phi_hat/sqrt(dot_product(phi_hat,phi_hat))
     end if
 
     !DEBUG [JF]
-    !if (.not. present(power_isocurv)) then
-    !  print*, "no power_isocurv"
-    !  print*, power_adiab
-    !  stop
-    !end if
     write(20, *), Log(a)-Log(a_init), power_adiab, power_isocurv
+    !print*, "power_matrix", power_matrix
+    write(3, *), Log(a)-Log(a_init), power_matrix
 
     contains
 
-      !Projection of v orthogonally onto line spanned by u
-      function projection(v,u) result(proj)
 
-        real(dp), dimension(:), intent(in) :: v, u
-        real(dp), dimension(size(v)) :: proj
+    !Basis perpend to adiab direction.  Gram-Schmidt
+    subroutine build_isocurv_basis()
 
-        proj = u*(dot_product(v,u)/dot_product(u,u))
+      real(dp), dimension(size(dphi),size(dphi)) :: spanning
+      !field dirs
+      real(dp), dimension(size(dphi),size(dphi)) :: phi_hat
+      real(dp), dimension(size(dphi)) :: phi_hat_temp
+      real(dp) :: check_dot
+      integer :: i, j, adiab_index
 
-      end function projection
+      !Build field space vects
+      do i=1,size(phi_hat,1); do j=1,size(phi_hat,2)
+        if (i==j) then
+          phi_hat(i,j) = 0e0_dp
+        else
+          phi_hat(i,j) = 1e0_dp
+        end if
+      end do; end do
+
+      !Find field direction closest aligned to omega_z
+      !This check makes sure get linearly indep field space vects
+      check_dot=0e0_dp
+      adiab_index=0
+      do i=1,size(phi_hat,1)
+        if (abs(dot_product(phi_hat(i,:),omega_z(:)))>check_dot) then
+          check_dot = abs(dot_product(phi_hat(i,:),omega_z(:)))
+          adiab_index=i
+        end if
+      end do
+      if (adiab_index ==0) then
+        print*, "It appears all field space directions are aligned with"
+        print*, "the adiab direction."
+        stop
+      end if
+
+        
+      !Set the "most adiab" dir to 1
+      if (adiab_index /= 1) then
+        phi_hat_temp = phi_hat(1,:)
+        phi_hat(1,:) = phi_hat(adiab_index,:)
+        phi_hat(adiab_index,:) = phi_hat_temp
+      end if
+
+      spanning = 0e0_dp
+      spanning(1,:)=omega_z/norm(omega_z)
+
+      s_iso = 0e0_dp
+      do i=2,size(spanning,1)
+        
+        spanning(i,:) = phi_hat(i,:)
+        do j=1, i-1
+          spanning(i,:) = spanning(i,:) - &
+            projection(spanning(i,:),spanning(j,:))
+        end do
+
+        if (norm(spanning(i,:)) > div_zero_tol) then
+          s_iso(i-1,:) = spanning(i,:)/norm(spanning(i,:))
+        else
+          print*, "spanning(",i,",:) has zero norm..."
+          stop
+        end if
+
+        if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-15) then
+          print*, "Isocurv projection has large adiab component."
+          write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
+          stop
+        end if
+      end do
+
+
+    end subroutine build_isocurv_basis
+
 
   end subroutine powerspectrum
 
+  !Projection of v orthogonally onto line spanned by u
+  pure function projection(v,u) result(proj)
+
+    real(dp), dimension(:), intent(in) :: v, u
+    real(dp), dimension(size(v)) :: proj
+
+    proj = u*(dot_product(v,u)/dot_product(u,u))
+
+  end function projection
+
+  !Norm of v
+  pure function norm(v)
+
+    real(dp), dimension(:), intent(in) :: v
+    real(dp) :: norm
+
+    norm = sqrt(dot_product(v,v))
+
+  end function norm
+
 
     !END MULTIFIELD
+
 
   pure FUNCTION tensorpower(v, a)
     USE internals

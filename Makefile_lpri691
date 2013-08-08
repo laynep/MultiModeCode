@@ -8,7 +8,7 @@
 #F90C     = gfortran
 #FFLAGS = -O3 -fopenmp -ffast-math # -fdefault-real-8
 F90C     = ifort
-FFLAGS = -r8 -fpp -openmp  -fast
+FFLAGS = -r8 -fpp #-openmp  -fast
 
 # Intel 9 on IA-64 (eg. COSMOS)
 # (do "module load icomp90" before compiling)

@@ -286,8 +286,10 @@ CONTAINS
        htemp=SAFETY*h*(errmax**PSHRNK)
        h=sign(max(abs(htemp),0.1d0*abs(h)),h)
        xnew=x+h
-       if (xnew == x) then 
-          print*, 'stepsize underflow in rkqs'
+       !Errors if use xnew==x, as one might suspect
+       !if (xnew == x) then 
+       if (abs(h)<1e-30_dp) then 
+          print*, 'stepsize underflow in rkqs_r'
           ode_underflow = .true.
           return
        endif
@@ -358,7 +360,7 @@ CONTAINS
        !Errors if use xnew==x, as one might suspect
        !if (xnew == x) then 
        if (abs(h)<1e-30_dp) then 
-          print*, 'stepsize underflow in rkqs'
+          print*, 'stepsize underflow in rkqs_c'
           ode_underflow = .true.
           return
        endif
