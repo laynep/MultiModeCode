@@ -185,7 +185,7 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE odeint_r
 
-  ![ LP: ] Only called for ptb mode eqns
+  ! Only called for ptb mode eqns
   SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmin, derivs, qderivs, rkqs_c)
     USE ode_path
     USE internals
@@ -268,10 +268,10 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
     DO nstp=1,MAXSTP
 
        IF (use_q) THEN
-          ![ LP: ] super-h use Q
+          ! super-h use Q
           CALL qderivs(x, y, dydx)
        ELSE
-          ![ LP: ] sub-h use psi
+          ! sub-h use psi
           CALL derivs(x, y, dydx)
        END IF
 
@@ -321,11 +321,11 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
           IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
              !MULTIFIELD
              IF (use_q) THEN
-                ![ LP: ] w/out isocurv calculation
+                ! w/out isocurv calculation
                 !call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
                 !    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
 
-                ![ LP: ] with isocurv calculation
+                ! with isocurv calculation
                 call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
                     *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik)
 
@@ -358,7 +358,7 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
        END IF
 
 !DEBUG
-![ LP: ] CHECK for adiabaticity?
+! CHECK for adiabaticity?
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
              IF(getEps(phi, delphi) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.
@@ -386,17 +386,17 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
           IF (infl_ended) THEN
              IF (use_q) THEN
                 ytmp(:) = y(:)
-                ![ LP: ] bckgrd
+                ! bckgrd
                 ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
 
-                ![ LP: ] ptbs
+                ! ptbs
                 ystart(index_ptb_y:index_ptb_vel_y-1) = &
                   ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
                 ystart(index_ptb_vel_y:index_tensor_y-1) = &
                   ytmp(index_ptb_vel_y:index_tensor_y-1)&
                   *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
 
-                ![ LP: ] tensors
+                ! tensors
                 ystart(index_tensor_y) =&
                   ytmp(index_tensor_y)*scalefac/a_switch
                 ystart(index_tensor_y+1) =&

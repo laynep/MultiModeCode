@@ -48,8 +48,6 @@ CONTAINS
     RETURN
   END SUBROUTINE total_efold
 
-![ LP: ] CHECK; Need to calculate pow_isocurvature, but not ready yet.
-  !SUBROUTINE evolve(kin, pow_adiabatic, powt, powz)
   SUBROUTINE evolve(kin, pow_adiabatic, powt, powz, pow_isocurvature)
     USE modpk_odeint
     USE ode_path
@@ -72,19 +70,21 @@ CONTAINS
     real(dp) :: dum, ah, alpha_ik, dalpha, dh
     real(dp), DIMENSION(num_inflaton) :: p_ik,delphi
 
-    ![ LP: ] NB: the psi portion of the y-vector is 1:n=psi_1(1:n) and
-    ![ LP: ] NB: 2n:3n=psi_2(1:n), etc.
+    character(36) :: e2_fmt = '(a25, es12.4, a3, es11.4, a1)'
+
+    ! the psi portion of the y-vector is 1:n=psi_1(1:n) and
+    ! 2n:3n=psi_2(1:n), etc.
 
     !     x = alpha     e-folds
-    ![ LP: ] Background
+    ! Background
     !     y(1:n) = phi                 dydx(1:n)=dphi/dalpha
     !     y(n+1:2n) = dphi/dalpha      dydx(n+1:2n)=d^2phi/dalpha^2
 
-    ![ LP: ] Mode matrix ptb, psi_IJ
+    ! Mode matrix ptb, psi_IJ
     !     y(2n+1:2n+n**2) = psi               dydx(2n+1:3n)=dpsi/dalpha
     !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
 
-    ![ LP: ] Tensors
+    ! Tensors
     !     y(2n+2n**2+1) = v                  dydx(4n+1)=dv/dalpha
     !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
 
@@ -93,13 +93,13 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
-    ![ LP: ] Set aliases for indices for above
+    ! Set aliases for indices for above
     index_ptb_y = 2*num_inflaton+1
     index_ptb_vel_y = 2*num_inflaton+1+num_inflaton**2
     index_tensor_y = 2*num_inflaton+2*num_inflaton**2+1
     index_uzeta_y = index_tensor_y + 2
 
-    ![ LP: ] Make the powerspectrum array.
+    ! Make the powerspectrum array.
     if (allocated(pow_ptb_ij)) then
       deallocate(pow_ptb_ij)
     end if
@@ -115,7 +115,8 @@ CONTAINS
        PRINT*,'MODPK: the bounds of the background you solved for. Please reconsider'
        PRINT*,'MODPK: your phi_init and N_pivot combo.'
        PRINT*,'MODPK: QUITTING'
-       print*, ah, aharr(1)
+       write(*,e2_fmt) "log(k/k_start):", ah
+       write(*,e2_fmt) "aharr(1):", aharr(1)
        STOP
     END IF
 
@@ -158,8 +159,9 @@ CONTAINS
     x2 = lna(nactual_bg) + 5.d0
     !END MULTIFIELD
 
+
     h1=0.1 !guessed start stepsize
-    accuracy=1.0d-6 !has a big impact on the speed of the code
+    accuracy=1.0d-8 !has a big impact on the speed of the code
     hmin=1e-30_dp !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
@@ -183,7 +185,7 @@ CONTAINS
 
     contains
 
-      ![ LP: ] A "packed" identity vector analog of identity matrix.
+      ! A "packed" identity vector analog of identity matrix.
       subroutine make_identity(identityvector)
 
         real(dp), dimension(:), intent(out) :: identityvector
@@ -201,26 +203,26 @@ CONTAINS
 
       subroutine set_ic(y)
 
-        ![ LP: ] Note that ah=log(aH) and overall scaled by sqrt(2k)
+        ! Note that ah=log(aH) and overall scaled by sqrt(2k)
 
         complex(dp), dimension(:), intent(out) :: y
         real(dp), dimension(num_inflaton**2) :: identity
 
-        ![ LP: ] Identity vector analog of identity matrix
+        ! Identity vector analog of identity matrix
         call make_identity(identity)
 
-        ![ LP: ] Background - from previous evolution
+        ! Background - from previous evolution
         y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
         y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
-        ![ LP: ] mode matrix - diagonalize, Bunch-Davies
+        ! mode matrix - diagonalize, Bunch-Davies
         y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
         y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
 
-        ![ LP: ] tensors
+        ! tensors
         y(index_tensor_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
         y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
 
-        ![ LP: ] u_zeta
+        ! u_zeta
         y(index_uzeta_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
         y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
 

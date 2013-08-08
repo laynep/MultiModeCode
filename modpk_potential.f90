@@ -418,6 +418,9 @@ CONTAINS
         phi_hat = 0e0_dp
         phi_hat(i) = 1e0_dp
 
+        !DEBUG
+        !ISO PROJ NOT WORKING YET
+
         !s_iso(i,:) = phi_hat(:) - 
         !if (i>1) then
         !  do j=1,i

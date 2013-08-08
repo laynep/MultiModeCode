@@ -60,6 +60,8 @@ program test_mmodpk
 
   call output_observables()
 
+
+
   contains
 
     subroutine allocate_vars()
@@ -80,11 +82,11 @@ program test_mmodpk
 
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice
-      write(*, e_fmt) "log10(m^2) =", vparams(1,1)
+      !write(*, e_fmt) "log10(m^2) =", vparams(1,1)
       write(*, e_fmt) "N_pivot =", N_pivot
       !write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', sqrt(4*N_pivot + phi_infl_end(1)**2), ')'
       ! [JF] Need to look up this formatting confusion next time you have a book or the internet....
-      write(*, *),  "phi_pivot =", phi_pivot ! [JF] This line should be replaced with the previous line.
+      !write(*, *),  "phi_pivot =", phi_pivot ! [JF] This line should be replaced with the previous line.
       ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
       write(*, e2_fmt) "N_tot =", N_tot,'(', 0.25*dot_product(phi_init, phi_init), ')' !'(', 0.25*(dot_product(phi_init, phi_init) - dot_product(phi_infl_end, phi_infl_end)), ')'
 
@@ -93,10 +95,12 @@ program test_mmodpk
       write(*, *), ps0, pz0
       write(*, *), ps1, pz1
       write(*, *), ps2, pz2
-      write(*, *), "Isocurvature P =", ps0_iso, ps1_iso, ps2_iso
+      write(*, e2_fmt), "Isocurvature P =", ps0_iso
+      write(*, e2_fmt), "Isocurvature P =", ps1_iso
+      write(*, e2_fmt), "Isocurvature P =", ps2_iso
       write(*, e2_fmt) "Pt/Ps =", pt0/ps0, '(', 16*epsilon, ')'
 
-      write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
+      !write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-eta,')'
       write(*, e2_fmt) "n_s =", 1.d0+log(ps2/ps1)/dlnk/2.d0, '(', 1-2*epsilon-1/(N_pivot),')' ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
       write(*, e2_fmt) "n_t =", log(pt2/pt1)/dlnk/2.d0, '(', -2*epsilon, ')'
 
