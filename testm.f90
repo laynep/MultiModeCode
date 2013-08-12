@@ -34,7 +34,7 @@ program test_mmodpk
   namelist /init/ num_inflaton, potential_choice, &
     modpkoutput, slowroll_infl_end, instreheat, vparam_arrays
 
-  namelist /ic_sampling/ sampling_techn, energy_scale
+  !namelist /ic_sampling/ sampling_techn, energy_scale
 
   namelist /params/ phi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -52,7 +52,7 @@ program test_mmodpk
   call allocate_vars()
 
   !Read other params from file
-	read(unit=u, nml=ic_sampling)
+  !	read(unit=u, nml=ic_sampling)
 	read(unit=u, nml=params)
 	close(unit=u)
 
