@@ -7,6 +7,8 @@ program test_mmodpk
   use ode_path
   use access_modpk
   use internals
+  use modpk_icsampling
+  use modpk_rng, only : init_random_seed
 
   implicit none
 
@@ -20,12 +22,15 @@ program test_mmodpk
   !Run-specific input params
   integer :: i, vparam_arrays
 
+  !Parallel variables
+  integer :: numtasks, rank
+  !integer :: OMP_GET_NUM_THREADS
+
   !Cosmology
   real(dp) :: dlnk, As, ns, nt, r
 
   !Sampling parameters for ICs
-  integer, parameter :: test_samp=1, eqen_samp=2
-  integer :: sampling_techn
+  integer :: sampling_techn, numb_samples
   real(dp) :: energy_scale
 
   integer :: u
@@ -34,11 +39,10 @@ program test_mmodpk
   namelist /init/ num_inflaton, potential_choice, &
     modpkoutput, slowroll_infl_end, instreheat, vparam_arrays
 
-  namelist /ic_sampling/ sampling_techn, energy_scale
+  namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples
 
   namelist /params/ phi_init0, vparams, &
     N_pivot, k_pivot, dlnk
-
 
   !------------------------------------------------
 
@@ -47,7 +51,6 @@ program test_mmodpk
 	open(newunit=u, file="parameters_multimodecode.txt", &
     status="old", delim = "apostrophe")
   read(unit=u, nml=init)
-
 
   call allocate_vars()
 
@@ -58,7 +61,25 @@ program test_mmodpk
 
   call output_initial_data()
 
-  call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
+  if (sampling_techn==test_samp) then
+    call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
+
+  else if (sampling_techn == eqen_samp) then
+
+    !parallelize?
+
+	  !Set random seed for each thread.
+	  call init_random_seed()
+
+    do i=1,numb_samples
+
+      call get_ic(sampling_techn, energy_scale, numb_samples)
+
+      !call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
+
+    end do
+
+  end if
 
   contains
 
@@ -70,6 +91,8 @@ program test_mmodpk
       real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
       real(dp) :: ps0_iso,ps1_iso,ps2_iso
       real(dp) :: pz0, pz1, pz2
+      real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
+      logical :: calc_full_pk
 
       !Initialize potential and calc background
       call potinit
@@ -81,6 +104,9 @@ program test_mmodpk
       call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1, ps1_iso)
       call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2, ps2_iso)
 
+      !Get full spectrum for adiab and isocurv at equal intvs in lnk
+      call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
+
       epsilon = getEps(phi_pivot, dphi_pivot)
       eta = geteta(phi_pivot, dphi_pivot)
 
@@ -89,11 +115,55 @@ program test_mmodpk
       r=pt0/ps0
       nt=log(pt2/pt1)/dlnk/2.d0
 
-      call output_observables((/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
+      call output_observables(pk_arr,pk_iso_arr, &
+        (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
         (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
-        ns,r,nt, epsilon,eta)
+        ns,r,nt, epsilon,eta,calc_full_pk)
+
 
     end subroutine calculate_pk_observables
+
+
+    subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
+
+      real(dp), dimension(:,:), allocatable, intent(out) :: pk_arr
+      real(dp), allocatable, optional, intent(out) :: pk_iso_arr(:,:)
+      real(dp), intent(in) :: dlnk
+
+      real(dp) :: kmin, kmax, incr
+      logical, intent(inout) :: calc_full_pk
+      real(dp) :: p_scalar, p_tensor, p_zeta, p_iso, k_input
+      integer :: i, steps, u
+
+      namelist /full_pk/ kmin, kmax, steps, calc_full_pk
+
+	    open(newunit=u, file="parameters_multimodecode.txt", &
+        status="old", delim = "apostrophe")
+      read(unit=u, nml=full_pk)
+      close(u)
+
+      !If don't want full spectrum, return
+      if (.not. calc_full_pk) return
+
+      allocate(pk_arr(steps, 2))
+      if (present(pk_iso_arr)) allocate(pk_iso_arr(steps, 2))
+
+      pk_arr=0e0_dp
+      if (present(pk_iso_arr)) pk_iso_arr=0e0_dp
+
+      k_input=kmin
+      incr=(kmax/kmin)**(1/real(steps-1))
+      do i=1,steps
+        k_input = kmin*incr**(i-1)
+        call evolve(k_input, p_scalar, p_tensor, p_zeta, p_iso)
+
+        pk_arr(i,:)=(/k_input,p_scalar/)
+        if (present(pk_iso_arr)) pk_iso_arr(i,:)=(/k_input,p_iso/)
+
+      end do
+
+
+    end subroutine get_full_pk
 
 
     subroutine allocate_vars()
@@ -112,10 +182,17 @@ program test_mmodpk
 
     end subroutine allocate_vars
 
-    subroutine output_observables(As,At,Az,A_iso,ns,r,nt, epsilon,eta)
+    subroutine output_observables(pk_arr, pk_iso_arr,&
+        As,At,Az,A_iso,ns,r,nt, epsilon,eta,calc_full_pk)
 
+      real(dp), dimension(:,:), intent(in) :: pk_arr
+      real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
       real(dp), intent(in) :: ns,r,nt, epsilon,eta
       real(dp), dimension(:), intent(in) :: As, At, Az, A_iso
+
+      logical :: calc_full_pk
+
+      integer :: i
 
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice
@@ -138,6 +215,15 @@ program test_mmodpk
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
       write(*, e2_fmt) "n_s =", ns, '(', 1-2*epsilon-1/(N_pivot),')'
       write(*, e2_fmt) "n_t =", nt, '(', -2*epsilon, ')'
+
+      if (calc_full_pk) then
+        do i=1,size(pk_arr,1)
+          write(101,*) pk_arr(i,:)
+          if(present(pk_iso_arr)) write(102,*) pk_iso_arr(i,:)
+        end do
+        write(*,*) "Adiab P(k) written to file #101"
+        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to file #102"
+      end if
 
     end subroutine output_observables
 
@@ -168,6 +254,28 @@ program test_mmodpk
       open (unit = 3, file = "powmatrix.txt", status = 'replace')
     end subroutine DEBUG_writing_etc
 
+!NOT WORKING YET
+#ifdef MPI
+    subroutine mpi_parallelize()
+
+      integer :: ierr, rc
+
+	    call mpi_init(ierr)
+	    	if(ierr .ne. 0) then
+	    		print*,"Error parallelizing."
+	    		call mpi_abort(mpi_comm_world, rc, ierr)
+	    		stop
+	    	end if
+
+	    !Obtains info on processors.
+	    call mpi_comm_rank(mpi_comm_world, rank, ierr)
+	    call mpi_comm_size(mpi_comm_world, numtasks, ierr)
+	    print*,'Number of tasks=',numtasks,' My rank=',rank
+	    call mpi_barrier(mpi_comm_world,ierr)
+
+
+    end subroutine mpi_parallelize
+#endif
 
 
 end program test_mmodpk

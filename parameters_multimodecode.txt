@@ -15,7 +15,8 @@ NB: sampling_techn = {1=test_samp, 2=eqen_samp}
 
 &ic_sampling
   sampling_techn = 1
-  energy_scale = 0.1
+  energy_scale = .04
+  numb_samples = 2
 /
 
 ----------------
@@ -24,8 +25,26 @@ NB: sampling_techn = {1=test_samp, 2=eqen_samp}
   k_pivot = 0.002
   dlnk = 0.05
 
-  phi_init0 = 15.0, 15.0, 25.0
+  phi_init0 = 11.0, 11.0, 21.0
   vparams= -10.0,-9.0, -8.0
+/
+
+----------------
+&priors
+  phi0_priors_min = 0.5, 0.5, 0.5
+  phi0_priors_max = 11.0, 11.0, 21.0
+  dphi0_priors_min = 0.0, 0.0, 0.0
+  dphi0_priors_max = 1e-6, 1e-6, 1e-6
+  penalty_fact = .1
+/
+
+
+----------------
+&full_pk
+  calc_full_pk=.false.
+  steps = 100
+  kmin=5.0e-4
+  kmax=5.0e0
 /
 
 ----------------
@@ -37,6 +56,8 @@ NB: sampling_techn = {1=test_samp, 2=eqen_samp}
   phi_init0=10.31001, 12.93651, 12.0
   vparams = -10.422895047377294, -8.5144100284986442, -9.0
 
+  vparams(1,:)= -10.0,-9.0, -8.0
+  vparams(2,:)= -10.0,-9.0, -8.0
 
   phi_init0 = 13.6, 7.4
 

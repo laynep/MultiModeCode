@@ -5,6 +5,8 @@ MODULE potential
   PUBLIC :: pot, getH, getHdot, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower
 
+  public :: norm
+
 CONTAINS
 
   FUNCTION MySech(x)
@@ -515,7 +517,7 @@ CONTAINS
           stop
         end if
 
-        if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-15) then
+        if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-12) then
           print*, "Isocurv projection has large adiab component."
           write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
           stop
