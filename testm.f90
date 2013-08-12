@@ -55,13 +55,14 @@ program test_mmodpk
   call allocate_vars()
 
   !Read other params from file
-  !	read(unit=u, nml=ic_sampling)
+	read(unit=u, nml=ic_sampling)
 	read(unit=u, nml=params)
 	close(unit=u)
 
   call output_initial_data()
 
   if (sampling_techn==test_samp) then
+
     call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
 
   else if (sampling_techn == eqen_samp) then

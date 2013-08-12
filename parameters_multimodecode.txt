@@ -44,7 +44,7 @@ NB: sampling_techn = {1=test_samp, 2=eqen_samp}
 
 ----------------
 &full_pk
-  calc_full_pk=.false.
+  calc_full_pk=.true.
   steps = 100
   kmin=5.0e-4
   kmax=5.0e0
