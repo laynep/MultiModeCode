@@ -212,7 +212,7 @@ CONTAINS
     ode_underflow = .FALSE.
     ode_ps_output = .FALSE.
     ode_infl_end = .TRUE.
-    save_steps = .TRUE.
+    save_steps = .true.
     pk_bad = 0
 
     !MULTIFIELD

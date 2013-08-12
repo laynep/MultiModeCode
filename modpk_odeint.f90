@@ -162,9 +162,7 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
        END IF
        h=hnext
     END DO
-    PRINT*,'too many steps in odeint'
-    !DEBUG
-    print*, x
+    PRINT*,'too many steps in odeint', x
     ode_underflow=.TRUE.
     
   CONTAINS
@@ -178,9 +176,6 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
       xp(kount)=x
       yp(:,kount)=y(:)
       xsav=x
-      !!DEBUG
-      !write(314,*), "xp", xp
-      !write(315,*), "yp", yp
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE odeint_r
@@ -337,12 +332,6 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
 
                 powt_ik=tensorpower(y(index_tensor_y), scalefac)
              END IF
-!DEBUG
-!print*, "Power spectra:"
-!print*, "Isocurv pk", pow_isocurv_ik
-!write(10,*),  pow_isocurv_ik, pow_adiab_ik
-!print*, "Curv pk", pow_adiab_ik
-!stop
 
 
              if (compute_zpower) then  !! compute only once upon horizon exit
@@ -357,8 +346,6 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
           END IF
        END IF
 
-!DEBUG
-! CHECK for adiabaticity?
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
              IF(getEps(phi, delphi) .GT. 2 .AND. slowroll_start) infl_ended=.TRUE.
