@@ -55,7 +55,7 @@ program test_mmodpk
   call allocate_vars()
 
   !Read other params from file
-	read(unit=u, nml=ic_sampling)
+  !	read(unit=u, nml=ic_sampling)
 	read(unit=u, nml=params)
 	close(unit=u)
 

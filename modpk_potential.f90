@@ -29,6 +29,7 @@ CONTAINS
     real(dp) :: pot
     real(dp), INTENT(IN) :: phi(:)
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
+    real(dp) :: c1_V(size(phi)) !! some constants for a more flexible potential construction in case 9
     real(dp) :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
     !real(dp), dimension(size(phi)/2) :: lambda_waterfall, mass_waterfall, &
     !  mass_infl, couple_water_infl
@@ -74,6 +75,10 @@ CONTAINS
        pot = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
          phi(2)**2/mu_hybrid**2 +&
          phi(1)**2*phi(2)**2/nu_hybrid**4)
+     case(9)
+       m2_V = vparams(1,:)
+       c1_V = vparams(2,:)
+       pot = 0.5*sum(m2_V*phi*phi) + sum(c1_V)
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -91,7 +96,7 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:)
     real(dp) :: dVdphi(size(phi))
     real(dp) :: dphi(size(phi)), phiplus(size(phi))
-    real(dp) :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp) :: m2_V(size(phi)),  c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     integer :: i
 
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
@@ -148,6 +153,9 @@ CONTAINS
             2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
           dVdphi(2) = (lambda_hybrid**4)*(2.0_dp*phi(2)/mu_hybrid**2 +&
             2.0_dp*phi(1)**2*phi(2)/nu_hybrid**4)
+       case(9)!Saddle type things
+          m2_V = (vparams(1,:))
+          dVdphi = m2_V*phi
        !END MULTIFIELD
        case default
           write(*,*) 'MODPK: Need to set dVdphi in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
@@ -167,7 +175,7 @@ CONTAINS
 
     real(dp), INTENT(IN) :: phi(:)
     real(dp) :: d2VdPhi2(size(phi),size(phi))
-    real(dp) :: m2_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp) :: m2_V(size(phi)), c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     integer :: i, j
 
     real(dp) :: dphi,phiplus
@@ -228,6 +236,9 @@ CONTAINS
 
           d2Vdphi2(2,2) = (lambda_hybrid**4)*(2.0_dp/mu_hybrid**2 +&
             2.0_dp*phi(1)**2/nu_hybrid**4)
+       case(9)          
+          m2_V = vparams(1,:)
+          forall (i = 1:size(phi)) d2Vdphi2(i,i) = m2_V(i)
 
        case default
           write(*,*) 'MODPK: Need to set d2Vdphi2 in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
