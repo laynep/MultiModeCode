@@ -594,23 +594,26 @@ CONTAINS
   END FUNCTION zpower
 
 
-  function trace_d2Vdphi2(phi) result(trace)
+  function trace_d2logVdphi2(phi) result(trace)
     !
     !     Returns trace of d^2V/dPhi^2 given phi
     !     Used in calculating bundle width
     !
 
     real(dp), intent(in) :: phi(:)
-    real(dp) :: trace, Vaa(size(phi),size(phi))
+    real(dp) :: trace, V_ab(size(phi),size(phi)), V_a(size(phi)), V
     integer :: i
 
-    Vaa = d2Vdphi2(phi)
+    V_ab = d2Vdphi2(phi)
+    V_a = dVdphi(phi)
+    V = pot(phi)
+
     trace = 0e0_dp
     do i=1,size(phi)
-      trace = trace + Vaa(i,i)
+      trace = trace + V_ab(i,i)/V - (V_a(i)/V)**2
     end do
 
-  end function trace_d2Vdphi2
+  end function trace_d2logVdphi2
 
   !Calc bundle width by integrating tr(d2Vdphi2) to efold by Riemann sum
   subroutine bundle_width(this,phi, efold)
@@ -621,8 +624,8 @@ CONTAINS
 
     dN = efold - this%N
 
-    this%dlogThetadN= this%dlogThetadN+ &
-      dN*trace_d2Vdphi2(phi)
+    this%dlogThetadN= this%dlogThetadN - &
+      dN*trace_d2logVdphi2(phi)
 
     this%width=exp(this%dlogThetadN)
 
