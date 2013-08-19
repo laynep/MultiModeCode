@@ -12,6 +12,9 @@ MODULE background_evolution
 CONTAINS
 
   SUBROUTINE backgrnd
+    use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
+      dphi_iso_N
+
     INTEGER*4 :: i,j, rescl_count
 
     real(dp) :: phi_init_trial(size(phi_init))
@@ -26,6 +29,8 @@ CONTAINS
     CHARACTER(19) :: array_fmt
     CHARACTER(len=5) :: ci
 
+    real(dp) :: alpha_iso_N
+
     write(ci, '(I5)'), size(phi_init)
     ci = adjustl(ci)
     array_fmt = '(a25,'//trim(ci)//'es10.3)'
@@ -36,7 +41,10 @@ CONTAINS
     !     y(1)=phi              dydx(1)=dphi/dx
     !     y(2)=dphi/dx          dydx(1)=d^2phi/dx^2
 
-    if (.not. allocated(phi_init)) PRINT*, 'MODPK: Please initialize phi_ini as an array!'
+    if (.not. allocated(phi_init)) then
+      PRINT*, 'MODPK: Please initialize phi_ini as an array!'
+      stop
+    end if
 
     if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
 
@@ -132,11 +140,45 @@ CONTAINS
           a_end = EXP(alpha_e)*a_init
        ELSE
           alpha_pivot = alpha_e-N_pivot
+
+          !DEBUG
+          if (save_iso_N) then
+            alpha_iso_N = alpha_e - N_iso_ref
+            if (alpha_iso_N<0e0_dp) then
+              print*, "alpha_iso_N=",alpha_iso_N,"<0"
+              stop
+            end if
+          end if
+
           i=locate(lna(1:nactual_bg),alpha_pivot)
           j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
           CALL polint(lna(j:j+4), hubarr(j:j+4), alpha_pivot, H_pivot, dh)
           CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), alpha_pivot, phi_pivot, bb)
           CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), alpha_pivot, dphi_pivot, bb)
+
+          !DEBUG
+          if (save_iso_N) then
+            if (.not. allocated(phi_iso_N)) then
+              print*, "phi_iso_N not allocated..."
+              stop
+            endif
+
+            i=locate(lna(1:nactual_bg),alpha_iso_N)
+            j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
+            CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), &
+              alpha_iso_N, phi_iso_N, bb)
+            CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), &
+              alpha_iso_N, dphi_iso_N, bb)
+            !DEBUG
+            !print*, "fields 0", phi_init0
+            !print*, "fields N", phi_iso_N
+            !print*, "fields piv", phi_pivot
+            !print*, "vels 0", dphi_init0
+            !print*, "vels N", dphi_iso_N
+            !print*, "vels piv", dphi_pivot
+            !stop
+          end if
+
           a_init=k_pivot*Mpc2Mpl/H_pivot/EXP(alpha_pivot)
           a_end=EXP(alpha_e)*a_init
           a_end_inst=EXP(-71.1d0+LOG(V_i/V_end)/4.d0+LOG((M_Pl**4)/V_i)/4.d0)
@@ -168,6 +210,8 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
+    use modpk_icsampling, only : sampling_techn, eqen_samp
+
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
 
@@ -204,8 +248,18 @@ CONTAINS
     x2=Nefold_max !ending value
 
     !MULTIFIELD
+    !Set the ICS
     y(1 : size(y)/2) = phi_init_trial  !phi(x1)
-    y(size(y)/2+1 : (size(y))) = -dVdphi(phi_init_trial)/3./h_init/h_init !dphi/dalpha(x1) slowroll approx
+
+    if (sampling_techn==eqen_samp) then
+      !Set w/equal energy, not necess close to SR
+      y(size(y)/2+1 : (size(y))) = dphi_init0
+
+    else
+      !dphi/dalpha(x1) slowroll approx
+      y(size(y)/2+1 : (size(y))) = &
+        -dVdphi(phi_init_trial)/3./h_init/h_init
+    end if
     !END MULTIFIELD
 
     !Call the integrator

@@ -32,6 +32,9 @@ CONTAINS
     !
     pk_bad = 0
     phi_init = initialphi(phi_init0)
+
+    !NB: For eqen sampling, dphi_init set in trial_background
+
     CALL backgrnd
     RETURN
   END SUBROUTINE potinit
@@ -69,6 +72,7 @@ CONTAINS
     real(dp), dimension(:,:), allocatable :: power_matrix
     real(dp) :: dum, ah, alpha_ik, dalpha, dh
     real(dp), DIMENSION(num_inflaton) :: p_ik,delphi
+    real(dp), DIMENSION(num_inflaton) :: dp_ik
 
     character(36) :: e2_fmt = '(a25, es12.4, a3, es11.4, a1)'
 
@@ -125,11 +129,14 @@ CONTAINS
 
     !MULTIFIELD
     CALL array_polint(aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
+    CALL array_polint(aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
     !END MULTIFIELD
+
     CALL polint(aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
     CALL polint(aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
     a_ik=EXP(alpha_ik)*a_init
     x1=alpha_ik
+
 
     IF(x1.le.0.) THEN
        PRINT*,'MODPK: The phi_init you specified is too small to give'
@@ -152,10 +159,7 @@ CONTAINS
     ode_underflow = .false.
     ode_ps_output = .true.
     ode_infl_end = .true.
-
-    !DEBUG
-    ![ LP: ] Put as input param...
-    save_steps = .false.
+    save_steps = .true.
 
     pk_bad = 0
 
@@ -217,7 +221,8 @@ CONTAINS
 
         ! Background - from previous evolution
         y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
-        y(num_inflaton+1:2*num_inflaton) = cmplx(-dVdphi(p_ik)/3./h_ik/h_ik)  !dphi/dalpha(x1) slowroll approx
+        y(num_inflaton+1:2*num_inflaton) = cmplx(dp_ik) !Not in exact SR
+
         ! mode matrix - diagonalize, Bunch-Davies
         y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
         y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity

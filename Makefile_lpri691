@@ -8,7 +8,9 @@
 #F90C     = gfortran
 #FFLAGS = -O3 -cpp -fopenmp -ffast-math # -fdefault-real-8
 F90C     = ifort
-FFLAGS = -r8 -fpp -openmp  -fast # -DMPI
+FFLAGS = -r8 -fpp -O0 # -openmp  -fast # -DMPI
+#F90C     = mpif90
+#FFLAGS = -r8 -fpp -O0 -DMPI # -openmp  -fast # -DMPI
 
 
 #Settings for building camb_fits

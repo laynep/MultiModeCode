@@ -10,6 +10,10 @@ program test_mmodpk
   use modpk_icsampling
   use modpk_rng, only : init_random_seed
 
+#ifdef MPI
+  use mpi
+#endif
+
   implicit none
 
   !Writing fmts
@@ -20,34 +24,39 @@ program test_mmodpk
   character(len=2) :: ci
 
   !Run-specific input params
-  integer :: i, vparam_arrays
+  integer :: i, vparam_rows
 
   !Parallel variables
   integer :: numtasks, rank
-  !integer :: OMP_GET_NUM_THREADS
 
   !Cosmology
   real(dp) :: dlnk, As, ns, nt, r
 
   !Sampling parameters for ICs
-  integer :: sampling_techn, numb_samples
+  integer :: numb_samples
   real(dp) :: energy_scale
+  real(dp), dimension(:,:), allocatable :: priors_min, priors_max
+
+  type(ic_and_observables), dimension(:), allocatable :: ic_output
+  type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N
 
   integer :: u
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
-    modpkoutput, slowroll_infl_end, instreheat, vparam_arrays
+    modpkoutput, slowroll_infl_end, instreheat, vparam_rows
 
-  namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples
+  namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
+    save_iso_N, N_iso_ref
 
   namelist /params/ phi_init0, vparams, &
     N_pivot, k_pivot, dlnk
 
+
   !------------------------------------------------
 
 
-  !Read initializing params from file (num_inflaton)
+  !Read initializing params from file
 	open(newunit=u, file="parameters_multimodecode.txt", &
     status="old", delim = "apostrophe")
   read(unit=u, nml=init)
@@ -61,25 +70,44 @@ program test_mmodpk
 
   call output_initial_data()
 
-  if (sampling_techn==test_samp) then
+  if (sampling_techn==reg_samp) then
 
     call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
 
-  else if (sampling_techn == eqen_samp) then
+  else if (sampling_techn == eqen_samp .or. &
+    sampling_techn == slowroll_samp) then
 
-    !parallelize?
-
-	  !Set random seed for each thread.
+#ifdef MPI
+    call mpi_parallelize()
+	  !Set random seed for each process.
+	  call init_random_seed(rank)
+#else
 	  call init_random_seed()
+#endif
+
+    !Initialize the sampler
+    call init_sampler(priors_min, priors_max)
 
     do i=1,numb_samples
 
-      call get_ic(sampling_techn, energy_scale, numb_samples)
+      call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt)
 
-      !call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
+      !Load & print output array
+      !Save in ic_output in case want to post-process.
+      !Comment-out if don't want to keep and just do write(1,*)
+      call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt)
+      call ic_output(i)%printout(1)
+      if (save_iso_N) then
+        call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
+          As,ns,r,nt)
+        call ic_output_iso_N(i)%printout(2)
+      end if
 
     end do
 
+  else
+    print*, "ERROR: sampling technique",sampling_techn,"not implemented."
+    stop
   end if
 
   contains
@@ -146,9 +174,12 @@ program test_mmodpk
       !If don't want full spectrum, return
       if (.not. calc_full_pk) return
 
+      !Make the output arrays
+      if (allocated(pk_arr)) deallocate(pk_arr)
+      if (allocated(pk_iso_arr) .and. present(pk_iso_arr)) &
+        deallocate(pk_iso_arr)
       allocate(pk_arr(steps, 2))
       if (present(pk_iso_arr)) allocate(pk_iso_arr(steps, 2))
-
       pk_arr=0e0_dp
       if (present(pk_iso_arr)) pk_iso_arr=0e0_dp
 
@@ -170,7 +201,13 @@ program test_mmodpk
     subroutine allocate_vars()
 
       !Model dependent
-      allocate(vparams(vparam_arrays,num_inflaton))
+      allocate(vparams(vparam_rows,num_inflaton))
+      if (sampling_techn/=reg_samp) then
+        allocate(priors_max(2,num_inflaton))
+        allocate(priors_min(2,num_inflaton))
+        allocate(dphi_init0(num_inflaton))
+        allocate(dphi_init(num_inflaton))
+      end if
 
       allocate(phi_init0(num_inflaton))
       allocate(phi_init(num_inflaton))
@@ -180,6 +217,7 @@ program test_mmodpk
       allocate(phi_infl_end(num_inflaton))
       allocate(phi_pivot(num_inflaton))
       allocate(dphi_pivot(num_inflaton))
+
 
     end subroutine allocate_vars
 
@@ -211,6 +249,7 @@ program test_mmodpk
       write(*, e2_fmt), "Isocurvature P =", A_iso(1)
       write(*, e2_fmt), "Isocurvature P =", A_iso(2)
       write(*, e2_fmt), "Isocurvature P =", A_iso(3)
+      write(*, e2_fmt), "Bundle Width =", field_bundle%width
       write(*, e2_fmt) "Pt/Ps =", r, '(', 16*epsilon, ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
@@ -254,6 +293,106 @@ program test_mmodpk
       PRINT*, "Writing field correlation solution to powmatrix.txt"
       open (unit = 3, file = "powmatrix.txt", status = 'replace')
     end subroutine DEBUG_writing_etc
+
+    !Calculate observables, but grab a new IC each time called
+    subroutine calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt)
+
+      real(dp), intent(in) :: k_pivot,dlnk
+      real(dp), intent(out) :: As,ns,r,nt
+      real(dp) :: epsilon, eta
+      real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
+      real(dp) :: ps0_iso,ps1_iso,ps2_iso
+      real(dp) :: pz0, pz1, pz2
+      real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
+      logical :: calc_full_pk
+
+      call get_ic(phi_init0, dphi_init0, sampling_techn, &
+        priors_min, priors_max, &
+         numb_samples,energy_scale)
+
+      !Initialize potential and calc background
+      call potinit
+
+      !DEBUG
+      !call DEBUG_writing_etc()
+
+      call evolve(k_pivot, ps0, pt0, pz0,ps0_iso)
+      call evolve(k_pivot*exp(-dlnk), ps1, pt1, pz1, ps1_iso)
+      call evolve(k_pivot*exp(dlnk), ps2, pt2, pz2, ps2_iso)
+
+      !Get full spectrum for adiab and isocurv at equal intvs in lnk
+      call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
+
+      epsilon = getEps(phi_pivot, dphi_pivot)
+      eta = geteta(phi_pivot, dphi_pivot)
+
+      As = ps0
+      ns = 1.d0+log(ps2/ps1)/dlnk/2.d0
+      r=pt0/ps0
+      nt=log(pt2/pt1)/dlnk/2.d0
+
+      call output_observables(pk_arr,pk_iso_arr, &
+        (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
+        (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
+        ns,r,nt, epsilon,eta,calc_full_pk)
+
+
+    end subroutine calculate_pk_observables_per_IC
+
+    subroutine init_sampler(priors_min, priors_max)
+
+
+      real(dp), dimension(:,:), intent(out) :: priors_min, &
+        priors_max
+
+      real(dp), dimension(:), allocatable :: phi0_priors_min, &
+        dphi0_priors_min, phi0_priors_max, dphi0_priors_max
+
+      integer :: u, i
+
+      namelist /priors/ phi0_priors_min, phi0_priors_max, &
+        dphi0_priors_min, dphi0_priors_max, &
+        penalty_fact
+
+      if (allocated(phi0_priors_max)) then
+        print*, "ERROR: Priors allocated before initialization."
+        stop
+      else
+        allocate(phi0_priors_max(num_inflaton))
+        allocate(dphi0_priors_max(num_inflaton))
+        allocate(phi0_priors_min(num_inflaton))
+        allocate(dphi0_priors_min(num_inflaton))
+        phi0_priors_min=0e0_dp
+        phi0_priors_max=0e0_dp
+        dphi0_priors_min=0e0_dp
+        dphi0_priors_max=0e0_dp
+      end if
+
+      if (save_iso_N) then
+        allocate(phi_iso_N(num_inflaton))
+        allocate(dphi_iso_N(num_inflaton))
+      end if
+
+      !Read phi0 priors from file
+	    open(newunit=u, file="parameters_multimodecode.txt", &
+        status="old", delim = "apostrophe")
+      read(unit=u, nml=priors)
+      close(u)
+
+      !Make ouput array(s)
+      allocate(ic_output(numb_samples))
+      if (save_iso_N) allocate(ic_output_iso_N(numb_samples))
+      do i=1,size(ic_output)
+        allocate(ic_output(i)%ic(2*num_inflaton))
+        if (save_iso_N) allocate(ic_output_iso_N(i)%ic(2*num_inflaton))
+      end do
+
+      priors_max(1,:) = phi0_priors_max
+      priors_max(2,:) = dphi0_priors_max
+      priors_min(1,:) = phi0_priors_min
+      priors_min(2,:) = dphi0_priors_min
+
+    end subroutine init_sampler
 
 !NOT WORKING YET
 #ifdef MPI
