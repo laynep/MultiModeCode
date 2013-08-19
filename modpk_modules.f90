@@ -37,6 +37,7 @@ MODULE modpkparams
   INTEGER :: num_inflaton
   real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams
   real(dp), ALLOCATABLE :: phi_init0(:), phi_init(:)
+  real(dp), ALLOCATABLE :: dphi_init0(:), dphi_init(:)
   real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
 
   real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(:,:) !The first index is the multifield index

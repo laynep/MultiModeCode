@@ -6,6 +6,18 @@ MODULE potential
        tensorpower, initialphi, geteta, zpower
 
   public :: norm
+  public :: bundle, field_bundle
+
+  type :: bundle
+    real(dp) :: N=0e0_dp
+    real(dp) :: width=0e0_dp
+    real(dp) :: dlogThetadN=0e0_dp
+    contains
+      procedure :: calc_width =>bundle_width
+  end type bundle
+
+  type(bundle) :: field_bundle
+
 
 CONTAINS
 
@@ -264,9 +276,9 @@ CONTAINS
     real(dp) :: Ninit, finv, lambda, mu, phesq
     real(dp) :: x1, x2
 
-    
+
     Ninit = 70.d0
-    
+
     if (size(phi0) .gt. 1) then 
        phii = phi0 ! MULTIFIELD
     else  !SINGLE FIELD
@@ -447,14 +459,8 @@ CONTAINS
       end do; end do; end do
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
-      !DEBUG
       power_isocurv=0e0_dp
-      !power_isocurv = sqrt(dot_product(pk_iso_vect,pk_iso_vect))
       power_isocurv = sum(pk_iso_vect)
-!DEBUG
-!print*,"power_isocurv", power_isocurv
-!print*, "pk_iso_vect", pk_iso_vect
-!stop
 
     end if
 
@@ -487,7 +493,7 @@ CONTAINS
 
       !Find field direction closest aligned to omega_z
       !This check makes sure get linearly indep field space vects
-      check_dot=0e0_dp
+      check_dot=1e-30_dp
       adiab_index=0
       do i=1,size(phi_hat,1)
         if (abs(dot_product(phi_hat(i,:),omega_z(:)))>check_dot) then
@@ -501,7 +507,7 @@ CONTAINS
         stop
       end if
 
-        
+
       !Set the "most adiab" dir to 1
       if (adiab_index /= 1) then
         phi_hat_temp = phi_hat(1,:)
@@ -514,7 +520,7 @@ CONTAINS
 
       s_iso = 0e0_dp
       do i=2,size(spanning,1)
-        
+
         spanning(i,:) = phi_hat(i,:)
         do j=1, i-1
           spanning(i,:) = spanning(i,:) - &
@@ -537,7 +543,6 @@ CONTAINS
 
 
     end subroutine build_isocurv_basis
-
 
   end subroutine powerspectrum
 
@@ -587,5 +592,47 @@ CONTAINS
     zpower = abs(u_zeta**2)/dsigma**2/a**2 /(2*k) * (k**3)/(2*PI**2)
 
   END FUNCTION zpower
+
+
+  function trace_d2logVdphi2(phi) result(trace)
+    !
+    !     Returns trace of d^2V/dPhi^2 given phi
+    !     Used in calculating bundle width
+    !
+
+    real(dp), intent(in) :: phi(:)
+    real(dp) :: trace, V_ab(size(phi),size(phi)), V_a(size(phi)), V
+    integer :: i
+
+    V_ab = d2Vdphi2(phi)
+    V_a = dVdphi(phi)
+    V = pot(phi)
+
+    trace = 0e0_dp
+    do i=1,size(phi)
+      trace = trace + V_ab(i,i)/V - (V_a(i)/V)**2
+    end do
+
+  end function trace_d2logVdphi2
+
+  !Calc bundle width by integrating tr(d2Vdphi2) to efold by Riemann sum
+  subroutine bundle_width(this,phi, efold)
+
+    class(bundle) :: this
+    real(dp), intent(in) :: phi(:), efold
+    real(dp) :: dN
+
+    dN = efold - this%N
+
+    this%dlogThetadN= this%dlogThetadN - &
+      dN*trace_d2logVdphi2(phi)
+
+    this%width=exp(this%dlogThetadN)
+
+    this%N=efold
+
+  end subroutine bundle_width
+
+
 
 END MODULE potential

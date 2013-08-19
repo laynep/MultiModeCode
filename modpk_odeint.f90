@@ -1,5 +1,6 @@
 MODULE modpk_odeint
   use modpkparams, only : dp
+  use modpk_icsampling, only : sampling_techn, reg_samp
   IMPLICIT NONE
 
   INTERFACE odeint
@@ -24,7 +25,7 @@ CONTAINS
     real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
     !MULTIFIELD
     real(dp), DIMENSION(num_inflaton) :: p, delp
-    !END MULTIFIDLE
+    !END MULTIFIELD
 
     INTERFACE
        SUBROUTINE derivs(x,y,dydx)
@@ -54,13 +55,22 @@ CONTAINS
          END INTERFACE
        END SUBROUTINE rkqs_r
     END INTERFACE
-    
+
     real(dp), PARAMETER :: TINY=1.0d-30
-    INTEGER*4, PARAMETER :: MAXSTP=10000
+    INTEGER*4, PARAMETER :: MAXSTP=100000
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
     real(dp), DIMENSION(SIZE(ystart)) :: dydx, y, yscal
     real(dp) :: z, scalefac
+
+    real(dp) :: infl_efolds, infl_efolds_start
+    logical :: infl_checking
+
+
+
+    infl_checking = .false.
+    infl_efolds_start = 0e0_dp
+
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -75,24 +85,35 @@ CONTAINS
        ALLOCATE(xp(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
+
     DO nstp=1,MAXSTP
+
+      !Calc bundle width by integrating tr(d2Vdphi2)
+      call field_bundle%calc_width(y(1:num_inflaton),x)
+
+      !DEBUG
+      !print*, "bundle_width_value", field_bundle%width
+      !print*, "bundle_theta", field_bundle%dlogThetadN
+
+
        CALL derivs(x,y,dydx)
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
+
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
+
        CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+
        IF (hdid == h) THEN
           nok=nok+1
        ELSE
           nbad=nbad+1
        END IF
 
-         !DEBUG
+       !DEBUG
        !IF ((x-x2)*(x2-x1) >= 0.0) THEN
        IF ((x-x2)*(x2-x1) > 0.0d0) THEN
-print*, x, x2, x1, (x-x2)*(x2-x1)
-
 
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
@@ -100,16 +121,37 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
           PRINT*,'MODPK: QUITTING'
           WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP       
+          STOP
           RETURN
        END IF
 
        !MULTIFIELD
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton)
+
+       IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
+         if (sampling_techn==reg_samp) then
+           slowroll_start=.true.
+         else
+           !If scan ICs, say inflating iff eps<1 for "extended" period,
+           !3 efolds - protects against transient inflation epochs, i.e.,
+           !at traj turn-around or chance starting with dphi=0
+
+           if (.not. infl_checking) then
+             infl_checking = .true.
+             infl_efolds_start = x
+           else
+
+             infl_efolds = x - infl_efolds_start
+             if (infl_efolds > 3.0) then
+               slowroll_start=.true.
+             end if
+
+           end if
+         end if
+       endif
        !END MULTIFIELD
 
-       IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
 
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
@@ -153,7 +195,7 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
              END IF
              !END MULTIFIELD
           ENDIF
-       ENDIF       
+       ENDIF
 
        IF (ode_underflow) RETURN
        IF (ABS(hnext) < hmin) THEN
@@ -162,7 +204,8 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
        END IF
        h=hnext
     END DO
-    PRINT*,'too many steps in odeint', x
+    PRINT*,'too many steps in odeint_r', nstp
+    PRINT*,"E-fold", x, "Step size", h
     ode_underflow=.TRUE.
     
   CONTAINS
@@ -422,7 +465,7 @@ print*, x, x2, x1, (x-x2)*(x2-x1)
        END IF
        h=hnext
     END DO
-    PRINT*,'too many steps in odeint'
+    PRINT*,'too many steps in odeint_c', x
     PRINT*,'x =', x, 'h =', h 
     ode_underflow=.TRUE.
 

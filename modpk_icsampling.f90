@@ -1,50 +1,63 @@
-!Implements various IC sampling techniques
+!Implements various IC sampling techniques:
+!reg_samp = Take phi_init0 from param file and set dphi in SR
+!eqen_samp = Sample an iso-E surface by alternating which dimn is set by the
+!energy constraint
+!slowroll_samp = Sample phi0, set dphi in SR
+
 module modpk_icsampling
-  use potential
-  use modpkparams
+  use potential, only : norm, pot
+  use modpkparams, only : dp, slowroll_start, num_inflaton, &
+    potential_choice, vparams
   implicit none
 
-  integer, parameter :: test_samp=1, eqen_samp=2
+  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3
+  integer :: sampling_techn
+  real(dp) :: penalty_fact
+  logical :: save_iso_N=.false.
+  real(dp) :: N_iso_ref
+  real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N
+
+  !Type to save the ICs and observs. Add new observables here
+  type :: ic_and_observables
+    real(dp), dimension(:), allocatable :: ic
+    real(dp) :: As, ns, r, nt
+    contains
+      procedure :: printout => ic_print_observables
+      procedure :: load_observables => ic_load_observables
+  end type ic_and_observables
+
 
   contains
 
+
     !Grab a new IC according to the sampling_techn variable
-    subroutine get_ic(sampling_techn, energy_scale, numb_samples)
+    subroutine get_ic(phi0, dphi0,sampling_techn, &
+        priors_min, priors_max, &
+         numb_samples,energy_scale)
 
       integer, intent(in) :: sampling_techn, numb_samples
       real(dp), intent(in), optional :: energy_scale
+      real(dp), dimension(num_inflaton), intent(out) :: phi0, dphi0
+      real(dp), dimension(2,num_inflaton), intent(in) :: priors_min, &
+        priors_max
 
-      real(dp), dimension(num_inflaton) :: y_background
-      real(dp), dimension(:), allocatable :: phi0_priors_min, &
+      real(dp), dimension(2*num_inflaton) :: y_background
+      real(dp), dimension(num_inflaton) :: phi0_priors_min, &
         dphi0_priors_min, phi0_priors_max, dphi0_priors_max
-      integer :: u, i
 
-      real(dp), dimension(:,:), allocatable :: sample
+      !real(dp), dimension(:,:), allocatable :: sample
 
-      real(dp) :: penalty_fact
-
-      namelist /priors/ phi0_priors_min, phi0_priors_max, &
-        dphi0_priors_min, dphi0_priors_max, &
-        penalty_fact
+      phi0_priors_max=priors_max(1,:)
+      phi0_priors_min=priors_min(1,:)
+      dphi0_priors_max=priors_max(2,:)
+      dphi0_priors_min=priors_min(2,:)
 
       if (sampling_techn == eqen_samp) then
 
-        allocate(phi0_priors_min(num_inflaton))
-        allocate(phi0_priors_max(num_inflaton))
-        allocate(dphi0_priors_min(num_inflaton))
-        allocate(dphi0_priors_max(num_inflaton))
-
-        if (slowroll_start) then
-          print*, "Setting slowroll_start = .false."
-          slowroll_start = .false.
-        end if
-
-        !Read phi0 priors from file
-	      open(newunit=u, file="parameters_multimodecode.txt", &
-          status="old", delim = "apostrophe")
-        read(unit=u, nml=priors)
-        close(u)
-
+        !Tell solver starting out of SR, even if in SR
+        !in case it's only transient, e.g., starting with dphi=0
+        !but not on "attractor"
+        if (slowroll_start) slowroll_start = .false.
 
         !Not ready for primetime
         !call penalized_constrained_montecarlo(sample,energy_scale, &
@@ -56,10 +69,23 @@ module modpk_icsampling
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
+      else if (sampling_techn == slowroll_samp) then
+
+        !Force solver to start in SR
+        slowroll_start = .true.
+
+        call unconstrained_ic(y_background, &
+          phi0_priors_min, phi0_priors_max, &
+          dphi0_priors_min, dphi0_priors_max)
+
       else
         print*, "ERROR: Sampling technique hasn't been implemented."
         stop
       end if
+
+      !Load initial vals from sample
+      phi0 = y_background(1:num_inflaton)
+      dphi0 = y_background(num_inflaton+1:2*num_inflaton)
 
     end subroutine get_ic
 
@@ -279,10 +305,6 @@ print*, new_measure
 
 
 
-
-
-
-
     !Require the background ICs to start with the same energy.
     !Alternates selecting the fields and vels 
     !Assumes canonical kinetic term
@@ -295,18 +317,12 @@ print*, new_measure
         phi0_priors_max, dphi0_priors_min, dphi0_priors_max
       real(dp), intent(in) :: energy_scale
 
-      real(dp), dimension(num_inflaton*2) :: delta_prior
-
       real(dp), dimension(num_inflaton) :: phi, dphi
 
 	    real(dp) :: rand, rho_not_alloc
-	    integer :: param_constr, a, b, i, ll
-      integer, parameter :: maxtry=1000
+	    integer :: param_constr, i, ll
+      integer, parameter :: maxtry=100
 
-
-      delta_prior(1:num_inflaton) = phi0_priors_max-phi0_priors_min
-      delta_prior(num_inflaton+1:2*num_inflaton) = &
-        dphi0_priors_max-dphi0_priors_min
 
 	    do ll=1,maxtry
 
@@ -316,16 +332,9 @@ print*, new_measure
           stop
         end if
 
-        !Choose y from unif prior
-        do i=1,size(y)
-          call random_number(rand)
-          y(i) = rand*delta_prior(i)
-          if (i > num_inflaton) then
-            y(i) = y(i) + dphi0_priors_min(i)
-          else
-            y(i) = y(i) + phi0_priors_min(i)
-          end if
-        end do
+        call unconstrained_ic(y, &
+          phi0_priors_min, phi0_priors_max, &
+          dphi0_priors_min, dphi0_priors_max)
 
         !Randomly pick a dimn to set by energy constraint
         call random_number(rand)
@@ -343,20 +352,15 @@ print*, new_measure
 	    	rho_not_alloc = energy_scale**4 - pot(phi) -&
           0.5e0_dp*sum(dphi*dphi)
 
-!DEBUG
-!print*, "constraining", param_constr
-!print*, "energy remaining", rho_not_alloc
-!print*, "y", y
-
 	    	if (rho_not_alloc<0) then
 !DEBUG
 print*, "Off shell ------------- cycling"
-print*, "E diff", rho_not_alloc
-print*, "KE", 0.5e0_dp*sum(dphi*dphi)
-print*, "PE", pot(phi)
-print*, "energy_scale", energy_scale
-print*, "fields", phi
-print*, "vels", dphi
+!print*, "E diff", rho_not_alloc
+!print*, "KE", 0.5e0_dp*sum(dphi*dphi)
+!print*, "PE", pot(phi)
+!print*, "energy_scale", energy_scale
+!print*, "fields", phi
+!print*, "vels", dphi
           cycle
         else
           exit
@@ -368,11 +372,44 @@ print*, "vels", dphi
       call set_y_by_energy_constraint(y, param_constr, energy_scale)
 
 
-      !DEBUG
-      !print*, "stopping at end of alt_eqen_ic"
-      !stop
-
     end subroutine alt_eqen_ic
+
+    !Uniform sampling of fields, unconstrained
+    !Also grabs momenta uniformly
+    subroutine unconstrained_ic(y, &
+        phi0_priors_min, phi0_priors_max, &
+        dphi0_priors_min, dphi0_priors_max)
+
+      real(dp), dimension(num_inflaton*2), intent(out) :: y
+      real(dp), dimension(num_inflaton), intent(in) :: phi0_priors_min, &
+        phi0_priors_max, dphi0_priors_min, dphi0_priors_max
+
+      real(dp), dimension(num_inflaton*2) :: delta_prior
+
+
+	    real(dp) :: rand
+	    integer :: i
+
+
+      delta_prior(1:num_inflaton) = phi0_priors_max-phi0_priors_min
+      delta_prior(num_inflaton+1:2*num_inflaton) = &
+        dphi0_priors_max-dphi0_priors_min
+
+
+      !Choose y from unif prior
+      do i=1,size(y)
+        call random_number(rand)
+        y(i) = rand*delta_prior(i)
+        if (i > num_inflaton) then
+          y(i) = y(i) + dphi0_priors_min(i-num_inflaton)
+        else
+          y(i) = y(i) + phi0_priors_min(i)
+        end if
+      end do
+
+
+    end subroutine unconstrained_ic
+
 
     !Find min of potential w/all but one param constrained by method of
     !gradient descent.
@@ -477,5 +514,47 @@ print*, "vels", dphi
 
     end subroutine set_y_by_energy_constraint
 
+
+    !Print the cosmo observables to file
+    subroutine ic_print_observables(this, outunit)
+
+      class(ic_and_observables) :: this
+      integer, intent(in) :: outunit
+
+      write(outunit,*) this%ic(:)
+      write(outunit,*) this%As
+      write(outunit,*) this%ns
+      write(outunit,*) this%r
+      write(outunit,*) this%nt
+
+    end subroutine ic_print_observables
+
+    !Load the cosmo observables into the ic_and_observables type
+    subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt)
+
+      class(ic_and_observables) :: this
+      real(dp), intent(in) :: As, ns, r, nt
+      real(dp), dimension(:), intent(in) :: phi0, dphi0
+
+      integer :: ind
+
+      if (.not. allocated(this%ic)) then
+        allocate(this%ic(size(phi0)+size(dphi0)))
+      else if (size(phi0) + size(dphi0) /= size(this%ic)) then
+        deallocate(this%ic)
+        allocate(this%ic(size(phi0) + size(dphi0)))
+      end if
+
+      !num_inflaton
+      ind = size(phi0)
+
+      this%ic(1:ind) = phi0
+      this%ic(ind+1:ind+size(dphi0)) = dphi0
+      this%As = As
+      this%ns = ns
+      this%r = r
+      this%nt = nt
+
+    end subroutine ic_load_observables
 
 end module modpk_icsampling

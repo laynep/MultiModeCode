@@ -32,9 +32,9 @@ CAMBOBJ       = constants.o utils.o subroutines.o inifile.o \
 	bessels.o $(EQUATIONS).o $(NONLINEAR).o lensing.o $(CMBMAIN).o $(CAMBFILE).o
 
 MODPKOBJ = modpk_modules.o modpk_potential.o \
-					 modpk_utils.o modpk_odeint.o \
-					 modpk_rng.o modpk_icsampling.o \
-					 modpk_backgrnd.o modpk.o 
+					 modpk_utils.o modpk_rng.o \
+				   modpk_icsampling.o modpk_odeint.o \
+					 modpk_backgrnd.o modpk.o
 
 default: camb
 
