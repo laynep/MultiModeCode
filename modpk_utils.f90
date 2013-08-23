@@ -40,7 +40,11 @@ CONTAINS
     !END MULTIFIELD
 
     IF(dot_product(delp,delp) .gt. 6.0d0) THEN
-       WRITE(*,*) 'MODPK: H is imaginary:',x,p,delp
+       WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
+       write(*,*) 'Eps=',0.5*dot_product(delp,delp),
+       write(*,*) 'E-fold=',x
+       write(*,*) "Phi="p
+       write(*,*) "Dphi="delp
        !In the case of the hilltop potential, the integrator
        !in a trial step can go here very occasionally because
        !the trial step is too large and it has come too close to V=0.
@@ -129,7 +133,14 @@ CONTAINS
     grad_V = sqrt(dot_product(Vp, Vp))
 
     IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
-       WRITE(*,*) 'MODPK: H is imaginary:',x,phi,delphi
+       WRITE(*,*) 'MODPK: H is imaginary in derivs.'
+       write(*,*) 'Eps=',0.5*dot_product(delp,delp),
+       write(*,*) 'E-fold=',x
+       write(*,*) "Phi="p
+       write(*,*) "Dphi="delp
+
+       !Can sometimes get here when IC sampling
+       !Overriding this error
        if (sampling_techn/=reg_samp) then
          !Override this error and return
          pk_bad=bad_ic

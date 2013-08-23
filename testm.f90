@@ -125,6 +125,11 @@ program test_mmodpk
     stop
   end if
 
+#ifdef MPI
+	!Halts processors here.
+	call mpi_barrier(mpi_comm_world,ierr)
+#endif
+
   contains
 
 
@@ -133,14 +138,12 @@ program test_mmodpk
       !Open output files for each rank
       outsamp=300+rank
       outsamp_N_iso=300+rank+numtasks
-      open(unit=outsamp,file="ic_obs_output.txt")
-      open(unit=outsamp_N_iso,file="ic_obs_output_N_iso.txt")
 
 		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.txt'
 		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.txt'
 
 		  open(unit=outsamp,status='new',file=sampname)
-		  open(unit=outsamp_N_iso,status='new',file=isoNname)
+      if (save_iso_N) open(unit=outsamp_N_iso,status='new',file=isoNname)
 
     end subroutine open_output_files
 
