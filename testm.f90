@@ -35,6 +35,7 @@ program test_mmodpk
 
   !Sampling parameters for ICs
   integer :: numb_samples
+  integer :: outsamp, outsamp_N_iso
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
 
@@ -42,6 +43,7 @@ program test_mmodpk
   type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N
 
   integer :: u
+	character(len=15) :: isoNname, sampname
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -82,8 +84,17 @@ program test_mmodpk
     call mpi_parallelize()
 	  !Set random seed for each process.
 	  call init_random_seed(rank)
+
+    call open_output_files()
+
 #else
+    !Open output files
+    open(newunit=outsamp,file="ic_eqen.txt")
+    open(newunit=outsamp_N_iso,file="ic_isoN.txt")
+
+	  !Set random seed
 	  call init_random_seed()
+
 #endif
 
     !Initialize the sampler
@@ -99,12 +110,12 @@ program test_mmodpk
       !Comment-out if don't want to keep and just do write(1,*)
       call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
       A_iso, A_pnad, A_ent, A_bundle)
-      call ic_output(i)%printout(1)
+      call ic_output(i)%printout(outsamp)
       if (save_iso_N) then
         call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
           As,ns,r,nt,&
           A_iso, A_pnad, A_ent, A_bundle)
-        call ic_output_iso_N(i)%printout(2)
+        call ic_output_iso_N(i)%printout(outsamp_N_iso)
       end if
 
     end do
@@ -115,6 +126,23 @@ program test_mmodpk
   end if
 
   contains
+
+
+    subroutine open_output_files()
+
+      !Open output files for each rank
+      outsamp=300+rank
+      outsamp_N_iso=300+rank+numtasks
+      open(unit=outsamp,file="ic_obs_output.txt")
+      open(unit=outsamp_N_iso,file="ic_obs_output_N_iso.txt")
+
+		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.txt'
+		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.txt'
+
+		  open(unit=outsamp,status='new',file=sampname, form='unformatted')
+		  open(unit=outsamp_N_iso,status='new',file=isoNname, form='unformatted')
+
+    end subroutine open_output_files
 
     subroutine calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
 
