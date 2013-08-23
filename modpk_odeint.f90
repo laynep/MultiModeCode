@@ -92,8 +92,7 @@ CONTAINS
       call field_bundle%calc_width(y(1:num_inflaton),x)
 
       !DEBUG
-      !print*, "bundle_width_value", field_bundle%width
-      !print*, "bundle_theta", field_bundle%dlogThetadN
+      write(14,*), x, field_bundle%width, field_bundle%dlogThetadN
 
 
        CALL derivs(x,y,dydx)

@@ -4,7 +4,7 @@ MODULE background_evolution
   USE modpk_odeint
   USE ode_path
   USE powersp
-  USE potential, ONLY : pot,getH, getHdot, dVdphi, getEps
+  USE potential, ONLY : pot,getH, getHdot, dVdphi, getEps, d2Vdphi2
   USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -259,6 +259,12 @@ CONTAINS
       !dphi/dalpha(x1) slowroll approx
       y(size(y)/2+1 : (size(y))) = &
         -dVdphi(phi_init_trial)/3./h_init/h_init
+      ![ JF ] DEBUG
+      Print*, "test",  y(size(y)/2+1 : (size(y))) 
+      Print*, "potential", pot(phi_init_trial)
+      Print*, "first deriv of V", dVdphi(phi_init_trial)
+      Print*, "second deriv of V", d2Vdphi2(phi_init_trial)
+      Stop
     end if
     !END MULTIFIELD
 
