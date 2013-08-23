@@ -3,7 +3,7 @@
 ----------------
 &init
   num_inflaton=2
-  potential_choice=10
+  potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -14,7 +14,7 @@
 NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp}
 
 &ic_sampling
-  sampling_techn = 1
+  sampling_techn = 2
   numb_samples = 200
 
   energy_scale = .04
@@ -31,6 +31,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp}
 
  phi_init0=-1.001, 0.325245
   vparams = -10.422895047377294, -8.5144100284986442
+/
 
   phi_init0=12.0, 12.0
 ----------------
@@ -54,6 +55,10 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp}
 
 ---------------
 #MISC STUFF
+  phi0_priors_min = -1.5, 0.2
+  phi0_priors_max = -0.5, 0.4
+
+
 
  phi_init0 = 18.0, 18.0, 18.0
   vparams= -14.000, -13.398, -8.046

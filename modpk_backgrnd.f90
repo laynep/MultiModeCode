@@ -264,11 +264,14 @@ CONTAINS
       y(size(y)/2+1 : (size(y))) = &
         -dVdphi(phi_init_trial)/3./h_init/h_init
       ![ JF ] DEBUG
-      Print*, "test",  y(size(y)/2+1 : (size(y))) 
+      print*, "-------"
+      Print*, "dy",  y(size(y)/2+1 : (size(y))) 
       Print*, "potential", pot(phi_init_trial)
       Print*, "first deriv of V", dVdphi(phi_init_trial)
       Print*, "second deriv of V", d2Vdphi2(phi_init_trial)
-      Stop
+      !DEBUG
+      y(size(y)/2+1 : (size(y))) = 0e0_dp
+      !stop
     end if
     !END MULTIFIELD
 
@@ -295,7 +298,7 @@ CONTAINS
        h1 = 0.1
     end if
     dxsav=1.d-7
-    accuracy=1.0d-6
+    accuracy=1.0d-7
     hmin=0.0 !minimum stepsize
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 

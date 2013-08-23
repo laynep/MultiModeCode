@@ -67,6 +67,8 @@ CONTAINS
     logical :: infl_checking
 
 
+    !Inits for checking whether in
+    !extended inflation period (for IC scan)
     infl_checking = .false.
     infl_efolds_start = 0e0_dp
 
@@ -131,10 +133,6 @@ CONTAINS
        !MULTIFIELD
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton)
-
-
-    !DEBUG
-    !print*, "e-fold=",x,getEps(p,delp), h
 
 
 

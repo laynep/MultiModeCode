@@ -48,6 +48,7 @@ module modpk_icsampling
         dphi0_priors_min, phi0_priors_max, dphi0_priors_max
 
       real(dp), dimension(:,:), allocatable :: sample
+      real(dp) :: H, rho
 
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
@@ -96,6 +97,12 @@ module modpk_icsampling
       !Load initial vals from sample
       phi0 = y_background(1:num_inflaton)
       dphi0 = y_background(num_inflaton+1:2*num_inflaton)
+
+      !NB: change to dphidN
+      !H=(energy_scale**2)/sqrt(3.0)
+      rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)
+      H=sqrt(rho/3.0e0_dp)
+      dphi0 = H*y_background(num_inflaton+1:2*num_inflaton)
 
     end subroutine get_ic
 
