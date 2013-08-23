@@ -13,7 +13,7 @@ CONTAINS
 
   SUBROUTINE backgrnd
     use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
-      dphi_iso_N
+      dphi_iso_N, sampling_techn, eqen_samp, bad_ic
 
     INTEGER*4 :: i,j, rescl_count
 
@@ -47,6 +47,8 @@ CONTAINS
     end if
 
     if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
+    if (modpkoutput .and. sampling_techn==eqen_samp) &
+      write(*, array_fmt) 'dphi_init =', dphi_init0
 
     if (size(phi_init) .eq. 1) then !! for single field
 
@@ -115,7 +117,8 @@ CONTAINS
 
        !DEBUG
        !else if ((alpha_e - lna(1)) .gt. 2*N_pivot) then
-       else if ((alpha_e - lna(1)) .gt. 20*N_pivot) then
+       !else if ((alpha_e - lna(1)) .gt. 20*N_pivot) then
+       else if ((alpha_e - lna(1)) .gt. Nefold_max) then
 
           if (modpkoutput) write(*, *) 'MODPK: Too many efolds obtained. Please rescale your initial value'
           pk_bad = 6
@@ -146,7 +149,8 @@ CONTAINS
             alpha_iso_N = alpha_e - N_iso_ref
             if (alpha_iso_N<0e0_dp) then
               print*, "alpha_iso_N=",alpha_iso_N,"<0"
-              stop
+              pk_bad=bad_ic
+              return
             end if
           end if
 

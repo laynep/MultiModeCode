@@ -10,10 +10,10 @@ MODULE potential
 
   type :: bundle
     real(dp) :: N=0e0_dp
-    real(dp) :: width=0e0_dp
+    real(dp) :: exp_scalar=0e0_dp
     real(dp) :: dlogThetadN=0e0_dp
     contains
-      procedure :: calc_width =>bundle_width
+      procedure :: calc_exp_scalar =>bundle_exp_scalar
   end type bundle
 
   type(bundle) :: field_bundle
@@ -395,19 +395,35 @@ CONTAINS
 
   ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
   !adiabatic P(k), and isocurv P(k); includes cross correlations
-  subroutine powerspectrum(psi, dphi, a, power_matrix, power_adiab, power_isocurv)
+  !subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_matrix, power_adiab, power_isocurv)
+  subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_spectrum)
     use internals
-    real(dp), dimension(:,:), intent(out) :: power_matrix
-    real(dp), intent(out) :: power_adiab
-    real(dp), intent(out), optional :: power_isocurv
+    use powersp
 
-    real(dp), dimension(:), intent(in) :: dphi
+    type(power_spectra), intent(inout) :: power_spectrum
+    real(dp), dimension(:), intent(in) :: dphi, phi
     ! Hacked matrix to vect
-    complex(dp), dimension(:), intent(in) :: psi
+    complex(dp), dimension(:), intent(in) :: psi, dpsi
     real(dp), intent(in) :: a
 
+    complex(dp), dimension(size(dphi),size(dphi)) :: power_matrix
+    complex(dp), dimension(size(dphi),size(dphi)) :: d_power_matrix
+    complex(dp), dimension(size(dphi),size(dphi)) :: cross_matrix
+    real(dp) :: power_adiab
+    real(dp) :: power_isocurv
+    real(dp) :: power_pnad
+    real(dp) :: power_entropy
+
+    real(dp) :: AAprod, ABprod, BAprod, BBprod
+
+    real(dp) :: H, Pdot
+
+    !Pre-factors for Pnad P(k)
+    real(dp), dimension(num_inflaton) :: A_vect, B_vect
+
     ! size(dphi)=num_inflaton
-    complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix
+    complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix,&
+      dpsi_matrix
     real(dp), dimension(size(dphi)-1) :: pk_iso_vect
 
     !proj along adiab dir
@@ -416,15 +432,18 @@ CONTAINS
     real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso
     real(dp), parameter :: div_zero_tol=1e-20_dp
 
-    real(dp) :: zeta2, phi_dot_0_scaled
+    real(dp) :: zeta2, phi_dot_0_scaled, prefactor
     integer :: numb_infl
     integer :: i, j, ll
+
+    real(dp) :: prod_exponent
 
     numb_infl=size(dphi)
 
     ! Convert hacked vector to matrix
     do i=1,numb_infl; do j=1, numb_infl
       psi_matrix(i,j) = psi((i-1)*numb_infl+j)
+      dpsi_matrix(i,j) = dpsi((i-1)*numb_infl+j)
     end do; end do
 
     ! Make projection vector along adiabatic and isocurv directions
@@ -432,10 +451,23 @@ CONTAINS
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
 
-
+    !Build power matrices for fields, vels, and cross correls
     power_matrix=0e0_dp
+    d_power_matrix=0e0_dp
+    cross_matrix=0e0_dp
+
+    prefactor= (k**3/2.0e0_dp/(pi**2)/a**2)/(2e0_dp*k)
     do i=1,numb_infl;do j=1, numb_infl; do ll=1,numb_infl
-      power_matrix(i,j) =power_matrix(i,j)+ (k**3/2.0e0_dp/(pi**2)/a**2)*psi_matrix(i,ll)*conjg(psi_matrix(j,ll))/(2e0_dp*k)
+
+      power_matrix(i,j) =power_matrix(i,j)+ &
+        psi_matrix(i,ll)*conjg(psi_matrix(j,ll))*prefactor
+
+      d_power_matrix(i,j) =d_power_matrix(i,j)+&
+        dpsi_matrix(i,ll)*conjg(dpsi_matrix(j,ll))*prefactor
+
+      cross_matrix(i,j) =cross_matrix(i,j)+ &
+        psi_matrix(i,ll)*conjg(dpsi_matrix(j,ll))*prefactor
+
     end do; end do; end do
 
     !Adiabatic power spectrum
@@ -446,12 +478,13 @@ CONTAINS
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
 
     !Isocurvature power spectra
-    if (present(power_isocurv) .and. numb_infl>1) then
+    if (numb_infl>1) then
 
-      !Build the entropic unit vects
+      !Build the isocurv unit vects
       call build_isocurv_basis()
 
       !Vector of iso-spectra
+      !Project power_matrix onto directs perpend to adiab direction
       pk_iso_vect = 0e0_dp
       do i=1,size(s_iso,1); do j=1, numb_infl; do ll=1,numb_infl
         pk_iso_vect(i) = pk_iso_vect(i) + &
@@ -459,15 +492,76 @@ CONTAINS
       end do; end do; end do
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
-      power_isocurv=0e0_dp
+      power_isocurv = 0e0_dp
       power_isocurv = sum(pk_iso_vect)
 
+      !P(k) of total non-adiab pressure ptbs
+      !dP_nad_i(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*Psi_ij)*\hat{a}_j
+      power_pnad =0e0_dp
+
+      A_vect = get_A_vect(phi,dphi)
+      B_vect = get_B_vect(phi,dphi)
+
+      AAprod = 0e0_dp
+      ABprod = 0e0_dp
+      BAprod = 0e0_dp
+      BBprod = 0e0_dp
+      do i=1,numb_infl; do j=1,numb_infl
+
+        AAprod = AAprod +A_vect(i)*A_vect(j)*power_matrix(i,j)
+        ABprod = ABprod +A_vect(i)*B_vect(j)*cross_matrix(i,j)
+        BAprod = BAprod +B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
+        BBprod = BBprod +B_vect(i)*B_vect(j)*d_power_matrix(i,j)
+
+      end do; end do
+      power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
+      !Taking diff of "large" numbs means large error in the difference
+      !Check that power_pnad is smaller than DP accuracy and set to zero
+
+      prod_exponent = abs(real(AAprod)) + abs(real(BBprod)) +&
+        abs(real(ABprod)) + abs(real(BAprod))
+
+      if (power_pnad>1e-60_dp) then
+
+        prod_exponent = log10(prod_exponent/power_pnad)
+
+        if( prod_exponent >14e0_dp) then
+          !Reached DP accuracy, all subseq results are numer error
+          power_pnad = 0e0_dp
+        end if
+
+      else
+        power_pnad=0e0_dp
+      endif
+
+
+      !Rescale so spectrum for S=(H/Pdot)dP_nad - total entropy ptb
+      H=getH(phi,dphi)
+      Pdot=getPdot(phi,dphi)
+      power_entropy = ((H/Pdot)**2)*power_pnad
+
+    else
+      power_spectrum%isocurv =  0e0_dp
+      power_spectrum%pnad    =  0e0_dp
+      power_spectrum%entropy =  0e0_dp
     end if
 
     !DEBUG [JF]
-    write(20, *), Log(a)-Log(a_init), power_adiab, power_isocurv
-    !print*, "power_matrix", power_matrix
-    write(3, *), Log(a)-Log(a_init), power_matrix
+    write(21, *) Log(a)-Log(a_init), power_adiab, power_isocurv, power_pnad,&
+    power_entropy
+
+    write(29, *)Log(a)-Log(a_init),power_isocurv
+    write(28, *) Log(a)-Log(a_init),power_pnad
+    write(27, *) Log(a)-Log(a_init),power_entropy
+
+    power_spectrum%matrix  =  power_matrix
+    power_spectrum%adiab   =  power_adiab
+    power_spectrum%isocurv =  power_isocurv
+    power_spectrum%pnad    =  power_pnad
+    power_spectrum%entropy =  power_entropy
+
 
     contains
 
@@ -507,7 +601,6 @@ CONTAINS
         stop
       end if
 
-
       !Set the "most adiab" dir to 1
       if (adiab_index /= 1) then
         phi_hat_temp = phi_hat(1,:)
@@ -544,7 +637,89 @@ CONTAINS
 
     end subroutine build_isocurv_basis
 
+    !Functions for calculating the total non-adiabatic pressure perturbation
+    !matrices
+
+    !dP_nad(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*Psi_ij)*\hat{a}_j
+    function get_A_vect(phi,dphi) result(A)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: A
+      real(dp) :: H, H2, firstterm, Vdot, c2, eps, gamm
+      real(dp), dimension(size(phi)) :: secondterm, thirdterm, Vprime
+
+      H=getH(phi,dphi)
+      H2=H**2
+      Vprime=dVdphi(phi)
+      !c2 = getcs2(phi,dphi)
+      Vdot = H*sum(Vprime*dphi)
+      eps = geteps(phi,dphi)
+      !gamm=(1.0e0_dp+c2)/(1.0e0_dp-c2)
+
+      firstterm = (2.0e0_dp/3.0e0_dp/H2/sum(dphi*dphi))
+      secondterm=(-3.0e0_dp*H2*sum(dphi*dphi) - (Vdot/H))*Vprime
+      thirdterm = Vdot*H*dphi*(1.0e0_dp + 0.5e0_dp*sum(dphi*dphi))
+      A=firstterm*(secondterm+thirdterm)
+
+    end function get_A_vect
+
+
+    function get_B_vect(phi,dphi) result(B)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: B
+      real(dp) :: firstterm, H, H2, Vdot, eps, c2
+      real(dp), dimension(size(phi)) :: Vprime
+
+      H=getH(phi,dphi)
+      H2=H**2
+      c2 = getcs2(phi,dphi)
+
+      B = (1.0e0_dp-c2)*H2*dphi
+
+    end function get_B_vect
+
+
+    function getPdot(phi,dphi) result(Pdot)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp) :: Pdot, H, H2
+      real(dp), dimension(size(phi)) :: Vprime
+
+      Vprime=dVdphi(phi)
+
+      H=getH(phi,dphi)
+      H2=H**2
+
+      Pdot = -H*sum(3.0e0_dp*H2*dphi*dphi + 2e0_dp*Vprime*dphi)
+
+    end function getPdot
+
+
+    function getrhodot(phi,dphi) result(rhodot)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp) :: rhodot, H, H2
+
+      H=getH(phi,dphi)
+
+      rhodot = -3.0e0_dp*H**3*sum(dphi*dphi)
+
+    end function getrhodot
+
+
+    function getcs2(phi,dphi) result(cs2)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp) :: cs2
+
+      cs2 = getpdot(phi,dphi)/getrhodot(phi,dphi)
+
+    end function getcs2
+
+
   end subroutine powerspectrum
+
 
   !Projection of v orthogonally onto line spanned by u
   pure function projection(v,u) result(proj)
@@ -555,6 +730,7 @@ CONTAINS
     proj = u*(dot_product(v,u)/dot_product(u,u))
 
   end function projection
+
 
   !Norm of v
   pure function norm(v)
@@ -597,7 +773,7 @@ CONTAINS
   function trace_d2logVdphi2(phi) result(trace)
     !
     !     Returns trace of d^2V/dPhi^2 given phi
-    !     Used in calculating bundle width
+    !     Used in calculating bundle exp_scalar
     !
 
     real(dp), intent(in) :: phi(:)
@@ -615,8 +791,8 @@ CONTAINS
 
   end function trace_d2logVdphi2
 
-  !Calc bundle width by integrating tr(d2Vdphi2) to efold by Riemann sum
-  subroutine bundle_width(this,phi, efold)
+  !Calc bundle exp_scalar by integrating tr(d2Vdphi2) to efold by Riemann sum
+  subroutine bundle_exp_scalar(this,phi, efold)
 
     class(bundle) :: this
     real(dp), intent(in) :: phi(:), efold
@@ -627,11 +803,11 @@ CONTAINS
     this%dlogThetadN= this%dlogThetadN - &
       dN*trace_d2logVdphi2(phi)
 
-    this%width=exp(this%dlogThetadN)
+    this%exp_scalar=exp(this%dlogThetadN)
 
     this%N=efold
 
-  end subroutine bundle_width
+  end subroutine bundle_exp_scalar
 
 
 

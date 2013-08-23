@@ -21,6 +21,7 @@ CONTAINS
     USE powersp
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
+    use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
     real(dp) :: k,klo,khi
 
@@ -34,9 +35,20 @@ CONTAINS
     phi_init = initialphi(phi_init0)
 
     !NB: For eqen sampling, dphi_init set in trial_background
-
     CALL backgrnd
+
+
+    !When scanning ICs, let some backgrnd errors override
+    if (sampling_techn/=reg_samp) then
+      if (pk_bad == bad_ic) then
+        !DEBUG
+        print*, "--------------- BAD IC; RESTARTING -------------------"
+        return
+      end if
+    end if
+
     RETURN
+
   END SUBROUTINE potinit
 
   SUBROUTINE total_efold
@@ -51,24 +63,26 @@ CONTAINS
     RETURN
   END SUBROUTINE total_efold
 
-  SUBROUTINE evolve(kin, pow_adiabatic, powt, powz, pow_isocurvature)
+  SUBROUTINE evolve(kin, powerspectrum_out)
     USE modpk_odeint
     USE ode_path
     USE modpkparams
     USE internals
     USE powersp
-    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getHdot
+    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getHdot, field_bundle
     USE modpk_utils, ONLY : locate, polint, derivs, qderivs, rkqs_c, array_polint
+    use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
 
     !!INTEGER*4, PARAMETER :: NVAR = 10
+    type(power_spectra), intent(out) :: powerspectrum_out
 
     integer*4 :: i,j
     real(dp) :: accuracy,h1,hmin,x1,x2 
     complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
     real(dp), INTENT(IN) :: kin
-    real(dp), INTENT(OUT), optional :: pow_isocurvature
-    real(dp), INTENT(OUT) :: pow_adiabatic,  powt, powz
+    real(dp) :: pow_isocurvature
+    real(dp) :: pow_adiabatic,  powt, powz
     real(dp), dimension(:,:), allocatable :: power_matrix
     real(dp) :: dum, ah, alpha_ik, dalpha, dh
     real(dp), DIMENSION(num_inflaton) :: p_ik,delphi
@@ -104,20 +118,37 @@ CONTAINS
     index_uzeta_y = index_tensor_y + 2
 
     ! Make the powerspectrum array.
-    if (allocated(pow_ptb_ij)) then
-      deallocate(pow_ptb_ij)
+    if (allocated(powerspectrum_out%matrix)) then
+      deallocate(powerspectrum_out%matrix)
     end if
-    allocate(pow_ptb_ij(num_inflaton,num_inflaton))
+    if (allocated(power_internal%matrix)) then
+      deallocate(power_internal%matrix)
+    end if
+    allocate(power_internal%matrix(num_inflaton,num_inflaton))
+    allocate(powerspectrum_out%matrix(num_inflaton,num_inflaton))
 
+
+    !Evaluation scale
     k=kin*Mpc2Mpl
+    powerspectrum_out%k=k
 
-    ah=LOG(k/k_start)     !! start where k = 100 aH, deep in the horizon, ah = log(aH), k_start=1d2
+
+    !! start where k = 100 aH, deep in the horizon, ah = log(aH), k_start=1d2
+    ah=LOG(k/k_start)
     i= locate(aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
        PRINT*,'MODPK: The background solution worked, but the k you requested', k,' is outside'
        PRINT*,'MODPK: the bounds of the background you solved for. Please reconsider'
        PRINT*,'MODPK: your phi_init and N_pivot combo.'
+
+       !Override the stop.
+       if (sampling_techn/=reg_samp) then
+         pk_bad=bad_ic
+         return
+       end if
+
+
        PRINT*,'MODPK: QUITTING'
        write(*,e2_fmt) "log(k/k_start):", ah
        write(*,e2_fmt) "aharr(1):", aharr(1)
@@ -154,6 +185,8 @@ CONTAINS
 
     call set_ic(y)
 
+    power_internal = powerspectrum_out
+
     !     Call the integrator
     !
     ode_underflow = .false.
@@ -175,16 +208,13 @@ CONTAINS
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
     nactual_mode = kount  ! update nactual after evolving the modes
 
-    IF(.NOT. ode_underflow) THEN 
-      !power_matrix = pow_ptb_ij
-      powt = powt_ik
-      powz = powz_ik
-      pow_adiabatic = pow_adiab_ik
-      pow_isocurvature = pow_isocurv_ik
+    IF(.NOT. ode_underflow) THEN
+      powerspectrum_out = power_internal
+      powerspectrum_out%bundle_exp_scalar=field_bundle%exp_scalar
     ELSE
-      pow_adiabatic = 0d0
-      pow_isocurvature = 0d0
-      powt=0.
+      powerspectrum_out%adiab= 0e0_dp
+      powerspectrum_out%isocurv=0e0_dp
+      powerspectrum_out%tensor=0e0_dp
       pk_bad=1
     ENDIF
 

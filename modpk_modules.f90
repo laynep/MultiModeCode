@@ -7,7 +7,7 @@ END MODULE camb_interface
 MODULE modpkparams
   IMPLICIT NONE
 
-  ![ LP: ] Double precision.
+  !Double precision.
   INTEGER, parameter :: DP = selected_real_kind(15, 307)
 
   LOGICAL :: use_modpk, vnderivs, instreheat
@@ -27,7 +27,9 @@ MODULE modpkparams
   real(dp) :: h_init, rescale_factor
 
   real(dp), ALLOCATABLE :: phidot_sign(:)
-  real(dp) :: Nefold_max=10000.
+  !DEBUG
+  !real(dp) :: Nefold_max=10000.
+  real(dp) :: Nefold_max=100000.
   real(dp) :: lna(nsteps)
   real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
   LOGICAL :: slowroll_infl_end
@@ -69,10 +71,8 @@ MODULE internals
   use modpkparams, only : num_inflaton, dp
   IMPLICIT NONE
   real(dp), PARAMETER :: PI=3.141592653589793238462643383279502884197
-  real(dp) :: h_ik, powt_ik, powz_ik
-  ![ LP: ] MULTIFIELD
-  real(dp) :: pow_adiab_ik, pow_isocurv_ik
-  real(dp), dimension(:,:), allocatable :: pow_ptb_ij
+  real(dp) :: h_ik
+  !MULTIFIELD
   integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y
   !END MULTIFIELD
   real(dp) :: k, a_ik
@@ -81,9 +81,37 @@ MODULE internals
 END MODULE internals
 
 
-MODULE powersp
+module powersp
   use modpkparams, only : dp
-  IMPLICIT NONE
-  INTEGER*4 :: ik
+  implicit none
+  integer*4 :: ik
   real(dp) :: eval_ps,k_start, useq_ps
-END MODULE powersp
+
+  !Power spectrum type, used for one k
+  !Simplifies all the various defns for isocurv ptbs
+  type :: power_spectra
+    !Mode
+    real(dp) :: k
+    !Ptb spectra
+    complex(dp), dimension(:,:), allocatable :: matrix
+    !Proj ptb spectra onto adiab direction
+    real(dp) :: adiab
+    !Tensor mode spectrum
+    real(dp) :: tensor
+    !Approximated zeta spectrum
+    real(dp) :: powz
+    !Proj ptb spectra onto directions perpend to adiab
+    real(dp) :: isocurv
+    !Total non-adiab pressure ptb spectrum
+    real(dp) :: pnad
+    !Total entropic ptb spectrum, proportional to non-adiab pressure ptb
+    real(dp) :: entropy
+    !Expansion scalar for field space bundle width
+    real(dp) :: bundle_exp_scalar
+
+  end type
+
+  !For temporary calc of spectra in odeint
+  type(power_spectra) :: power_internal
+
+end module powersp
