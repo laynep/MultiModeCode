@@ -139,8 +139,8 @@ program test_mmodpk
 		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.txt'
 		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.txt'
 
-		  open(unit=outsamp,status='new',file=sampname, form='unformatted')
-		  open(unit=outsamp_N_iso,status='new',file=isoNname, form='unformatted')
+		  open(unit=outsamp,status='new',file=sampname)
+		  open(unit=outsamp_N_iso,status='new',file=isoNname)
 
     end subroutine open_output_files
 
