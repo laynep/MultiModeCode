@@ -1,5 +1,6 @@
 MODULE modpk_utils
   use modpkparams
+  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -7,12 +8,12 @@ MODULE modpk_utils
      module procedure rkck_c
   END INTERFACE
 
-  ![ LP: ] Local variable; if true, then switch to using Q variable
+  !Local variable; if true, then switch to using Q variable
   logical, private :: using_q_superh=.false.
 
 CONTAINS
 
-  ![ LP: ] Background derivatives y'=f(y)
+  !Background derivatives y'=f(y)
   SUBROUTINE bderivs(x,y,yprime)
     USE modpkparams
     USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getHdot
@@ -51,6 +52,11 @@ CONTAINS
           yprime(2)=0.0d0
           RETURN
        ENDIF
+       if (sampling_techn/=reg_samp) then
+         !Override this error and return
+         pk_bad=bad_ic
+         return
+       end if
        WRITE(*,*) 'MODPK: QUITTING'
        write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
        if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
@@ -62,7 +68,13 @@ CONTAINS
 
     !MULTIFIELD
     yprime(1 : size(y)/2) = delp
-    yprime(size(y)/2+1 : size(y)) = -((3.0+dhubble/hubble)*delp+dVdphi(p)/hubble/hubble)
+    yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delp+&
+      dVdphi(p)/hubble/hubble)
+
+    !DEBUG
+    !Derivs in cosmic time
+    !yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delp - dVdphi(p)
+
     !END MULTIFIELD 
 
     RETURN
@@ -70,11 +82,12 @@ CONTAINS
   END SUBROUTINE bderivs
 
 
-  ![ LP: ] Full y (back+mode matrix+tensor) derivatives y'=f(y)
+  ! Full y (back+mode matrix+tensor) derivatives y'=f(y)
   SUBROUTINE derivs(x,y,yprime)
     USE modpkparams
     USE internals
     USE potential, ONLY: pot, dVdphi, d2Vdphi2, getH, getHdot, getEps, getEta
+    USE camb_interface, ONLY : pk_bad
     IMPLICIT NONE
     real(dp), INTENT(IN) :: x
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(IN) :: y
@@ -106,7 +119,7 @@ CONTAINS
     delphi = dble(y(num_inflaton+1:2*num_inflaton))
     dotphi = sqrt(dot_product(delphi, delphi))
 
-    ![ LP: ] Aliases to potential derivatives
+    !Aliases to potential derivatives
     epsilon = getEps(phi, delphi)
     eta = geteta(phi, delphi)
     Vpp = d2Vdphi2(phi)
@@ -115,8 +128,14 @@ CONTAINS
     Vz = dot_product(Vp, delphi)/dotphi
     grad_V = sqrt(dot_product(Vp, Vp))
 
-    IF(dot_product(delphi, delphi) .GT. 6.d0) THEN
+    IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
        WRITE(*,*) 'MODPK: H is imaginary:',x,phi,delphi
+       if (sampling_techn/=reg_samp) then
+         !Override this error and return
+         pk_bad=bad_ic
+         return
+       end if
+
        WRITE(*,*) 'MODPK: QUITTING'
        write(*,*) 'vparams: ', (vparams(i, :), i=1, size(vparams,1))
        if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
@@ -127,8 +146,8 @@ CONTAINS
     dhubble=getHdot(phi,delphi)
     a=EXP(x)
 
-    ![ LP: ] Alias y's into real variable names
-    ![ LP: ] NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
+    ! Alias y's into real variable names
+    ! NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
     psi = y(index_ptb_y:index_ptb_vel_y-1)
     dpsi = y(index_ptb_vel_y:index_tensor_y-1)
 
@@ -137,19 +156,19 @@ CONTAINS
     u_zeta = y(index_uzeta_y)
     du_zeta = y(index_uzeta_y+1)
 
-    ![ LP: ] Build the mass matrix, Cab
+    ! Build the mass matrix, Cab
     call build_mass_matrix(Cab)
 
-    ![ LP: ] -----------------------------
-    ![ LP: ] Set the RHS of y'(x) = f(y(x))
-    ![ LP: ] -----------------------------
+    ! -----------------------------
+    ! Set the RHS of y'(x) = f(y(x))
+    ! -----------------------------
 
-    ![ LP: ] background
+    ! background
     yprime(1:num_inflaton) = cmplx(delphi)
     yprime(num_inflaton+1:2*num_inflaton) =&
       cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble))
 
-    ![ LP: ] ptb matrix
+    ! ptb matrix
     yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
 
     if (using_q_superh) then
@@ -163,7 +182,7 @@ CONTAINS
     end if
 
 
-    ![ LP: ] tensors
+    ! tensors
     yprime(index_tensor_y) = dv
     if (using_q_superh) then
       yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv - (k/a_init/a/hubble)**2*v
@@ -172,7 +191,7 @@ CONTAINS
         (k/a_init/a/hubble)**2*v + (2.0e0_dp - epsilon)*v
     end if
 
-    ![ LP: ] adiabatic ptb
+    ! adiabatic ptb
     yprime(index_uzeta_y) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
     yprime(index_uzeta_y+1) = -(1.0e0_dp - epsilon)*du_zeta -&
@@ -205,7 +224,7 @@ CONTAINS
 
       end subroutine build_mass_matrix
 
-      ![ LP: ] Only works for square matrices
+      ! Only works for square matrices
       pure function dot(matrixA,hacked_vector) result(outvect)
 
         real(dp), dimension(:,:), intent(in) :: matrixA
@@ -233,7 +252,7 @@ CONTAINS
 
   END SUBROUTINE derivs
 
-  ![ LP: ] Full y (back+mode matrix(in Q at horizon cross)+tensor) derivatives y'=f(y)
+  ! Full y (back+mode matrix(in Q at horizon cross)+tensor) derivatives y'=f(y)
   subroutine qderivs(x,y,yprime)
     use modpkparams
     implicit none
@@ -504,8 +523,8 @@ CONTAINS
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END FUNCTION locate
 
-  ![ LP: ] Polynomial interpolation
-  ![ LP: ] Given array XA and YA (of same length) and given a value X, returns
+  ! Polynomial interpolation
+  ! Given array XA and YA (of same length) and given a value X, returns
   !value Y such that if P(x) is a polynomial st P(XA_i)=YA_i, then Y=P(X) ---
   !and an error estimate DY
   SUBROUTINE polint(xa,ya,x,y,dy)
@@ -600,7 +619,7 @@ CONTAINS
   END FUNCTION reallocate_rm
 
 
-  ![ LP: ] Take a "hacked" vector, i.e., a matrix B that is in the
+  ! Take a "hacked" vector, i.e., a matrix B that is in the
   !form of a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
   !Returns the matrix form. NB: the vector must be a representation of a square
   !matrix.
@@ -621,7 +640,7 @@ CONTAINS
 
   end function convert_hacked_vector_to_matrix
 
-  ![ LP: ] Take a matrix and "hack" it into a vector, i.e.,
+  ! Take a matrix and "hack" it into a vector, i.e.,
   !a vector where the rows of B(i,1:N) --> first N terms in B(1:N), etc
   pure function convert_matrix_to_hacked_vector(matrix) &
     result(hacked_vector)

@@ -5,12 +5,13 @@
 !slowroll_samp = Sample phi0, set dphi in SR
 
 module modpk_icsampling
-  use potential, only : norm, pot
+  use potential, only : norm, pot, getH
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3
+  integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
   logical :: save_iso_N=.false.
@@ -21,6 +22,7 @@ module modpk_icsampling
   type :: ic_and_observables
     real(dp), dimension(:), allocatable :: ic
     real(dp) :: As, ns, r, nt
+    real(dp) :: A_iso, A_pnad, A_ent, A_bundle
     contains
       procedure :: printout => ic_print_observables
       procedure :: load_observables => ic_load_observables
@@ -45,7 +47,7 @@ module modpk_icsampling
       real(dp), dimension(num_inflaton) :: phi0_priors_min, &
         dphi0_priors_min, phi0_priors_max, dphi0_priors_max
 
-      !real(dp), dimension(:,:), allocatable :: sample
+      real(dp), dimension(:,:), allocatable :: sample
 
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
@@ -60,20 +62,28 @@ module modpk_icsampling
         if (slowroll_start) slowroll_start = .false.
 
         !Not ready for primetime
+        !call implicit_surface_sampling(sample,energy_scale, &
+        !  numb_samples,&
+        !  phi0_priors_min, phi0_priors_max, &
+        !  dphi0_priors_min, dphi0_priors_max)
+
+        !Not ready for primetime
         !call penalized_constrained_montecarlo(sample,energy_scale, &
         !  numb_samples, penalty_fact,&
         !  phi0_priors_min, phi0_priors_max, &
         !  dphi0_priors_min, dphi0_priors_max)
 
-        call alt_eqen_ic(y_background, energy_scale, &
+        call eqen_ic(y_background, energy_scale, &
           phi0_priors_min, phi0_priors_max, &
-          dphi0_priors_min, dphi0_priors_max)
+          dphi0_priors_min, dphi0_priors_max, &
+          velconst=.true.)
 
       else if (sampling_techn == slowroll_samp) then
 
         !Force solver to start in SR
         slowroll_start = .true.
 
+        !Will override what vels it chooses later
         call unconstrained_ic(y_background, &
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
@@ -308,20 +318,21 @@ print*, new_measure
     !Require the background ICs to start with the same energy.
     !Alternates selecting the fields and vels 
     !Assumes canonical kinetic term
-    subroutine alt_eqen_ic(y, energy_scale, &
+    subroutine eqen_ic(y, energy_scale, &
         phi0_priors_min, phi0_priors_max, &
-        dphi0_priors_min, dphi0_priors_max)
+        dphi0_priors_min, dphi0_priors_max,velconst)
 
       real(dp), dimension(num_inflaton*2), intent(out) :: y
       real(dp), dimension(num_inflaton), intent(in) :: phi0_priors_min, &
         phi0_priors_max, dphi0_priors_min, dphi0_priors_max
       real(dp), intent(in) :: energy_scale
+      logical, intent(in) :: velconst
 
       real(dp), dimension(num_inflaton) :: phi, dphi
 
 	    real(dp) :: rand, rho_not_alloc
 	    integer :: param_constr, i, ll
-      integer, parameter :: maxtry=100
+      integer, parameter :: maxtry=200
 
 
 	    do ll=1,maxtry
@@ -336,43 +347,57 @@ print*, new_measure
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
-        !Randomly pick a dimn to set by energy constraint
+        !Pick a dimn to set by energy constraint
         call random_number(rand)
-        param_constr = ceiling(rand*size(y))
+        if (velconst) then
+          !Constrain velocity, since model indep assuming canon KE
+          !Easier to later over/under sample
+          param_constr = ceiling(rand*num_inflaton)+num_inflaton
+        else
+          param_constr = ceiling(rand*size(y))
+        end if
 
         !Set y(constraint) to minim energy value
         y(param_constr) = min_fixed_energy(param_constr)
 
-
         phi = y(1:num_inflaton)
         dphi = y(num_inflaton+1:2*num_inflaton)
-
 
 	    	!Energy density not allocated
 	    	rho_not_alloc = energy_scale**4 - pot(phi) -&
           0.5e0_dp*sum(dphi*dphi)
 
 	    	if (rho_not_alloc<0) then
-!DEBUG
-print*, "Off shell ------------- cycling"
-!print*, "E diff", rho_not_alloc
-!print*, "KE", 0.5e0_dp*sum(dphi*dphi)
-!print*, "PE", pot(phi)
-!print*, "energy_scale", energy_scale
-!print*, "fields", phi
-!print*, "vels", dphi
+          print*, "IC off shell ------------- cycling"
           cycle
         else
-          exit
+
+	        !Set y(constraint) to fix total energy
+          call set_y_by_energy_constraint(y, param_constr, energy_scale)
+          phi = y(1:num_inflaton)
+          dphi = y(num_inflaton+1:2*num_inflaton)
+
+          if (any(phi<phi0_priors_min) .or. any(dphi<dphi0_priors_min) &
+            .or. any(phi>phi0_priors_max) &
+            .or. any(dphi>dphi0_priors_max)) then
+          !DEBUG
+          print*, "!!!!!!!!!!!!!!!!!!GOT HERE!!!!!!!!!!!!!!!!!!!!!!!!"
+          print*, "phi",phi
+          print*, "dphi",dphi
+
+            cycle
+
+          else
+            exit
+          end if
+
         end if
 
 	    end do
 		
-	    !Set y(constraint) to fix total energy
-      call set_y_by_energy_constraint(y, param_constr, energy_scale)
 
 
-    end subroutine alt_eqen_ic
+    end subroutine eqen_ic
 
     !Uniform sampling of fields, unconstrained
     !Also grabs momenta uniformly
@@ -452,7 +477,7 @@ print*, "Off shell ------------- cycling"
       real(dp), dimension(num_inflaton) :: phi, dphi
       integer :: poly_degree
       complex(dp) :: root
-      real(dp) :: rand
+      real(dp) :: rand, H
       real(dp) :: m2_V(num_inflaton), energy_remaining
 
       !NB: y(constraint) already set to its minim value
@@ -462,6 +487,7 @@ print*, "Off shell ------------- cycling"
 
       phi = y(1:num_inflaton)
       dphi = y(num_inflaton+1:2*num_inflaton)
+
 
       !w/y(constraint)=0
       energy_remaining = energy_scale**4 - pot(phi) - &
@@ -475,14 +501,12 @@ print*, "Off shell ------------- cycling"
         y(constraint) = rand_sign()*sqrt(2e0_dp* &
           (energy_remaining))
 
-        !return
 
       else
 
         !Constraining a field and have to solve the potential
         !Try to do this by hand.
         if (potential_choice==1) then
-          poly_degree = 2
 
           m2_V = 10.d0**(vparams(1,:))
 
@@ -511,8 +535,136 @@ print*, "Off shell ------------- cycling"
           print*, "sign", rand_sign()
           !stop
 
+      !Convert dphidt-->dphidN
+      H = sqrt(3.0e0_dp)*energy_scale**2
+      dphi = H*dphi
 
     end subroutine set_y_by_energy_constraint
+
+
+    !Takes a uniform sample of implicit surface defined in the "constrained"
+    !dimensions. Then moves the sample by electro-static charge until in
+    !equilibrium.  Then spawns new points and repeats until full sample built.
+    !Inspired largely from
+    ! http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.27.2922&rep=rep1&type=pdf
+    subroutine implicit_surface_sampling(sample,energy_scale, &
+      numb_samples,&
+      phi0_priors_min, phi0_priors_max, &
+      dphi0_priors_min, dphi0_priors_max)
+
+      real(dp), dimension(:,:), allocatable :: sample
+      real(dp), intent(in) :: energy_scale
+      integer, intent(in) :: numb_samples
+      real(dp), dimension(num_inflaton), intent(in) :: phi0_priors_min, &
+        dphi0_priors_min, phi0_priors_max, dphi0_priors_max
+
+      real(dp), dimension(:,:), allocatable :: temp_sample
+      real(dp), dimension(num_inflaton) :: phi
+      real(dp), dimension(2*num_inflaton) :: xvecti, xvectj, radius,&
+        deltax
+      real(dp) :: alpha, sigma, energy, tol
+
+      integer :: i,j, firstvel
+      logical, dimension(:), allocatable :: in_equil
+
+      !Make the arrays
+      if (allocated(sample)) then
+        deallocate(sample)
+      endif
+      allocate(sample(numb_samples,2*num_inflaton))
+      if (numb_samples<20) then
+        allocate(temp_sample(numb_samples,2*num_inflaton))
+      else
+        allocate(temp_sample(numb_samples/10,2*num_inflaton))
+      end if
+      allocate(in_equil(size(temp_sample,1)))
+
+      !Seed the IC surface
+      !Use the first velocity (in time) as the constrained variable
+      firstvel = num_inflaton+1
+      do i=1,size(temp_sample,1)
+        call unconstrained_ic(temp_sample(i,:), &
+          phi0_priors_min, phi0_priors_max, &
+          dphi0_priors_min, dphi0_priors_max)
+        phi = temp_sample(i,1:num_inflaton)
+        temp_sample(i,firstvel) = constrain_first_vel(temp_sample(i,:),&
+          sgn=1.0e0_dp)
+      end do
+
+      !Walk temporary points around surface by electrostatic-like pot
+      !Uses grad desc
+      in_equil = .false.
+      tol = 1e-3_dp
+      alpha=0.1e0_dp
+      !DEBUG
+      !Supposed to be sqrt(surface area/sample size)
+      sigma=0.3e0_dp*sqrt(1.0e0_dp/size(temp_sample,1))
+      do while (.not. all(in_equil))
+
+        deltax=0e0_dp
+
+        do i=1,size(temp_sample,1)
+          xvecti = temp_sample(i,:)
+
+          !DEBUG
+          !O(N^2)
+          do j=1,size(temp_sample,1)-1
+            xvectj = temp_sample(j,:)
+            radius = xvecti-xvectj
+            energy = alpha*&
+              exp(-1e0_dp*abs(sum(radius*radius))/(2.0e0_dp*sigma**2))
+
+            !DEBUG
+            deltax = deltax + radius*energy
+
+            !Check if in equil
+            if (sum(deltax*deltax)<tol) then
+              in_equil(i) =.true.
+            end if
+
+          end do
+
+          !Take step on constraint surface
+          temp_sample(i,:)=temp_sample(i,:) + deltax
+          temp_sample(i,firstvel) = constrain_first_vel(temp_sample(i,:),&
+            temp_sample(i,firstvel)/abs(temp_sample(i,firstvel)),&
+            randvel=.false.)
+
+        end do
+
+
+      end do
+
+
+      contains
+
+        function constrain_first_vel(y,sgn,randvel) result(constrain_y)
+
+          real(dp), dimension(2*num_inflaton), intent(in) :: y
+          real(dp), dimension(num_inflaton-1) :: vely
+          real(dp) :: sgn
+          logical, optional :: randvel
+          real(dp) :: constrain_y
+          real(dp) :: rand
+
+          vely = y(num_inflaton+2:2*num_inflaton)
+
+          constrain_y = sgn*sqrt(2.0e0_dp*(energy_scale**4-pot(phi))&
+            - sum(vely*vely))
+
+          !Pick first vel's sign at random
+          if (present(randvel) .and. randvel) then
+            call random_number(rand)
+            rand = 2.0e0_dp*rand
+            if (ceiling(rand)==2) then
+              constrain_y=-1.0e0_dp*constrain_y
+            endif
+          end if
+
+        end function constrain_first_vel
+
+    end subroutine implicit_surface_sampling
+
 
 
     !Print the cosmo observables to file
@@ -521,19 +673,26 @@ print*, "Off shell ------------- cycling"
       class(ic_and_observables) :: this
       integer, intent(in) :: outunit
 
-      write(outunit,*) this%ic(:)
-      write(outunit,*) this%As
-      write(outunit,*) this%ns
-      write(outunit,*) this%r
-      write(outunit,*) this%nt
+      write(outunit,*) "ic(:)   ",this%ic(:)
+      write(outunit,*) "As      ",this%As
+      write(outunit,*) "ns      ",this%ns
+      write(outunit,*) "r       ",this%r
+      write(outunit,*) "nt      ",this%nt
+      write(outunit,*) "A_iso   ",this%A_iso
+      write(outunit,*) "A_pnad  ",this%A_pnad
+      write(outunit,*) "A_ent   ",this%A_ent
+      write(outunit,*) "A_bundle",this%A_bundle
+      write(outunit,*) "---------"
 
     end subroutine ic_print_observables
 
     !Load the cosmo observables into the ic_and_observables type
-    subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt)
+    subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt,&
+      A_iso, A_pnad, A_ent, A_bundle)
 
       class(ic_and_observables) :: this
       real(dp), intent(in) :: As, ns, r, nt
+      real(dp), intent(in) :: A_iso, A_pnad, A_ent, A_bundle
       real(dp), dimension(:), intent(in) :: phi0, dphi0
 
       integer :: ind
@@ -554,6 +713,10 @@ print*, "Off shell ------------- cycling"
       this%ns = ns
       this%r = r
       this%nt = nt
+      this%A_iso= A_iso
+      this%A_pnad=A_pnad
+      this%A_ent=A_ent
+      this%A_bundle=A_bundle
 
     end subroutine ic_load_observables
 

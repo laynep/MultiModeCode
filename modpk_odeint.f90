@@ -67,7 +67,6 @@ CONTAINS
     logical :: infl_checking
 
 
-
     infl_checking = .false.
     infl_efolds_start = 0e0_dp
 
@@ -88,12 +87,8 @@ CONTAINS
 
     DO nstp=1,MAXSTP
 
-      !Calc bundle width by integrating tr(d2Vdphi2)
-      call field_bundle%calc_width(y(1:num_inflaton),x)
-
-      !DEBUG
-      write(14,*), x, field_bundle%width, field_bundle%dlogThetadN
-
+       !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
+       call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
        CALL derivs(x,y,dydx)
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
@@ -101,6 +96,17 @@ CONTAINS
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
+
+       !DEBUG
+       !print*, "----"
+       !print*, "Efolds",x
+       !print*, "y",y
+       !!write(300,*) y
+       !print*, "h",h
+       !print*, "x2",x2
+       !print*, "x1",x1
+       !print*, "x2-x",x2-x
+       !print*, "other", (x+h-x2)*(x+h-x1)
 
        CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
 
@@ -110,8 +116,6 @@ CONTAINS
           nbad=nbad+1
        END IF
 
-       !DEBUG
-       !IF ((x-x2)*(x2-x1) >= 0.0) THEN
        IF ((x-x2)*(x2-x1) > 0.0d0) THEN
 
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
@@ -127,6 +131,12 @@ CONTAINS
        !MULTIFIELD
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton)
+
+
+    !DEBUG
+    !print*, "e-fold=",x,getEps(p,delp), h
+
+
 
        IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
          if (sampling_techn==reg_samp) then
@@ -148,6 +158,8 @@ CONTAINS
 
            end if
          end if
+       else if (infl_checking) then
+         infl_checking=.false.
        endif
        !END MULTIFIELD
 
@@ -171,7 +183,7 @@ CONTAINS
              ENDIF
 
              !MULTIFIELD
-             IF (size(p) .eq. 1) THEN    
+             IF (size(p) .eq. 1) THEN
                 IF (phidot_sign(1).GT.0..AND.(p(1).GT.(phi_infl_end(1)+0.1))) THEN
                    infl_ended=.TRUE.
                    ystart(:)=y(:)
@@ -206,9 +218,9 @@ CONTAINS
     PRINT*,'too many steps in odeint_r', nstp
     PRINT*,"E-fold", x, "Step size", h
     ode_underflow=.TRUE.
-    
+
   CONTAINS
-    
+
     SUBROUTINE save_a_step
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
@@ -276,11 +288,15 @@ CONTAINS
     END INTERFACE
 
     real(dp), PARAMETER :: TINY=1.0d-40
-    INTEGER*4, PARAMETER :: MAXSTP=10000
+    INTEGER*4, PARAMETER :: MAXSTP=100000
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
     COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: dydx, y, yscal
     real(dp) :: scalefac, hubble, a_switch, dotphi
+
+    complex(dp), dimension(num_inflaton**2) :: psi, dpsi
+
+
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -355,29 +371,39 @@ CONTAINS
        
       
        IF(ode_ps_output) THEN
+
           IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+
              !MULTIFIELD
              IF (use_q) THEN
-                ! w/out isocurv calculation
-                !call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
-                !    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik)
 
-                ! with isocurv calculation
-                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1) &
-                    *scalefac/a_switch, delphi, scalefac, pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik)
+               !Y's are in \bar{Q}=Q/a_switch
+               psi = y(index_ptb_y:index_ptb_vel_y-1) &
+                    *scalefac/a_switch
+               dpsi = scalefac/a_switch*&
+                 (y(index_ptb_vel_y:index_tensor_y-1) + &
+                 y(index_ptb_y:index_ptb_vel_y-1))
 
-                powt_ik=tensorpower(y(index_tensor_y) &
+               ! with isocurv calculation
+               call powerspectrum(psi, dpsi, phi, delphi, &
+                 scalefac, power_internal)
+
+               power_internal%tensor=tensorpower(y(index_tensor_y) &
                   *scalefac/a_switch, scalefac)
              ELSE
-                call powerspectrum(y(index_ptb_y:index_ptb_vel_y-1), &
-                    delphi, scalefac, pow_ptb_ij,pow_adiab_ik,pow_isocurv_ik)
 
-                powt_ik=tensorpower(y(index_tensor_y), scalefac)
+               psi = y(index_ptb_y:index_ptb_vel_y-1)
+               dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+
+               call powerspectrum(psi, dpsi, phi, delphi, &
+                 scalefac, power_internal)
+
+               power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
              END IF
 
 
              if (compute_zpower) then  !! compute only once upon horizon exit
-                powz_ik = zpower(y(index_uzeta_y), dotphi, scalefac)
+                power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
                 compute_zpower = .false.
              end if
 
@@ -439,7 +465,7 @@ CONTAINS
           END IF
        ENDIF
 
-       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN 
+       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
           !switch to the Q variable for super-horizon evolution
           !only apply the switch on y(1:4*num_inflaton+2)
           use_q = .TRUE.
