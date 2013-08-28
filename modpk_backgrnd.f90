@@ -435,6 +435,9 @@ CONTAINS
     hmin=0.0 !minimum stepsize
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
+    !DEBUG
+    print*, "pk_bad from backgrnd",pk_bad
+
     IF(.NOT. ode_underflow) THEN
        lna(1:kount)=xp(1:kount)
        nactual_bg=kount

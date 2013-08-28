@@ -99,17 +99,6 @@ CONTAINS
             CALL save_a_step
        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
 
-       !DEBUG
-       !print*, "----"
-       !print*, "Efolds",x
-       !print*, "y",y
-       !!write(300,*) y
-       !print*, "h",h
-       !print*, "x2",x2
-       !print*, "x1",x1
-       !print*, "x2-x",x2-x
-       !print*, "other", (x+h-x2)*(x+h-x1)
-
        CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
 
        IF (hdid == h) THEN

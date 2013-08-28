@@ -710,12 +710,12 @@ CONTAINS
     end if
 
     !DEBUG [JF]
-    write(21, *) Log(a)-Log(a_init), power_adiab, power_isocurv, power_pnad,&
-    power_entropy
+    !write(21, *) Log(a)-Log(a_init), power_adiab, power_isocurv, power_pnad,&
+    !power_entropy
 
-    write(29, *)Log(a)-Log(a_init),power_isocurv
-    write(28, *) Log(a)-Log(a_init),power_pnad
-    write(27, *) Log(a)-Log(a_init),power_entropy
+    !write(29, *)Log(a)-Log(a_init),power_isocurv
+    !write(28, *) Log(a)-Log(a_init),power_pnad
+    !write(27, *) Log(a)-Log(a_init),power_entropy
 
     power_spectrum%matrix  =  power_matrix
     power_spectrum%adiab   =  power_adiab

@@ -8,9 +8,11 @@ module modpk_icsampling
   use potential, only : norm, pot, getH
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
+  use internals, only : pi
   implicit none
 
-  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3
+  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
+    fromfile_samp=4
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
@@ -21,12 +23,14 @@ module modpk_icsampling
   !Type to save the ICs and observs. Add new observables here
   type :: ic_and_observables
     real(dp), dimension(:), allocatable :: ic
-    real(dp) :: As, ns, r, nt
+    real(dp) :: As, ns, r, nt, alpha_s
     real(dp) :: A_iso, A_pnad, A_ent, A_bundle
     contains
       procedure :: printout => ic_print_observables
       procedure :: load_observables => ic_load_observables
   end type ic_and_observables
+
+  integer, private :: icfile
 
 
   contains
@@ -49,6 +53,7 @@ module modpk_icsampling
 
       real(dp), dimension(:,:), allocatable :: sample
       real(dp) :: H, rho
+      integer :: i,j
 
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
@@ -89,6 +94,30 @@ module modpk_icsampling
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
+      else if (sampling_techn == fromfile_samp) then
+
+        !Get IC from a file
+#ifdef MPI
+!DEBUG
+print*, "sampling_techn==fromfile_samp doesn't work with MPI"
+stop
+#endif
+
+!DEBUG
+print*, "not working..."
+stop
+        open(newunit=icfile, file="initial_conditions.txt",&
+          form="unformatted",status="old")
+        !DEBUG
+        print*, "icfile", icfile
+        do j=1,10
+          read(icfile), (y_background(i),i=1,size(y_background))
+        print*, "size", size(y_background)
+        end do
+        !DEBUG
+        print*, "INITIAL COND", y_background
+        stop
+
       else
         print*, "ERROR: Sampling technique hasn't been implemented."
         stop
@@ -98,8 +127,7 @@ module modpk_icsampling
       phi0 = y_background(1:num_inflaton)
       dphi0 = y_background(num_inflaton+1:2*num_inflaton)
 
-      !NB: change to dphidN
-      !H=(energy_scale**2)/sqrt(3.0)
+      !NB: Convert dphidt-->dphidN
       rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)
       H=sqrt(rho/3.0e0_dp)
       dphi0 = H*y_background(num_inflaton+1:2*num_inflaton)
@@ -337,18 +365,13 @@ print*, new_measure
 
       real(dp), dimension(num_inflaton) :: phi, dphi
 
-	    real(dp) :: rand, rho_not_alloc
-	    integer :: param_constr, i, ll
+	    real(dp) :: rand, rho_not_alloc, KE
+
+	    integer :: param_constr, i, ll, j
       integer, parameter :: maxtry=200
 
 
 	    do ll=1,maxtry
-
-        if(ll==maxtry) then
-          print*, "Couldn't find an IC with energy=energy_scale in the max"
-          print*, "number of tries."
-          stop
-        end if
 
         call unconstrained_ic(y, &
           phi0_priors_min, phi0_priors_max, &
@@ -357,52 +380,110 @@ print*, new_measure
         !Pick a dimn to set by energy constraint
         call random_number(rand)
         if (velconst) then
-          !Constrain velocity, since model indep assuming canon KE
-          !Easier to later over/under sample
-          param_constr = ceiling(rand*num_inflaton)+num_inflaton
+          !Parameterize the closed surface in velocity space:
+          !KE = (1/2)sum(dotphi*dotphi)
+          !by spherical coords.
+          !Use prior on angles since model indep assuming canon KE
+          !Gives "uniform area" sample on vels
+
+	        !Energy density not allocated
+          phi = y(1:num_inflaton)
+          dphi=y(num_inflaton+1:2*num_inflaton)
+	        KE = energy_scale**4 - pot(phi)
+
+          call constrain_via_thetas(dphi,sqrt(2.0e0_dp*KE))
+
+          y(num_inflaton+1:2*num_inflaton) = dphi
+
+    	    !Energy density not allocated
+    	    rho_not_alloc = energy_scale**4 - pot(phi) -&
+            0.5e0_dp*sum(dphi*dphi)
+
+
+	    	  if (abs(rho_not_alloc)<1e-25) then
+            print*, "IC off shell ------------- cycling", ll
+            if (ll==maxtry) then
+              print*, "    Energy overrun =", rho_not_alloc
+              print*, "    E**4 =", energy_scale**4
+              print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
+              print*, "    PE =", pot(phi)
+              exit
+            end if
+            cycle
+          else
+            return
+          end if
+
+
         else
           param_constr = ceiling(rand*size(y))
-        end if
 
-        !Set y(constraint) to minim energy value
-        y(param_constr) = min_fixed_energy(param_constr)
+          !Set y(constraint) to minim energy value
+          y(param_constr) = min_fixed_energy(param_constr)
 
-        phi = y(1:num_inflaton)
-        dphi = y(num_inflaton+1:2*num_inflaton)
-
-	    	!Energy density not allocated
-	    	rho_not_alloc = energy_scale**4 - pot(phi) -&
-          0.5e0_dp*sum(dphi*dphi)
-
-	    	if (rho_not_alloc<0) then
-          print*, "IC off shell ------------- cycling"
-          cycle
-        else
-
-	        !Set y(constraint) to fix total energy
-          call set_y_by_energy_constraint(y, param_constr, energy_scale)
           phi = y(1:num_inflaton)
           dphi = y(num_inflaton+1:2*num_inflaton)
 
-          if (any(phi<phi0_priors_min) .or. any(dphi<dphi0_priors_min) &
-            .or. any(phi>phi0_priors_max) &
-            .or. any(dphi>dphi0_priors_max)) then
-          !DEBUG
-          print*, "!!!!!!!!!!!!!!!!!!GOT HERE!!!!!!!!!!!!!!!!!!!!!!!!"
-          print*, "phi",phi
-          print*, "dphi",dphi
+	    	  !Energy density not allocated
+	    	  rho_not_alloc = energy_scale**4 - pot(phi) -&
+            0.5e0_dp*sum(dphi*dphi)
 
+	    	  if (abs(rho_not_alloc)<1e-25_dp) then
+            print*, "IC off shell ------------- cycling", ll
+            if (ll==maxtry) then
+              print*, "    Energy overrun =", rho_not_alloc
+              print*, "    E**4 =", energy_scale**4
+              print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
+              print*, "    PE =", pot(phi)
+              exit
+            end if
             cycle
-
           else
-            exit
-          end if
 
+	          !Set y(constraint) to fix total energy
+            call set_y_by_energy_constraint(y, param_constr, energy_scale)
+            phi = y(1:num_inflaton)
+            dphi = y(num_inflaton+1:2*num_inflaton)
+
+            !DEBUG
+            return
+
+            !if (any(phi<phi0_priors_min) .or. any(dphi<dphi0_priors_min) &
+            !  .or. any(phi>phi0_priors_max) &
+            !  .or. any(dphi>dphi0_priors_max)) then
+            !  if(any(phi<phi0_priors_min)) then
+            !    print*,"phi<phi0_priors_min"
+            !  endif
+            !  if(any(dphi<dphi0_priors_min)) then
+            !    print*,"dphi<dphi0_priors_min"
+            !  endif
+            !  if(any(phi>phi0_priors_max)) then
+            !    print*,"phi>phi0_priors_max"
+            !  endif
+            !  if(any(dphi>dphi0_priors_max)) then
+            !    print*,"dphi>dphi0_priors_max"
+            !    !DEBUG
+            !    !do i=1, size(phi)
+            !    !  if (dphi(i)>dphi0_priors_max(i)) then
+            !    !    print*, "vals", dphi(i), dphi0_priors_max(i)
+            !    !  end if
+            !    !end do
+            !  endif
+            !  !DEBUG
+            !  !stop
+            !  cycle
+            !else
+            !  return
+            !end if
+
+          end if
         end if
 
 	    end do
-		
 
+      print*, "Couldn't find an IC with energy=energy_scale in the max"
+      print*, "number of tries."
+      stop
 
     end subroutine eqen_ic
 
@@ -532,19 +613,6 @@ print*, new_measure
         !root = laguerre_root_finder(poly_degree)
 
       end if
-
-
-          !DEBUG
-          print*, "y(constraint)", y(constraint), "constraint", constraint
-          if (constraint<num_inflaton) print*, "const mass", m2_V(constraint)
-          print*, "KE", .5e0_dp*sum(dphi*dphi)
-          print*, "PE", .5e0_dp*sum(m2_V*phi*phi)
-          print*, "sign", rand_sign()
-          !stop
-
-      !Convert dphidt-->dphidN
-      H = sqrt(3.0e0_dp)*energy_scale**2
-      dphi = H*dphi
 
     end subroutine set_y_by_energy_constraint
 
@@ -680,25 +748,25 @@ print*, new_measure
       class(ic_and_observables) :: this
       integer, intent(in) :: outunit
 
-      write(outunit,*) "ic(:)   ",this%ic(:)
-      write(outunit,*) "As      ",this%As
-      write(outunit,*) "ns      ",this%ns
-      write(outunit,*) "r       ",this%r
-      write(outunit,*) "nt      ",this%nt
-      write(outunit,*) "A_iso   ",this%A_iso
-      write(outunit,*) "A_pnad  ",this%A_pnad
-      write(outunit,*) "A_ent   ",this%A_ent
-      write(outunit,*) "A_bundle",this%A_bundle
-      write(outunit,*) "---------"
+      if (num_inflaton*2 +9 > 120000) then
+        print*, "Don't be silly."
+        print*, "Too many fields to print out properly."
+        print*, "Fix formatting..."
+        stop
+      end if
+
+      write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
+        this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
+        this%A_ent, this%A_bundle
 
     end subroutine ic_print_observables
 
     !Load the cosmo observables into the ic_and_observables type
     subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt,&
-      A_iso, A_pnad, A_ent, A_bundle)
+      alpha_s, A_iso, A_pnad, A_ent, A_bundle)
 
       class(ic_and_observables) :: this
-      real(dp), intent(in) :: As, ns, r, nt
+      real(dp), intent(in) :: As, ns, r, nt, alpha_s
       real(dp), intent(in) :: A_iso, A_pnad, A_ent, A_bundle
       real(dp), dimension(:), intent(in) :: phi0, dphi0
 
@@ -720,11 +788,61 @@ print*, new_measure
       this%ns = ns
       this%r = r
       this%nt = nt
+      this%alpha_s = alpha_s
       this%A_iso= A_iso
       this%A_pnad=A_pnad
       this%A_ent=A_ent
       this%A_bundle=A_bundle
 
     end subroutine ic_load_observables
+
+    subroutine constrain_via_thetas(y, radius)
+
+      real(dp), dimension(:), intent(out) :: y
+      real(dp), dimension(size(y)) :: dphi
+      real(dp), allocatable :: theta(:)
+      real(dp), intent(in) :: radius
+      real(dp) :: rand
+      integer :: n, i, j
+
+      n = size(y)
+
+      if (n>1) then
+        allocate(theta(n-1))
+      else
+        print*, "Eqen sampling doesn't work for num_inflaton=1"
+        stop
+      end if
+
+      !Get the angles with unif priors
+      call random_number(rand)
+      theta(size(theta)) = rand*2.0e0_dp*pi
+      if (size(theta)>1) then
+        do i=1,size(theta)-1
+          call random_number(rand)
+          theta(i) =rand*pi
+        end do
+      end if
+
+      !Change to Cartesian, i.e., field-space coords
+      dphi = radius
+      do i=1,n-1
+        dphi(i) = dphi(i)*cos(theta(i))
+
+        if (i>1) then
+          do j=1,i-1
+            dphi(i) = dphi(i)*sin(theta(j))
+          end do
+        end if
+
+      end do
+
+      do j=1,size(theta)
+        dphi(n) = dphi(n)*sin(theta(j))
+      end do
+          
+      y = dphi
+
+    end subroutine constrain_via_thetas
 
 end module modpk_icsampling

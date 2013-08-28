@@ -41,10 +41,10 @@ CONTAINS
 
     IF(dot_product(delp,delp) .gt. 6.0d0) THEN
        WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
-       write(*,*) 'Eps=',0.5*dot_product(delp,delp),
+       write(*,*) 'Eps=',0.5*dot_product(delp,delp)
        write(*,*) 'E-fold=',x
-       write(*,*) "Phi="p
-       write(*,*) "Dphi="delp
+       write(*,*) "Phi=",p
+       write(*,*) "Dphi=",delp
        !In the case of the hilltop potential, the integrator
        !in a trial step can go here very occasionally because
        !the trial step is too large and it has come too close to V=0.
@@ -134,10 +134,10 @@ CONTAINS
 
     IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
        WRITE(*,*) 'MODPK: H is imaginary in derivs.'
-       write(*,*) 'Eps=',0.5*dot_product(delp,delp),
+       write(*,*) 'Eps=',0.5*dot_product(delphi,delphi)
        write(*,*) 'E-fold=',x
-       write(*,*) "Phi="p
-       write(*,*) "Dphi="delp
+       write(*,*) "Phi=",phi
+       write(*,*) "Dphi=",delphi
 
        !Can sometimes get here when IC sampling
        !Overriding this error

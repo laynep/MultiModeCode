@@ -30,7 +30,7 @@ program test_mmodpk
   integer :: numtasks, rank
 
   !Cosmology
-  real(dp) :: dlnk, As, ns, nt, r
+  real(dp) :: dlnk, As, ns, nt, r, alpha_s
   real(dp) :: A_iso, A_pnad, A_ent, A_bundle
 
   !Sampling parameters for ICs
@@ -78,7 +78,8 @@ program test_mmodpk
     call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
 
   else if (sampling_techn == eqen_samp .or. &
-    sampling_techn == slowroll_samp) then
+    sampling_techn == slowroll_samp .or.&
+    sampling_techn == fromfile_samp) then
 
 #ifdef MPI
     call mpi_parallelize()
@@ -103,17 +104,17 @@ program test_mmodpk
     do i=1,numb_samples
 
       call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-        A_iso, A_pnad, A_ent, A_bundle)
+        alpha_s, A_iso, A_pnad, A_ent, A_bundle)
 
       !Load & print output array
       !Save in ic_output in case want to post-process.
       !Comment-out if don't want to keep and just do write(1,*)
       call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
-      A_iso, A_pnad, A_ent, A_bundle)
+      alpha_s, A_iso, A_pnad, A_ent, A_bundle)
       call ic_output(i)%printout(outsamp)
       if (save_iso_N) then
         call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
-          As,ns,r,nt,&
+          As,ns,r,nt, alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle)
         call ic_output_iso_N(i)%printout(outsamp_N_iso)
       end if
@@ -127,7 +128,7 @@ program test_mmodpk
 
 #ifdef MPI
 	!Halts processors here.
-	call mpi_barrier(mpi_comm_world,ierr)
+	call mpi_barrier(mpi_comm_world,i)
 #endif
 
   contains
@@ -208,7 +209,7 @@ program test_mmodpk
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
         (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
         (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        ns,r,nt, epsilon,eta,calc_full_pk)
+        ns,r,nt, alpha_s, epsilon,eta,calc_full_pk)
 
 
     end subroutine calculate_pk_observables
@@ -285,11 +286,12 @@ program test_mmodpk
     end subroutine allocate_vars
 
     subroutine output_observables(pk_arr, pk_iso_arr,&
-        As,At,Az,A_iso,A_pnad,A_ent,ns,r,nt, epsilon,eta,calc_full_pk)
+        As,At,Az,A_iso,A_pnad,A_ent,ns,r,nt, alpha_s,&
+        epsilon,eta,calc_full_pk)
 
       real(dp), dimension(:,:), intent(in) :: pk_arr
       real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
-      real(dp), intent(in) :: ns,r,nt, epsilon,eta
+      real(dp), intent(in) :: ns,r,nt, epsilon,eta, alpha_s
       real(dp), dimension(:), intent(in) :: As, At, Az, A_iso, &
         A_pnad,A_ent
 
@@ -325,6 +327,8 @@ program test_mmodpk
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
       write(*, e2_fmt) "n_s =", ns, '(', 1-2*epsilon-1/(N_pivot),')'
       write(*, e2_fmt) "n_t =", nt, '(', -2*epsilon, ')'
+      write(*, e2_fmt) "alpha_s =", alpha_s, '(', 8.0*epsilon*(2.0*eta -&
+        3.0*epsilon), ')'
 
       if (calc_full_pk) then
         do i=1,size(pk_arr,1)
@@ -366,10 +370,10 @@ program test_mmodpk
 
     !Calculate observables, but grab a new IC each time called
     subroutine calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-        A_iso, A_pnad, A_ent, A_bundle)
+        alpha_s, A_iso, A_pnad, A_ent, A_bundle)
 
       real(dp), intent(in) :: k_pivot,dlnk
-      real(dp), intent(out) :: As,ns,r,nt
+      real(dp), intent(out) :: As,ns,r,nt, alpha_s
       real(dp), intent(out) :: A_iso, A_pnad, A_ent, A_bundle
       real(dp) :: epsilon, eta
       real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
@@ -388,6 +392,7 @@ program test_mmodpk
       call get_ic(phi_init0, dphi_init0, sampling_techn, &
         priors_min, priors_max, &
          numb_samples,energy_scale)
+
 
       !Initialize potential and calc background
       call potinit
@@ -446,6 +451,8 @@ program test_mmodpk
       ns = 1.d0+log(ps2/ps1)/dlnk/2.d0
       r=pt0/ps0
       nt=log(pt2/pt1)/dlnk/2.d0
+      alpha_s = (log(ps2) + log(ps1)-2.0e0_dp*log(ps0))/dlnk**2
+
       A_iso=ps0_iso
       A_pnad=pnad0
       A_ent=pent0
@@ -455,7 +462,7 @@ program test_mmodpk
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
         (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
         (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        ns,r,nt, epsilon,eta,calc_full_pk)
+        ns,r,nt,alpha_s, epsilon,eta,calc_full_pk)
 
 
     end subroutine calculate_pk_observables_per_IC
