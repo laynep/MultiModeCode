@@ -103,6 +103,9 @@ program test_mmodpk
 
     do i=1,numb_samples
 
+      !DEBUG
+      print*, "sample numb", i, "of", numb_samples
+
       call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
         alpha_s, A_iso, A_pnad, A_ent, A_bundle)
 
@@ -393,7 +396,6 @@ program test_mmodpk
         priors_min, priors_max, &
          numb_samples,energy_scale)
 
-
       !Initialize potential and calc background
       call potinit
 
@@ -401,9 +403,6 @@ program test_mmodpk
         A_iso, A_pnad, A_ent, A_bundle, &
         leave)
       if (leave) return
-
-      !DEBUG
-      !call DEBUG_writing_etc()
 
       call evolve(k_pivot, pk0)
         call test_bad(pk_bad,As,ns,r,nt,&
@@ -477,7 +476,10 @@ program test_mmodpk
       real(dp) ::As,ns,r,nt
       real(dp) :: A_iso, A_pnad, A_ent, A_bundle
 
-      if (pk_bad==bad_ic) then
+      !If pk_bad==bad_ic, then restart IC
+      !If pk_bad==4, then ode_underflow
+      if (pk_bad==bad_ic .or. pk_bad==4) then
+
         !Set all observs to 0
         As =0e0_dp
         ns=0e0_dp
@@ -488,6 +490,7 @@ program test_mmodpk
         A_ent=0e0_dp
         A_bundle=0e0_dp
         leave = .true.
+
       end if
 
 

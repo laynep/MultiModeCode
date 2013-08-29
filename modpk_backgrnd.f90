@@ -31,6 +31,7 @@ CONTAINS
 
     real(dp) :: alpha_iso_N
 
+
     write(ci, '(I5)'), size(phi_init)
     ci = adjustl(ci)
     array_fmt = '(a25,'//trim(ci)//'es10.3)'
@@ -49,6 +50,7 @@ CONTAINS
     if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
     if (modpkoutput .and. sampling_techn==eqen_samp) &
       write(*, array_fmt) 'dphi_init =', dphi_init0
+
 
     if (size(phi_init) .eq. 1) then !! for single field
 
@@ -73,9 +75,11 @@ CONTAINS
 
        ENDIF
 
+
        !Try the background evolution for a user-defined phi_init and rescale if necessary
        rescl_count=0
        rescale_factor = 0.1d0
+
 
        DO
           phi_init_trial=phi_init
@@ -96,8 +100,13 @@ CONTAINS
        END DO
     !MULTIFIELD
     else
+
        CALL trial_background(phi_init, alpha_e, V_end)
+
        if (pk_bad .ne. 0) then
+         !Override specific errors when doing IC sampling
+          if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+
           print*, 'MODPK: pk_bad = ', pk_bad
           stop
        end if
@@ -115,9 +124,6 @@ CONTAINS
           pk_bad = 6
           return
 
-       !DEBUG
-       !else if ((alpha_e - lna(1)) .gt. 2*N_pivot) then
-       !else if ((alpha_e - lna(1)) .gt. 20*N_pivot) then
        else if ((alpha_e - lna(1)) .gt. Nefold_max) then
 
           if (modpkoutput) write(*, *) 'MODPK: Too many efolds obtained. Please rescale your initial value'
@@ -144,7 +150,6 @@ CONTAINS
        ELSE
           alpha_pivot = alpha_e-N_pivot
 
-          !DEBUG
           if (save_iso_N) then
             alpha_iso_N = alpha_e - N_iso_ref
             if (alpha_iso_N<0e0_dp) then
@@ -160,7 +165,6 @@ CONTAINS
           CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), alpha_pivot, phi_pivot, bb)
           CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), alpha_pivot, dphi_pivot, bb)
 
-          !DEBUG
           if (save_iso_N) then
             if (.not. allocated(phi_iso_N)) then
               print*, "phi_iso_N not allocated..."
@@ -173,14 +177,6 @@ CONTAINS
               alpha_iso_N, phi_iso_N, bb)
             CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), &
               alpha_iso_N, dphi_iso_N, bb)
-            !DEBUG
-            !print*, "fields 0", phi_init0
-            !print*, "fields N", phi_iso_N
-            !print*, "fields piv", phi_pivot
-            !print*, "vels 0", dphi_init0
-            !print*, "vels N", dphi_iso_N
-            !print*, "vels piv", dphi_pivot
-            !stop
           end if
 
           a_init=k_pivot*Mpc2Mpl/H_pivot/EXP(alpha_pivot)
@@ -214,7 +210,7 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
-    use modpk_icsampling, only : sampling_techn, eqen_samp
+    use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -263,15 +259,6 @@ CONTAINS
       !dphi/dalpha(x1) slowroll approx
       y(size(y)/2+1 : (size(y))) = &
         -dVdphi(phi_init_trial)/3./h_init/h_init
-      ![ JF ] DEBUG
-      print*, "-------"
-      Print*, "dy",  y(size(y)/2+1 : (size(y))) 
-      Print*, "potential", pot(phi_init_trial)
-      Print*, "first deriv of V", dVdphi(phi_init_trial)
-      Print*, "second deriv of V", d2Vdphi2(phi_init_trial)
-      !DEBUG
-      y(size(y)/2+1 : (size(y))) = 0e0_dp
-      !stop
     end if
     !END MULTIFIELD
 
@@ -302,7 +289,18 @@ CONTAINS
     hmin=0.0 !minimum stepsize
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
+    if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) then
+      return
+    end if
+
     IF(.NOT. ode_underflow) THEN
+      if (size(lna) < kount .or. size(xp) < kount) then
+        print*, "kount is too big. Giving this error instead of"
+        print*, "a segmentation fault."
+        stop
+      end if
+    !DEBUG
+    print*, "sizes", size(lna), size(xp), kount
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
@@ -320,6 +318,7 @@ CONTAINS
           grad_V = sqrt(dot_product(Vp, Vp))
           dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
        END DO
+
        !END MULTIFIELD
        !
        !     Determine the parameters needed for converting k(Mpc^-1) to K
@@ -434,9 +433,6 @@ CONTAINS
     accuracy=1.0d-6
     hmin=0.0 !minimum stepsize
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
-
-    !DEBUG
-    print*, "pk_bad from backgrnd",pk_bad
 
     IF(.NOT. ode_underflow) THEN
        lna(1:kount)=xp(1:kount)

@@ -1,6 +1,7 @@
 MODULE modpk_odeint
   use modpkparams, only : dp
-  use modpk_icsampling, only : sampling_techn, reg_samp
+  use camb_interface, only : pk_bad
+  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic
   IMPLICIT NONE
 
   INTERFACE odeint
@@ -57,7 +58,7 @@ CONTAINS
     END INTERFACE
 
     real(dp), PARAMETER :: TINY=1.0d-30
-    INTEGER*4, PARAMETER :: MAXSTP=100000
+    INTEGER, PARAMETER :: MAXSTP=nsteps
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
     real(dp), DIMENSION(SIZE(ystart)) :: dydx, y, yscal
@@ -92,7 +93,16 @@ CONTAINS
        !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
+       !Uncomment to write the trajectories...
+       write(1,'(12E18.10)') x, y(:)
+
        CALL derivs(x,y,dydx)
+
+       !If get bad deriv, then override this error when IC sampling
+       if (pk_bad==bad_ic) then
+         return
+       end if
+
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
@@ -275,7 +285,7 @@ CONTAINS
     END INTERFACE
 
     real(dp), PARAMETER :: TINY=1.0d-40
-    INTEGER*4, PARAMETER :: MAXSTP=100000
+    INTEGER, PARAMETER :: MAXSTP=nsteps
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
     COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: dydx, y, yscal
