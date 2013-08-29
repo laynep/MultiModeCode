@@ -94,7 +94,7 @@ CONTAINS
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
        !Uncomment to write the trajectories...
-       write(1,'(12E18.10)') x, y(:)
+       !write(1,'(12E18.10)') x, y(:)
 
        CALL derivs(x,y,dydx)
 

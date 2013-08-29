@@ -38,6 +38,7 @@ program test_mmodpk
   integer :: outsamp, outsamp_N_iso
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
+  logical :: output_badic
 
   type(ic_and_observables), dimension(:), allocatable :: ic_output
   type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N
@@ -50,7 +51,7 @@ program test_mmodpk
     modpkoutput, slowroll_infl_end, instreheat, vparam_rows
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
-    save_iso_N, N_iso_ref
+    save_iso_N, N_iso_ref,output_badic
 
   namelist /params/ phi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -114,12 +115,21 @@ program test_mmodpk
       !Comment-out if don't want to keep and just do write(1,*)
       call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
       alpha_s, A_iso, A_pnad, A_ent, A_bundle)
-      call ic_output(i)%printout(outsamp)
+      if (output_badic .or. pk_bad/=bad_ic) then
+        call ic_output(i)%printout(outsamp)
+      endif
+
+      if (.not. output_badic .and. pk_bad/=bad_ic) then
+        call ic_output(i)%printout(outsamp)
+      end if
+
       if (save_iso_N) then
         call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
           As,ns,r,nt, alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle)
-        call ic_output_iso_N(i)%printout(outsamp_N_iso)
+        if (output_badic .or. pk_bad/=bad_ic) then
+          call ic_output_iso_N(i)%printout(outsamp_N_iso)
+        end if
       end if
 
     end do
@@ -399,23 +409,23 @@ program test_mmodpk
       !Initialize potential and calc background
       call potinit
 
-      call test_bad(pk_bad,As,ns,r,nt,&
+      call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
         A_iso, A_pnad, A_ent, A_bundle, &
         leave)
       if (leave) return
 
       call evolve(k_pivot, pk0)
-        call test_bad(pk_bad,As,ns,r,nt,&
+        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
           leave)
         if (leave) return
       call evolve(k_pivot*exp(-dlnk), pk1)
-        call test_bad(pk_bad,As,ns,r,nt,&
+        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
           leave)
         if (leave) return
       call evolve(k_pivot*exp(dlnk), pk2)
-        call test_bad(pk_bad,As,ns,r,nt,&
+        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
           leave)
         if (leave) return
@@ -467,13 +477,13 @@ program test_mmodpk
     end subroutine calculate_pk_observables_per_IC
 
 
-    subroutine test_bad(pk_bad,As,ns,r,nt,&
+    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,&
       A_iso, A_pnad, A_ent, A_bundle, &
       leave)
 
       integer :: pk_bad
       logical :: leave
-      real(dp) ::As,ns,r,nt
+      real(dp) ::As,ns,r,nt, alpha_s
       real(dp) :: A_iso, A_pnad, A_ent, A_bundle
 
       !If pk_bad==bad_ic, then restart IC
@@ -485,6 +495,7 @@ program test_mmodpk
         ns=0e0_dp
         r=0e0_dp
         nt=0e0_dp
+        alpha_s=0e0_dp
         A_iso=0e0_dp
         A_pnad=0e0_dp
         A_ent=0e0_dp

@@ -299,8 +299,6 @@ CONTAINS
         print*, "a segmentation fault."
         stop
       end if
-    !DEBUG
-    print*, "sizes", size(lna), size(xp), kount
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
