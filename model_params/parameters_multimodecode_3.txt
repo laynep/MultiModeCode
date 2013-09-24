@@ -65,10 +65,17 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 
   phi_init0=12.0, 12.0
 
+<<<<<<< HEAD
  phi_init0=-1.001, 0.325245, 0.0
   vparams = -10.0, -9.0, -8.5
 
  phi_init0 = 18.0, 18.0, 18.0
+=======
+  phi_init0=-1.001, 0.325245, 0.0
+  vparams = -10.0, -9.0, -8.5
+
+  phi_init0 = 18.0, 18.0, 18.0
+>>>>>>> 290ed9ca9d8d8d57426c8da241e4fd522a0df630
   vparams= -14.000, -13.398, -8.046
 
 

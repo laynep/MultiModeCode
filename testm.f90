@@ -32,6 +32,8 @@ program test_mmodpk
   !Cosmology
   real(dp) :: dlnk, As, ns, nt, r, alpha_s
   real(dp) :: A_iso, A_pnad, A_ent, A_bundle
+  real(dp) :: n_iso, n_pnad, n_ent
+
 
   !Sampling parameters for ICs
   integer :: numb_samples
@@ -78,11 +80,17 @@ program test_mmodpk
 
     call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
 
+  !Eqen sampling
   else if (sampling_techn == eqen_samp .or. &
+    !Set vels in SR
     sampling_techn == slowroll_samp .or.&
-    sampling_techn == fromfile_samp) then
+    !Grab IC from file
+    sampling_techn == fromfile_samp .or. &
+    !Loop over different vparams for given num_inflaton
+    sampling_techn == mass_loop_samp) then
 
 #ifdef MPI
+
     call mpi_parallelize()
 	  !Set random seed for each process.
 	  call init_random_seed(rank)
@@ -90,6 +98,7 @@ program test_mmodpk
     call open_output_files()
 
 #else
+
     !Open output files
     open(newunit=outsamp,file="ic_eqen.txt")
     open(newunit=outsamp_N_iso,file="ic_isoN.txt")
@@ -107,26 +116,9 @@ program test_mmodpk
       !DEBUG
       print*, "sample numb", i, "of", numb_samples
 
-      call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-        alpha_s, A_iso, A_pnad, A_ent, A_bundle)
-
-      !Load & print output array
-      !Save in ic_output in case want to post-process.
-      !Comment-out if don't want to keep and just do write(1,*)
-      call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
-      alpha_s, A_iso, A_pnad, A_ent, A_bundle)
-      if (output_badic .or. pk_bad/=bad_ic) then
-        call ic_output(i)%printout(outsamp)
-      endif
-
-      if (save_iso_N) then
-        call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
-          As,ns,r,nt, alpha_s,&
-          A_iso, A_pnad, A_ent, A_bundle)
-        if (output_badic .or. pk_bad/=bad_ic) then
-          call ic_output_iso_N(i)%printout(outsamp_N_iso)
-        end if
-      end if
+      !call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
+      !  alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
+      call calculate_pk_observables_per_IC(k_pivot,dlnk)
 
     end do
 
@@ -206,6 +198,7 @@ program test_mmodpk
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
       call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
 
+      !SR vars at horizon
       epsilon = getEps(phi_pivot, dphi_pivot)
       eta = geteta(phi_pivot, dphi_pivot)
 
@@ -370,7 +363,6 @@ program test_mmodpk
       end do
       close(1)
       PRINT*, "Done writing"
-      ![DEBUG] [JF]
       PRINT*, "Writing powerspectrum solution to pow.txt"
       open (unit = 20, file = "pow.txt", status = 'replace')
       PRINT*, "Writing field correlation solution to powmatrix.txt"
@@ -378,12 +370,18 @@ program test_mmodpk
     end subroutine DEBUG_writing_etc
 
     !Calculate observables, but grab a new IC each time called
-    subroutine calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-        alpha_s, A_iso, A_pnad, A_ent, A_bundle)
+    !subroutine calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
+    !    alpha_s, A_iso, A_pnad, A_ent, A_bundle,&
+    !    n_iso, n_pnad, n_ent)
+    subroutine calculate_pk_observables_per_IC(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
-      real(dp), intent(out) :: As,ns,r,nt, alpha_s
-      real(dp), intent(out) :: A_iso, A_pnad, A_ent, A_bundle
+      !real(dp), intent(out) :: As,ns,r,nt, alpha_s
+      !real(dp), intent(out) :: A_iso, A_pnad, A_ent, A_bundle
+      !real(dp), intent(out) :: n_iso, n_pnad, n_ent
+      real(dp) :: As,ns,r,nt, alpha_s
+      real(dp) :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp) :: n_iso, n_pnad, n_ent
       real(dp) :: epsilon, eta
       real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
       real(dp) :: ps0_iso,ps1_iso,ps2_iso
@@ -407,22 +405,26 @@ program test_mmodpk
 
       call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
         A_iso, A_pnad, A_ent, A_bundle, &
+        n_iso, n_pnad, n_ent, &
         leave)
       if (leave) return
 
       call evolve(k_pivot, pk0)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
+          n_iso, n_pnad, n_ent, &
           leave)
         if (leave) return
       call evolve(k_pivot*exp(-dlnk), pk1)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
+          n_iso, n_pnad, n_ent, &
           leave)
         if (leave) return
       call evolve(k_pivot*exp(dlnk), pk2)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
+          n_iso, n_pnad, n_ent, &
           leave)
         if (leave) return
 
@@ -457,6 +459,9 @@ program test_mmodpk
       r=pt0/ps0
       nt=log(pt2/pt1)/dlnk/2.d0
       alpha_s = (log(ps2) + log(ps1)-2.0e0_dp*log(ps0))/dlnk**2
+      n_iso=log(ps2_iso/ps1_iso)/dlnk/2.d0
+      n_pnad=log(pnad2/pnad1)/dlnk/2.d0
+      n_ent=log(pent2/pent1)/dlnk/2.d0
 
       A_iso=ps0_iso
       A_pnad=pnad0
@@ -469,18 +474,38 @@ program test_mmodpk
         (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
         ns,r,nt,alpha_s, epsilon,eta,calc_full_pk)
 
+      !Load & print output array
+      !Save in ic_output in case want to post-process.
+      !Comment-out if don't want to keep and just do write(1,*)
+      call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
+      alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
+      if (output_badic .or. pk_bad/=bad_ic) then
+        call ic_output(i)%printout(outsamp)
+      endif
+
+      if (save_iso_N) then
+        call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
+          As,ns,r,nt, alpha_s,&
+          A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
+        if (output_badic .or. pk_bad/=bad_ic) then
+          call ic_output_iso_N(i)%printout(outsamp_N_iso)
+        end if
+      end if
+
 
     end subroutine calculate_pk_observables_per_IC
 
 
     subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,&
       A_iso, A_pnad, A_ent, A_bundle, &
+      n_iso, n_pnad, n_ent, &
       leave)
 
       integer :: pk_bad
       logical :: leave
       real(dp) ::As,ns,r,nt, alpha_s
       real(dp) :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp) :: n_iso, n_pnad, n_ent
 
       !If pk_bad==bad_ic, then restart IC
       !If pk_bad==4, then ode_underflow
@@ -496,6 +521,9 @@ program test_mmodpk
         A_pnad=0e0_dp
         A_ent=0e0_dp
         A_bundle=0e0_dp
+        n_iso=0e0_dp
+        n_pnad=0e0_dp
+        n_ent=0e0_dp
         leave = .true.
 
       end if
