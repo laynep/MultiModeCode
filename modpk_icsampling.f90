@@ -12,7 +12,7 @@ module modpk_icsampling
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4
+    fromfile_samp=4, mass_loop_samp=5
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
@@ -24,6 +24,7 @@ module modpk_icsampling
   type :: ic_and_observables
     real(dp), dimension(:), allocatable :: ic
     real(dp) :: As, ns, r, nt, alpha_s
+    real(dp) :: n_iso, n_pnad,n_ent
     real(dp) :: A_iso, A_pnad, A_ent, A_bundle
     contains
       procedure :: printout => ic_print_observables
@@ -104,7 +105,7 @@ stop
 #endif
 
 !DEBUG
-print*, "not working..."
+print*, "sampling_techn==fromfile_samp not yet working..."
 stop
         open(newunit=icfile, file="initial_conditions.txt",&
           form="unformatted",status="old")
@@ -117,6 +118,13 @@ stop
         !DEBUG
         print*, "INITIAL COND", y_background
         stop
+
+      else if (sampling_techn==mass_loop_samp) then
+        !Get new vparams
+        call mass_spectrum_nflation(vparams)
+
+        !Set IC with zero velocity
+        call equal_displacement_ic(y_background, energy_scale)
 
       else
         print*, "ERROR: Sampling technique hasn't been implemented."
@@ -748,8 +756,7 @@ print*, new_measure
       class(ic_and_observables) :: this
       integer, intent(in) :: outunit
 
-      if (num_inflaton*2 +9 > 120000) then
-        print*, "Don't be silly."
+      if (num_inflaton*2 +12 > 120000) then
         print*, "Too many fields to print out properly."
         print*, "Fix formatting..."
         stop
@@ -757,17 +764,19 @@ print*, new_measure
 
       write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
         this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
-        this%A_ent, this%A_bundle
+        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent
 
     end subroutine ic_print_observables
 
     !Load the cosmo observables into the ic_and_observables type
     subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt,&
-      alpha_s, A_iso, A_pnad, A_ent, A_bundle)
+      alpha_s, A_iso, A_pnad, A_ent, A_bundle, &
+      n_iso, n_pnad, n_ent)
 
       class(ic_and_observables) :: this
       real(dp), intent(in) :: As, ns, r, nt, alpha_s
       real(dp), intent(in) :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp), intent(in) :: n_iso, n_pnad, n_ent
       real(dp), dimension(:), intent(in) :: phi0, dphi0
 
       integer :: ind
@@ -793,6 +802,9 @@ print*, new_measure
       this%A_pnad=A_pnad
       this%A_ent=A_ent
       this%A_bundle=A_bundle
+      this%n_iso= n_iso
+      this%n_pnad=n_pnad
+      this%n_ent=n_ent
 
     end subroutine ic_load_observables
 
@@ -840,9 +852,94 @@ print*, new_measure
       do j=1,size(theta)
         dphi(n) = dphi(n)*sin(theta(j))
       end do
-          
+
       y = dphi
 
     end subroutine constrain_via_thetas
+
+    !For a sum-separable potential only
+    !Set IC for each field at an equal displacement from the local minimum
+    !as measured by energy
+    subroutine equal_displacement_ic(y,energy_scale)
+
+      real(dp), dimension(num_inflaton*2), intent(out) :: y
+      real(dp), intent(in) :: energy_scale
+      real(dp) :: m2(num_inflaton), E4
+
+      !N-quadratic, m^2*phi^2
+      if (potential_choice==1) then
+        !Energy displacement for every field IC
+        E4 = energy_scale**4/num_inflaton
+        !Masses
+        m2 = 10.d0**(vparams(1,:))
+
+        y(1:num_inflaton) = 2.0e0_dp*E4/m2(:)
+        y(1:num_inflaton) = sqrt(y(1:num_inflaton))
+
+        y(num_inflaton+1:2*num_inflaton) = 0e0_dp
+      else
+        write(*,*) "Error in equal_displacement_ic:"
+        write(*,*) "potential_choice=",potential_choice,"not supported."
+        stop
+      end if
+
+    end subroutine equal_displacement_ic
+
+    !Sets the masses in N-quadratic inflation according to hep-th/0512102
+    !Easther-McAllister
+    subroutine mass_spectrum_nflation(vpnew, mass_ratio)
+
+      real(dp), intent(inout), dimension(1,num_inflaton) :: vpnew
+      real(dp), optional :: mass_ratio
+      real(dp) :: ratio_max, rand
+      integer :: i, prior
+      integer, parameter :: unif_param=0, log_param=1
+
+      if (size(vparams,1) /=1 .or. size(vparams,2) /= num_inflaton) then
+        write(*,*), "Error: vparams of wrong order."
+        write(*,*), "size(vparams,2) /= num_inflaton or"
+        write(*,*), "size(vparams,1) /= 1."
+        stop
+      end if
+
+      !m2 set at random (unif on m^2) w/max prior range set by max mass
+      !ratio; ratio_max=m2_lightest/m2_heaviest
+      if (present(mass_ratio)) then
+        ratio_max = mass_ratio
+      else
+        ratio_max = 9.0e0_dp
+      end if
+
+      prior = 1
+
+      !vpnew(1,1) = -10.091514981121351e0_dp
+      vpnew(1,1) = minval(vparams(1,:))
+      do i=2,num_inflaton
+        call random_number(rand)
+        if (prior == unif_param) then
+          rand = rand*(ratio_max-1.0e0_dp) + 1.0e0_dp
+          vpnew(1,i) = vpnew(1,1)+2.0e0_dp*log10(rand)
+        else if (prior == log_param) then
+          rand = rand*2.0e0_dp*log10(ratio_max)
+          vpnew(1,i) = vpnew(1,1)+rand
+        else
+          write(*,*) "Prior not supported. prior=", prior
+          stop
+        end if
+      end do
+
+      !DEBUG
+      !do i=1,size(vpnew,2)
+      !  print*, "-------------"
+      !  print*, "i", i
+      !  print*, "lowest mass", 10e0**vpnew(1,1)
+      !  print*, "vparams", vpnew(1,i)
+      !  print*, "masses", 10e0**vpnew(1,i)
+      !  print*, "ratio",sqrt((10e0**vpnew(1,i))/(10e0**vpnew(1,1)))
+      !end do
+      print*, "ratio",sqrt((10e0**vpnew(1,:))/(10e0**vpnew(1,1)))
+      !stop
+
+    end subroutine mass_spectrum_nflation
 
 end module modpk_icsampling
