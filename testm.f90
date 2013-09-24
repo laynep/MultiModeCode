@@ -119,10 +119,6 @@ program test_mmodpk
         call ic_output(i)%printout(outsamp)
       endif
 
-      if (.not. output_badic .and. pk_bad/=bad_ic) then
-        call ic_output(i)%printout(outsamp)
-      end if
-
       if (save_iso_N) then
         call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
           As,ns,r,nt, alpha_s,&

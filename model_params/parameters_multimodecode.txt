@@ -16,12 +16,13 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 
 &ic_sampling
   sampling_techn = 2
-  numb_samples = 50
+  numb_samples = 100000
 
-  energy_scale = .04
+  energy_scale= 0.05
 
   save_iso_N = .false.
   N_iso_ref = 100
+  output_badic=.false.
 /
 
 ----------------
@@ -31,14 +32,14 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
   dlnk = 0.05
 
  phi_init0 = 2.0, 2.0
-  vparams= -14.000,  -10.000
+  vparams = -10.422895047377294, -8.5144100284986442
 /
 
 ----------------
 !Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0.0, 0.0
-  phi0_priors_max = 23.0, 23.0
+  phi0_priors_min = -20.0, -20.0
+  phi0_priors_max = 20.0, 20.0
 
   dphi0_priors_min = -2.262e-3,-2.262e-3
   dphi0_priors_max = 2.262e-3,2.262e-3
@@ -58,6 +59,9 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 #MISC STUFF
   phi0_priors_min = -1.5, 0.2
   phi0_priors_max = -0.5, 0.4
+
+
+  vparams= -8.000, -10.0, -10.6021
 
   phi_init0=12.0, 12.0
 
