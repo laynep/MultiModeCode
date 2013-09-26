@@ -191,7 +191,10 @@ CONTAINS
     ode_underflow = .false.
     ode_ps_output = .true.
     ode_infl_end = .true.
-    save_steps = .true.
+
+    !DEBUG
+    !save_steps = .true.
+    save_steps = .false.
 
     pk_bad = 0
 

@@ -121,7 +121,7 @@ stop
 
       else if (sampling_techn==mass_loop_samp) then
         !Get new vparams
-        call mass_spectrum_nflation(vparams)
+        call mass_spectrum_prior(vparams)
 
         !Set IC with zero velocity
         call equal_displacement_ic(y_background, energy_scale)
@@ -749,7 +749,6 @@ print*, new_measure
     end subroutine implicit_surface_sampling
 
 
-
     !Print the cosmo observables to file
     subroutine ic_print_observables(this, outunit)
 
@@ -873,8 +872,7 @@ print*, new_measure
         !Masses
         m2 = 10.d0**(vparams(1,:))
 
-        y(1:num_inflaton) = 2.0e0_dp*E4/m2(:)
-        y(1:num_inflaton) = sqrt(y(1:num_inflaton))
+        y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
 
         y(num_inflaton+1:2*num_inflaton) = 0e0_dp
       else
@@ -887,7 +885,12 @@ print*, new_measure
 
     !Sets the masses in N-quadratic inflation according to hep-th/0512102
     !Easther-McAllister
-    subroutine mass_spectrum_nflation(vpnew, mass_ratio)
+    !........
+    !Not yet working.
+    !subroutine mass_spectrum_nflation(vpnew)
+
+    !Chooses masses from flat/log priors
+    subroutine mass_spectrum_prior(vpnew, mass_ratio)
 
       real(dp), intent(inout), dimension(1,num_inflaton) :: vpnew
       real(dp), optional :: mass_ratio
@@ -907,10 +910,11 @@ print*, new_measure
       if (present(mass_ratio)) then
         ratio_max = mass_ratio
       else
-        ratio_max = 9.0e0_dp
+        ratio_max = 10.0e0_dp
       end if
 
-      prior = 1
+      !prior = log_param
+      prior = unif_param
 
       !vpnew(1,1) = -10.091514981121351e0_dp
       vpnew(1,1) = minval(vparams(1,:))
@@ -928,18 +932,8 @@ print*, new_measure
         end if
       end do
 
-      !DEBUG
-      !do i=1,size(vpnew,2)
-      !  print*, "-------------"
-      !  print*, "i", i
-      !  print*, "lowest mass", 10e0**vpnew(1,1)
-      !  print*, "vparams", vpnew(1,i)
-      !  print*, "masses", 10e0**vpnew(1,i)
-      !  print*, "ratio",sqrt((10e0**vpnew(1,i))/(10e0**vpnew(1,1)))
-      !end do
-      print*, "ratio",sqrt((10e0**vpnew(1,:))/(10e0**vpnew(1,1)))
-      !stop
+      print*, "mass ratio",sqrt((10e0**vpnew(1,:))/(10e0**vpnew(1,1)))
 
-    end subroutine mass_spectrum_nflation
+    end subroutine mass_spectrum_prior
 
 end module modpk_icsampling

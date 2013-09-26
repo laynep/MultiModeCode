@@ -211,7 +211,7 @@ program test_mmodpk
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
         (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
         (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        ns,r,nt, alpha_s, epsilon,eta,calc_full_pk)
+        (/ns/),r,nt, alpha_s, epsilon,eta,calc_full_pk)
 
 
     end subroutine calculate_pk_observables
@@ -293,9 +293,9 @@ program test_mmodpk
 
       real(dp), dimension(:,:), intent(in) :: pk_arr
       real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
-      real(dp), intent(in) :: ns,r,nt, epsilon,eta, alpha_s
+      real(dp), intent(in) :: r,nt, epsilon,eta, alpha_s
       real(dp), dimension(:), intent(in) :: As, At, Az, A_iso, &
-        A_pnad,A_ent
+        A_pnad,A_ent, ns
 
       logical :: calc_full_pk
 
@@ -327,7 +327,12 @@ program test_mmodpk
       write(*, e2_fmt) "Pt/Ps =", r, '(', 16*epsilon, ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, e2_fmt) "n_s =", ns, '(', 1-2*epsilon-1/(N_pivot),')'
+      write(*, e2_fmt) "n_s =", ns(1), '(', 1-2*epsilon-1/(N_pivot),')'
+      if (size(ns)>1) then
+        write(*, e2_fmt) "n_iso =", ns(2)
+        write(*, e2_fmt) "n_pnad =", ns(3)
+        write(*, e2_fmt) "n_ent =", ns(4)
+      end if
       write(*, e2_fmt) "n_t =", nt, '(', -2*epsilon, ')'
       write(*, e2_fmt) "alpha_s =", alpha_s, '(', 8.0*epsilon*(2.0*eta -&
         3.0*epsilon), ')'
@@ -472,7 +477,7 @@ program test_mmodpk
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
         (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
         (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        ns,r,nt,alpha_s, epsilon,eta,calc_full_pk)
+        (/ns,n_iso,n_pnad,n_ent/),r,nt,alpha_s, epsilon,eta,calc_full_pk)
 
       !Load & print output array
       !Save in ic_output in case want to post-process.
