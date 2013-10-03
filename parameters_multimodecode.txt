@@ -2,7 +2,7 @@
 
 ----------------
 &init
-  num_inflaton=50
+  num_inflaton=12
   potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
@@ -16,7 +16,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 
 &ic_sampling
   sampling_techn = 5
-  numb_samples = 1
+  numb_samples = 2
 
   energy_scale = .007
 

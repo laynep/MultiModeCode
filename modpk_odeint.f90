@@ -91,6 +91,12 @@ CONTAINS
     DO nstp=1,MAXSTP
 
        !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
+       if (nstp==1) then
+         !Initialize
+         field_bundle%N=0e0_dp
+         field_bundle%dlogThetadN=0e0_dp
+         field_bundle%exp_scalar=1e0_dp
+       end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
        !Uncomment to write the trajectories...
