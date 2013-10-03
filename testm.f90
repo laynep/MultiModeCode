@@ -471,7 +471,8 @@ program test_mmodpk
       A_iso=ps0_iso
       A_pnad=pnad0
       A_ent=pent0
-      A_bundle=pk0%entropy
+      !A_bundle=pk0%entropy
+      A_bundle=field_bundle%exp_scalar
 
       call output_observables(pk_arr,pk_iso_arr, &
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &

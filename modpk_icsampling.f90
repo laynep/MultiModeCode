@@ -756,8 +756,9 @@ print*, new_measure
       integer, intent(in) :: outunit
 
       if (num_inflaton*2 +12 > 120000) then
+        print*, "Don't be silly."
         print*, "Too many fields to print out properly."
-        print*, "Fix formatting..."
+        print*, "Fix formatting."
         stop
       end if
 

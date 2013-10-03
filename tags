@@ -1,1178 +1,333 @@
-!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
-!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
-!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
-!_TAG_PROGRAM_NAME	Exuberant Ctags	//
-!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
-!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-10	inifile.f90	/^10  write (*,*) 'error reading double for key: '\/\/Key$/;"	l	function:Ini_Read_Double_File	file:
-10	inifile.f90	/^10  write (*,*) 'error reading double for key: '\/\/Key$/;"	l	function:Ini_Read_Real_File	file:
-10	inifile.f90	/^10  write (*,*) 'error reading integer for key: '\/\/Key$/;"	l	function:Ini_Read_Int_File	file:
-10	inifile.f90	/^10  write (*,*) 'error reading logical for key: '\/\/Key$/;"	l	function:Ini_Read_Logical_File	file:
-10	subroutines.f90	/^10        i=i+1$/;"	l	function:rombint	file:
-10	subroutines.f90	/^10        i=i+1$/;"	l	function:rombint_obj	file:
-100	subroutines.f90	/^  100       continue$/;"	l	subroutine:dverk	file:
-101	cmbmain.f90	/^101          if (CP%WantTransfer.and.itf <= CP%Transfer%num_redshifts) then$/;"	l	subroutine:CalcScalarSources	file:
-101	halofit.f90	/^101   continue$/;"	l	subroutine:NonLinear_GetNonLinRatios	file:
-105	subroutines.f90	/^  105       continue$/;"	l	subroutine:dverk	file:
-110	subroutines.f90	/^  110             continue$/;"	l	subroutine:dverk	file:
-1111	subroutines.f90	/^ 1111       continue$/;"	l	subroutine:dverk	file:
-115	subroutines.f90	/^  115          if (c(1) .ne. 2._dl) go to 120$/;"	l	subroutine:dverk	file:
-120	subroutines.f90	/^  120          if (c(1) .ne. 3._dl) go to 130$/;"	l	subroutine:dverk	file:
-125	subroutines.f90	/^  125             continue$/;"	l	subroutine:dverk	file:
-130	subroutines.f90	/^  130          if (c(1) .ne. 4._dl) go to 140$/;"	l	subroutine:dverk	file:
-135	subroutines.f90	/^  135             continue$/;"	l	subroutine:dverk	file:
-140	subroutines.f90	/^  140          if (c(1) .ne. 5._dl) go to 150$/;"	l	subroutine:dverk	file:
-145	subroutines.f90	/^  145             continue$/;"	l	subroutine:dverk	file:
-15	subroutines.f90	/^   15       continue$/;"	l	subroutine:dverk	file:
-150	subroutines.f90	/^  150          continue$/;"	l	subroutine:dverk	file:
-155	subroutines.f90	/^  155             continue$/;"	l	subroutine:dverk	file:
-160	subroutines.f90	/^  160          continue$/;"	l	subroutine:dverk	file:
-165	subroutines.f90	/^  165       continue$/;"	l	subroutine:dverk	file:
-170	subroutines.f90	/^  170       continue$/;"	l	subroutine:dverk	file:
-175	subroutines.f90	/^  175       if (c(23) .gt. 1._dl) go to 180$/;"	l	subroutine:dverk	file:
-180	subroutines.f90	/^  180       continue$/;"	l	subroutine:dverk	file:
-185	subroutines.f90	/^  185       continue$/;"	l	subroutine:dverk	file:
-190	subroutines.f90	/^  190       continue$/;"	l	subroutine:dverk	file:
-195	subroutines.f90	/^  195       continue$/;"	l	subroutine:dverk	file:
-20	subroutines.f90	/^20        continue$/;"	l	function:rombint	file:
-20	subroutines.f90	/^20        continue$/;"	l	function:rombint_obj	file:
-200	subroutines.f90	/^  200       continue$/;"	l	subroutine:dverk	file:
-205	subroutines.f90	/^  205       continue$/;"	l	subroutine:dverk	file:
-210	subroutines.f90	/^  210       continue$/;"	l	subroutine:dverk	file:
-215	subroutines.f90	/^  215       continue$/;"	l	subroutine:dverk	file:
-220	subroutines.f90	/^  220       continue$/;"	l	subroutine:dverk	file:
-2222	subroutines.f90	/^ 2222       continue$/;"	l	subroutine:dverk	file:
-225	subroutines.f90	/^  225       continue$/;"	l	subroutine:dverk	file:
-230	lensing.f90	/^230 cnorm = 1\/sqrt(sumuni)$/;"	l	subroutine:rec3jj	file:
-230	subroutines.f90	/^  230       continue$/;"	l	subroutine:dverk	file:
-235	subroutines.f90	/^  235       continue$/;"	l	subroutine:dverk	file:
-30	lensing.f90	/^30  lstep = lstep+1$/;"	l	subroutine:rec3jj	file:
-30	subroutines.f90	/^   30          continue$/;"	l	subroutine:dverk	file:
-30	subroutines.f90	/^30        continue$/;"	l	function:rombint	file:
-30	subroutines.f90	/^30        continue$/;"	l	function:rombint_obj	file:
-300	subroutines.f90	/^  300       continue$/;"	l	subroutine:dverk	file:
-305	subroutines.f90	/^  305          continue$/;"	l	subroutine:dverk	file:
-310	subroutines.f90	/^  310       if (c(1) .ne. 2._dl) go to 320$/;"	l	subroutine:dverk	file:
-315	subroutines.f90	/^  315          continue$/;"	l	subroutine:dverk	file:
-320	subroutines.f90	/^  320       if (c(1) .ne. 3._dl) go to 330$/;"	l	subroutine:dverk	file:
-325	subroutines.f90	/^  325          continue$/;"	l	subroutine:dverk	file:
-330	subroutines.f90	/^  330       if (c(1) .ne. 4._dl) go to 340$/;"	l	subroutine:dverk	file:
-335	subroutines.f90	/^  335          continue$/;"	l	subroutine:dverk	file:
-340	subroutines.f90	/^  340       if (c(1) .ne. 5._dl) go to 350$/;"	l	subroutine:dverk	file:
-345	subroutines.f90	/^  345          continue$/;"	l	subroutine:dverk	file:
-35	subroutines.f90	/^   35       continue$/;"	l	subroutine:dverk	file:
-350	subroutines.f90	/^  350       continue$/;"	l	subroutine:dverk	file:
-355	subroutines.f90	/^  355          continue$/;"	l	subroutine:dverk	file:
-360	subroutines.f90	/^  360       continue$/;"	l	subroutine:dverk	file:
-40	subroutines.f90	/^40      rombint=g0$/;"	l	function:rombint	file:
-40	subroutines.f90	/^40      rombint_obj=g0$/;"	l	function:rombint_obj	file:
-400	inifile.f90	/^400 close(unit_id)$/;"	l	subroutine:Ini_Open_File	file:
-400	subroutines.f90	/^  400          continue$/;"	l	subroutine:dverk	file:
-405	subroutines.f90	/^  405          continue$/;"	l	subroutine:dverk	file:
-410	subroutines.f90	/^  410       continue$/;"	l	subroutine:dverk	file:
-415	subroutines.f90	/^  415          continue$/;"	l	subroutine:dverk	file:
-420	subroutines.f90	/^  420       continue$/;"	l	subroutine:dverk	file:
-45	subroutines.f90	/^   45       if (c(21).ne.0._dl .and. &$/;"	l	subroutine:dverk	file:
-50	subroutines.f90	/^   50    continue$/;"	l	subroutine:dverk	file:
-500	inifile.f90	/^500 error=.true.$/;"	l	subroutine:Ini_Open_File	file:
-500	inifile.f90	/^500 write(*,*) 'Ini_SaveReadValues_File: Error creating '\/\/trim(afile)$/;"	l	subroutine:Ini_SaveReadValues_File	file:
-500	subroutines.f90	/^  500 continue$/;"	l	subroutine:dverk	file:
-99999	subroutines.f90	/^99999 continue$/;"	l	subroutine:dverk	file:
-A10	constants.f90	/^       real(dl), parameter :: A10 /;"	v	module:constants
-A2P_s	recfast.f90	/^        real(dl) A2P_s,/;"	v	module:RECDATA
-A2P_t	recfast.f90	/^        real(dl) A2P_s,A2P_t,/;"	v	module:RECDATA
-AGauss1	recfast.f90	/^        real(dl), parameter :: AGauss1 /;"	v	module:Recombination
-AGauss2	recfast.f90	/^        real(dl), parameter :: AGauss2 /;"	v	module:Recombination
-A_bundle	isocurv_driver.f90	/^  real(dp) :: A_iso, A_pnad, A_ent, A_bundle$/;"	v	program:isocurv_driver
-A_bundle	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad, A_ent, A_bundle$/;"	k	type:ic_and_observables
-A_bundle	testm.f90	/^  real(dp) :: A_iso, A_pnad, A_ent, A_bundle$/;"	v	program:test_mmodpk
-A_ent	isocurv_driver.f90	/^  real(dp) :: A_iso, A_pnad, A_ent,/;"	v	program:isocurv_driver
-A_ent	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad, A_ent,/;"	k	type:ic_and_observables
-A_ent	testm.f90	/^  real(dp) :: A_iso, A_pnad, A_ent,/;"	v	program:test_mmodpk
-A_iso	isocurv_driver.f90	/^  real(dp) :: A_iso,/;"	v	program:isocurv_driver
-A_iso	modpk_icsampling.f90	/^    real(dp) :: A_iso,/;"	k	type:ic_and_observables
-A_iso	testm.f90	/^  real(dp) :: A_iso,/;"	v	program:test_mmodpk
-A_pnad	isocurv_driver.f90	/^  real(dp) :: A_iso, A_pnad,/;"	v	program:isocurv_driver
-A_pnad	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad,/;"	k	type:ic_and_observables
-A_pnad	testm.f90	/^  real(dp) :: A_iso, A_pnad,/;"	v	program:test_mmodpk
-AccuracyBoost	modules.f90	/^      real(dl) :: AccuracyBoost /;"	v	module:ModelParams
-AccurateBB	modules.f90	/^         logical   :: AccurateBB$/;"	k	type:CAMBparams
-AccuratePolarization	modules.f90	/^         logical   :: AccuratePolarization$/;"	k	type:CAMBparams
-AccurateReionization	modules.f90	/^         logical   :: AccurateReionization$/;"	k	type:CAMBparams
-AngularDiameterDistance	modules.f90	/^        function AngularDiameterDistance(/;"	f	module:ModelParams
-As	isocurv_driver.f90	/^  real(dp) :: dlnk, As,/;"	v	program:isocurv_driver
-As	modpk_icsampling.f90	/^    real(dp) :: As,/;"	k	type:ic_and_observables
-As	testm.f90	/^  real(dp) :: dlnk, As,/;"	v	program:test_mmodpk
-B01	recfast.f90	/^        real(dl), parameter :: B01 /;"	v	module:Recombination
-B10	constants.f90	/^       real(dl), parameter :: A10 = 2.869e-15, B10 /;"	v	module:constants
-BESSI	lensing.f90	/^      FUNCTION BESSI(/;"	f	module:lensing
-BESSI0	lensing.f90	/^      FUNCTION BESSI0(/;"	f	module:lensing
-BESSI1	lensing.f90	/^      FUNCTION BESSI1(/;"	f	module:lensing
-BESSJ	lensing.f90	/^      FUNCTION BESSJ(/;"	f	module:lensing
-BESSJ1	lensing.f90	/^      FUNCTION BESSJ1(/;"	f	module:lensing
-BJL	bessels.f90	/^         SUBROUTINE BJL(/;"	s	module:SpherBessels
-BJL_EXTERNAL	bessels.f90	/^        SUBROUTINE BJL_EXTERNAL(/;"	s
-BadHarmonic	lensing.f90	/^subroutine BadHarmonic$/;"	s	module:lensing
-Bess0	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess0,/;"	v	module:lensing
-Bess2	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess2,/;"	v	module:lensing
-Bess4	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess4,/;"	v	module:lensing
-Bess6	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess6,/;"	v	module:lensing
-BessRanges	bessels.f90	/^        Type(Regions):: BessRanges$/;"	v	module:SpherBessels
-Bessels_Free	bessels.f90	/^     subroutine Bessels_Free$/;"	s	module:SpherBessels
-Bfact	recfast.f90	/^        real(dl) Lambda_He,Lalpha_He,Bfact,/;"	v	module:RECDATA
-CAMB	camb.f90	/^     module CAMB$/;"	m
-CAMBParams_Set	modules.f90	/^         subroutine CAMBParams_Set(/;"	s	module:ModelParams
-CAMB_FreeCAMBdata	camb.f90	/^       subroutine CAMB_FreeCAMBdata(/;"	s	module:CAMB
-CAMB_GetAge	camb.f90	/^        function CAMB_GetAge(/;"	f	module:CAMB
-CAMB_GetCls	camb.f90	/^        subroutine CAMB_GetCls(/;"	s	module:CAMB
-CAMB_GetResults	camb.f90	/^       subroutine CAMB_GetResults(/;"	s	module:CAMB
-CAMB_GetTransfers	camb.f90	/^       subroutine CAMB_GetTransfers(/;"	s	module:CAMB
-CAMB_GetZreFromTau	camb.f90	/^        function CAMB_GetZreFromTau(/;"	f	module:CAMB
-CAMB_InitCAMBdata	camb.f90	/^       subroutine CAMB_InitCAMBdata(/;"	s	module:CAMB
-CAMB_SetDefParams	camb.f90	/^        subroutine CAMB_SetDefParams(/;"	s	module:CAMB
-CAMB_TransfersToPowers	camb.f90	/^       subroutine CAMB_TransfersToPowers(/;"	s	module:CAMB
-CAMB_ValidateParams	camb.f90	/^         function CAMB_ValidateParams(/;"	f	module:CAMB
-CAMB_cleanup	camb.f90	/^         subroutine CAMB_cleanup$/;"	s	module:CAMB
-CAMBdata	camb.f90	/^         Type CAMBdata$/;"	t	module:CAMB
-CAMBmain	cmbmain.f90	/^  module CAMBmain$/;"	m
-CAMBparams	modules.f90	/^        type CAMBparams$/;"	t	module:ModelParams
-CB1	recfast.f90	/^        real(dl) CB1,/;"	v	module:RECDATA
-CB1_He1	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,CT,CB1_He1,/;"	v	module:RECDATA
-CB1_He2	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,CT,CB1_He1,CB1_He2,/;"	v	module:RECDATA
-CDB	recfast.f90	/^        real(dl) CB1,CDB,/;"	v	module:RECDATA
-CDB_He	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,CT,CB1_He1,CB1_He2,CDB_He,/;"	v	module:RECDATA
-CK	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,/;"	v	module:RECDATA
-CK_He	recfast.f90	/^        real(dl) Lambda_He,Lalpha_He,Bfact,CK_He,/;"	v	module:RECDATA
-CL	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,/;"	v	module:RECDATA
-CL_He	recfast.f90	/^        real(dl) Lambda_He,Lalpha_He,Bfact,CK_He,CL_He$/;"	v	module:RECDATA
-COBE_CMBTemp	constants.f90	/^       real(dl), parameter :: COBE_CMBTemp /;"	v	module:constants
-COBE_scales	modules.f90	/^        real(dl), dimension (:), allocatable ::  COBElikelihoods,COBE_scales$/;"	v	module:ModelData
-COBElikelihoods	modules.f90	/^        real(dl), dimension (:), allocatable ::  COBElikelihoods,/;"	v	module:ModelData
-COBEnormalize	modules.f90	/^        subroutine COBEnormalize$/;"	s	module:ModelData
-CP	modules.f90	/^        type(CAMBparams) CP /;"	v	module:ModelParams
-CR	recfast.f90	/^        real(dl) CB1,CDB,CR,/;"	v	module:RECDATA
-CT	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,CT,/;"	v	module:RECDATA
-CT_B	modules.f90	/^        integer, parameter :: CT_Temp =1, CT_E = 2, CT_B /;"	v	module:ModelData
-CT_Cross	modules.f90	/^        integer, parameter :: CT_Temp =1, CT_E = 2, CT_B = 3, CT_Cross=/;"	v	module:ModelData
-CT_E	modules.f90	/^        integer, parameter :: CT_Temp =1, CT_E /;"	v	module:ModelData
-CT_Temp	modules.f90	/^        integer, parameter :: CT_Temp /;"	v	module:ModelData
-CTransScal	modules.f90	/^         Type(ClTransferData), target :: CTransScal,/;"	v	module:ModelData
-CTransTens	modules.f90	/^         Type(ClTransferData), target :: CTransScal, CTransTens,/;"	v	module:ModelData
-CTransVec	modules.f90	/^         Type(ClTransferData), target :: CTransScal, CTransTens, CTransVec$/;"	v	module:ModelData
-C_Cross	modules.f90	/^        integer, parameter :: C_Temp = 1, C_E = 2, C_Cross /;"	v	module:ModelData
-C_E	modules.f90	/^        integer, parameter :: C_Temp = 1, C_E /;"	v	module:ModelData
-C_Phi	modules.f90	/^        integer, parameter :: C_Temp = 1, C_E = 2, C_Cross =3, C_Phi /;"	v	module:ModelData
-C_PhiTemp	modules.f90	/^        integer, parameter :: C_Temp = 1, C_E = 2, C_Cross =3, C_Phi = 4, C_PhiTemp /;"	v	module:ModelData
-C_Temp	modules.f90	/^        integer, parameter :: C_Temp /;"	v	module:ModelData
-C_last	modules.f90	/^        integer :: C_last /;"	v	module:ModelData
-CalcScalCls	cmbmain.f90	/^        subroutine CalcScalCls(/;"	s	module:CAMBmain
-CalcScalCls2	cmbmain.f90	/^        subroutine CalcScalCls2(/;"	s	module:CAMBmain
-CalcScalarSources	cmbmain.f90	/^      subroutine CalcScalarSources(/;"	s	module:CAMBmain
-CalcTensCls	cmbmain.f90	/^        subroutine CalcTensCls(/;"	s	module:CAMBmain
-CalcTensorSources	cmbmain.f90	/^      subroutine CalcTensorSources(/;"	s	module:CAMBmain
-CalcVecCls	cmbmain.f90	/^        subroutine CalcVecCls(/;"	s	module:CAMBmain
-CalcVectorSources	cmbmain.f90	/^      subroutine CalcVectorSources(/;"	s	module:CAMBmain
-Capacity	inifile.f90	/^     integer Capacity$/;"	k	type:TNameValueList
-ClTransScal	camb.f90	/^            Type (ClTransferData) :: ClTransScal,/;"	k	type:CAMBdata
-ClTransTens	camb.f90	/^            Type (ClTransferData) :: ClTransScal,ClTransTens,/;"	k	type:CAMBdata
-ClTransVec	camb.f90	/^            Type (ClTransferData) :: ClTransScal,ClTransTens,ClTransVec$/;"	k	type:CAMBdata
-ClTransferData	modules.f90	/^         Type ClTransferData$/;"	t	module:ModelData
-ClTransferToCl	cmbmain.f90	/^     subroutine ClTransferToCl(/;"	s	module:CAMBmain
-Cl_lensed	modules.f90	/^        real(dl) , dimension (:,:,:), allocatable :: Cl_lensed$/;"	v	module:ModelData
-Cl_scalar	modules.f90	/^        real(dl), dimension (:,:,:), allocatable :: Cl_scalar,/;"	v	module:ModelData
-Cl_tensor	modules.f90	/^        real(dl), dimension (:,:,:), allocatable :: Cl_scalar, Cl_tensor,/;"	v	module:ModelData
-Cl_vector	modules.f90	/^        real(dl), dimension (:,:,:), allocatable :: Cl_scalar, Cl_tensor, Cl_vector$/;"	v	module:ModelData
-Compton_CT	constants.f90	/^       real(dl), parameter :: Compton_CT /;"	v	module:constants
-ComputeEveryl	modules.f90	/^      logical :: ComputeEveryl=/;"	v	module:ModelParams
-CorrFuncFlatSky	lensing.f90	/^subroutine CorrFuncFlatSky$/;"	s	module:lensing
-CorrFuncFullSky	lensing.f90	/^subroutine CorrFuncFullSky$/;"	s	module:lensing
-CosmomcTheta	modules.f90	/^       function CosmomcTheta(/;"	f	module:ModelParams
-Count	inifile.f90	/^     integer Count$/;"	k	type:TNameValueList
-DEBUG_writing_etc	testm.f90	/^    subroutine DEBUG_writing_etc(/;"	s	program:test_mmodpk
-DP	modpk_modules.f90	/^  INTEGER, parameter :: DP /;"	v	module:modpkparams
-DebugEvolution	modules.f90	/^        logical, parameter :: DebugEvolution /;"	v	module:ModelParams
-DebugMsgs	modules.f90	/^        logical, parameter :: DebugMsgs=/;"	v	module:ModelParams
-DefIni	inifile.f90	/^  Type(TIniFile) :: DefIni$/;"	v	module:IniFile
-Delta	inifile.f90	/^     integer Delta$/;"	k	type:TNameValueList
-DeltaB	recfast.f90	/^        real(dl) Lambda,DeltaB,/;"	v	module:RECDATA
-DeltaB_He	recfast.f90	/^        real(dl) Lambda,DeltaB,DeltaB_He,/;"	v	module:RECDATA
-DeltaTime	modules.f90	/^        function DeltaTime(/;"	f	module:ModelParams
-Delta_p_l_k	modules.f90	/^          real(dl), dimension(:,:,:), pointer :: Delta_p_l_k$/;"	k	type:ClTransferData
-Do21cm	recfast.f90	/^        logical :: Do21cm /;"	v	module:Recombination
-Do21cm_mina	recfast.f90	/^        real(dl), parameter :: Do21cm_mina /;"	v	module:Recombination
-Do21cm_minev	recfast.f90	/^        real(dl), parameter :: Do21cm_minev /;"	v	module:Recombination
-DoClsInterpol	modules.f90	/^      logical :: DoClsInterpol=/;"	v	module:ModelParams
-DoFlatIntegration	cmbmain.f90	/^        subroutine DoFlatIntegration(/;"	s	module:CAMBmain
-DoLateRadTruncation	equations.f90	/^        logical :: DoLateRadTruncation /;"	v	module:GaugeInterface
-DoLensing	modules.f90	/^         logical   :: DoLensing$/;"	k	type:CAMBparams
-DoRangeInt	cmbmain.f90	/^ subroutine DoRangeInt(/;"	s	module:CAMBmain
-DoRangeIntTensor	cmbmain.f90	/^      subroutine DoRangeIntTensor(/;"	s	module:CAMBmain
-DoSourceIntegration	cmbmain.f90	/^      subroutine DoSourceIntegration(/;"	s	module:CAMBmain
-DoSourcek	cmbmain.f90	/^      subroutine DoSourcek(/;"	s	module:CAMBmain
-DoTensorNeutrinos	equations.f90	/^        logical :: DoTensorNeutrinos /;"	v	module:GaugeInterface
-DoThermoSpline	modules.f90	/^        subroutine DoThermoSpline(/;"	s	module:ThermoData
-Eqns_name	equations.f90	/^        character(LEN=*), parameter :: Eqns_name /;"	v	module:GaugeInterface
-EvolutionVars	equations.f90	/^        type EvolutionVars$/;"	t	module:GaugeInterface
-Evolve_q	cmbmain.f90	/^      Type(Regions) :: Evolve_q$/;"	v	module:CAMBmain
-ExactClosedSum	cmbmain.f90	/^      logical ExactClosedSum /;"	v	module:CAMBmain
-FeedbackLevel	modules.f90	/^        integer :: FeedbackLevel /;"	v	module:ModelParams
-FirstZerolForBeta	equations.f90	/^            integer FirstZerolForBeta$/;"	k	type:EvolutionVars
-FreeSourceMem	cmbmain.f90	/^       subroutine FreeSourceMem$/;"	s	module:CAMBmain
-Free_ClTransfer	modules.f90	/^        subroutine Free_ClTransfer(/;"	s	module:ModelData
-G	constants.f90	/^       real(dl), parameter :: G=/;"	v	module:constants
-G11	equations.f90	/^            real(dl) G11(/;"	k	type:EvolutionVars
-G30	equations.f90	/^            real(dl) G11(max_nu),G30(/;"	k	type:EvolutionVars
-GET_INIT	recfast.f90	/^        subroutine GET_INIT(/;"	s	module:Recombination
-GaugeInterface	equations.f90	/^        module GaugeInterface$/;"	m
-GaugeInterface_EvolveScal	equations.f90	/^         subroutine GaugeInterface_EvolveScal(/;"	s	module:GaugeInterface
-GaugeInterface_Init	equations.f90	/^        subroutine GaugeInterface_Init$/;"	s	module:GaugeInterface
-GaugeInterface_ScalEv	equations.f90	/^        subroutine GaugeInterface_ScalEv(/;"	s	module:GaugeInterface
-GenerateBessels	bessels.f90	/^     subroutine GenerateBessels$/;"	s	module:SpherBessels
-GetBessels	lensing.f90	/^      subroutine GetBessels(/;"	s	module:lensing
-GetInitPowerArrayTens	cmbmain.f90	/^        subroutine GetInitPowerArrayTens(/;"	s	module:CAMBmain
-GetInitPowerArrayVec	cmbmain.f90	/^        subroutine GetInitPowerArrayVec(/;"	s	module:CAMBmain
-GetNumEqns	equations.f90	/^        subroutine GetNumEqns(/;"	s	module:GaugeInterface
-GetOmegak	equations.f90	/^        function GetOmegak(/;"	f
-GetSigma8	sigma8.f90	/^     program GetSigma8$/;"	p
-GetSourceMem	cmbmain.f90	/^       subroutine GetSourceMem$/;"	s	module:CAMBmain
-GetTauStart	cmbmain.f90	/^      function GetTauStart(/;"	f	module:CAMBmain
-GetTestTime	modules.f90	/^         function GetTestTime(/;"	f	module:ModelParams
-GetTransfer	cmbmain.f90	/^     subroutine GetTransfer(/;"	s	module:CAMBmain
-Gyr	constants.f90	/^       real(dl), parameter :: Gyr=/;"	v	module:constants
-H0	modules.f90	/^         real(dl)  :: H0,/;"	k	type:CAMBparams
-HO	recfast.f90	/^        real(dl) Tnow,HO$/;"	v	module:RECDATA
-H_frac	recfast.f90	/^        real(dl) Lambda,DeltaB,DeltaB_He,Lalpha,mu_H,mu_T,H_frac$/;"	v	module:RECDATA
-H_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot, N_tot, H_pivot$/;"	v	module:modpkparams
-ION	recfast.f90	/^        subroutine ION(/;"	s	module:Recombination
-IniFile	inifile.f90	/^module IniFile$/;"	m
-Ini_Close	inifile.f90	/^  subroutine Ini_Close$/;"	s	module:IniFile
-Ini_Close_File	inifile.f90	/^  subroutine Ini_Close_File(/;"	s	module:IniFile
-Ini_Echo_Read	inifile.f90	/^  logical :: Ini_Echo_Read /;"	v	module:IniFile
-Ini_HasKey	inifile.f90	/^  function Ini_HasKey(/;"	f	module:IniFile
-Ini_HasKey_File	inifile.f90	/^  function Ini_HasKey_File(/;"	f	module:IniFile
-Ini_Key_To_Arraykey	inifile.f90	/^  function Ini_Key_To_Arraykey(/;"	f	module:IniFile
-Ini_NameValue_Add	inifile.f90	/^  subroutine Ini_NameValue_Add(/;"	s	module:IniFile
-Ini_Open	inifile.f90	/^  subroutine Ini_Open(/;"	s	module:IniFile
-Ini_Open_File	inifile.f90	/^  subroutine Ini_Open_File(/;"	s	module:IniFile
-Ini_Open_Fromlines	inifile.f90	/^  subroutine Ini_Open_Fromlines(/;"	s	module:IniFile
-Ini_Read_Double	inifile.f90	/^  function Ini_Read_Double(/;"	f	module:IniFile
-Ini_Read_Double_Array	inifile.f90	/^  function Ini_Read_Double_Array(/;"	f	module:IniFile
-Ini_Read_Double_Array_File	inifile.f90	/^  function Ini_Read_Double_Array_File(/;"	f	module:IniFile
-Ini_Read_Double_File	inifile.f90	/^  function Ini_Read_Double_File(/;"	f	module:IniFile
-Ini_Read_Int	inifile.f90	/^  function Ini_Read_Int(/;"	f	module:IniFile
-Ini_Read_Int_Array	inifile.f90	/^  function Ini_Read_Int_Array(/;"	f	module:IniFile
-Ini_Read_Int_Array_File	inifile.f90	/^  function Ini_Read_Int_Array_File(/;"	f	module:IniFile
-Ini_Read_Int_File	inifile.f90	/^  function Ini_Read_Int_File(/;"	f	module:IniFile
-Ini_Read_Logical	inifile.f90	/^  function Ini_Read_Logical(/;"	f	module:IniFile
-Ini_Read_Logical_File	inifile.f90	/^  function Ini_Read_Logical_File(/;"	f	module:IniFile
-Ini_Read_Real	inifile.f90	/^  function Ini_Read_Real(/;"	f	module:IniFile
-Ini_Read_Real_Array	inifile.f90	/^  function Ini_Read_Real_Array(/;"	f	module:IniFile
-Ini_Read_Real_Array_File	inifile.f90	/^  function Ini_Read_Real_Array_File(/;"	f	module:IniFile
-Ini_Read_Real_File	inifile.f90	/^  function Ini_Read_Real_File(/;"	f	module:IniFile
-Ini_Read_String	inifile.f90	/^  function Ini_Read_String(/;"	f	module:IniFile
-Ini_Read_String_Array	inifile.f90	/^  function Ini_Read_String_Array(/;"	f	module:IniFile
-Ini_Read_String_Array_File	inifile.f90	/^  function Ini_Read_String_Array_File(/;"	f	module:IniFile
-Ini_Read_String_File	inifile.f90	/^  function Ini_Read_String_File(/;"	f	module:IniFile
-Ini_SaveReadValues	inifile.f90	/^  subroutine Ini_SaveReadValues(/;"	s	module:IniFile
-Ini_SaveReadValues_File	inifile.f90	/^  subroutine Ini_SaveReadValues_File(/;"	s	module:IniFile
-Ini_fail_on_not_found	inifile.f90	/^  logical :: Ini_fail_on_not_found /;"	v	module:IniFile
-Ini_max_name_len	inifile.f90	/^  integer, parameter :: Ini_max_name_len /;"	v	module:IniFile
-Ini_max_string_len	inifile.f90	/^  integer, parameter :: Ini_max_string_len /;"	v	module:IniFile
-InitPower	modules.f90	/^         type(InitialPowerParams) :: InitPower /;"	k	type:CAMBparams
-InitSourceInterpolation	cmbmain.f90	/^      subroutine InitSourceInterpolation$/;"	s	module:CAMBmain
-InitSpherBessels	bessels.f90	/^      subroutine InitSpherBessels$/;"	s	module:SpherBessels
-InitTransfer	cmbmain.f90	/^      subroutine InitTransfer$/;"	s	module:CAMBmain
-InitVars	cmbmain.f90	/^      subroutine InitVars$/;"	s	module:CAMBmain
-Init_ClTransfer	modules.f90	/^        subroutine Init_ClTransfer(/;"	s	module:ModelData
-Init_Cls	modules.f90	/^        subroutine Init_Cls$/;"	s	module:ModelData
-InitialConditionVector	modules.f90	/^         real(dl) ::  InitialConditionVector(/;"	k	type:CAMBparams
-InitialPower	power_tilt.f90	/^     module InitialPower /;"	m
-InitialPowerParams	power_tilt.f90	/^      Type InitialPowerParams$/;"	t	module:InitialPower
-InitialPower_ReadParams	power_tilt.f90	/^       subroutine InitialPower_ReadParams(/;"	s	module:InitialPower
-InitializePowers	power_tilt.f90	/^       subroutine InitializePowers(/;"	s	module:InitialPower
-IntegrateSourcesBessels	cmbmain.f90	/^      subroutine IntegrateSourcesBessels(/;"	s	module:CAMBmain
-IntegrationVars	cmbmain.f90	/^       type IntegrationVars$/;"	t	module:CAMBmain
-IntegrationVars_Init	cmbmain.f90	/^      subroutine IntegrationVars_Init(/;"	s	module:CAMBmain
-InterpolateClArr	modules.f90	/^      subroutine InterpolateClArr(/;"	s	module:lvalues
-InterpolateCls	cmbmain.f90	/^    subroutine InterpolateCls(/;"	s	module:CAMBmain
-InterpolateSources	cmbmain.f90	/^      subroutine InterpolateSources(/;"	s	module:CAMBmain
-Items	inifile.f90	/^     type(TNameValue_pointer), dimension(:), pointer :: Items$/;"	k	type:TNameValueList
-Kf	equations.f90	/^            real(dl) Kf(/;"	k	type:EvolutionVars
-Kft	equations.f90	/^            real(dl) Kf(max_l_evolve),Kft(/;"	k	type:EvolutionVars
-Ksign	modules.f90	/^         real(dl) curv,r, Ksign /;"	k	type:CAMBparams
-L	inifile.f90	/^     Type (TNameValueLi/;"	k	type:TIniFile
-L_H_alpha	recfast.f90	/^        real(dl) L_H_ion,L_H_alpha,/;"	v	module:RECDATA
-L_H_ion	recfast.f90	/^        real(dl) L_H_ion,/;"	v	module:RECDATA
-L_He1_ion	recfast.f90	/^        real(dl) L_H_ion,L_H_alpha,L_He1_ion,/;"	v	module:RECDATA
-L_He2St_ion	recfast.f90	/^        real(dl)  L_He_2Pt,L_He_2St,L_He2St_ion$/;"	v	module:RECDATA
-L_He2_ion	recfast.f90	/^        real(dl) L_H_ion,L_H_alpha,L_He1_ion,L_He2_ion,/;"	v	module:RECDATA
-L_He_2Pt	recfast.f90	/^        real(dl)  L_He_2Pt,/;"	v	module:RECDATA
-L_He_2St	recfast.f90	/^        real(dl)  L_He_2Pt,L_He_2St,/;"	v	module:RECDATA
-L_He_2p	recfast.f90	/^        real(dl) L_H_ion,L_H_alpha,L_He1_ion,L_He2_ion,L_He_2s,L_He_2p$/;"	v	module:RECDATA
-L_He_2s	recfast.f90	/^        real(dl) L_H_ion,L_H_alpha,L_He1_ion,L_He2_ion,L_He_2s,/;"	v	module:RECDATA
-Lalpha	recfast.f90	/^        real(dl) Lambda,DeltaB,DeltaB_He,Lalpha,/;"	v	module:RECDATA
-Lalpha_He	recfast.f90	/^        real(dl) Lambda_He,Lalpha_He,/;"	v	module:RECDATA
-Lambda	recfast.f90	/^        real(dl) Lambda,/;"	v	module:RECDATA
-LambdaGeneral	equations.f90	/^       module LambdaGeneral$/;"	m
-Lambda_He	recfast.f90	/^        real(dl) Lambda_He,/;"	v	module:RECDATA
-MPC_in_sec	constants.f90	/^       real(dl), parameter :: MPC_in_sec /;"	v	module:constants
-MT	modules.f90	/^        Type (MatterTransferData) :: MT /;"	v	module:Transfer
-MTrans	camb.f90	/^            Type (MatterTransferData) :: MTrans$/;"	k	type:CAMBdata
-M_Pl	modpk_modules.f90	/^  real(dp), PARAMETER :: M_Pl=/;"	v	module:modpkparams
-Magnetic	equations.f90	/^        real(dl) :: Magnetic /;"	v	module:GaugeInterface
-MassiveNu	modules.f90	/^    module MassiveNu$/;"	m
-MassiveNuApprox	equations.f90	/^            logical MassiveNuApprox$/;"	k	type:EvolutionVars
-MassiveNuMethod	modules.f90	/^         integer   :: MassiveNuMethod$/;"	k	type:CAMBparams
-MassiveNuVars	equations.f90	/^     subroutine MassiveNuVars(/;"	s	module:GaugeInterface
-MassiveNuVarsOut	equations.f90	/^       subroutine MassiveNuVarsOut(/;"	s	module:GaugeInterface
-MatterPowerData	modules.f90	/^        Type MatterPowerData$/;"	t	module:Transfer
-MatterPowerData_Load	modules.f90	/^        subroutine MatterPowerData_Load(/;"	s	module:Transfer
-MatterPowerData_k	modules.f90	/^        function MatterPowerData_k(/;"	f	module:Transfer
-MatterPowerdata_Free	modules.f90	/^        subroutine MatterPowerdata_Free(/;"	s	module:Transfer
-MatterPowerdata_MakeNonlinear	modules.f90	/^        subroutine MatterPowerdata_MakeNonlinear(/;"	s	module:Transfer
-MatterPowerdata_getsplines	modules.f90	/^        subroutine MatterPowerdata_getsplines(/;"	s	module:Transfer
-MatterTransferData	modules.f90	/^        Type MatterTransferData$/;"	t	module:Transfer
-Max_eta_k	modules.f90	/^         real(dl)  :: Max_eta_k,/;"	k	type:CAMBparams
-Max_eta_k_tensor	modules.f90	/^         real(dl)  :: Max_eta_k, Max_eta_k_tensor$/;"	k	type:CAMBparams
-Max_l	modules.f90	/^         integer   :: Max_l,/;"	k	type:CAMBparams
-Max_l_tensor	modules.f90	/^         integer   :: Max_l, Max_l_tensor$/;"	k	type:CAMBparams
-MaxlNeeded	equations.f90	/^            integer lmaxg,lmaxnr,lmaxnu,lmaxgpol,MaxlNeeded$/;"	k	type:EvolutionVars
-Maxtau	modules.f90	/^        real(dl) tauminn,dlntau,Maxtau$/;"	v	module:ThermoData
-Min_kh_nonlinear	halofit.f90	/^       real, parameter :: Min_kh_nonlinear /;"	v	module:NonLinear
-ModelData	modules.f90	/^        module ModelData$/;"	m
-ModelData_Free	modules.f90	/^         subroutine ModelData_Free$/;"	s	module:ModelData
-ModelParams	modules.f90	/^        module ModelParams$/;"	m
-Mpc	constants.f90	/^       real(dl), parameter :: Mpc /;"	v	module:constants
-Mpc2Mpl	modpk_modules.f90	/^  real(dp), PARAMETER :: Mpc2Mpl=/;"	v	module:modpkparams
-MySech	modpk_potential.f90	/^  FUNCTION MySech(/;"	f	module:potential
-N	modpk_potential.f90	/^    real(dp) :: N=/;"	k	type:bundle
-NNow	recfast.f90	/^        real(dl) :: NNow,/;"	v	module:Recombination
-N_iso_ref	modpk_icsampling.f90	/^  real(dp) :: N_iso_ref$/;"	v	module:modpk_icsampling
-N_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot,/;"	v	module:modpkparams
-N_tot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot, N_tot,/;"	v	module:modpkparams
-Name	inifile.f90	/^     character(Ini_max_name_len)  :: Name$/;"	k	type:TNameValue
-Nefold_max	modpk_modules.f90	/^  real(dp) :: Nefold_max=/;"	v	module:modpkparams
-Nnow	modules.f90	/^       real(dl) Nnow$/;"	v	module:ModelParams
-NonLinear	halofit.f90	/^      module NonLinear$/;"	m
-NonLinear	modules.f90	/^         integer   :: NonLinear$/;"	k	type:CAMBparams
-NonLinearLensing	cmbmain.f90	/^     subroutine NonLinearLensing$/;"	s	module:CAMBmain
-NonLinear_GetNonLinRatios	halofit.f90	/^     subroutine NonLinear_GetNonLinRatios(/;"	s	module:NonLinear
-NonLinear_GetRatios	halofit.f90	/^     subroutine NonLinear_GetRatios(/;"	s
-NonLinear_GetRatios_all	halofit.f90	/^     subroutine NonLinear_GetRatios_all(/;"	s
-NonLinear_Lens	modules.f90	/^         integer, parameter :: NonLinear_none=0, NonLinear_Pk =1, NonLinear_Lens=/;"	v	module:ModelParams
-NonLinear_Pk	modules.f90	/^         integer, parameter :: NonLinear_none=0, NonLinear_Pk /;"	v	module:ModelParams
-NonLinear_none	modules.f90	/^         integer, parameter :: NonLinear_none=/;"	v	module:ModelParams
-NormalizeClsAtL	modules.f90	/^      subroutine NormalizeClsAtL(/;"	s	module:ModelData
-NuMethod	equations.f90	/^            integer NuMethod$/;"	k	type:EvolutionVars
-Nu_Integrate	modules.f90	/^        subroutine Nu_Integrate(/;"	s	module:MassiveNu
-Nu_Integrate01	modules.f90	/^        subroutine Nu_Integrate01(/;"	s	module:MassiveNu
-Nu_Intvsq	modules.f90	/^   subroutine Nu_Intvsq(/;"	s	module:MassiveNu
-Nu_Shear	modules.f90	/^        subroutine Nu_Shear(/;"	s	module:MassiveNu
-Nu_approx	modules.f90	/^        integer, parameter :: Nu_int = 0, Nu_trunc=1, Nu_approx /;"	v	module:ModelParams
-Nu_background	modules.f90	/^       subroutine Nu_background(/;"	s	module:MassiveNu
-Nu_best	modules.f90	/^        integer, parameter :: Nu_int = 0, Nu_trunc=1, Nu_approx = 2, Nu_best /;"	v	module:ModelParams
-Nu_derivs	modules.f90	/^        subroutine Nu_derivs(/;"	s	module:MassiveNu
-Nu_init	modules.f90	/^        subroutine Nu_init$/;"	s	module:MassiveNu
-Nu_int	modules.f90	/^        integer, parameter :: Nu_int /;"	v	module:ModelParams
-Nu_mass_degeneracies	modules.f90	/^         real(dl)  :: Nu_mass_degeneracies(/;"	k	type:CAMBparams
-Nu_mass_eigenstates	modules.f90	/^         integer   :: Nu_mass_eigenstates /;"	k	type:CAMBparams
-Nu_mass_fractions	modules.f90	/^         real(dl)  :: Nu_mass_fractions(/;"	k	type:CAMBparams
-Nu_mass_splittings	modules.f90	/^         logical :: Nu_mass_splittings$/;"	k	type:CAMBparams
-Nu_rho	modules.f90	/^       subroutine Nu_rho(/;"	s	module:MassiveNu
-Nu_trunc	modules.f90	/^        integer, parameter :: Nu_int = 0, Nu_trunc=/;"	v	module:ModelParams
-NumSources	modules.f90	/^          integer :: NumSources /;"	k	type:ClTransferData
-Num_Nu_massive	modules.f90	/^         real(dl)  :: H0,TCMB,yhe,Num_Nu_massless,Num_Nu_massive$/;"	k	type:CAMBparams
-Num_Nu_massless	modules.f90	/^         real(dl)  :: H0,TCMB,yhe,Num_Nu_massless,/;"	k	type:CAMBparams
-Nz	recfast.f90	/^        integer,  parameter :: Nz=/;"	v	module:Recombination
-OmegaK	recfast.f90	/^       real(dl) OmegaK,/;"	v	module:RECDATA
-OmegaKFlat	modules.f90	/^      real(dl), parameter :: OmegaKFlat /;"	v	module:ModelParams
-OmegaT	recfast.f90	/^       real(dl) OmegaK, OmegaT,/;"	v	module:RECDATA
-OnlyTransfers	modules.f90	/^         logical OnlyTransfers /;"	k	type:CAMBparams
-OutputDenominator	modules.f90	/^        real(dl), parameter ::  OutputDenominator /;"	v	module:ModelParams
-OutputNormalization	modules.f90	/^         integer   :: OutputNormalization /;"	k	type:CAMBparams
-P	inifile.f90	/^     Type(TNameValue), pointer :: P$/;"	k	type:TNameValue_pointer
-P	power_tilt.f90	/^      Type(InitialPo/;"	v	module:InitialPower
-P	sigma8.f90	/^        type(CAMBparams)  P /;"	v	program:GetSigma8
-P	tester.f90	/^        type(CAMBparams)  P /;"	v	program:tester
-PI	modpk_modules.f90	/^  real(dp), PARAMETER :: PI=/;"	v	module:internals
-Params	camb.f90	/^            Type (CAMBparams) :: Params$/;"	k	type:CAMBdata
-Power_Descript	power_tilt.f90	/^     function Power_Descript(/;"	f	module:InitialPower
-Power_Name	power_tilt.f90	/^      character(LEN=*), parameter :: Power_Name /;"	v	module:InitialPower
-RECDATA	recfast.f90	/^       module RECDATA$/;"	m
-RECFAST_Heswitch	recfast.f90	/^          integer  :: RECFAST_Heswitch$/;"	k	type:RecombinationParams
-RECFAST_Heswitch_default	recfast.f90	/^        integer, parameter ::  RECFAST_Heswitch_default /;"	v	module:Recombination
-RECFAST_Hswitch	recfast.f90	/^          logical  :: RECFAST_Hswitch /;"	k	type:RecombinationParams
-RECFAST_Hswitch_default	recfast.f90	/^        logical, parameter  :: RECFAST_Hswitch_default /;"	v	module:Recombination
-RECFAST_fudge	recfast.f90	/^          real(dl) :: RECFAST_fudge /;"	k	type:RecombinationParams
-RECFAST_fudge_He	recfast.f90	/^          real(dl) :: RECFAST_fudge_He /;"	k	type:RecombinationParams
-RECFAST_fudge_He_default	recfast.f90	/^        real(dl), parameter :: RECFAST_fudge_He_default /;"	v	module:Recombination
-RECFAST_fudge_default	recfast.f90	/^        real(dl), parameter :: RECFAST_fudge_default /;"	v	module:Recombination
-RECFAST_fudge_default2	recfast.f90	/^        real(dl), parameter :: RECFAST_fudge_default2 /;"	v	module:Recombination
-ReadValues	inifile.f90	/^     Type (TNameValueList) :: L, ReadValues$/;"	k	type:TIniFile
-Recomb	modules.f90	/^         type(Recombi/;"	k	type:CAMBparams
-Recombination	recfast.f90	/^        module Recombination$/;"	m
-RecombinationParams	recfast.f90	/^        type RecombinationParams$/;"	t	module:Recombination
-Recombination_Name	recfast.f90	/^        character(LEN=*), parameter :: Recombination_Name /;"	v	module:Recombination
-Recombination_ReadParams	recfast.f90	/^         subroutine Recombination_ReadParams(/;"	s	module:Recombination
-Recombination_SetDefParams	recfast.f90	/^        subroutine Recombination_SetDefParams(/;"	s	module:Recombination
-Recombination_Validate	recfast.f90	/^        subroutine Recombination_Validate(/;"	s	module:Recombination
-Recombination_init	recfast.f90	/^        subroutine Recombination_init(/;"	s	module:Recombination
-Recombination_tm	recfast.f90	/^        function Recombination_tm(/;"	f	module:Recombination
-Recombination_ts	recfast.f90	/^        function Recombination_ts(/;"	f	module:Recombination
-Recombination_xe	recfast.f90	/^        function Recombination_xe(/;"	f	module:Recombination
-Reion	modules.f90	/^         type(Reioni/;"	k	type:CAMBparams
-ReionHist	modules.f90	/^         type(ReionizationHistory) :: ReionHist$/;"	k	type:CAMBparams
-Reionization	reionization.f90	/^             logical    :: Reionization$/;"	k	type:ReionizationParams
-Reionization	reionization.f90	/^module Reionization$/;"	m
-ReionizationHistory	reionization.f90	/^        type ReionizationHistory$/;"	t	module:Reionization
-ReionizationParams	reionization.f90	/^       type ReionizationParams$/;"	t	module:Reionization
-Reionization_AccuracyBoost	reionization.f90	/^       real(dl) :: Reionization_AccuracyBoost /;"	v	module:Reionization
-Reionization_DefFraction	reionization.f90	/^       real(dl), parameter :: Reionization_DefFraction /;"	v	module:Reionization
-Reionization_GetOptDepth	reionization.f90	/^function Reionization_GetOptDepth(/;"	f	module:Reionization
-Reionization_Init	reionization.f90	/^ subroutine Reionization_Init(/;"	s	module:Reionization
-Reionization_Name	reionization.f90	/^       character(LEN=*), parameter :: Reionization_Name /;"	v	module:Reionization
-Reionization_ReadParams	reionization.f90	/^ subroutine Reionization_ReadParams(/;"	s	module:Reionization
-Reionization_SetDefParams	reionization.f90	/^ subroutine Reionization_SetDefParams(/;"	s	module:Reionization
-Reionization_SetFromOptDepth	reionization.f90	/^ subroutine Reionization_SetFromOptDepth(/;"	s	module:Reionization
-Reionization_SetParamsForZre	reionization.f90	/^ subroutine Reionization_SetParamsForZre(/;"	s	module:Reionization
-Reionization_Validate	reionization.f90	/^ subroutine Reionization_Validate(/;"	s	module:Reionization
-Reionization_doptdepth_dz	reionization.f90	/^ function Reionization_doptdepth_dz(/;"	f	module:Reionization
-Reionization_maxz	reionization.f90	/^      real(dl), parameter :: Reionization_maxz /;"	v	module:Reionization
-Reionization_timesteps	reionization.f90	/^ function Reionization_timesteps(/;"	f	module:Reionization
-Reionization_tol	reionization.f90	/^      real(dl), private, parameter :: Reionization_tol /;"	v	module:Reionization
-Reionization_xe	reionization.f90	/^ function Reionization_xe(/;"	f	module:Reionization
-Reionization_zreFromOptDepth	reionization.f90	/^ subroutine Reionization_zreFromOptDepth(/;"	s	module:Reionization
-Rionization_zexp	reionization.f90	/^       real(dl) :: Rionization_zexp /;"	v	module:Reionization
-ScalEqsToPropagate	equations.f90	/^            integer ScalEqsToPropagate$/;"	k	type:EvolutionVars
-ScalarPower	power_tilt.f90	/^      function ScalarPower(/;"	f	module:InitialPower
-ScalarPowerAmp	power_tilt.f90	/^       real(dl) ScalarPowerAmp(/;"	k	type:InitialPowerParams
-Scalar_initial_condition	modules.f90	/^         integer   :: Scalar_initial_condition /;"	k	type:CAMBparams
-SetClosedkValuesFromArr	cmbmain.f90	/^      subroutine SetClosedkValuesFromArr(/;"	s	module:CAMBmain
-SetDefPowerParams	power_tilt.f90	/^       subroutine SetDefPowerParams(/;"	s	module:InitialPower
-SetTimeSteps	modules.f90	/^        subroutine SetTimeSteps$/;"	s	module:ThermoData
-SetkValuesForInt	cmbmain.f90	/^     subroutine SetkValuesForInt$/;"	s	module:CAMBmain
-SetkValuesForSources	cmbmain.f90	/^      subroutine SetkValuesForSources$/;"	s	module:CAMBmain
-SlashComments	inifile.f90	/^     logical SlashComments$/;"	k	type:TIniFile
-SourceNum	cmbmain.f90	/^      integer SourceNum$/;"	v	module:CAMBmain
-SourceSteps	cmbmain.f90	/^          integer SourceSteps /;"	k	type:IntegrationVars
-SourceToTransfers	cmbmain.f90	/^     subroutine SourceToTransfers(/;"	s	module:CAMBmain
-Source_q	cmbmain.f90	/^          real(dl), dimension(:,:), pointer :: Source_q,/;"	k	type:IntegrationVars
-SpherBessels	bessels.f90	/^        module SpherBessels$/;"	m
-Src	cmbmain.f90	/^      real(dl), dimension(:,:,:), allocatable :: Src,/;"	v	module:CAMBmain
-SwitchToMassiveNuApprox	equations.f90	/^        subroutine SwitchToMassiveNuApprox(/;"	s	module:GaugeInterface
-TCMB	modules.f90	/^         real(dl)  :: H0,TCMB,/;"	k	type:CAMBparams
-TIniFile	inifile.f90	/^  Type TIniFile$/;"	t	module:IniFile
-TNameValue	inifile.f90	/^  type TNameValue$/;"	t	module:IniFile
-TNameValueList	inifile.f90	/^  Type TNameValueList$/;"	t	module:IniFile
-TNameValueList_Add	inifile.f90	/^  subroutine TNameValueList_Add(/;"	s	module:IniFile
-TNameValueList_Clear	inifile.f90	/^  subroutine TNameValueList_Clear(/;"	s	module:IniFile
-TNameValueList_Delete	inifile.f90	/^  subroutine TNameValueList_Delete(/;"	s	module:IniFile
-TNameValueList_HasKey	inifile.f90	/^  function TNameValueList_HasKey(/;"	f	module:IniFile
-TNameValueList_Init	inifile.f90	/^  subroutine TNameValueList_Init(/;"	s	module:IniFile
-TNameValueList_SetCapacity	inifile.f90	/^  subroutine TNameValueList_SetCapacity(/;"	s	module:IniFile
-TNameValueList_ValueOf	inifile.f90	/^  subroutine TNameValueList_ValueOf(/;"	s	module:IniFile
-TNameValue_pointer	inifile.f90	/^  type TNameValue_pointer$/;"	t	module:IniFile
-T_21cm	constants.f90	/^       real(dl), parameter :: f_21cm = 1420.40575e6_dl, l_21cm= c\/f_21cm, T_21cm /;"	v	module:constants
-TensorPower	power_tilt.f90	/^      function TensorPower(/;"	f	module:InitialPower
-ThermoData	modules.f90	/^        module ThermoData$/;"	m
-ThermoData_Free	modules.f90	/^        subroutine ThermoData_Free$/;"	s	module:ThermoData
-Thermo_OpacityToTime	modules.f90	/^       function Thermo_OpacityToTime(/;"	f	module:ThermoData
-ThisCT	cmbmain.f90	/^      Type(ClTransferData), pointer :: ThisCT$/;"	v	module:CAMBmain
-ThisReion	reionization.f90	/^    Type(ReionizationParams), private, pointer ::  ThisReion$/;"	v	module:Reionization
-ThisReionHist	reionization.f90	/^    Type(ReionizationHistory), private, pointer :: ThisReionHist$/;"	v	module:Reionization
-ThreadNum	modules.f90	/^      integer :: ThreadNum /;"	v	module:ModelParams
-TightCoupling	equations.f90	/^            logical TightCoupling$/;"	k	type:EvolutionVars
-TimeOfz	modules.f90	/^        function TimeOfz(/;"	f	module:ModelParams
-TimeSteps	modules.f90	/^        Type(Regions) :: TimeSteps$/;"	v	module:ModelParams
-Tnow	recfast.f90	/^        real(dl) Tnow,/;"	v	module:RECDATA
-Transfer	modules.f90	/^         type(TransferP/;"	k	type:CAMBparams
-Transfer	modules.f90	/^        module Transfer$/;"	m
-TransferData	modules.f90	/^         real, dimension(:,:,:), pointer :: TransferData$/;"	k	type:MatterTransferData
-TransferOnly	equations.f90	/^            logical TransferOnly$/;"	k	type:EvolutionVars
-TransferOut	cmbmain.f90	/^     subroutine TransferOut$/;"	s	module:CAMBmain
-TransferParams	modules.f90	/^        type TransferParams$/;"	t	module:ModelParams
-Transfer_Allocate	modules.f90	/^        subroutine Transfer_Allocate(/;"	s	module:Transfer
-Transfer_Free	modules.f90	/^        subroutine Transfer_Free(/;"	s	module:Transfer
-Transfer_GetMatterPower	modules.f90	/^        subroutine Transfer_GetMatterPower(/;"	s	module:Transfer
-Transfer_GetMatterPowerData	modules.f90	/^        subroutine Transfer_GetMatterPowerData(/;"	s	module:Transfer
-Transfer_Get_sigma8	modules.f90	/^        subroutine Transfer_Get_sigma8(/;"	s	module:Transfer
-Transfer_SaveMatterPower	modules.f90	/^        subroutine Transfer_SaveMatterPower(/;"	s	module:Transfer
-Transfer_SaveToFiles	modules.f90	/^        subroutine Transfer_SaveToFiles(/;"	s	module:Transfer
-Transfer_SetForNonlinearLensing	modules.f90	/^       subroutine Transfer_SetForNonlinearLensing(/;"	s	module:Transfer
-Transfer_b	modules.f90	/^        integer, parameter :: Transfer_kh =1, Transfer_cdm=2,Transfer_b=/;"	v	module:Transfer
-Transfer_cdm	modules.f90	/^        integer, parameter :: Transfer_kh =1, Transfer_cdm=/;"	v	module:Transfer
-Transfer_g	modules.f90	/^        integer, parameter :: Transfer_kh =1, Transfer_cdm=2,Transfer_b=3,Transfer_g=/;"	v	module:Transfer
-Transfer_kh	modules.f90	/^        integer, parameter :: Transfer_kh /;"	v	module:Transfer
-Transfer_max	modules.f90	/^        integer, parameter :: Transfer_max /;"	v	module:Transfer
-Transfer_nu	modules.f90	/^                              Transfer_r=5, Transfer_nu /;"	v	module:Transfer
-Transfer_output_Sig8	modules.f90	/^        subroutine Transfer_output_Sig8(/;"	s	module:Transfer
-Transfer_output_Sig8AndNorm	modules.f90	/^        subroutine Transfer_output_Sig8AndNorm(/;"	s	module:Transfer
-Transfer_r	modules.f90	/^        integer, parameter :: Transfer_kh =1, Transfer_cdm=2,Transfer_b=3,Transfer_g=4, &$/;"	v	module:Transfer
-Transfer_tot	modules.f90	/^                              Transfer_r=5, Transfer_nu = 6,  & !massless and massive neutrino$/;"	v	module:Transfer
-Tsrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(Nz),dxrec(Nz), Tsrec(/;"	v	module:Recombination
-USpherBesselWithDeriv	bessels.f90	/^        subroutine USpherBesselWithDeriv(/;"	s	module:SpherBessels
-UseLimber	cmbmain.f90	/^      function UseLimber(/;"	f	module:CAMBmain
-Value	inifile.f90	/^     character(Ini_max_string_len):: Value$/;"	k	type:TNameValue
-WantCls	modules.f90	/^         logical   :: WantCls,/;"	k	type:CAMBparams
-WantScalars	modules.f90	/^         logical   :: WantScalars,/;"	k	type:CAMBparams
-WantTensors	modules.f90	/^         logical   :: WantScalars, WantTensors,/;"	k	type:CAMBparams
-WantTransfer	modules.f90	/^         logical   :: WantCls, WantTransfer$/;"	k	type:CAMBparams
-WantVectors	modules.f90	/^         logical   :: WantScalars, WantTensors, WantVectors$/;"	k	type:CAMBparams
-WindowVarDelta	reionization.f90	/^          real(dl) :: WindowVarMid, WindowVarDelta$/;"	k	type:ReionizationHistory
-WindowVarMid	reionization.f90	/^          real(dl) :: WindowVarMid,/;"	k	type:ReionizationHistory
-WriteFitsCls	writefits.f90	/^ subroutine WriteFitsCls(/;"	s
-a_end	modpk_modules.f90	/^  real(dp) :: a_end,/;"	v	module:modpkparams
-a_ik	modpk_modules.f90	/^  real(dp) :: k, a_ik$/;"	v	module:internals
-a_init	modpk_modules.f90	/^  real(dp) :: a_init$/;"	v	module:modpkparams
-a_pivot	modpk_modules.f90	/^  real(dp) :: a_end, a_pivot$/;"	v	module:modpkparams
-a_rad	constants.f90	/^       real(dl), parameter :: a_rad /;"	v	module:constants
-access_modpk	modpk.f90	/^MODULE access_modpk$/;"	m
-actual_opt_depth	modules.f90	/^        real(dl) :: tight_tau, actual_opt_depth$/;"	v	module:ThermoData
-adiab	modpk_modules.f90	/^    real(dp) :: adiab$/;"	k	type:power_spectra
-adotrad	modules.f90	/^        real(dl) taurst,dtaurec,taurend, tau_maxvis,adotrad$/;"	v	module:ModelParams
-aharr	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), aharr(/;"	v	module:modpkparams
-airy_ai	bessels.f90	/^      function airy_ai(/;"	f	module:SpherBessels
-ajl	bessels.f90	/^        real(dl), dimension(:,:), allocatable ::  ajl,/;"	v	module:SpherBessels
-ajlpr	bessels.f90	/^        real(dl), dimension(:,:), allocatable ::  ajl,ajlpr,/;"	v	module:SpherBessels
-akthom	modules.f90	/^       real(dl) akthom /;"	v	module:ModelParams
-akthom	reionization.f90	/^          real(dl) :: akthom,/;"	k	type:ReionizationHistory
-allocate_vars	testm.f90	/^    subroutine allocate_vars(/;"	s	program:test_mmodpk
-alpha_s	isocurv_driver.f90	/^  real(dp) :: dlnk, As, ns, nt, r, alpha_s$/;"	v	program:isocurv_driver
-alpha_s	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt, alpha_s$/;"	k	type:ic_and_observables
-alpha_s	testm.f90	/^  real(dp) :: dlnk, As, ns, nt, r, alpha_s$/;"	v	program:test_mmodpk
-am_max	modules.f90	/^          real(dl), parameter :: am_max /;"	v	module:MassiveNu
-am_maxp	modules.f90	/^          real(dl), parameter :: am_maxp=/;"	v	module:MassiveNu
-am_min	modules.f90	/^          real(dl), parameter :: am_min /;"	v	module:MassiveNu
-am_minp	modules.f90	/^          real(dl),parameter  :: am_minp=/;"	v	module:MassiveNu
-an	power_tilt.f90	/^       real(dl) an(/;"	k	type:InitialPowerParams
-ant	power_tilt.f90	/^       real(dl) ant(/;"	k	type:InitialPowerParams
-array_fmt	isocurv_driver.f90	/^  character(16) :: array_fmt$/;"	v	program:isocurv_driver
-array_fmt	testm.f90	/^  character(16) :: array_fmt$/;"	v	program:test_mmodpk
-array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(/;"	s	module:modpk_utils
-aux_buf	equations.f90	/^            real(dl) tenspigdot, aux_buf$/;"	k	type:EvolutionVars
-backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/;"	s	module:background_evolution
-backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/;"	s	module:background_evolution
-background_evolution	modpk_backgrnd.f90	/^MODULE background_evolution$/;"	m
-bad_ic	modpk_icsampling.f90	/^  integer, parameter :: bad_ic=/;"	v	module:modpk_icsampling
-barssc0	constants.f90	/^       real(dl), parameter :: barssc0=/;"	v	module:constants
-bderivs	modpk_utils.f90	/^  SUBROUTINE bderivs(/;"	s	module:modpk_utils
-bessj0	lensing.f90	/^      FUNCTION bessj0(/;"	f	module:lensing
-bigH	recfast.f90	/^        real(dl), parameter :: bigH=/;"	v	module:RECDATA
-build_isocurv_basis	modpk_potential.f90	/^    subroutine build_isocurv_basis(/;"	s	subroutine:powerspectrum
-build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(/;"	s	subroutine:derivs
-build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(/;"	s	module:modpk_icsampling
-bundle	modpk_potential.f90	/^  type :: bundle$/;"	t	module:potential
-bundle_exp_scalar	modpk_modules.f90	/^    real(dp) :: bundle_exp_scalar$/;"	k	type:power_spectra
-bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(/;"	s	module:potential
-c	constants.f90	/^       real(dl), parameter :: c /;"	v	module:constants
-calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(/;"	f	module:modpk_postprocessing
-calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(/;"	s	program:test_mmodpk
-calculate_pk_observables_per_IC	testm.f90	/^    subroutine calculate_pk_observables_per_IC(/;"	s	program:test_mmodpk
-call_again	modules.f90	/^       logical ::call_again /;"	v	module:ModelParams
-camb_interface	modpk_modules.f90	/^MODULE camb_interface$/;"	m
-chi0	modules.f90	/^         real(dl) tau0,chi0 /;"	k	type:CAMBparams
-ci	isocurv_driver.f90	/^  character(len=2) :: ci$/;"	v	program:isocurv_driver
-ci	testm.f90	/^  character(len=2) :: ci$/;"	v	program:test_mmodpk
-closed	modules.f90	/^         logical flat,closed,/;"	k	type:CAMBparams
-cmbmain	cmbmain.f90	/^      subroutine cmbmain$/;"	s	module:CAMBmain
-const	modules.f90	/^          real(dl), parameter  :: const /;"	v	module:MassiveNu
-const2	modules.f90	/^          real(dl), parameter  :: const2 /;"	v	module:MassiveNu
-const_fourpi	constants.f90	/^       real(dl), parameter :: const_twopi=2._dl*const_pi, const_fourpi=/;"	v	module:constants
-const_pi	constants.f90	/^       real(dl), parameter :: const_pi /;"	v	module:constants
-const_sqrt6	constants.f90	/^       real(dl), parameter :: const_sqrt6=/;"	v	module:constants
-const_twopi	constants.f90	/^       real(dl), parameter :: const_twopi=/;"	v	module:constants
-constants	constants.f90	/^   module constants$/;"	m
-constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(/;"	f	subroutine:implicit_surface_sampling
-constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(/;"	s	module:modpk_icsampling
-convert_hacked_vector_to_matrix	modpk_utils.f90	/^  pure function convert_hacked_vector_to_matrix(/;"	f	module:modpk_utils
-convert_matrix_to_hacked_vector	modpk_utils.f90	/^  pure function convert_matrix_to_hacked_vector(/;"	f	module:modpk_utils
-cosfunc	modules.f90	/^         function cosfunc /;"	f	module:ModelParams
-cs2	modules.f90	/^        real(dl) tb(nthermo),cs2(/;"	v	module:ThermoData
-cs2_lam	equations.f90	/^         real(dl) :: cs2_lam /;"	v	module:LambdaGeneral
-curv	modules.f90	/^         real(dl) curv,/;"	k	type:CAMBparams
-curv	power_tilt.f90	/^      real(dl) curv /;"	v	module:InitialPower
-d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(/;"	f	module:potential
-dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(/;"	f	module:Recombination
-dTsrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(Nz),dxrec(Nz), Tsrec(Nz) ,dTsrec(/;"	v	module:Recombination
-dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(/;"	f	module:potential
-dbessel	lensing.f90	/^ real(dl), parameter :: dbessel /;"	v	module:lensing
-dcs2	modules.f90	/^        real(dl) dcs2(/;"	v	module:ThermoData
-ddBess0	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess0, ddBess0$/;"	v	module:lensing
-ddBess2	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess2, ddBess2$/;"	v	module:lensing
-ddBess4	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess4, ddBess4$/;"	v	module:lensing
-ddBess6	lensing.f90	/^ real(dl), dimension(:), allocatable :: Bess6, ddBess6$/;"	v	module:lensing
-ddSource_q	cmbmain.f90	/^          real(dl), dimension(:,:), pointer :: Source_q, ddSource_q$/;"	k	type:IntegrationVars
-ddSrc	cmbmain.f90	/^      real(dl), dimension(:,:,:), allocatable :: Src, ddSrc /;"	v	module:CAMBmain
-ddajlpr	bessels.f90	/^        real(dl), dimension(:,:), allocatable ::  ajl,ajlpr, ddajlpr$/;"	v	module:SpherBessels
-ddddotmu	modules.f90	/^        real(dl) dddotmu(nthermo),ddddotmu(/;"	v	module:ThermoData
-dddotmu	modules.f90	/^        real(dl) dddotmu(/;"	v	module:ThermoData
-ddmat	modules.f90	/^          real(dl), dimension(:,:), pointer :: matpower, ddmat$/;"	k	type:MatterPowerData
-ddotmu	modules.f90	/^        real(dl) dotmu(nthermo), ddotmu(/;"	v	module:ThermoData
-ddr1	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,p1,dr1,dp1,ddr1,/;"	v	module:MassiveNu
-ddragoptdepth_dz	modules.f90	/^        function ddragoptdepth_dz(/;"	f	module:ThermoData
-ddvis	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,dvis,ddvis,/;"	v	module:ThermoData
-debug	equations.f90	/^       integer debug$/;"	v	module:GaugeInterface
-delsigma	modpk_modules.f90	/^  real(dp) :: delsigma /;"	v	module:modpkparams
-delta_redshift	reionization.f90	/^             real(dl)   :: redshift, delta_redshift,/;"	k	type:ReionizationParams
-delta_z	recfast.f90	/^        real(dl), parameter :: delta_z /;"	v	module:Recombination
-demmu	modules.f90	/^        real(dl) demmu(/;"	v	module:ThermoData
-denl	equations.f90	/^        real(dl) polfac(max_l_evolve),tensfac(max_l_evolve),tensfacpol(max_l_evolve), &$/;"	v	module:GaugeInterface
-derivpolevl	recfast.f90	/^          function derivpolevl(/;"	f	module:Recombination
-derivs	equations.f90	/^        subroutine derivs(/;"	s	module:GaugeInterface
-derivs	modpk_utils.f90	/^  SUBROUTINE derivs(/;"	s	module:modpk_utils
-derivst	equations.f90	/^        subroutine derivst(/;"	s	module:GaugeInterface
-dl	constants.f90	/^      integer, parameter :: dl /;"	v
-dlfdlq	modules.f90	/^          real(dl) dlfdlq(/;"	v	module:MassiveNu
-dlnam	modules.f90	/^          real(dl) dlnam$/;"	v	module:MassiveNu
-dlnk	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk,/;"	v	program:driver_modpk
-dlnk	isocurv_driver.f90	/^  real(dp) :: dlnk,/;"	v	program:isocurv_driver
-dlnk	testm.f90	/^  real(dp) :: dlnk,/;"	v	program:test_mmodpk
-dlntau	modules.f90	/^        real(dl) tauminn,dlntau,/;"	v	module:ThermoData
-dlogThetadN	modpk_potential.f90	/^    real(dp) :: dlogThetadN=/;"	k	type:bundle
-doTmatTspin	recfast.f90	/^        logical :: doTmatTspin /;"	v	module:Recombination
-do_bispectrum	modules.f90	/^        logical, parameter :: do_bispectrum /;"	v	module:ModelParams
-dopac	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,dvis,ddvis,expmmu,dopac,/;"	v	module:ThermoData
-doptdepth_dz	modules.f90	/^        function doptdepth_dz(/;"	f	module:ThermoData
-dot	modpk_utils.f90	/^      pure function dot(/;"	f	subroutine:derivs
-dotmu	modules.f90	/^        real(dl) dotmu(/;"	v	module:ThermoData
-dp1	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,p1,dr1,dp1,/;"	v	module:MassiveNu
-dphi_init	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0/;"	v	module:modpkparams
-dphi_init0	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0(/;"	v	module:modpkparams
-dphi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N$/;"	v	module:modpk_icsampling
-dphi_pivot	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(/;"	v	module:modpkparams
-dphiarr	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(/;"	v	module:modpkparams
-dq	cmbmain.f90	/^          real(dl) q, dq /;"	k	type:IntegrationVars
-dq	modules.f90	/^          real(dl), parameter :: dq=/;"	v	module:MassiveNu
-dr1	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,p1,dr1,/;"	v	module:MassiveNu
-dragoptdepth	modules.f90	/^        function dragoptdepth(/;"	f	module:ThermoData
-driver_modpk	driver_modpk.f90	/^PROGRAM driver_modpk$/;"	p
-dsound_da	modules.f90	/^       function dsound_da(/;"	f	module:ModelParams
-dtauda	equations.f90	/^        function dtauda(/;"	f
-dtauda	reionization.f90	/^      real(dl), private, external :: dtauda,/;"	v	module:Reionization
-dtaurec	modules.f90	/^        real(dl) taurst,dtaurec,/;"	v	module:ModelParams
-dtaurec_q	cmbmain.f90	/^      real(dl) :: dtaurec_q$/;"	v	module:CAMBmain
-dtda	camb.f90	/^  function dtda(/;"	f
-dtheta_dN	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(nsteps), dtheta_dN(/;"	v	module:modpkparams
-dtmrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(Nz),dxrec(Nz), Tsrec(Nz) ,dTsrec(Nz), tmrec(Nz),dtmrec(/;"	v	module:Recombination
-dverk	subroutines.f90	/^      subroutine dverk /;"	s
-dvis	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,dvis,/;"	v	module:ThermoData
-dxrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(Nz),dxrec(/;"	v	module:Recombination
-dxsav	modpk_modules.f90	/^  real(dp) :: dxsav$/;"	v	module:ode_path
-e2_fmt	isocurv_driver.f90	/^  character(36), parameter:: e2_fmt /;"	v	program:isocurv_driver
-e2_fmt	testm.f90	/^  character(36), parameter:: e2_fmt /;"	v	program:test_mmodpk
-e_fmt	isocurv_driver.f90	/^  character(16), parameter:: e_fmt /;"	v	program:isocurv_driver
-e_fmt	testm.f90	/^  character(16), parameter:: e_fmt /;"	v	program:test_mmodpk
-emmu	modules.f90	/^        real(dl) sdotmu(nthermo),emmu(/;"	v	module:ThermoData
-energy_measure	modpk_icsampling.f90	/^    function energy_measure(/;"	f	module:modpk_icsampling
-energy_scale	isocurv_driver.f90	/^  real(dp) :: energy_scale$/;"	v	program:isocurv_driver
-energy_scale	testm.f90	/^  real(dp) :: energy_scale$/;"	v	program:test_mmodpk
-entropy	modpk_modules.f90	/^    real(dp) :: entropy$/;"	k	type:power_spectra
-ep0	equations.f90	/^       real(dl), parameter :: ep0=/;"	v	module:GaugeInterface
-epsarr	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(/;"	v	module:modpkparams
-epsw	equations.f90	/^       real(dl) epsw$/;"	v	module:GaugeInterface
-eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(/;"	s	module:modpk_icsampling
-eqen_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=/;"	v	module:modpk_icsampling
-equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(/;"	s	module:modpk_icsampling
-eval_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,/;"	v	module:powersp
-evolve	modpk.f90	/^  SUBROUTINE evolve(/;"	s	module:access_modpk
-evolve_Ts	recfast.f90	/^        logical, parameter :: evolve_Ts /;"	v	module:Recombination
-exp_scalar	modpk_potential.f90	/^    real(dp) :: exp_scalar=/;"	k	type:bundle
-expmmu	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,dvis,ddvis,expmmu,/;"	v	module:ThermoData
-fHe	modules.f90	/^       real(dl) fHe /;"	v	module:ModelParams
-fHe	recfast.f90	/^        real(dl) :: NNow, fHe /;"	v	module:Recombination
-fHe	reionization.f90	/^          real(dl) :: akthom, fHe$/;"	k	type:ReionizationHistory
-f_21cm	constants.f90	/^       real(dl), parameter :: f_21cm /;"	v	module:constants
-f_K	modules.f90	/^        function f_K(/;"	f	module:ModelParams
-fderivs	equations.f90	/^        subroutine fderivs(/;"	s	module:GaugeInterface
-fderivst	equations.f90	/^        subroutine fderivst(/;"	s	module:GaugeInterface
-fderivsv	equations.f90	/^        subroutine fderivsv(/;"	s	module:GaugeInterface
-field_bundle	modpk_potential.f90	/^  type(bundle) :: field_bundle$/;"	v	module:potential
-file_l	bessels.f90	/^        integer  num_xx, kmaxfile, file_numl,  file_l(/;"	v	module:SpherBessels
-file_numl	bessels.f90	/^        integer  num_xx, kmaxfile, file_numl,/;"	v	module:SpherBessels
-fileio_unit	modules.f90	/^        integer, parameter :: fileio_unit /;"	v	module:ModelParams
-find_z	modules.f90	/^       subroutine find_z(/;"	s	module:ThermoData
-findiffdphi	modpk_modules.f90	/^  real(dp) :: findiffdphi$/;"	v	module:modpkparams
-flat	modules.f90	/^         logical flat,/;"	k	type:CAMBparams
-fraction	reionization.f90	/^             real(dl)   :: redshift, delta_redshift, fraction$/;"	k	type:ReionizationParams
-fromfile_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &$/;"	v	module:modpk_icsampling
-fu	recfast.f90	/^        real(dl) CB1,CDB,CR,CK,CL,CT,CB1_He1,CB1_He2,CDB_He,fu$/;"	v	module:RECDATA
-full_bessel_integration	modules.f90	/^        logical, parameter :: full_bessel_integration /;"	v	module:ModelParams
-full_pk	testm.f90	/^      namelist \/full_pk\//;"	n	subroutine:get_full_pk
-getEps	modpk_potential.f90	/^  FUNCTION getEps(/;"	f	module:potential
-getH	modpk_potential.f90	/^  FUNCTION getH(/;"	f	module:potential
-getHdot	modpk_potential.f90	/^  FUNCTION getHdot(/;"	f	module:potential
-getPdot	modpk_potential.f90	/^    function getPdot(/;"	f	subroutine:powerspectrum
-get_A_vect	modpk_potential.f90	/^    function get_A_vect(/;"	f	subroutine:powerspectrum
-get_B_vect	modpk_potential.f90	/^    function get_B_vect(/;"	f	subroutine:powerspectrum
-get_full_pk	testm.f90	/^    subroutine get_full_pk(/;"	s	program:test_mmodpk
-get_ic	modpk_icsampling.f90	/^    subroutine get_ic(/;"	s	module:modpk_icsampling
-getcs2	modpk_potential.f90	/^    function getcs2(/;"	f	subroutine:powerspectrum
-getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(/;"	f	module:potential
-geteta	modpk_potential.f90	/^  FUNCTION geteta(/;"	f	module:potential
-getrhodot	modpk_potential.f90	/^    function getrhodot(/;"	f	subroutine:powerspectrum
-grhob	modules.f90	/^        real(dl) grhom,grhog,grhor,grhob,/;"	v	module:ModelParams
-grhoc	modules.f90	/^        real(dl) grhom,grhog,grhor,grhob,grhoc,/;"	v	module:ModelParams
-grhog	modules.f90	/^        real(dl) grhom,grhog,/;"	v	module:ModelParams
-grhok	modules.f90	/^        real(dl) grhom,grhog,grhor,grhob,grhoc,grhov,grhornomass,grhok$/;"	v	module:ModelParams
-grhom	modules.f90	/^        real(dl) grhom,/;"	v	module:ModelParams
-grhor	modules.f90	/^        real(dl) grhom,grhog,grhor,/;"	v	module:ModelParams
-grhormass	modules.f90	/^        real(dl) grhormass(/;"	v	module:ModelParams
-grhornomass	modules.f90	/^        real(dl) grhom,grhog,grhor,grhob,grhoc,grhov,grhornomass,/;"	v	module:ModelParams
-grhov	modules.f90	/^        real(dl) grhom,grhog,grhor,grhob,grhoc,grhov,/;"	v	module:ModelParams
-h_P	constants.f90	/^       real(dl), parameter :: h_P /;"	v	module:constants
-h_ik	modpk_modules.f90	/^  real(dp) :: h_ik$/;"	v	module:internals
-h_init	modpk_modules.f90	/^  real(dp) :: h_init,/;"	v	module:modpkparams
-halofit	halofit.f90	/^      subroutine halofit(/;"	s	module:NonLinear
-hard_bispectrum	modules.f90	/^        logical, parameter :: hard_bispectrum /;"	v	module:ModelParams
-helium_fullreion_deltaredshift	reionization.f90	/^       real(dl) :: helium_fullreion_deltaredshift /;"	v	module:Reionization
-helium_fullreion_redshift	reionization.f90	/^       real(dl) :: helium_fullreion_redshift /;"	v	module:Reionization
-helium_fullreion_redshiftstart	reionization.f90	/^       real(dl) :: helium_fullreion_redshiftstart /;"	v	module:Reionization
-high_precision	modules.f90	/^            logical     ::  high_precision$/;"	k	type:TransferParams
-hubarr	modpk_modules.f90	/^  real(dp) :: hubarr(/;"	v	module:modpkparams
-i	driver_modpk.f90	/^  INTEGER*4 :: i$/;"	v	program:driver_modpk
-i	isocurv_driver.f90	/^  in/;"	v	program:isocurv_driver
-i	sigma8.f90	/^        in/;"	v	program:GetSigma8
-i	testm.f90	/^  in/;"	v	program:test_mmodpk
-iCl_scalar	cmbmain.f90	/^      real(dl), dimension(:,:,:), allocatable :: iCl_scalar,/;"	v	module:CAMBmain
-iCl_tensor	cmbmain.f90	/^      real(dl), dimension(:,:,:), allocatable :: iCl_scalar, iCl_vector,iCl_tensor$/;"	v	module:CAMBmain
-iCl_vector	cmbmain.f90	/^      real(dl), dimension(:,:,:), allocatable :: iCl_scalar, iCl_vector,/;"	v	module:CAMBmain
-i_fmt	isocurv_driver.f90	/^  character(16), parameter:: i_fmt /;"	v	program:isocurv_driver
-i_fmt	testm.f90	/^  character(16), parameter:: i_fmt /;"	v	program:test_mmodpk
-ic	modpk_icsampling.f90	/^    real(dp), dimension(:), allocatable :: ic$/;"	k	type:ic_and_observables
-ic_and_observables	modpk_icsampling.f90	/^  type :: ic_and_observables$/;"	t	module:modpk_icsampling
-ic_load_observables	modpk_icsampling.f90	/^    subroutine ic_load_observables(/;"	s	module:modpk_icsampling
-ic_output	isocurv_driver.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output$/;"	v	program:isocurv_driver
-ic_output	testm.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output$/;"	v	program:test_mmodpk
-ic_output_iso_N	isocurv_driver.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N$/;"	v	program:isocurv_driver
-ic_output_iso_N	testm.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N$/;"	v	program:test_mmodpk
-ic_print_observables	modpk_icsampling.f90	/^    subroutine ic_print_observables(/;"	s	module:modpk_icsampling
-ic_sampling	isocurv_driver.f90	/^  namelist \/ic_sampling\//;"	n	program:isocurv_driver
-ic_sampling	testm.f90	/^  namelist \/ic_sampling\//;"	n	program:test_mmodpk
-icfile	modpk_icsampling.f90	/^  integer, private :: icfile$/;"	v	module:modpk_icsampling
-ik	modpk_modules.f90	/^  integer*4 :: ik$/;"	v	module:powersp
-implicit_surface_sampling	modpk_icsampling.f90	/^    subroutine implicit_surface_sampling(/;"	s	module:modpk_icsampling
-include_helium_fullreion	reionization.f90	/^       logical :: include_helium_fullreion /;"	v	module:Reionization
-index_ptb_vel_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y,/;"	v	module:internals
-index_ptb_y	modpk_modules.f90	/^  integer :: index_ptb_y,/;"	v	module:internals
-index_tensor_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y,/;"	v	module:internals
-index_uzeta_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y$/;"	v	module:internals
-infl_ended	modpk_modules.f90	/^  LOGICAL :: infl_ended$/;"	v	module:ode_path
-init	isocurv_driver.f90	/^  namelist \/init\//;"	n	program:isocurv_driver
-init	testm.f90	/^  namelist \/init\//;"	n	program:test_mmodpk
-init_background	equations.f90	/^       subroutine init_background$/;"	s
-init_massive_nu	modules.f90	/^      subroutine init_massive_nu(/;"	s
-init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(/;"	s	module:modpk_rng
-init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial(/;"	s	module:modpk_rng
-init_sampler	testm.f90	/^    subroutine init_sampler(/;"	s	program:test_mmodpk
-inithermo	modules.f90	/^     subroutine inithermo(/;"	s	module:ThermoData
-initial	equations.f90	/^        subroutine initial(/;"	s	module:GaugeInterface
-initial_adiabatic	equations.f90	/^         integer, parameter :: initial_adiabatic=/;"	v	module:GaugeInterface
-initial_iso_CDM	equations.f90	/^         integer, parameter :: initial_adiabatic=1, initial_iso_CDM=/;"	v	module:GaugeInterface
-initial_iso_baryon	equations.f90	/^         integer, parameter :: initial_adiabatic=1, initial_iso_CDM=2, &$/;"	v	module:GaugeInterface
-initial_iso_neutrino	equations.f90	/^         initial_iso_baryon=3,  initial_iso_neutrino=/;"	v	module:GaugeInterface
-initial_iso_neutrino_vel	equations.f90	/^         initial_iso_baryon=3,  initial_iso_neutrino=4, initial_iso_neutrino_vel=/;"	v	module:GaugeInterface
-initial_nummodes	equations.f90	/^         integer, parameter :: initial_nummodes /;"	v	module:GaugeInterface
-initial_vector	equations.f90	/^         initial_iso_baryon=3,  initial_iso_neutrino=4, initial_iso_neutrino_vel=5, initial_vector /;"	v	module:GaugeInterface
-initialphi	modpk_potential.f90	/^  FUNCTION initialphi(/;"	f	module:potential
-initialt	equations.f90	/^        subroutine initialt(/;"	s	module:GaugeInterface
-initialv	equations.f90	/^        subroutine initialv(/;"	s	module:GaugeInterface
-initlval	modules.f90	/^        subroutine initlval(/;"	s	module:lvalues
-instreheat	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs, instreheat$/;"	v	module:modpkparams
-internals	modpk_modules.f90	/^MODULE internals$/;"	m
-invsinfunc	modules.f90	/^         function invsinfunc(/;"	f	module:ModelParams
-iq0	equations.f90	/^            integer iq0,/;"	k	type:EvolutionVars
-iq1	equations.f90	/^            integer iq0,iq1,/;"	k	type:EvolutionVars
-iq2	equations.f90	/^            integer iq0,iq1,iq2$/;"	k	type:EvolutionVars
-iqt	equations.f90	/^            integer iqt$/;"	k	type:EvolutionVars
-isoNname	isocurv_driver.f90	/^	character(len=15) :: isoNname,/;"	v	program:isocurv_driver
-isoNname	testm.f90	/^	character(len=15) :: isoNname,/;"	v	program:test_mmodpk
-isocurv	modpk_modules.f90	/^    real(dp) :: isocurv$/;"	k	type:power_spectra
-isocurv_driver	isocurv_driver.f90	/^program isocurv_driver$/;"	p
-k	modpk_modules.f90	/^    real(dp) :: k$/;"	k	type:power_spectra
-k	modpk_modules.f90	/^  real(dp) :: k,/;"	v	module:internals
-k2_buf	equations.f90	/^            real(dl) k_buf,k2_buf /;"	k	type:EvolutionVars
-kIntSampleBoost	modules.f90	/^      real(dl) :: kIntSampleBoost=/;"	v	module:ModelParams
-kSrcSampleBoost	modules.f90	/^      real(dl) :: kSrcSampleBoost=/;"	v	module:ModelParams
-k_0_scalar	power_tilt.f90	/^       real(dl) k_0_scalar,/;"	k	type:InitialPowerParams
-k_0_tensor	power_tilt.f90	/^       real(dl) k_0_scalar, k_0_tensor$/;"	k	type:InitialPowerParams
-k_B	constants.f90	/^       real(dl), parameter :: k_B /;"	v	module:constants
-k_buf	equations.f90	/^            real(dl) k_buf,/;"	k	type:EvolutionVars
-k_per_logint	modules.f90	/^            integer     ::  k_per_logint /;"	k	type:TransferParams
-k_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot,/;"	v	module:modpkparams
-k_start	modpk_modules.f90	/^  real(dp) :: eval_ps,k_start,/;"	v	module:powersp
-kappa	constants.f90	/^       real(dl), parameter :: kappa=/;"	v	module:constants
-kappa_HH_21cm	recfast.f90	/^        function kappa_HH_21cm(/;"	f	module:Recombination
-kappa_eH_21cm	recfast.f90	/^        function kappa_eH_21cm(/;"	f	module:Recombination
-kappa_pH_21cm	recfast.f90	/^        function kappa_pH_21cm(/;"	f	module:Recombination
-kin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin,/;"	v	program:driver_modpk
-kmax	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax,/;"	v	program:driver_modpk
-kmax	modules.f90	/^            real(dl)    ::  kmax /;"	k	type:TransferParams
-kmaxfile	bessels.f90	/^        integer  num_xx, kmaxfile,/;"	v	module:SpherBessels
-kmin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin,/;"	v	program:driver_modpk
-kount	modpk_modules.f90	/^  INTEGER*4 :: nok,nbad,kount$/;"	v	module:ode_path
-l	modules.f90	/^            integer l(/;"	k	type:lSamples
-l	tester.f90	/^        integer l$/;"	v	program:tester
-l0	modules.f90	/^            integer l0$/;"	k	type:lSamples
-l0max	modules.f90	/^      integer, parameter:: l0max=/;"	v	module:ModelParams
-lAccuracyBoost	modules.f90	/^      real(sp) :: lAccuracyBoost=/;"	v	module:ModelParams
-lSamp	modules.f90	/^        Type(lSampl/;"	v	module:lvalues
-lSampleBoost	modules.f90	/^      real(dl) :: lSampleBoost=/;"	v	module:ModelParams
-lSamples	modules.f90	/^        Type lSamples$/;"	t	module:lvalues
-l_21cm	constants.f90	/^       real(dl), parameter :: f_21cm = 1420.40575e6_dl, l_21cm=/;"	v	module:constants
-lens_Cls	lensing.f90	/^subroutine lens_Cls$/;"	s	module:lensing
-lensing	lensing.f90	/^module lensing$/;"	m
-lensing_includes_tensors	lensing.f90	/^ logical  :: lensing_includes_tensors /;"	v	module:lensing
-lensing_method	lensing.f90	/^ integer :: lensing_method /;"	v	module:lensing
-lensing_method_curv_corr	lensing.f90	/^ integer, parameter :: lensing_method_curv_corr=/;"	v	module:lensing
-lensing_method_flat_corr	lensing.f90	/^ integer, parameter :: lensing_method_curv_corr=1,lensing_method_flat_corr=/;"	v	module:lensing
-lensing_method_harmonic	lensing.f90	/^ integer, parameter :: lensing_method_curv_corr=1,lensing_method_flat_corr=2, &$/;"	v	module:lensing
-line21_const	constants.f90	/^       real(dl), parameter :: line21_const /;"	v	module:constants
-lmax_arr	modules.f90	/^      integer, parameter :: lmax_arr /;"	v	module:ModelParams
-lmax_donelnfa	lensing.f90	/^ integer :: lmax_donelnfa /;"	v	module:lensing
-lmax_lensed	modules.f90	/^        integer lmax_lensed /;"	v	module:ModelData
-lmaxg	equations.f90	/^            integer lmaxg,/;"	k	type:EvolutionVars
-lmaxgpol	equations.f90	/^            integer lmaxg,lmaxnr,lmaxnu,lmaxgpol,/;"	k	type:EvolutionVars
-lmaxnr	equations.f90	/^            integer lmaxg,lmaxnr,/;"	k	type:EvolutionVars
-lmaxnrt	equations.f90	/^            integer lmaxnrt,/;"	k	type:EvolutionVars
-lmaxnrv	equations.f90	/^            integer lmaxnrv,/;"	k	type:EvolutionVars
-lmaxnu	equations.f90	/^            integer lmaxg,lmaxnr,lmaxnu,/;"	k	type:EvolutionVars
-lmaxnut	equations.f90	/^            integer lmaxnrt, lmaxnut,/;"	k	type:EvolutionVars
-lmaxpolt	equations.f90	/^            integer lmaxnrt, lmaxnut, lmaxt, lmaxpolt$/;"	k	type:EvolutionVars
-lmaxpolv	equations.f90	/^            integer lmaxnrv, lmaxv, lmaxpolv$/;"	k	type:EvolutionVars
-lmaxt	equations.f90	/^            integer lmaxnrt, lmaxnut, lmaxt,/;"	k	type:EvolutionVars
-lmaxv	equations.f90	/^            integer lmaxnrv, lmaxv,/;"	k	type:EvolutionVars
-lmin	modules.f90	/^      integer, parameter :: lmin /;"	v	module:ModelParams
-lna	modpk_modules.f90	/^  real(dp) :: lna(/;"	v	module:modpkparams
-lnfa	lensing.f90	/^ real(dl), dimension(:), allocatable  :: lnfa$/;"	v	module:lensing
-locate	modpk_utils.f90	/^  FUNCTION locate(/;"	f	module:modpk_utils
-log_kh	modules.f90	/^          real(dl), dimension(:), pointer :: log_kh,/;"	k	type:MatterPowerData
-ls	modules.f90	/^          Type (lSamples) :: ls /;"	k	type:ClTransferData
-lvalues	modules.f90	/^        module lvalues$/;"	m
-m_H	constants.f90	/^       real(dl), parameter :: m_H /;"	v	module:constants
-m_e	constants.f90	/^       real(dl), parameter :: m_e /;"	v	module:constants
-m_p	constants.f90	/^       real(dl), parameter :: m_p /;"	v	module:constants
-make_blob	modpk_rng.f90	/^function make_blob(/;"	f	module:modpk_rng
-make_identity	modpk.f90	/^      subroutine make_identity(/;"	s	subroutine:evolve
-mass_loop_samp	modpk_icsampling.f90	/^    fromfile_samp=4, mass_loop_samp=/;"	v	module:modpk_icsampling
-mass_ratio_He_H	constants.f90	/^       real(dl), parameter :: mass_ratio_He_H /;"	v	module:constants
-mass_spectrum_nflation	modpk_icsampling.f90	/^    subroutine mass_spectrum_nflation(/;"	s	module:modpk_icsampling
-matpower	modules.f90	/^          real(dl), dimension(:,:), pointer :: matpower,/;"	k	type:MatterPowerData
-matrix	modpk_modules.f90	/^    complex(dp), dimension(:,:), allocatable :: matrix$/;"	k	type:power_spectra
-matter_verydom_tau	modules.f90	/^        real(dl) :: matter_verydom_tau$/;"	v	module:ThermoData
-max_Nu	modules.f90	/^        integer, parameter :: max_Nu /;"	v	module:ModelParams
-max_bessels_etak	modules.f90	/^        real(dl) :: max_bessels_etak /;"	v	module:ModelParams
-max_bessels_l_index	modules.f90	/^        integer :: max_bessels_l_index /;"	v	module:ModelParams
-max_etak_scalar	cmbmain.f90	/^      real(dl) max_etak_tensor , max_etak_vector, max_etak_scalar$/;"	v	module:CAMBmain
-max_etak_tensor	cmbmain.f90	/^      real(dl) max_etak_tensor /;"	v	module:CAMBmain
-max_etak_vector	cmbmain.f90	/^      real(dl) max_etak_tensor , max_etak_vector,/;"	v	module:CAMBmain
-max_l_evolve	equations.f90	/^        integer, parameter :: max_l_evolve /;"	v	module:GaugeInterface
-max_transfer_redshifts	modules.f90	/^        integer, parameter :: max_transfer_redshifts /;"	v	module:ModelParams
-max_vparams	modpk_modules.f90	/^  INTEGER*4, parameter :: max_vparams /;"	v	module:modpkparams
-maximum_l	cmbmain.f90	/^      integer maximum_l /;"	v	module:CAMBmain
-maximum_qeta	cmbmain.f90	/^      real(dl) :: maximum_qeta /;"	v	module:CAMBmain
-min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(/;"	f	module:modpk_icsampling
-modpk_As	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As,/;"	v	module:modpkparams
-modpk_icsampling	modpk_icsampling.f90	/^module modpk_icsampling$/;"	m
-modpk_nrun	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun,/;"	v	module:modpkparams
-modpk_ns	modpk_modules.f90	/^  real(dp) :: modpk_ns,/;"	v	module:modpkparams
-modpk_nt	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt,/;"	v	module:modpkparams
-modpk_odeint	modpk_odeint.f90	/^MODULE modpk_odeint$/;"	m
-modpk_postprocessing	modpk_postprocessing.f90	/^module modpk_postprocessing$/;"	m
-modpk_r	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As, modpk_r$/;"	v	module:modpkparams
-modpk_rng	modpk_rng.f90	/^module modpk_rng$/;"	m
-modpk_utils	modpk_utils.f90	/^MODULE modpk_utils$/;"	m
-modpkfeedback	modules.f90	/^         logical :: modpkfeedback$/;"	k	type:CAMBparams
-modpkoutput	modpk_modules.f90	/^  LOGICAL :: modpkoutput=/;"	v	module:camb_interface
-modpkparams	modpk_modules.f90	/^MODULE modpkparams$/;"	m
-mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize(/;"	s	program:test_mmodpk
-mu_H	recfast.f90	/^        real(dl) Lambda,DeltaB,DeltaB_He,Lalpha,mu_H,/;"	v	module:RECDATA
-mu_T	recfast.f90	/^        real(dl) Lambda,DeltaB,DeltaB_He,Lalpha,mu_H,mu_T,/;"	v	module:RECDATA
-n_eq	recfast.f90	/^        integer :: n_eq /;"	v	module:RECDATA
-n_run	power_tilt.f90	/^       real(dl) n_run(/;"	k	type:InitialPowerParams
-nactual_bg	modpk_modules.f90	/^  INTEGER*4 :: nactual_bg,/;"	v	module:modpkparams
-nactual_mode	modpk_modules.f90	/^  INTEGER*4 :: nactual_bg, nactual_mode$/;"	v	module:modpkparams
-nbad	modpk_modules.f90	/^  INTEGER*4 :: nok,nbad,/;"	v	module:ode_path
-nn	power_tilt.f90	/^       integer nn /;"	k	type:InitialPowerParams
-nnmax	power_tilt.f90	/^      integer, parameter :: nnmax=/;"	v	module:InitialPower
-no_rad_multpoles	equations.f90	/^            logical no_rad_multpoles /;"	k	type:EvolutionVars
-nok	modpk_modules.f90	/^  INTEGER*4 :: nok,/;"	v	module:ode_path
-nonlin_ratio	modules.f90	/^          real(dl), dimension(:,:), pointer :: nonlin_ratio$/;"	k	type:MatterPowerData
-norm	modpk_potential.f90	/^  pure function norm(/;"	f	module:potential
-normal_array	modpk_rng.f90	/^function normal_array(/;"	f	module:modpk_rng
-normal_scalar	modpk_rng.f90	/^function normal_scalar(/;"	f	module:modpk_rng
-not4	recfast.f90	/^        real(dl), parameter :: not4 /;"	v	module:RECDATA
-nqmax	modules.f90	/^          integer nqmax$/;"	v	module:MassiveNu
-nqmax0	modules.f90	/^          integer, parameter :: nqmax0=/;"	v	module:MassiveNu
-nrhopn	modules.f90	/^          integer, parameter  :: nrhopn=/;"	v	module:MassiveNu
-ns	isocurv_driver.f90	/^  real(dp) :: dlnk, As, ns,/;"	v	program:isocurv_driver
-ns	modpk_icsampling.f90	/^    real(dp) :: As, ns,/;"	k	type:ic_and_observables
-ns	testm.f90	/^  real(dp) :: dlnk, As, ns,/;"	v	program:test_mmodpk
-nsteps	modpk_modules.f90	/^  INTEGER, PARAMETER :: nsteps=/;"	v	module:modpkparams
-nt	isocurv_driver.f90	/^  real(dp) :: dlnk, As, ns, nt,/;"	v	program:isocurv_driver
-nt	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt,/;"	k	type:ic_and_observables
-nt	testm.f90	/^  real(dp) :: dlnk, As, ns, nt,/;"	v	program:test_mmodpk
-nthermo	modules.f90	/^        integer,parameter :: nthermo=/;"	v	module:ThermoData
-nuRhoPres	modules.f90	/^        subroutine nuRhoPres(/;"	s	module:MassiveNu
-nu_masses	modules.f90	/^       real(dl) :: nu_masses(/;"	v	module:ModelParams
-num_inflaton	modpk_modules.f90	/^  INTEGER :: num_inflaton$/;"	v	module:modpkparams
-num_k	modules.f90	/^          integer   ::  num_k,/;"	k	type:MatterPowerData
-num_q_trans	modules.f90	/^         integer   ::  num_q_trans /;"	k	type:MatterTransferData
-num_redshifts	modules.f90	/^            integer     ::  num_redshifts$/;"	k	type:TransferParams
-num_xx	bessels.f90	/^        integer  num_xx,/;"	v	module:SpherBessels
-num_z	modules.f90	/^          integer   ::  num_k, num_z /;"	k	type:MatterPowerData
-numb_samples	isocurv_driver.f90	/^  integer :: numb_samples$/;"	v	program:isocurv_driver
-numb_samples	testm.f90	/^  integer :: numb_samples$/;"	v	program:test_mmodpk
-numtasks	isocurv_driver.f90	/^  integer :: numtasks,/;"	v	program:isocurv_driver
-numtasks	testm.f90	/^  integer :: numtasks,/;"	v	program:test_mmodpk
-nvar	equations.f90	/^            integer nvar,/;"	k	type:EvolutionVars
-nvart	equations.f90	/^            integer nvar,nvart,/;"	k	type:EvolutionVars
-nvarv	equations.f90	/^            integer nvar,nvart, nvarv$/;"	k	type:EvolutionVars
-ode_infl_end	modpk_modules.f90	/^  LOGICAL :: ode_infl_end$/;"	v	module:ode_path
-ode_path	modpk_modules.f90	/^MODULE ode_path$/;"	m
-ode_ps_output	modpk_modules.f90	/^  LOGICAL :: ode_ps_output$/;"	v	module:ode_path
-ode_underflow	modpk_modules.f90	/^  LOGICAL :: ode_underflow$/;"	v	module:ode_path
-odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(/;"	s	module:modpk_odeint
-odeint_r	modpk_odeint.f90	/^  SUBROUTINE odeint_r(/;"	s	module:modpk_odeint
-om_m	halofit.f90	/^       real(dl):: om_m,/;"	v	module:NonLinear
-om_v	halofit.f90	/^       real(dl):: om_m,om_v$/;"	v	module:NonLinear
-omega_m	halofit.f90	/^      function omega_m(/;"	f	module:NonLinear
-omega_v	halofit.f90	/^      function omega_v(/;"	f	module:NonLinear
-omegab	modules.f90	/^         real(dl)  :: omegab,/;"	k	type:CAMBparams
-omegac	modules.f90	/^         real(dl)  :: omegab, omegac,/;"	k	type:CAMBparams
-omegak	modules.f90	/^         real(dl) omegak$/;"	k	type:CAMBparams
-omegan	modules.f90	/^         real(dl)  :: omegab, omegac, omegav, omegan$/;"	k	type:CAMBparams
-omegav	modules.f90	/^         real(dl)  :: omegab, omegac, omegav,/;"	k	type:CAMBparams
-opac	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,dvis,ddvis,expmmu,dopac,/;"	v	module:ThermoData
-open	modules.f90	/^         logical flat,closed,open$/;"	k	type:CAMBparams
-open_output_files	testm.f90	/^    subroutine open_output_files(/;"	s	program:test_mmodpk
-optdepth	modules.f90	/^        function optdepth(/;"	f	module:ThermoData
-optical_depth	reionization.f90	/^             real(dl)   :: optical_depth$/;"	k	type:ReionizationParams
-outCOBE	modules.f90	/^        integer, parameter :: outCOBE=/;"	v	module:ModelParams
-outNone	modules.f90	/^        integer, parameter :: outCOBE=0, outNone=/;"	v	module:ModelParams
-output	equations.f90	/^        subroutine output(/;"	s	module:GaugeInterface
-output_COBElikelihood	modules.f90	/^        subroutine output_COBElikelihood$/;"	s	module:ModelData
-output_badic	isocurv_driver.f90	/^  logical :: output_badic$/;"	v	program:isocurv_driver
-output_badic	testm.f90	/^  logical :: output_badic$/;"	v	program:test_mmodpk
-output_cl_files	modules.f90	/^        subroutine output_cl_files(/;"	s	module:ModelData
-output_initial_data	testm.f90	/^    subroutine output_initial_data(/;"	s	program:test_mmodpk
-output_lens_pot_files	modules.f90	/^        subroutine output_lens_pot_files(/;"	s	module:ModelData
-output_observables	testm.f90	/^    subroutine output_observables(/;"	s	program:test_mmodpk
-output_veccl_files	modules.f90	/^        subroutine output_veccl_files(/;"	s	module:ModelData
-outputt	equations.f90	/^        subroutine outputt(/;"	s	module:GaugeInterface
-outputv	equations.f90	/^        subroutine outputv(/;"	s	module:GaugeInterface
-outsamp	isocurv_driver.f90	/^  integer :: outsamp,/;"	v	program:isocurv_driver
-outsamp	testm.f90	/^  integer :: outsamp,/;"	v	program:test_mmodpk
-outsamp_N_iso	isocurv_driver.f90	/^  integer :: outsamp, outsamp_N_iso$/;"	v	program:isocurv_driver
-outsamp_N_iso	testm.f90	/^  integer :: outsamp, outsamp_N_iso$/;"	v	program:test_mmodpk
-outtransf	equations.f90	/^      subroutine outtransf(/;"	s	module:GaugeInterface
-p1	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,p1,/;"	v	module:MassiveNu
-p1evl	bessels.f90	/^      function p1evl(/;"	f	module:SpherBessels
-params	isocurv_driver.f90	/^  namelist \/params\//;"	n	program:isocurv_driver
-params	testm.f90	/^  namelist \/params\//;"	n	program:test_mmodpk
-penalized_constrained_montecarlo	modpk_icsampling.f90	/^    subroutine penalized_constrained_montecarlo(/;"	s	module:modpk_icsampling
-penalty_fact	modpk_icsampling.f90	/^  real(dp) :: penalty_fact$/;"	v	module:modpk_icsampling
-phi_infl_end	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(:), phi_infl_end(/;"	v	module:modpkparams
-phi_init	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phi_init0/;"	v	module:modpkparams
-phi_init0	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phi_init0(/;"	v	module:modpkparams
-phi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_iso_N,/;"	v	module:modpk_icsampling
-phi_langer	bessels.f90	/^      function phi_langer(/;"	f	module:SpherBessels
-phi_pivot	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(/;"	v	module:modpkparams
-phi_recurs	bessels.f90	/^  function phi_recurs(/;"	f	module:SpherBessels
-phi_small_closed_int	bessels.f90	/^   subroutine phi_small_closed_int(/;"	s	module:SpherBessels
-phiarr	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phiarr(/;"	v	module:modpkparams
-phidot_sign	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phidot_sign(/;"	v	module:modpkparams
-pig	equations.f90	/^            real(dl) pig /;"	k	type:EvolutionVars
-pk_bad	modpk_modules.f90	/^  INTEGER :: pk_bad$/;"	v	module:camb_interface
-pk_initialized	modpk_modules.f90	/^  LOGICAL :: pk_initialized$/;"	v	module:camb_interface
-pkspline_k	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(/;"	v	module:access_modpk
-pkspline_kmax	modpk.f90	/^  real(dp), PARAMETER, PUBLIC :: pkspline_kmin = log(1.e-5_dp), pkspline_kmax /;"	v	module:access_modpk
-pkspline_kmin	modpk.f90	/^  real(dp), PARAMETER, PUBLIC :: pkspline_kmin /;"	v	module:access_modpk
-pkspline_n	modpk.f90	/^  INTEGER*4, PARAMETER, PUBLIC :: pkspline_n /;"	v	module:access_modpk
-pkspline_p	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(pkspline_n), pkspline_p(/;"	v	module:access_modpk
-pkspline_p2der	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(pkspline_n), pkspline_p(pkspline_n), &$/;"	v	module:access_modpk
-pkspline_pt	modpk.f90	/^	pkspline_p2der(pkspline_n), pkspline_pt(/;"	v	module:access_modpk
-pkspline_pt2der	modpk.f90	/^	pkspline_p2der(pkspline_n), pkspline_pt(pkspline_n), &$/;"	v	module:access_modpk
-pmax	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk, pmin, pmax$/;"	v	program:driver_modpk
-pmin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk, pmin,/;"	v	program:driver_modpk
-pnad	modpk_modules.f90	/^    real(dp) :: pnad$/;"	k	type:power_spectra
-polevl	bessels.f90	/^      function polevl(/;"	f	module:SpherBessels
-polevl	recfast.f90	/^          function polevl(/;"	f	module:Recombination
-polfac	equations.f90	/^        real(dl) polfac(/;"	v	module:GaugeInterface
-polind	equations.f90	/^            integer polind /;"	k	type:EvolutionVars
-polint	modpk_utils.f90	/^  SUBROUTINE polint(/;"	s	module:modpk_utils
-poltruncfac	equations.f90	/^            real(dl) poltruncfac$/;"	k	type:EvolutionVars
-pot	modpk_potential.f90	/^  FUNCTION pot(/;"	f	module:potential
-potential	modpk_potential.f90	/^MODULE potential$/;"	m
-potential_choice	modpk_modules.f90	/^  INTEGER :: potential_choice$/;"	v	module:modpkparams
-potinit	modpk.f90	/^  SUBROUTINE potinit$/;"	s	module:access_modpk
-pow	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow,/;"	v	program:driver_modpk
-power_internal	modpk_modules.f90	/^  type(power_spectra) :: power_internal$/;"	v	module:powersp
-power_spectra	modpk_modules.f90	/^  type :: power_spectra$/;"	t	module:powersp
-powersp	modpk_modules.f90	/^module powersp$/;"	m
-powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(/;"	s	module:potential
-powt	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt,/;"	v	program:driver_modpk
-powz	modpk_modules.f90	/^    real(dp) :: powz$/;"	k	type:power_spectra
-priors	testm.f90	/^      namelist \/priors\//;"	n	subroutine:init_sampler
-priors_max	isocurv_driver.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min, priors_max$/;"	v	program:isocurv_driver
-priors_max	testm.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min, priors_max$/;"	v	program:test_mmodpk
-priors_min	isocurv_driver.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min,/;"	v	program:isocurv_driver
-priors_min	testm.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min,/;"	v	program:test_mmodpk
-projection	modpk_potential.f90	/^  pure function projection(/;"	f	module:potential
-ps0	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0,/;"	v	program:driver_modpk
-ps1	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1,/;"	v	program:driver_modpk
-ps2	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2,/;"	v	program:driver_modpk
-pspivot	driver_modpk.f90	/^  DOUBLE PRECISION :: pspivot,/;"	v	program:driver_modpk
-pt0	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0,/;"	v	program:driver_modpk
-pt1	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0, pt1,/;"	v	program:driver_modpk
-pt2	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0, pt1, pt2$/;"	v	program:driver_modpk
-ptpivot	driver_modpk.f90	/^  DOUBLE PRECISION :: pspivot, ptpivot$/;"	v	program:driver_modpk
-q	cmbmain.f90	/^          real(dl) q,/;"	k	type:IntegrationVars
-q	equations.f90	/^            real(dl) q,/;"	k	type:EvolutionVars
-q	modules.f90	/^          Type (Regions) :: q$/;"	k	type:ClTransferData
-q2	equations.f90	/^            real(dl) q, q2$/;"	k	type:EvolutionVars
-q_ix	cmbmain.f90	/^          integer q_ix$/;"	k	type:IntegrationVars
-q_ix	equations.f90	/^            integer q_ix /;"	k	type:EvolutionVars
-q_trans	modules.f90	/^         real(dl), dimension (:), pointer :: q_trans$/;"	k	type:MatterTransferData
-qderivs	modpk_utils.f90	/^  subroutine qderivs(/;"	s	module:modpk_utils
-qdn	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,p1,dr1,dp1,ddr1,qdn$/;"	v	module:MassiveNu
-qintegral	bessels.f90	/^      function qintegral(/;"	f	module:SpherBessels
-qmax	cmbmain.f90	/^      real(dl) qmin, qmax /;"	v	module:CAMBmain
-qmin	cmbmain.f90	/^      real(dl) qmin,/;"	v	module:CAMBmain
-qmin0	cmbmain.f90	/^      real(dl),parameter :: qmin0=/;"	v	module:CAMBmain
-r	isocurv_driver.f90	/^  re/;"	v	program:isocurv_driver
-r	modpk_icsampling.f90	/^    re/;"	k	type:ic_and_observables
-r	modules.f90	/^         re/;"	k	type:CAMBparams
-r	testm.f90	/^  re/;"	v	program:test_mmodpk
-r1	modules.f90	/^          real(dl), dimension(:), allocatable ::  r1,/;"	v	module:MassiveNu
-r_drag0	modules.f90	/^        real(dl) :: r_drag0,/;"	v	module:ThermoData
-rand_sign	modpk_rng.f90	/^function rand_sign(/;"	f	module:modpk_rng
-rank	isocurv_driver.f90	/^  integer :: numtasks, rank$/;"	v	program:isocurv_driver
-rank	testm.f90	/^  integer :: numtasks, rank$/;"	v	program:test_mmodpk
-rat	power_tilt.f90	/^       real(dl) rat(/;"	k	type:InitialPowerParams
-ratio	tester.f90	/^        real(dl) ratio$/;"	v	program:tester
-reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(/;"	f	module:modpk_utils
-reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(/;"	f	module:modpk_utils
-rec3jj	lensing.f90	/^subroutine rec3jj(/;"	s	module:lensing
-recombination_saha_tau	recfast.f90	/^        real(dl) :: recombination_saha_tau /;"	v	module:Recombination
-recombination_saha_z	recfast.f90	/^        real(dl) :: recombination_saha_z /;"	v	module:Recombination
-redshift	reionization.f90	/^             real(dl)   :: redshift,/;"	k	type:ReionizationParams
-redshifts	modules.f90	/^            real(dl)    ::  redshifts(/;"	k	type:TransferParams
-redshifts	modules.f90	/^          real(dl), dimension(:), pointer :: log_kh, redshifts$/;"	k	type:MatterPowerData
-reg_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=/;"	v	module:modpk_icsampling
-rescale_factor	modpk_modules.f90	/^  real(dp) :: h_init, rescale_factor$/;"	v	module:modpkparams
-rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(/;"	s	module:modpk_utils
-rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(/;"	s	module:modpk_utils
-rkqs_c	modpk_utils.f90	/^  SUBROUTINE rkqs_c(/;"	s	module:modpk_utils
-rkqs_r	modpk_utils.f90	/^  SUBROUTINE rkqs_r(/;"	s	module:modpk_utils
-rofChi	modules.f90	/^         function rofChi(/;"	f	module:ModelParams
-rombint	reionization.f90	/^      real(dl), private, external :: dtauda, rombint,/;"	v	module:Reionization
-rombint	subroutines.f90	/^        function rombint(/;"	f
-rombint2	reionization.f90	/^      real(dl), private, external :: dtauda, rombint,rombint2$/;"	v	module:Reionization
-rombint2	subroutines.f90	/^        function rombint2(/;"	f
-rombint_obj	subroutines.f90	/^        function rombint_obj(/;"	f
-sampling_techn	modpk_icsampling.f90	/^  integer :: sampling_techn$/;"	v	module:modpk_icsampling
-sampname	isocurv_driver.f90	/^	character(len=15) :: isoNname, sampname$/;"	v	program:isocurv_driver
-sampname	testm.f90	/^	character(len=15) :: isoNname, sampname$/;"	v	program:test_mmodpk
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_c
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_r
-save_iso_N	modpk_icsampling.f90	/^  logical :: save_iso_N=/;"	v	module:modpk_icsampling
-save_steps	modpk_modules.f90	/^  LOGICAL, SAVE :: save_steps=/;"	v	module:ode_path
-scale	modules.f90	/^       real(dl) scale /;"	v	module:ModelParams
-sdotmu	modules.f90	/^        real(dl) sdotmu(/;"	v	module:ThermoData
-set_ic	modpk.f90	/^      subroutine set_ic(/;"	s	subroutine:evolve
-set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(/;"	s	module:modpk_icsampling
-shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(/;"	s	module:modpk_rng
-shuffle_dp_1	modpk_rng.f90	/^subroutine shuffle_dp_1(/;"	s	module:modpk_rng
-shuffle_dp_dimn	modpk_rng.f90	/^subroutine shuffle_dp_dimn(/;"	s	module:modpk_rng
-shuffle_int_1	modpk_rng.f90	/^subroutine shuffle_int_1(/;"	s	module:modpk_rng
-shuffle_int_dimn	modpk_rng.f90	/^subroutine shuffle_int_dimn(/;"	s	module:modpk_rng
-sigma	recfast.f90	/^        real(dl), parameter :: sigma /;"	v	module:RECDATA
-sigma_8	modules.f90	/^         real(dl), dimension (:,:), pointer ::  sigma_8$/;"	k	type:MatterTransferData
-sigma_He_2Ps	recfast.f90	/^        real(dl) A2P_s,A2P_t,sigma_He_2Ps,/;"	v	module:RECDATA
-sigma_He_2Pt	recfast.f90	/^        real(dl) A2P_s,A2P_t,sigma_He_2Ps,sigma_He_2Pt$/;"	v	module:RECDATA
-sigma_arr	modpk_modules.f90	/^  real(dp) :: sigma_arr(/;"	v	module:modpkparams
-sigma_boltz	constants.f90	/^       real(dl), parameter :: sigma_boltz /;"	v	module:constants
-sigma_thomson	constants.f90	/^       real(dl), parameter :: sigma_thomson /;"	v	module:constants
-slowroll_infl_end	modpk_modules.f90	/^  LOGICAL :: slowroll_infl_end$/;"	v	module:modpkparams
-slowroll_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=/;"	v	module:modpk_icsampling
-slowroll_start	modpk_modules.f90	/^  LOGICAL :: slowroll_start=/;"	v	module:modpkparams
-sp	constants.f90	/^      integer, parameter :: sp /;"	v
-spl_large	modules.f90	/^      real(dl), parameter :: spl_large=/;"	v	module:ModelParams
-splder	subroutines.f90	/^        subroutine splder(/;"	s
-spline	subroutines.f90	/^      SUBROUTINE spline(/;"	s
-spline_deriv	subroutines.f90	/^     SUBROUTINE spline_deriv(/;"	s
-spline_integrate	subroutines.f90	/^      subroutine spline_integrate(/;"	s
-splinepow	power_tilt.f90	/^     SUBROUTINE splinepow(/;"	s	module:InitialPower
-splini	subroutines.f90	/^        subroutine splini(/;"	s
-splint	subroutines.f90	/^        subroutine splint(/;"	s
-tanfunc	modules.f90	/^         function tanfunc(/;"	f	module:ModelParams
-tau0	modules.f90	/^         real(dl) tau0,/;"	k	type:CAMBparams
-tau_complete	reionization.f90	/^          real(dl) :: tau_start, tau_complete$/;"	k	type:ReionizationHistory
-tau_maxvis	modules.f90	/^        real(dl) taurst,dtaurec,taurend, tau_maxvis,/;"	v	module:ModelParams
-tau_start	reionization.f90	/^          real(dl) :: tau_start,/;"	k	type:ReionizationHistory
-tauminn	modules.f90	/^        real(dl) tauminn,/;"	v	module:ThermoData
-taurend	modules.f90	/^        real(dl) taurst,dtaurec,taurend,/;"	v	module:ModelParams
-taurst	modules.f90	/^        real(dl) taurst,/;"	v	module:ModelParams
-tautf	cmbmain.f90	/^      real(dl) tautf(/;"	v	module:CAMBmain
-tb	modules.f90	/^        real(dl) tb(/;"	v	module:ThermoData
-tensfac	equations.f90	/^        real(dl) polfac(max_l_evolve),tensfac(/;"	v	module:GaugeInterface
-tensfacpol	equations.f90	/^        real(dl) polfac(max_l_evolve),tensfac(max_l_evolve),tensfacpol(/;"	v	module:GaugeInterface
-tensor	modpk_modules.f90	/^    real(dp) :: tensor$/;"	k	type:power_spectra
-tensorpower	modpk_potential.f90	/^  pure FUNCTION tensorpower(/;"	f	module:potential
-tenspigdot	equations.f90	/^            real(dl) tenspigdot,/;"	k	type:EvolutionVars
-test_bad	testm.f90	/^    subroutine test_bad(/;"	s	program:test_mmodpk
-test_mmodpk	testm.f90	/^program test_mmodpk$/;"	p
-tester	tester.f90	/^      program tester$/;"	p
-thermo	modules.f90	/^        subroutine thermo(/;"	s	module:ThermoData
-tight_tau	modules.f90	/^        real(dl) :: tight_tau,/;"	v	module:ThermoData
-tmrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(Nz),dxrec(Nz), Tsrec(Nz) ,dTsrec(Nz), tmrec(/;"	v	module:Recombination
-tol	modules.f90	/^      real(dl),parameter :: tol=/;"	v	module:ModelParams
-total_efold	modpk.f90	/^  SUBROUTINE total_efold$/;"	s	module:access_modpk
-trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(/;"	f	module:potential
-transfer_interp_matterpower	modules.f90	/^        logical :: transfer_interp_matterpower /;"	v	module:Transfer
-transfer_power_var	modules.f90	/^        integer :: transfer_power_var /;"	v	module:Transfer
-trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(/;"	s	module:background_evolution
-u	isocurv_driver.f90	/^  integer :: u$/;"	v	program:isocurv_driver
-u	testm.f90	/^  integer :: u$/;"	v	program:test_mmodpk
-unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(/;"	s	module:modpk_icsampling
-use_modpk	modpk_modules.f90	/^  LOGICAL :: use_modpk,/;"	v	module:modpkparams
-use_optical_depth	reionization.f90	/^             logical    :: use_optical_depth$/;"	k	type:ReionizationParams
-useq_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,k_start, useq_ps$/;"	v	module:powersp
-using_q_superh	modpk_utils.f90	/^  logical, private :: using_q_superh=/;"	v	module:modpk_utils
-vec_sig0	equations.f90	/^        real(dl) :: vec_sig0 /;"	v	module:GaugeInterface
-vecfac	equations.f90	/^               denl(max_l_evolve),vecfac(/;"	v	module:GaugeInterface
-vecfacpol	equations.f90	/^               denl(max_l_evolve),vecfac(max_l_evolve),vecfacpol(/;"	v	module:GaugeInterface
-version	modules.f90	/^        character(LEN=*), parameter :: version /;"	v	module:ModelParams
-vis	modules.f90	/^        real(dl), dimension(:), allocatable :: vis,/;"	v	module:ThermoData
-vnderivs	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs,/;"	v	module:modpkparams
-vparam_rows	isocurv_driver.f90	/^  integer :: i, vparam_rows$/;"	v	program:isocurv_driver
-vparam_rows	testm.f90	/^  integer :: i, vparam_rows$/;"	v	program:test_mmodpk
-vparams	modpk_modules.f90	/^  real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams$/;"	v	module:modpkparams
-wGauss1	recfast.f90	/^        real(dl), parameter :: wGauss1=/;"	v	module:Recombination
-wGauss2	recfast.f90	/^        real(dl), parameter :: wGauss2=/;"	v	module:Recombination
-w_ix	equations.f90	/^            integer w_ix /;"	k	type:EvolutionVars
-w_lam	equations.f90	/^         real(dl)  :: w_lam /;"	v	module:LambdaGeneral
-w_nu	equations.f90	/^            real(dl) w_nu /;"	k	type:EvolutionVars
-w_perturb	equations.f90	/^         logical :: w_perturb /;"	v	module:LambdaGeneral
-want_zdrag	modules.f90	/^         logical   :: want_zstar, want_zdrag /;"	k	type:CAMBparams
-want_zstar	modules.f90	/^         logical   :: want_zstar,/;"	k	type:CAMBparams
-wint	halofit.f90	/^      subroutine wint(/;"	s	module:NonLinear
-xe	modules.f90	/^        real(dl) tb(nthermo),cs2(nthermo),xe(/;"	v	module:ThermoData
-xlimfrac	bessels.f90	/^         real(dl), parameter :: xlimmin=35._dl  , xlimfrac /;"	v	module:SpherBessels
-xlimmin	bessels.f90	/^         real(dl), parameter :: xlimmin=/;"	v	module:SpherBessels
-xp	modpk_modules.f90	/^  real(dp), DIMENSION(:), POINTER :: xp$/;"	v	module:ode_path
-xrec	recfast.f90	/^        real(dl) zrec(Nz),xrec(/;"	v	module:Recombination
-yhe	modules.f90	/^         real(dl)  :: H0,TCMB,yhe,/;"	k	type:CAMBparams
-yp	modpk_modules.f90	/^  real(dp), DIMENSION(:,:), POINTER :: yp$/;"	v	module:ode_path
-zGauss1	recfast.f90	/^        real(dl), parameter :: zGauss1 /;"	v	module:Recombination
-zGauss2	recfast.f90	/^        real(dl), parameter :: zGauss2=/;"	v	module:Recombination
-z_drag	modules.f90	/^        real(dl) :: r_drag0, z_star, z_drag /;"	v	module:ThermoData
-z_eq	recfast.f90	/^       real(dl) OmegaK, OmegaT, z_eq$/;"	v	module:RECDATA
-z_star	modules.f90	/^        real(dl) :: r_drag0, z_star,/;"	v	module:ThermoData
-zeta3	modules.f90	/^          real(dl), parameter  :: zeta3 /;"	v	module:MassiveNu
-zeta5	modules.f90	/^          real(dl), parameter  :: zeta5 /;"	v	module:MassiveNu
-zeta7	modules.f90	/^          real(dl), parameter  :: zeta7 /;"	v	module:MassiveNu
-zfinal	recfast.f90	/^        real(dl), parameter ::  zfinal=/;"	v	module:Recombination
-zinitial	recfast.f90	/^        real(dl), parameter ::  zinitial /;"	v	module:Recombination
-zpower	modpk_potential.f90	/^  pure FUNCTION zpower(/;"	f	module:potential
-zrec	recfast.f90	/^        real(dl) zrec(/;"	v	module:Recombination
+AngularDiameterDistance	modules.f90	/^        function AngularDiameterDistance(z)$/
+BESSI	lensing.f90	/^      FUNCTION BESSI(N,X)$/
+BESSI0	lensing.f90	/^      FUNCTION BESSI0(X)$/
+BESSI1	lensing.f90	/^      FUNCTION BESSI1(X)$/
+BESSJ	lensing.f90	/^      FUNCTION BESSJ(N,X)$/
+BESSJ1	lensing.f90	/^      FUNCTION BESSJ1(X)$/
+BJL	bessels.f90	/^         SUBROUTINE BJL(L,X,JL)$/
+BJL_EXTERNAL	bessels.f90	/^        SUBROUTINE BJL_EXTERNAL(L,X,JL)$/
+BadHarmonic	lensing.f90	/^subroutine BadHarmonic$/
+Bessels_Free	bessels.f90	/^     subroutine Bessels_Free$/
+CAMBParams_Set	modules.f90	/^         subroutine CAMBParams_Set(P, error, DoRei/
+CAMB_FreeCAMBdata	camb.f90	/^       subroutine CAMB_FreeCAMBdata(Dat)$/
+CAMB_GetAge	camb.f90	/^        function CAMB_GetAge(P)$/
+CAMB_GetCls	camb.f90	/^        subroutine CAMB_GetCls(Cls, lmax, in, GC_c/
+CAMB_GetResults	camb.f90	/^       subroutine CAMB_GetResults(Params, error)$/
+CAMB_GetTransfers	camb.f90	/^       subroutine CAMB_GetTransfers(Params, OutDat/
+CAMB_GetZreFromTau	camb.f90	/^        function CAMB_GetZreFromTau(P, tau)$/
+CAMB_InitCAMBdata	camb.f90	/^       subroutine CAMB_InitCAMBdata(Dat)$/
+CAMB_SetDefParams	camb.f90	/^        subroutine CAMB_SetDefParams(P)$/
+CAMB_TransfersToPowers	camb.f90	/^       subroutine CAMB_TransfersToPowers(CData)$/
+CAMB_ValidateParams	camb.f90	/^         function CAMB_ValidateParams(P) result(OK/
+CAMB_cleanup	camb.f90	/^         subroutine CAMB_cleanup$/
+COBEnormalize	modules.f90	/^        subroutine COBEnormalize$/
+CalcScalCls	cmbmain.f90	/^        subroutine CalcScalCls(CTrans)$/
+CalcScalCls2	cmbmain.f90	/^        subroutine CalcScalCls2(CTrans)$/
+CalcScalarSources	cmbmain.f90	/^      subroutine CalcScalarSources(EV,taustart)$/
+CalcTensCls	cmbmain.f90	/^        subroutine CalcTensCls(CTrans, GetInitPowe/
+CalcTensorSources	cmbmain.f90	/^      subroutine CalcTensorSources(EV,taustart)$/
+CalcVecCls	cmbmain.f90	/^        subroutine CalcVecCls(CTrans, GetInitPower/
+CalcVectorSources	cmbmain.f90	/^      subroutine CalcVectorSources(EV,taustart)$/
+ClTransferToCl	cmbmain.f90	/^     subroutine ClTransferToCl(CTransS,CTransT, CT/
+CorrFuncFlatSky	lensing.f90	/^subroutine CorrFuncFlatSky$/
+CorrFuncFullSky	lensing.f90	/^subroutine CorrFuncFullSky$/
+CosmomcTheta	modules.f90	/^       function CosmomcTheta()$/
+DEBUG_writing_etc	testm.f90	/^    subroutine DEBUG_writing_etc()$/
+DeltaTime	modules.f90	/^        function DeltaTime(a1,a2)$/
+DoFlatIntegration	cmbmain.f90	/^        subroutine DoFlatIntegration(IV, llmax)$/
+DoRangeInt	cmbmain.f90	/^ subroutine DoRangeInt(IV,chi,chiDisp,nstart,nend,/
+DoRangeIntTensor	cmbmain.f90	/^      subroutine DoRangeIntTensor(IV,chi,chiDisp,n/
+DoSourceIntegration	cmbmain.f90	/^      subroutine DoSourceIntegration(IV) !for part/
+DoSourcek	cmbmain.f90	/^      subroutine DoSourcek(EV,q_ix)$/
+DoThermoSpline	modules.f90	/^        subroutine DoThermoSpline(j2,tau)$/
+FreeSourceMem	cmbmain.f90	/^       subroutine FreeSourceMem$/
+Free_ClTransfer	modules.f90	/^        subroutine Free_ClTransfer(CTrans)$/
+GET_INIT	recfast.f90	/^        subroutine GET_INIT(z,x_H0,x_He0,x0)$/
+GaugeInterface_EvolveScal	equations.f90	/^         subroutine GaugeInterface_EvolveScal(EV,t/
+GaugeInterface_Init	equations.f90	/^        subroutine GaugeInterface_Init$/
+GaugeInterface_ScalEv	equations.f90	/^        subroutine GaugeInterface_ScalEv(EV,y,tau,/
+GenerateBessels	bessels.f90	/^     subroutine GenerateBessels$/
+GetBessels	lensing.f90	/^      subroutine GetBessels(MaxArg)$/
+GetInitPowerArrayTens	cmbmain.f90	/^        subroutine GetInitPowerArrayTens(pows,ks, /
+GetInitPowerArrayVec	cmbmain.f90	/^        subroutine GetInitPowerArrayVec(pows,ks, n/
+GetNumEqns	equations.f90	/^        subroutine GetNumEqns(EV)$/
+GetOmegak	equations.f90	/^        function GetOmegak()$/
+GetSourceMem	cmbmain.f90	/^       subroutine GetSourceMem$/
+GetTauStart	cmbmain.f90	/^      function GetTauStart(q)$/
+GetTestTime	modules.f90	/^         function GetTestTime()$/
+GetTransfer	cmbmain.f90	/^     subroutine GetTransfer(EV,tau)$/
+ION	recfast.f90	/^        subroutine ION(Recomb,Ndim,z,Y,f)$/
+Ini_Close	inifile.f90	/^  subroutine Ini_Close$/
+Ini_Close_File	inifile.f90	/^  subroutine Ini_Close_File(Ini)$/
+Ini_HasKey	inifile.f90	/^  function Ini_HasKey(Key) result(AValue)$/
+Ini_HasKey_File	inifile.f90	/^  function Ini_HasKey_File(Ini, Key) result(AValue/
+Ini_Key_To_Arraykey	inifile.f90	/^  function Ini_Key_To_Arraykey(Key, index)  result/
+Ini_NameValue_Add	inifile.f90	/^  subroutine Ini_NameValue_Add(Ini,AInLine)$/
+Ini_Open	inifile.f90	/^  subroutine Ini_Open(filename, unit_id,  error, s/
+Ini_Open_File	inifile.f90	/^  subroutine Ini_Open_File(Ini, filename, unit_id,/
+Ini_Open_Fromlines	inifile.f90	/^  subroutine Ini_Open_Fromlines(Ini, Lines, NumLin/
+Ini_Read_Double	inifile.f90	/^  function Ini_Read_Double(Key, Default)$/
+Ini_Read_Double_Array	inifile.f90	/^  function Ini_Read_Double_Array(Key, index, Defau/
+Ini_Read_Double_Array_File	inifile.f90	/^  function Ini_Read_Double_Array_File(Ini,Key, ind/
+Ini_Read_Double_File	inifile.f90	/^  function Ini_Read_Double_File(Ini,Key, Default)$/
+Ini_Read_Int	inifile.f90	/^  function Ini_Read_Int(Key, Default)$/
+Ini_Read_Int_Array	inifile.f90	/^  function Ini_Read_Int_Array(Key, index, Default)/
+Ini_Read_Int_Array_File	inifile.f90	/^  function Ini_Read_Int_Array_File(Ini,Key, index,/
+Ini_Read_Int_File	inifile.f90	/^  function Ini_Read_Int_File(Ini, Key, Default)$/
+Ini_Read_Logical	inifile.f90	/^  function Ini_Read_Logical(Key, Default)$/
+Ini_Read_Logical_File	inifile.f90	/^  function Ini_Read_Logical_File(Ini, Key, Default/
+Ini_Read_Real	inifile.f90	/^  function Ini_Read_Real(Key, Default)$/
+Ini_Read_Real_Array	inifile.f90	/^  function Ini_Read_Real_Array(Key, index, Default/
+Ini_Read_Real_Array_File	inifile.f90	/^  function Ini_Read_Real_Array_File(Ini,Key, index/
+Ini_Read_Real_File	inifile.f90	/^  function Ini_Read_Real_File(Ini,Key, Default)$/
+Ini_Read_String	inifile.f90	/^  function Ini_Read_String(Key, NotFoundFail) resu/
+Ini_Read_String_Array	inifile.f90	/^  function Ini_Read_String_Array(Key, index, NotFo/
+Ini_Read_String_Array_File	inifile.f90	/^  function Ini_Read_String_Array_File(Ini, Key, in/
+Ini_Read_String_File	inifile.f90	/^  function Ini_Read_String_File(Ini, Key, NotFound/
+Ini_SaveReadValues	inifile.f90	/^  subroutine Ini_SaveReadValues(afile,unit_id)$/
+Ini_SaveReadValues_File	inifile.f90	/^  subroutine Ini_SaveReadValues_File(Ini, afile, u/
+InitSourceInterpolation	cmbmain.f90	/^      subroutine InitSourceInterpolation$/
+InitSpherBessels	bessels.f90	/^      subroutine InitSpherBessels$/
+InitTransfer	cmbmain.f90	/^      subroutine InitTransfer$/
+InitVars	cmbmain.f90	/^      subroutine InitVars$/
+Init_ClTransfer	modules.f90	/^        subroutine Init_ClTransfer(CTrans)$/
+Init_Cls	modules.f90	/^        subroutine Init_Cls$/
+InitialPower_ReadParams	power_tilt.f90	/^       subroutine InitialPower_ReadParams(InitPowe/
+InitializePowers	power_tilt.f90	/^       subroutine InitializePowers(AParamSet,acurv/
+IntegrateSourcesBessels	cmbmain.f90	/^      subroutine IntegrateSourcesBessels(IV,j,l,nu/
+IntegrationVars_Init	cmbmain.f90	/^      subroutine IntegrationVars_Init(IV)$/
+InterpolateClArr	modules.f90	/^      subroutine InterpolateClArr(lSet,iCl, all_Cl/
+InterpolateCls	cmbmain.f90	/^    subroutine InterpolateCls(CTransS,CTransT,CTra/
+InterpolateSources	cmbmain.f90	/^      subroutine InterpolateSources(IV)$/
+MassiveNuVars	equations.f90	/^     subroutine MassiveNuVars(EV,y,a,grho,gpres,dg/
+MassiveNuVarsOut	equations.f90	/^       subroutine MassiveNuVarsOut(EV,y,yprime,a,g/
+MatterPowerData_Load	modules.f90	/^        subroutine MatterPowerData_Load(PK_data,fn/
+MatterPowerData_k	modules.f90	/^        function MatterPowerData_k(PK,  kh, itf) r/
+MatterPowerdata_Free	modules.f90	/^        subroutine MatterPowerdata_Free(PK_data)$/
+MatterPowerdata_MakeNonlinear	modules.f90	/^        subroutine MatterPowerdata_MakeNonlinear(P/
+MatterPowerdata_getsplines	modules.f90	/^        subroutine MatterPowerdata_getsplines(PK_d/
+ModelData_Free	modules.f90	/^         subroutine ModelData_Free$/
+MySech	modpk_potential.f90	/^  FUNCTION MySech(x)$/
+NonLinearLensing	cmbmain.f90	/^     subroutine NonLinearLensing$/
+NonLinear_GetNonLinRatios	halofit.f90	/^     subroutine NonLinear_GetNonLinRatios(CAMB_Pk)/
+NonLinear_GetRatios	halofit.f90	/^     subroutine NonLinear_GetRatios(CAMB_Pk)$/
+NonLinear_GetRatios_all	halofit.f90	/^     subroutine NonLinear_GetRatios_all(CAMB_Pk)$/
+NormalizeClsAtL	modules.f90	/^      subroutine NormalizeClsAtL(lnorm)$/
+Nu_Integrate	modules.f90	/^        subroutine Nu_Integrate(am,drhonu,fnu,dpnu/
+Nu_Integrate01	modules.f90	/^        subroutine Nu_Integrate01(am,drhonu,fnu,ps/
+Nu_Intvsq	modules.f90	/^   subroutine Nu_Intvsq(am,G11,G30,psi1,psi3)$/
+Nu_Shear	modules.f90	/^        subroutine Nu_Shear(am,shearnu,psi2)$/
+Nu_background	modules.f90	/^       subroutine Nu_background(am,rhonu,pnu)$/
+Nu_derivs	modules.f90	/^        subroutine Nu_derivs(am,adotoa,rhonu,rhonu/
+Nu_init	modules.f90	/^        subroutine Nu_init$/
+Nu_rho	modules.f90	/^       subroutine Nu_rho(am,rhonu)$/
+Power_Descript	power_tilt.f90	/^     function Power_Descript(in, Scal, Tens, Keys,/
+Recombination_ReadParams	recfast.f90	/^         subroutine Recombination_ReadParams(R, In/
+Recombination_SetDefParams	recfast.f90	/^        subroutine Recombination_SetDefParams(R)$/
+Recombination_Validate	recfast.f90	/^        subroutine Recombination_Validate(R, OK)$/
+Recombination_init	recfast.f90	/^        subroutine Recombination_init(Recomb, Omeg/
+Recombination_tm	recfast.f90	/^        function Recombination_tm(a)$/
+Recombination_ts	recfast.f90	/^        function Recombination_ts(a)$/
+Recombination_xe	recfast.f90	/^        function Recombination_xe(a)$/
+Reionization_GetOptDepth	reionization.f90	/^function Reionization_GetOptDepth(Reion, ReionHist/
+Reionization_Init	reionization.f90	/^ subroutine Reionization_Init(Reion, ReionHist, Yh/
+Reionization_ReadParams	reionization.f90	/^ subroutine Reionization_ReadParams(Reion, Ini)$/
+Reionization_SetDefParams	reionization.f90	/^ subroutine Reionization_SetDefParams(Reion)$/
+Reionization_SetFromOptDepth	reionization.f90	/^ subroutine Reionization_SetFromOptDepth(Reion, Re/
+Reionization_SetParamsForZre	reionization.f90	/^ subroutine Reionization_SetParamsForZre(Reion,Rei/
+Reionization_Validate	reionization.f90	/^ subroutine Reionization_Validate(Reion, OK)$/
+Reionization_doptdepth_dz	reionization.f90	/^ function Reionization_doptdepth_dz(z)$/
+Reionization_timesteps	reionization.f90	/^ function Reionization_timesteps(ReionHist)$/
+Reionization_xe	reionization.f90	/^ function Reionization_xe(a, tau, xe_recomb)$/
+Reionization_zreFromOptDepth	reionization.f90	/^ subroutine Reionization_zreFromOptDepth(Reion, Re/
+ScalarPower	power_tilt.f90	/^      function ScalarPower(k,in)$/
+SetClosedkValuesFromArr	cmbmain.f90	/^      subroutine SetClosedkValuesFromArr(R)$/
+SetDefPowerParams	power_tilt.f90	/^       subroutine SetDefPowerParams(AP)$/
+SetTimeSteps	modules.f90	/^        subroutine SetTimeSteps$/
+SetkValuesForInt	cmbmain.f90	/^     subroutine SetkValuesForInt$/
+SetkValuesForSources	cmbmain.f90	/^      subroutine SetkValuesForSources$/
+SourceToTransfers	cmbmain.f90	/^     subroutine SourceToTransfers(q_ix)$/
+SwitchToMassiveNuApprox	equations.f90	/^        subroutine SwitchToMassiveNuApprox(EV,y)$/
+TNameValueList_Add	inifile.f90	/^  subroutine TNameValueList_Add(L, AName, AValue)$/
+TNameValueList_Clear	inifile.f90	/^  subroutine TNameValueList_Clear(L)$/
+TNameValueList_Delete	inifile.f90	/^  subroutine TNameValueList_Delete(L, i)$/
+TNameValueList_HasKey	inifile.f90	/^  function TNameValueList_HasKey(L, AName) result /
+TNameValueList_Init	inifile.f90	/^  subroutine TNameValueList_Init(L)$/
+TNameValueList_SetCapacity	inifile.f90	/^  subroutine TNameValueList_SetCapacity(L, C)$/
+TNameValueList_ValueOf	inifile.f90	/^  subroutine TNameValueList_ValueOf(L, AName, AVal/
+TensorPower	power_tilt.f90	/^      function TensorPower(k,in)$/
+ThermoData_Free	modules.f90	/^        subroutine ThermoData_Free$/
+Thermo_OpacityToTime	modules.f90	/^       function Thermo_OpacityToTime(opacity)$/
+TimeOfz	modules.f90	/^        function TimeOfz(z)$/
+TransferOut	cmbmain.f90	/^     subroutine TransferOut$/
+Transfer_Allocate	modules.f90	/^        subroutine Transfer_Allocate(MTrans)$/
+Transfer_Free	modules.f90	/^        subroutine Transfer_Free(MTrans)$/
+Transfer_GetMatterPower	modules.f90	/^        subroutine Transfer_GetMatterPower(MTrans,/
+Transfer_GetMatterPowerData	modules.f90	/^        subroutine Transfer_GetMatterPowerData(MTr/
+Transfer_Get_sigma8	modules.f90	/^        subroutine Transfer_Get_sigma8(MTrans, sig/
+Transfer_SaveMatterPower	modules.f90	/^        subroutine Transfer_SaveMatterPower(MTrans/
+Transfer_SaveToFiles	modules.f90	/^        subroutine Transfer_SaveToFiles(MTrans,Fil/
+Transfer_SetForNonlinearLensing	modules.f90	/^       subroutine Transfer_SetForNonlinearLensing(/
+Transfer_output_Sig8	modules.f90	/^        subroutine Transfer_output_Sig8(MTrans)$/
+Transfer_output_Sig8AndNorm	modules.f90	/^        subroutine Transfer_output_Sig8AndNorm(MTr/
+USpherBesselWithDeriv	bessels.f90	/^        subroutine USpherBesselWithDeriv(closed,Ch/
+UseLimber	cmbmain.f90	/^      function UseLimber(l,k)$/
+WriteFitsCls	writefits.f90	/^ subroutine WriteFitsCls(Clsfile, lmx)$/
+airy_ai	bessels.f90	/^      function airy_ai(x)$/
+allocate_vars	testm.f90	/^    subroutine allocate_vars()$/
+array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(xa, ya, x, y, dy)$/
+backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/
+backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/
+bderivs	modpk_utils.f90	/^  SUBROUTINE bderivs(x,y,yprime)$/
+bessj0	lensing.f90	/^      FUNCTION bessj0(x)$/
+build_isocurv_basis	modpk_potential.f90	/^    subroutine build_isocurv_basis()$/
+build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(mass_matrix)$/
+build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(sample,n/
+bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi, efold)$/
+calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
+calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
+calculate_pk_observables_per_IC	testm.f90	/^    subroutine calculate_pk_observables_per_IC(k_p/
+cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
+constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
+constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(y, radius)$/
+cosfunc	modules.f90	/^         function cosfunc (Chi)$/
+d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
+dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
+dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(phi)$/
+ddragoptdepth_dz	modules.f90	/^        function ddragoptdepth_dz(z)$/
+derivpolevl	recfast.f90	/^          function derivpolevl(x,coef,N)$/
+derivs	equations.f90	/^        subroutine derivs(EV,n,tau,ay,ayprime)$/
+derivs	modpk_odeint.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
+derivs	modpk_odeint.f90	/^            SUBROUTINE derivs(x,y,dydx)$/
+derivs	modpk_odeint.f90	/^       SUBROUTINE derivs(x, y, dydx)$/
+derivs	modpk_odeint.f90	/^            SUBROUTINE derivs(x, y, dydx)$/
+derivs	modpk_utils.f90	/^  SUBROUTINE derivs(x,y,yprime)$/
+derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
+derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
+derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
+derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
+derivst	equations.f90	/^        subroutine derivst(EV,n,tau,ayt,aytprime)$/
+doptdepth_dz	modules.f90	/^        function doptdepth_dz(z)$/
+dragoptdepth	modules.f90	/^        function dragoptdepth(z)$/
+dsound_da	modules.f90	/^       function dsound_da(a)$/
+dtauda	equations.f90	/^        function dtauda(a)$/
+dtda	camb.f90	/^  function dtda(a)$/
+dverk	subroutines.f90	/^      subroutine dverk (EV,n, fcn, x, y, xend, tol/
+energy_measure	modpk_icsampling.f90	/^    function energy_measure(vect,energy_scale) res/
+eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(y, energy_scale, &$/
+equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(y,energy_scal/
+evolve	modpk.f90	/^  SUBROUTINE evolve(kin, powerspectrum_out)$/
+f_K	modules.f90	/^        function f_K(x)$/
+fderivs	equations.f90	/^        subroutine fderivs(EV,n,tau,ay,ayprime)$/
+fderivst	equations.f90	/^        subroutine fderivst(EV,n,tau,ayt,aytprime)/
+fderivsv	equations.f90	/^        subroutine fderivsv(EV,n,tau,yv,yvprime)$/
+find_z	modules.f90	/^       subroutine find_z(func,zout)  !find redshif/
+getEps	modpk_potential.f90	/^  FUNCTION getEps(phi,dphi)$/
+getH	modpk_potential.f90	/^  FUNCTION getH(phi,dphi)$/
+getHdot	modpk_potential.f90	/^  FUNCTION getHdot(phi,dphi)$/
+getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
+get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
+get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
+get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,/
+get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
+getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
+getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(phi,dphi)$/
+geteta	modpk_potential.f90	/^  FUNCTION geteta(phi, dphi)$/
+getrhodot	modpk_potential.f90	/^    function getrhodot(phi,dphi) result(rhodot)$/
+halofit	halofit.f90	/^      subroutine halofit(rk,rn,rncur,rknl,plin,pnl/
+ic_load_observables	modpk_icsampling.f90	/^    subroutine ic_load_observables(this, phi0,dphi/
+ic_print_observables	modpk_icsampling.f90	/^    subroutine ic_print_observables(this, outunit)/
+implicit_surface_sampling	modpk_icsampling.f90	/^    subroutine implicit_surface_sampling(sample,en/
+init_background	equations.f90	/^       subroutine init_background$/
+init_massive_nu	modules.f90	/^      subroutine init_massive_nu(has_massive_nu)$/
+init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(rank)$/
+init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial()$/
+init_sampler	testm.f90	/^    subroutine init_sampler(priors_min, priors_max/
+inithermo	modules.f90	/^     subroutine inithermo(taumin,taumax)$/
+initial	equations.f90	/^        subroutine initial(EV,y, tau)$/
+initialphi	modpk_potential.f90	/^  FUNCTION initialphi(phi0)$/
+initialt	equations.f90	/^        subroutine initialt(EV,yt,tau)$/
+initialv	equations.f90	/^        subroutine initialv(EV,yv,tau)$/
+initlval	modules.f90	/^        subroutine initlval(lSet,max_l)$/
+invsinfunc	modules.f90	/^         function invsinfunc(x)$/
+kappa_HH_21cm	recfast.f90	/^        function kappa_HH_21cm(T, deriv)$/
+kappa_eH_21cm	recfast.f90	/^        function kappa_eH_21cm(T, deriv)$/
+kappa_pH_21cm	recfast.f90	/^        function kappa_pH_21cm(T, deriv) ! from as/
+lens_Cls	lensing.f90	/^subroutine lens_Cls$/
+locate	modpk_utils.f90	/^  FUNCTION locate(xx,x)$/
+make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
+make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
+mass_spectrum_prior	modpk_icsampling.f90	/^    subroutine mass_spectrum_prior(vpnew, mass_rat/
+min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
+mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize()$/
+normal_array	modpk_rng.f90	/^function normal_array(n,mean,std) result(normal)$/
+normal_scalar	modpk_rng.f90	/^function normal_scalar(mean,std) result(scalar)$/
+nuRhoPres	modules.f90	/^        subroutine nuRhoPres(am,rhonu,pnu)$/
+odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmi/
+odeint_r	modpk_odeint.f90	/^  SUBROUTINE odeint_r(ystart,x1,x2,eps,h1,hmin,der/
+omega_m	halofit.f90	/^      function omega_m(aa,om_m0,om_v0,wval)$/
+omega_v	halofit.f90	/^      function omega_v(aa,om_m0,om_v0,wval)      $/
+open_output_files	testm.f90	/^    subroutine open_output_files()$/
+optdepth	modules.f90	/^        function optdepth(z)$/
+output	equations.f90	/^        subroutine output(EV,y, n,j,tau,sources)$/
+output_COBElikelihood	modules.f90	/^        subroutine output_COBElikelihood$/
+output_cl_files	modules.f90	/^        subroutine output_cl_files(ScalFile,TensFi/
+output_initial_data	testm.f90	/^    subroutine output_initial_data()$/
+output_lens_pot_files	modules.f90	/^        subroutine output_lens_pot_files(LensPotFi/
+output_observables	testm.f90	/^    subroutine output_observables(pk_arr, pk_iso_a/
+output_veccl_files	modules.f90	/^        subroutine output_veccl_files(VecFile, fac/
+outputt	equations.f90	/^        subroutine outputt(EV,yt,n,j,tau,dt,dte,dt/
+outputv	equations.f90	/^        subroutine outputv(EV,yv,n,j,tau,dt,dte,dt/
+outtransf	equations.f90	/^      subroutine outtransf(EV, y, Arr)$/
+p1evl	bessels.f90	/^      function p1evl(x,coef,N)$/
+penalized_constrained_montecarlo	modpk_icsampling.f90	/^    subroutine penalized_constrained_montecarlo(sa/
+phi_langer	bessels.f90	/^      function phi_langer(l,K,beta,chi)$/
+phi_recurs	bessels.f90	/^  function phi_recurs(l, K, beta, chi)$/
+phi_small_closed_int	bessels.f90	/^   subroutine phi_small_closed_int(l,beta,chi,y1,y/
+polevl	bessels.f90	/^      function polevl(x,coef,N)$/
+polevl	recfast.f90	/^          function polevl(x,coef,N)$/
+polint	modpk_utils.f90	/^  SUBROUTINE polint(xa,ya,x,y,dy)$/
+pot	modpk_potential.f90	/^  FUNCTION pot(phi)$/
+potinit	modpk.f90	/^  SUBROUTINE potinit$/
+powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(psi, dpsi, phi, dphi, a/
+qderivs	modpk_odeint.f90	/^       SUBROUTINE qderivs(x, y, dydx)$/
+qderivs	modpk_utils.f90	/^  subroutine qderivs(x,y,yprime)$/
+qintegral	bessels.f90	/^      function qintegral(sin_K,alpha, K)$/
+rand_sign	modpk_rng.f90	/^function rand_sign() result(sign)$/
+reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(p,n,m)$/
+reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(p,n)$/
+rec3jj	lensing.f90	/^subroutine rec3jj(thrcof,l2,l3,m2,m3)$/
+rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(y,dydx,x,h,yout,yerr,derivs)$/
+rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(y,dydx,x,h,yout,yerr,derivs)$/
+rkqs_c	modpk_odeint.f90	/^       SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,h/
+rkqs_c	modpk_utils.f90	/^  SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,hdid,h/
+rkqs_r	modpk_odeint.f90	/^       SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,h/
+rkqs_r	modpk_utils.f90	/^  SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,h/
+rofChi	modules.f90	/^         function rofChi(Chi) !sinh(chi) for open,/
+rombint	subroutines.f90	/^        function rombint(f,a,b,tol)$/
+rombint2	subroutines.f90	/^        function rombint2(f,a,b,tol, maxit, minste/
+rombint_obj	subroutines.f90	/^        function rombint_obj(obj,f,a,b,tol, maxit)/
+save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
+save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
+set_ic	modpk.f90	/^      subroutine set_ic(y)$/
+set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(y, const/
+shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(setA, setB, n)$/
+shuffle_dp_1	modpk_rng.f90	/^subroutine shuffle_dp_1(a)$/
+shuffle_dp_dimn	modpk_rng.f90	/^subroutine shuffle_dp_dimn(a)$/
+shuffle_int_1	modpk_rng.f90	/^subroutine shuffle_int_1(a)$/
+shuffle_int_dimn	modpk_rng.f90	/^subroutine shuffle_int_dimn(a)$/
+splder	subroutines.f90	/^        subroutine splder(y,dy,n, g)$/
+spline	subroutines.f90	/^      SUBROUTINE spline(x,y,n,yp1,ypn,y2)$/
+spline_deriv	subroutines.f90	/^     SUBROUTINE spline_deriv(x,y,y2,y1,n)$/
+spline_integrate	subroutines.f90	/^      subroutine spline_integrate(x,y,y2,yint,n)$/
+splinepow	power_tilt.f90	/^     SUBROUTINE splinepow(x,y,n,yp1,ypn,y2)$/
+splini	subroutines.f90	/^        subroutine splini(g,n)$/
+splint	subroutines.f90	/^        subroutine splint(y,z,n)$/
+tanfunc	modules.f90	/^         function tanfunc(Chi)$/
+test_bad	testm.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
+thermo	modules.f90	/^        subroutine thermo(tau,cs2b,opacity, dopaci/
+total_efold	modpk.f90	/^  SUBROUTINE total_efold$/
+trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(phi) result(trace)$/
+trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(phi_init_trial, alph/
+unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(y, &$/
+wint	halofit.f90	/^      subroutine wint(CAMB_Pk,itf,r,sig,d1,d2)$/
