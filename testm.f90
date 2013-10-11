@@ -87,7 +87,7 @@ program test_mmodpk
     !Grab IC from file
     sampling_techn == fromfile_samp .or. &
     !Loop over different vparams for given num_inflaton
-    sampling_techn == mass_loop_samp) then
+    sampling_techn == parameter_loop_samp) then
 
 #ifdef MPI
 
@@ -113,11 +113,8 @@ program test_mmodpk
 
     do i=1,numb_samples
 
-      !DEBUG
       print*, "sample numb", i, "of", numb_samples
 
-      !call calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-      !  alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
       call calculate_pk_observables_per_IC(k_pivot,dlnk)
 
     end do
@@ -349,11 +346,19 @@ program test_mmodpk
     end subroutine output_observables
 
     subroutine output_initial_data()
+      integer :: i
+
       write(ci, '(I2)'), num_inflaton
       ci = adjustl(ci)
       array_fmt = '(a25,'//trim(ci)//'es10.3)'
-      write(*, *) 'Testing two field with V(phi) = 1/2 m_I^2 phi_I^2+1/2 m_J^2 phi_J^2'
-      write(*, *), "vparams(1,:) =", vparams(1,:)
+      !write(*, *) 'Testing two field with V(phi) = 1/2 m_I^2 phi_I^2+1/2 m_J^2 phi_J^2'
+      if (size(vparams,1)>1) then
+        do i=1, size(vparams,1)
+          write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
+        end do
+      else
+        write(*, *), "vparams(1,:) =", vparams(1,:)
+      end if
     end subroutine output_initial_data
 
 
@@ -471,7 +476,6 @@ program test_mmodpk
       A_iso=ps0_iso
       A_pnad=pnad0
       A_ent=pent0
-      !A_bundle=pk0%entropy
       A_bundle=field_bundle%exp_scalar
 
       call output_observables(pk_arr,pk_iso_arr, &

@@ -3,7 +3,7 @@ MODULE potential
   use internals, only : pi
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: pot, getH, getHdot, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
+  PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower
 
   public :: norm
@@ -49,13 +49,17 @@ CONTAINS
     !  mass_infl, couple_water_infl
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
       mass_hybrid
+
+    integer :: phi_light_index
+    real(dp) :: lambda4(num_inflaton)
     
     select case(potential_choice)
     case(1) 
-    ! MULTIFIELD
+      ! m_i^2 phi_i^2 --- N-quadratic
        m2_V = 10.d0**(vparams(1,:))
-       pot = 0.5*sum(m2_V*phi*phi)
+       pot = 0.5d0*sum(m2_V*phi*phi)
     case(2)
+      ! N-flation (axions)
        lambda = 10.d0**vparams(1,:)
        finv = 1.d0/(10.d0**vparams(2,:))
        pot = sum(lambda**4*(1.d0+cos(finv*phi)))
@@ -109,6 +113,16 @@ CONTAINS
                  (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
                  Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/2.
       pot=potlarge+potsmall
+    case(11)
+      !N-quadratic w/one intxn term
+      !phi_i^2 + phi_{lightest}^2*phi_i^2
+      m2_V = 10.d0**(vparams(1,:))
+      lambda4 = 10.d0**vparams(2,:)
+      phi_light_index = minloc(m2_V,1)
+
+      pot = 0.5d0*sum(m2_V*phi*phi)+ &
+        (1.0d0/24.0d0)*(phi(phi_light_index)**2)*sum(lambda4*phi*phi)
+
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -132,6 +146,9 @@ CONTAINS
 
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
       mass_hybrid
+
+    integer :: phi_light_index
+    real(dp) :: lambda4(num_inflaton)
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -215,6 +232,19 @@ CONTAINS
            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))&
                    /)
 
+       case(11)
+         m2_V = 10.d0**(vparams(1,:))
+         lambda4 = 10.d0**vparams(2,:)
+         phi_light_index = minloc(m2_V,1)
+
+         !for i /= lightest
+         dVdphi = m2_V*phi + (1.0d0/12.0d0)*(phi(phi_light_index)**2)*lambda4*phi
+
+         !i=lightest
+         dVdphi(phi_light_index) = m2_V(phi_light_index)*phi(phi_light_index) + &
+           (1.0d0/6.0d0)*(phi(phi_light_index)**3)*lambda4(phi_light_index)
+
+
        !END MULTIFIELD
        case default
           write(*,*) 'MODPK: Need to set dVdphi in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
@@ -242,6 +272,9 @@ CONTAINS
     !  mass_infl, couple_water_infl
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
       mass_hybrid
+
+    integer :: phi_light_index
+    real(dp) :: lambda4(num_inflaton)
 
     if (vnderivs) then
        !MULTIFIELD
@@ -413,6 +446,45 @@ CONTAINS
               Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
             (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
+       case(11)
+         M2_V = 10.d0**(vparams(1,:))
+         Lambda4 = 10.d0**vparams(2,:)
+         Phi_light_index = minloc(m2_V,1)
+
+         do i=1,num_inflaton
+           do j=1, num_inflaton
+
+             if (i/=Phi_light_index .and. j/= Phi_light_index) then
+               if (i/=j) then
+                 d2Vdphi2(i,j) = 0e0_dp
+               else
+                 d2Vdphi2(i,j) = m2_V(i) + &
+                   (1.0d0/12.0d0)*Lambda4(i)*phi(Phi_light_index)**2
+               end if
+
+             else if (i==Phi_light_index .and. j/=Phi_light_index) then
+
+               d2Vdphi2(i,j) = 0e0_dp
+
+             else if (i/=Phi_light_index .and. j==Phi_light_index) then
+
+               d2Vdphi2(i,j) = (1.0d0/6.0d0)*Lambda4(i)* &
+                 phi(Phi_light_index)*phi(i)
+
+             else if (i==Phi_light_index .and. j==Phi_light_index) then
+
+               d2Vdphi2(i,j) = m2_V(Phi_light_index) + &
+                 0.5d0*Lambda4(Phi_light_index)*phi(Phi_light_index)**2
+
+             end if
+
+           end do
+           
+         end do
+
+
+
+
        case default
           write(*,*) 'MODPK: Need to set d2Vdphi2 in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
@@ -488,7 +560,6 @@ CONTAINS
 
     !MULTIFIELD
     getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)
-    !!getEps = 2.d0*(M_Pl**2)*(((getHdot(phi,dphi)/dphi)/getH(phi,dphi))**2)
     !END MULTIFIELD
     RETURN
 
@@ -509,17 +580,17 @@ CONTAINS
   END FUNCTION getH
 
 
-  FUNCTION getHdot(phi,dphi)
+  FUNCTION getdHdalpha(phi,dphi)
     !
     !     Returns dH/dalpha given phi and dphi/dalpha
     !
-    real(dp) :: getHdot
+    real(dp) :: getdHdalpha
     real(dp), INTENT(IN) :: phi(:), dphi(:)
     ! MULTIFIELD
-    getHdot = -dot_product(dphi, dphi) * getH(phi,dphi)/2./M_Pl**2
+    getdHdalpha = -dot_product(dphi, dphi) * getH(phi,dphi)/2./M_Pl**2
     ! END MULTIFIELD
     RETURN
-  END FUNCTION getHdot
+  END FUNCTION getdHdalpha
 
 
   FUNCTION getdepsdalpha(phi,dphi)
@@ -531,7 +602,7 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:), dphi(:)
     
     H=getH(phi,dphi)
-    dHdalpha=getHdot(phi,dphi)
+    dHdalpha=getdHdalpha(phi,dphi)
     eps=getEps(phi,dphi)
 
     ! MULTIFIELD
@@ -708,14 +779,6 @@ CONTAINS
       power_spectrum%pnad    =  0e0_dp
       power_spectrum%entropy =  0e0_dp
     end if
-
-    !DEBUG [JF]
-    !write(21, *) Log(a)-Log(a_init), power_adiab, power_isocurv, power_pnad,&
-    !power_entropy
-
-    !write(29, *)Log(a)-Log(a_init),power_isocurv
-    !write(28, *) Log(a)-Log(a_init),power_pnad
-    !write(27, *) Log(a)-Log(a_init),power_entropy
 
     power_spectrum%matrix  =  power_matrix
     power_spectrum%adiab   =  power_adiab
@@ -967,6 +1030,9 @@ CONTAINS
     this%exp_scalar=exp(this%dlogThetadN)
 
     this%N=efold
+
+    !DEBUG
+    !print*, "this%exp_scalar",this%exp_scalar
 
   end subroutine bundle_exp_scalar
 

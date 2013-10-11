@@ -1,6 +1,6 @@
 MODULE modpk_utils
   use modpkparams
-  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic
+  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic, parameter_loop_samp
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -8,15 +8,17 @@ MODULE modpk_utils
      module procedure rkck_c
   END INTERFACE
 
-  !Local variable; if true, then switch to using Q variable
+  !If true, then switch to using Q variable
   logical, private :: using_q_superh=.false.
+  !If true, then switch to using cosmic time; for pre-inflation integration
+  logical, private :: using_cosmic_time=.false.
 
 CONTAINS
 
   !Background derivatives y'=f(y)
   SUBROUTINE bderivs(x,y,yprime)
     USE modpkparams
-    USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getHdot
+    USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getdHdalpha
     USE camb_interface, ONLY : pk_bad
     real(dp), INTENT(IN) :: x
     real(dp), DIMENSION(:), INTENT(IN) :: y
@@ -41,6 +43,8 @@ CONTAINS
 
     IF(dot_product(delp,delp) .gt. 6.0d0) THEN
        WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
+       write(*,*) 'Check if V~=0, since makes H unstable'
+       write(*,*) 'Pot=', pot(p)
        write(*,*) 'Eps=',0.5*dot_product(delp,delp)
        write(*,*) 'E-fold=',x
        write(*,*) "Phi=",p
@@ -56,19 +60,20 @@ CONTAINS
           yprime(2)=0.0d0
           RETURN
        ENDIF
-       if (sampling_techn/=reg_samp) then
+       if (sampling_techn==reg_samp .or. sampling_techn==parameter_loop_samp) then
+         WRITE(*,*) 'MODPK: QUITTING'
+         write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
+         if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
+         STOP
+       else
          !Override this error and return
          pk_bad=bad_ic
          return
        end if
-       WRITE(*,*) 'MODPK: QUITTING'
-       write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
-       if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
-       STOP
     END IF
 
     hubble=getH(p,delp)
-    dhubble=getHdot(p,delp)
+    dhubble=getdHdalpha(p,delp)
 
     !MULTIFIELD
     yprime(1 : size(y)/2) = delp
@@ -79,7 +84,7 @@ CONTAINS
     !Derivs in cosmic time
     !yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delp - dVdphi(p)
 
-    !END MULTIFIELD 
+    !END MULTIFIELD
 
     RETURN
 
@@ -90,7 +95,7 @@ CONTAINS
   SUBROUTINE derivs(x,y,yprime)
     USE modpkparams
     USE internals
-    USE potential, ONLY: pot, dVdphi, d2Vdphi2, getH, getHdot, getEps, getEta
+    USE potential, ONLY: pot, dVdphi, d2Vdphi2, getH, getdHdalpha, getEps, getEta
     USE camb_interface, ONLY : pk_bad
     IMPLICIT NONE
     real(dp), INTENT(IN) :: x
@@ -98,7 +103,7 @@ CONTAINS
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: yprime
 
     ! background quantity
-    real(dp) :: hubble, dhubble, a, epsilon, dotphi, eta
+    real(dp) :: hubble, dhubble, scale_factor, epsilon, dotphi, eta
     real(dp) :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
     real(dp), DIMENSION(num_inflaton) :: phi, delphi, Vp
     real(dp), DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
@@ -154,8 +159,8 @@ CONTAINS
     END IF
 
     hubble=getH(phi,delphi)
-    dhubble=getHdot(phi,delphi)
-    a=EXP(x)
+    dhubble=getdHdalpha(phi,delphi)
+    scale_factor=a_init*EXP(x)
 
     ! Alias y's into real variable names
     ! NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
@@ -184,11 +189,11 @@ CONTAINS
 
     if (using_q_superh) then
       yprime(index_ptb_vel_y:index_tensor_y-1) = -(3.0e0_dp - epsilon)*dpsi &
-        - (k/a_init/a/hubble)**2*psi &
+        - (k/scale_factor/hubble)**2*psi &
         -dot(Cab, psi)/hubble**2
     else
       yprime(index_ptb_vel_y:index_tensor_y-1) = -(1.0e0_dp - epsilon)*dpsi &
-        - (k/a_init/a/hubble)**2*psi &
+        - (k/scale_factor/hubble)**2*psi &
         + (2.0e0_dp - epsilon)*psi - dot(Cab, psi)/hubble**2
     end if
 
@@ -196,17 +201,17 @@ CONTAINS
     ! tensors
     yprime(index_tensor_y) = dv
     if (using_q_superh) then
-      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv - (k/a_init/a/hubble)**2*v
+      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv - (k/scale_factor/hubble)**2*v
     else
       yprime(index_tensor_y+1) = -(1.0e0_dp - epsilon)*dv - &
-        (k/a_init/a/hubble)**2*v + (2.0e0_dp - epsilon)*v
+        (k/scale_factor/hubble)**2*v + (2.0e0_dp - epsilon)*v
     end if
 
     ! adiabatic ptb
     yprime(index_uzeta_y) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
     yprime(index_uzeta_y+1) = -(1.0e0_dp - epsilon)*du_zeta -&
-      (k/a_init/a/hubble)**2*u_zeta &
+      (k/scale_factor/hubble)**2*u_zeta &
       + (2.0e0_dp + 5.0e0_dp*epsilon - 2.0e0_dp*epsilon**2 + &
       2.0e0_dp*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
 
@@ -215,9 +220,6 @@ CONTAINS
     contains
 
       subroutine build_mass_matrix(mass_matrix)
-
-        !DEBUG
-        integer :: ii, jj
 
         real(dp), dimension(num_inflaton, num_inflaton), intent(out) :: mass_matrix
 
@@ -230,8 +232,6 @@ CONTAINS
                 (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
                 + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
         end if
-        !DEBUG
-        !write(314,*),log(a),((mass_matrix(ii,jj),ii=1,size(mass_matrix,1)),jj=1,size(mass_matrix,2))
 
       end subroutine build_mass_matrix
 
@@ -282,6 +282,7 @@ CONTAINS
 
   SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,hnext,derivs)
     USE ode_path
+    use camb_interface, only : pk_bad
     IMPLICIT NONE
     real(dp), DIMENSION(:), INTENT(INOUT) :: y
     real(dp), DIMENSION(:), INTENT(IN) :: dydx,yscal
@@ -311,6 +312,10 @@ CONTAINS
     h=htry
     do
        call rkck(y,dydx,x,h,ytemp,yerr,derivs)
+
+       !For possible error overrides in derivs
+       if (pk_bad /= 0) return
+
        errmax=maxval(abs(yerr(:)/yscal(:)))/eps
        if (errmax <= 1.0) exit
        htemp=SAFETY*h*(errmax**PSHRNK)

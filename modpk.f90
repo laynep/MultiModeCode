@@ -68,7 +68,7 @@ CONTAINS
     USE modpkparams
     USE internals
     USE powersp
-    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getHdot, field_bundle
+    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getdHdalpha, field_bundle
     USE modpk_utils, ONLY : locate, polint, derivs, qderivs, rkqs_c, array_polint
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
@@ -164,7 +164,9 @@ CONTAINS
 
     CALL polint(aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
     CALL polint(aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+
     a_ik=EXP(alpha_ik)*a_init
+
     x1=alpha_ik
 
 

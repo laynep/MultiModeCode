@@ -12,7 +12,7 @@ module modpk_icsampling
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4, mass_loop_samp=5
+    fromfile_samp=4, parameter_loop_samp=5
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
@@ -56,6 +56,8 @@ module modpk_icsampling
       real(dp) :: H, rho
       integer :: i,j
 
+      logical :: with_velocity
+
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
       dphi0_priors_max=priors_max(2,:)
@@ -95,36 +97,43 @@ module modpk_icsampling
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
-      else if (sampling_techn == fromfile_samp) then
+      else if (sampling_techn==parameter_loop_samp) then
 
-        !Get IC from a file
-#ifdef MPI
-!DEBUG
-print*, "sampling_techn==fromfile_samp doesn't work with MPI"
-stop
-#endif
+        if (potential_choice>2 .and. potential_choice/=11) then
+          print*, "parameter_loop_samp doesn't work for potential_choice=", potential_choice
+          stop
+        end if
 
-!DEBUG
-print*, "sampling_techn==fromfile_samp not yet working..."
-stop
-        open(newunit=icfile, file="initial_conditions.txt",&
-          form="unformatted",status="old")
-        !DEBUG
-        print*, "icfile", icfile
-        do j=1,10
-          read(icfile), (y_background(i),i=1,size(y_background))
-        print*, "size", size(y_background)
-        end do
-        !DEBUG
-        print*, "INITIAL COND", y_background
-        stop
-
-      else if (sampling_techn==mass_loop_samp) then
         !Get new vparams
-        call mass_spectrum_prior(vparams)
+        if (potential_choice==1) then
+          !N-quadratic -- m^2 phi^2
+          call n_quadratic_mass_looping(vparams)
 
-        !Set IC with zero velocity
-        call equal_displacement_ic(y_background, energy_scale)
+        else if (potential_choice==2) then
+          !N-flation (axions-cosine)
+          !call n_flation_looping(vparams, energy_scale)
+          call n_flation_random_prior(vparams)
+        else if (potential_choice==11) then
+          !N-quadratic w/intxn for lightest field
+          !m^2 phi^2 + phi_lightest^2 phi_i^2
+          call n_quadratic_mass_intxn_looping(vparams)
+
+        end if
+
+
+        !Set IC with either (V=0 and KE) or (KE=0 and V)
+        with_velocity = .false.
+
+
+        if (with_velocity) then
+          !Set IC with zero potential
+          print*, "Setting IC with zero potential"
+          call zero_potential_ic(y_background, energy_scale)
+        else
+          !Set IC with zero velocity
+          print*, "Setting IC with zero velocity"
+          call equal_displacement_ic(y_background, energy_scale)
+        end if
 
       else
         print*, "ERROR: Sampling technique hasn't been implemented."
@@ -135,7 +144,7 @@ stop
       phi0 = y_background(1:num_inflaton)
       dphi0 = y_background(num_inflaton+1:2*num_inflaton)
 
-      !NB: Convert dphidt-->dphidN
+      !Convert dphidt-->dphidN
       rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)
       H=sqrt(rho/3.0e0_dp)
       dphi0 = H*y_background(num_inflaton+1:2*num_inflaton)
@@ -381,6 +390,8 @@ print*, new_measure
 
 	    do ll=1,maxtry
 
+        y = 0e0_dp
+
         call unconstrained_ic(y, &
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
@@ -407,8 +418,11 @@ print*, new_measure
     	    rho_not_alloc = energy_scale**4 - pot(phi) -&
             0.5e0_dp*sum(dphi*dphi)
 
+          !DEBUG
+          print*, "rho_not_alloc", rho_not_alloc
 
-	    	  if (abs(rho_not_alloc)<1e-25) then
+
+	    	  if (abs(rho_not_alloc)<1e-25 .or. isnan(rho_not_alloc)) then
             print*, "IC off shell ------------- cycling", ll
             if (ll==maxtry) then
               print*, "    Energy overrun =", rho_not_alloc
@@ -501,7 +515,7 @@ print*, new_measure
         phi0_priors_min, phi0_priors_max, &
         dphi0_priors_min, dphi0_priors_max)
 
-      real(dp), dimension(num_inflaton*2), intent(out) :: y
+      real(dp), dimension(num_inflaton*2), intent(inout) :: y
       real(dp), dimension(num_inflaton), intent(in) :: phi0_priors_min, &
         phi0_priors_max, dphi0_priors_min, dphi0_priors_max
 
@@ -818,6 +832,7 @@ print*, new_measure
       integer :: n, i, j
 
       n = size(y)
+      y=0e0_dp
 
       if (n>1) then
         allocate(theta(n-1))
@@ -864,25 +879,66 @@ print*, new_measure
 
       real(dp), dimension(num_inflaton*2), intent(out) :: y
       real(dp), intent(in) :: energy_scale
-      real(dp) :: m2(num_inflaton), E4
+      real(dp) :: E4
+      real(dp), dimension(num_inflaton) :: m2, l4, f
+
+      !Energy displacement for every field IC
+      E4 = energy_scale**4/num_inflaton
 
       !N-quadratic, m^2*phi^2
       if (potential_choice==1) then
-        !Energy displacement for every field IC
-        E4 = energy_scale**4/num_inflaton
         !Masses
         m2 = 10.d0**(vparams(1,:))
 
         y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
 
-        y(num_inflaton+1:2*num_inflaton) = 0e0_dp
+      else if (potential_choice==2) then
+        !N-flation axions
+
+        l4 = 10.d0**vparams(1,:)
+        f = 10.d0**vparams(2,:)
+
+        y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
+        if (any(isnan(y))) then
+          print*, "ERROR: y has a NaN in equal_displacement_ic."
+          stop
+        end if
+
+      !N-quadratic with intxn w/lightest field, m^2*phi^2+phi_light^2 phi_i^2
+      !Just displace same as m^2phi^2
+      else if (potential_choice==11) then
+        !Masses
+        m2 = 10.d0**(vparams(1,:))
+
+        y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
       else
         write(*,*) "Error in equal_displacement_ic:"
         write(*,*) "potential_choice=",potential_choice,"not supported."
         stop
       end if
 
+      y(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
     end subroutine equal_displacement_ic
+
+    !For a sum-separable potential only
+    !Set IC for each field at an equal displacement from the local minimum
+    !as measured by energy
+    subroutine zero_potential_ic(y,energy_scale)
+
+      real(dp), dimension(num_inflaton*2), intent(inout) :: y
+      real(dp), intent(in) :: energy_scale
+      real(dp) :: KE
+      !real(dp), dimension(num_inflaton) :: phi, dphi
+
+      y(1:num_inflaton) = 0.1e-10
+
+      KE = energy_scale**4 - pot(y(1:num_inflaton))
+
+      call constrain_via_thetas(y(num_inflaton+1:2*num_inflaton),&
+        sqrt(2.0e0_dp*KE))
+
+    end subroutine zero_potential_ic
 
     !Sets the masses in N-quadratic inflation according to hep-th/0512102
     !Easther-McAllister
@@ -891,7 +947,7 @@ print*, new_measure
     !subroutine mass_spectrum_nflation(vpnew)
 
     !Chooses masses from flat/log priors
-    subroutine mass_spectrum_prior(vpnew, mass_ratio)
+    subroutine n_quadratic_mass_looping(vpnew, mass_ratio)
 
       real(dp), intent(inout), dimension(1,num_inflaton) :: vpnew
       real(dp), optional :: mass_ratio
@@ -899,12 +955,12 @@ print*, new_measure
       integer :: i, prior
       integer, parameter :: unif_param=0, log_param=1
 
-      if (size(vparams,1) /=1 .or. size(vparams,2) /= num_inflaton) then
-        write(*,*), "Error: vparams of wrong order."
-        write(*,*), "size(vparams,2) /= num_inflaton or"
-        write(*,*), "size(vparams,1) /= 1."
-        stop
-      end if
+      !if (size(vparams,1) /=1 .or. size(vparams,2) /= num_inflaton) then
+      !  write(*,*), "Error: vparams of wrong order."
+      !  write(*,*), "size(vparams,2) /= num_inflaton or"
+      !  write(*,*), "size(vparams,1) /= 1."
+      !  stop
+      !end if
 
       !m2 set at random (unif on m^2) w/max prior range set by max mass
       !ratio; ratio_max=m2_lightest/m2_heaviest
@@ -935,6 +991,164 @@ print*, new_measure
 
       print*, "mass ratio",sqrt((10e0**vpnew(1,:))/(10e0**vpnew(1,1)))
 
-    end subroutine mass_spectrum_prior
+    end subroutine n_quadratic_mass_looping
+
+    !Chooses masses from flat/log priors
+    subroutine n_quadratic_mass_intxn_looping(vpnew)
+
+      real(dp), intent(inout), dimension(2,num_inflaton) :: vpnew
+      real(dp) :: rand, intxn_min, intxn_max
+      integer :: i, prior
+      integer, parameter :: unif_param=0, log_param=1
+
+      !Set masses as in N-quadratic
+      call n_quadratic_mass_looping(vpnew(1,:))
+
+      !Set intxn term over interval
+
+      intxn_max = 1e-12_dp
+      prior = log_param
+
+      do i=1, size(vpnew,2)
+        call random_number(rand)
+        if (prior==unif_param) then
+          intxn_min = 0e0_dp
+          vpnew(2,i) = log10(rand*(intxn_max-intxn_min)+intxn_min)
+
+        else if (prior==log_param) then
+          intxn_min = -20e0_dp
+
+          vpnew(2,i) = rand*(log10(intxn_max)-intxn_min)+intxn_min
+
+        else
+          write(*,*) "Prior not supported. prior=", prior
+          stop
+        end if
+      end do
+
+      !DEBUG
+      print*, "Vparams from n_quadratic_mass_intxn_looping"
+      do i=1,2
+        write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
+      end do
+
+
+
+    end subroutine n_quadratic_mass_intxn_looping
+
+
+    !Place priors on the terms in expansion of the cos term into
+    ! 0.5*m^2phi^2 - (1/24)*alpha^2*phi^4
+    subroutine n_flation_looping(vpnew, energy_scale, mass_ratio)
+
+      real(dp), intent(inout), dimension(2,num_inflaton) :: vpnew
+      real(dp), intent(in) :: energy_scale
+      real(dp), optional :: mass_ratio
+      real(dp), dimension(num_inflaton) :: logmasses2, alpha4, masses2, alpha_max4,&
+        lambda,f
+      real(dp) :: ratio_max, rand
+      integer :: i, prior
+      integer, parameter :: unif_param=0, log_param=1
+
+      if (size(vparams,1) /=2 .or. size(vparams,2) /= num_inflaton) then
+        write(*,*), "Error: vparams of wrong order."
+        write(*,*), "size(vparams,2) /= num_inflaton or"
+        write(*,*), "size(vparams,1) /= 2."
+        stop
+      end if
+
+      !m2 set at random (unif on m^2) w/max prior range set by max mass
+      !ratio; ratio_max=m2_lightest/m2_heaviest
+      if (present(mass_ratio)) then
+        ratio_max = mass_ratio
+      else
+        ratio_max = 10.0e0_dp
+      end if
+
+
+      !prior = log_param
+      prior = unif_param
+
+      !Get masses**2
+      logmasses2 = 0e0_dp
+      !logmasses2(1) = minval(vparams(1,:))
+      logmasses2(1) = -10.091514981121351e0_dp
+      do i=2,num_inflaton
+        call random_number(rand)
+        if (prior == unif_param) then
+          rand = rand*(ratio_max-1.0e0_dp) + 1.0e0_dp
+          logmasses2(i) = logmasses2(1)+2.0e0_dp*log10(rand)
+        else if (prior == log_param) then
+          rand = rand*2.0e0_dp*log10(ratio_max)
+          logmasses2(i) = logmasses2(1)+rand
+        else
+          write(*,*) "Prior not supported. prior=", prior
+          stop
+        end if
+      end do
+      masses2 = 10.0e0_dp**logmasses2
+
+      !Get quartic expansion term
+      do i=1,num_inflaton
+        call random_number(rand)
+        alpha4(i) = (masses2(i)*rand)**2
+      end do
+
+      !Convert to vparams for lambda and f
+      lambda(:) = (masses2(:)**0.5)/(alpha4(:)**0.25)
+      f(:) = (masses2(:)**0.5)/(alpha4(:)**0.5)
+
+      vpnew(1,:) = log10(lambda(:))
+      vpnew(2,:) = log10(f(:))
+
+      !Set max val of alpha st quadratic energy = quartic energy initially
+      !alpha_max4= (6.0e0_dp*num_inflaton*masses2**2)/energy_scale**4
+
+      !alpha4=0e0_dp
+
+      !do i=1,num_inflaton
+      !  call random_number(rand)
+      !  if (prior == unif_param) then
+      !    alpha4(i) = rand*alpha_max4(i)
+      !  else if (prior == log_param) then
+      !    rand = rand*log10(alpha_max4(i))-20.0e0_dp
+      !    alpha4(i) = 10.0e0_dp**(rand)
+      !  else
+      !    write(*,*) "Prior not supported. prior=", prior
+      !    stop
+      !  end if
+      !end do
+
+
+      print*, "mass ratio",sqrt((10e0**logmasses2(:))/(10e0**logmasses2(1)))
+      print*, "alpha4",alpha4
+      print*, "lambda", lambda
+      print*, "f", f
+      print*, "masses2", masses2
+
+
+    end subroutine n_flation_looping
+
+
+    subroutine n_flation_random_prior(vpnew)
+
+      real(dp), intent(inout), dimension(2,num_inflaton) :: vpnew
+      real(dp) :: rand
+      real(dp), dimension(num_inflaton) :: ranges_l, ranges_f
+      integer :: i
+
+      ranges_l = (/-5.0d0, -1.96d0  /)
+      ranges_f = (/ 0.5d0, 1.3d0  /)
+
+      do i=1,num_inflaton
+        call random_number(rand)
+        vpnew(1,i)=rand*(ranges_l(2)-ranges_l(1))+ ranges_l(1)
+        call random_number(rand)
+        vpnew(2,i)=rand*(ranges_f(2)-ranges_f(1))+ ranges_f(1)
+      end do
+
+
+    end subroutine n_flation_random_prior
+
 
 end module modpk_icsampling

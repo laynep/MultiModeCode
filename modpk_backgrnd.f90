@@ -4,7 +4,7 @@ MODULE background_evolution
   USE modpk_odeint
   USE ode_path
   USE powersp
-  USE potential, ONLY : pot,getH, getHdot, dVdphi, getEps, d2Vdphi2
+  USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2
   USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -13,7 +13,7 @@ CONTAINS
 
   SUBROUTINE backgrnd
     use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
-      dphi_iso_N, sampling_techn, eqen_samp, bad_ic
+      dphi_iso_N, sampling_techn, eqen_samp, bad_ic, slowroll_samp, reg_samp
 
     INTEGER*4 :: i,j, rescl_count
 
@@ -43,12 +43,12 @@ CONTAINS
     !     y(2)=dphi/dx          dydx(1)=d^2phi/dx^2
 
     if (.not. allocated(phi_init)) then
-      PRINT*, 'MODPK: Please initialize phi_ini as an array!'
+      PRINT*, 'MODPK: Please initialize phi_init as an array!'
       stop
     end if
 
     if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
-    if (modpkoutput .and. sampling_techn==eqen_samp) &
+    if (modpkoutput .and. sampling_techn/=slowroll_samp) &
       write(*, array_fmt) 'dphi_init =', dphi_init0
 
 
@@ -105,10 +105,10 @@ CONTAINS
 
        if (pk_bad .ne. 0) then
          !Override specific errors when doing IC sampling
-          if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+         if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
 
-          print*, 'MODPK: pk_bad = ', pk_bad
-          stop
+         print*, 'MODPK: pk_bad = ', pk_bad
+         stop
        end if
     end if
     !END MULTIFIELD
@@ -133,6 +133,7 @@ CONTAINS
        !MULTIFIELD
 
        IF (instreheat) THEN
+
           a_init = EXP(-71.1d0 - alpha_e + LOG(V_i/V_end)/4.d0 + LOG((M_Pl**4)/V_i)/4.d0)
           Np_last = 0.5d0*N_pivot
           do while (abs(N_pivot-Np_last)>0.01d0)  ! determine N_pivot iteratively
@@ -180,8 +181,25 @@ CONTAINS
           end if
 
           a_init=k_pivot*Mpc2Mpl/H_pivot/EXP(alpha_pivot)
+
+
           a_end=EXP(alpha_e)*a_init
+
           a_end_inst=EXP(-71.1d0+LOG(V_i/V_end)/4.d0+LOG((M_Pl**4)/V_i)/4.d0)
+
+          if (isnan(a_end) .or. a_end<1.0d-100) then
+            print*, "MODPK: a_end=", a_end
+            print*, "MODPK: N_efold=", alpha_pivot
+            print*, "MODPK: likely too many efolds before"
+            print*, "MODPK: pivot scale leaves horizon"
+            if (sampling_techn/=reg_samp) then
+              pk_bad = bad_ic
+            else
+              stop
+            end if
+
+          end if
+
           IF (a_end .GT. a_end_inst) THEN
              PRINT*,'MODPK: inflation ends too late with this N_pivot.'
              pk_bad=3
@@ -189,7 +207,9 @@ CONTAINS
           ENDIF
        END IF
 
+
        a_pivot = EXP(alpha_pivot)*a_init
+
        N_tot = alpha_e - lna(1)
 
        if (modpkoutput) then
@@ -210,7 +230,8 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
-    use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic
+    use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic,&
+      slowroll_samp
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -251,14 +272,14 @@ CONTAINS
     !Set the ICS
     y(1 : size(y)/2) = phi_init_trial  !phi(x1)
 
-    if (sampling_techn==eqen_samp) then
-      !Set w/equal energy, not necess close to SR
-      y(size(y)/2+1 : (size(y))) = dphi_init0
-
-    else
+    if (sampling_techn==slowroll_samp .or. sampling_techn==reg_samp) then
       !dphi/dalpha(x1) slowroll approx
       y(size(y)/2+1 : (size(y))) = &
         -dVdphi(phi_init_trial)/3./h_init/h_init
+
+    else
+      !Set w/equal energy, not necess close to SR
+      y(size(y)/2+1 : (size(y))) = dphi_init0
     end if
     !END MULTIFIELD
 
@@ -288,6 +309,7 @@ CONTAINS
     dxsav=1.d-7
     accuracy=1.0d-7
     hmin=0.0 !minimum stepsize
+
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
     if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) then

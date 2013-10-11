@@ -187,9 +187,15 @@ bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi,
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
 calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
 calculate_pk_observables_per_IC	testm.f90	/^    subroutine calculate_pk_observables_per_IC(k_p/
+check_for_NaN	modpk_odeint.f90	/^    subroutine check_for_NaN()$/
+check_for_eternal_inflation	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation()$/
+check_for_too_many_steps	modpk_odeint.f90	/^    subroutine check_for_too_many_steps()$/
+check_for_underflow	modpk_odeint.f90	/^    subroutine check_for_underflow()$/
+check_infl_ended_for_nonSRbreakmodels	modpk_odeint.f90	/^    subroutine check_infl_ended_for_nonSRbreakmode/
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
 constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(y, radius)$/
+convert_q_to_u	modpk_odeint.f90	/^    subroutine convert_q_to_u()$/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
 d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
 dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
@@ -224,13 +230,13 @@ fderivsv	equations.f90	/^        subroutine fderivsv(EV,n,tau,yv,yvprime)$/
 find_z	modules.f90	/^       subroutine find_z(func,zout)  !find redshif/
 getEps	modpk_potential.f90	/^  FUNCTION getEps(phi,dphi)$/
 getH	modpk_potential.f90	/^  FUNCTION getH(phi,dphi)$/
-getHdot	modpk_potential.f90	/^  FUNCTION getHdot(phi,dphi)$/
 getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
 get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
 get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
 get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,/
 get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
 getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
+getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(phi,dphi)$/
 getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(phi,dphi)$/
 geteta	modpk_potential.f90	/^  FUNCTION geteta(phi, dphi)$/
 getrhodot	modpk_potential.f90	/^    function getrhodot(phi,dphi) result(rhodot)$/
@@ -257,9 +263,11 @@ lens_Cls	lensing.f90	/^subroutine lens_Cls$/
 locate	modpk_utils.f90	/^  FUNCTION locate(xx,x)$/
 make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
 make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
-mass_spectrum_prior	modpk_icsampling.f90	/^    subroutine mass_spectrum_prior(vpnew, mass_rat/
 min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
 mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize()$/
+n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(vpnew, energy_sca/
+n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(vpnew)$/
+n_quadratic_mass_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_looping(vpnew, mas/
 normal_array	modpk_rng.f90	/^function normal_array(n,mean,std) result(normal)$/
 normal_scalar	modpk_rng.f90	/^function normal_scalar(mean,std) result(scalar)$/
 nuRhoPres	modules.f90	/^        subroutine nuRhoPres(am,rhonu,pnu)$/
@@ -323,6 +331,7 @@ spline_integrate	subroutines.f90	/^      subroutine spline_integrate(x,y,y2,yint
 splinepow	power_tilt.f90	/^     SUBROUTINE splinepow(x,y,n,yp1,ypn,y2)$/
 splini	subroutines.f90	/^        subroutine splini(g,n)$/
 splint	subroutines.f90	/^        subroutine splint(y,z,n)$/
+start_using_q_var	modpk_odeint.f90	/^    subroutine start_using_q_var()$/
 tanfunc	modules.f90	/^         function tanfunc(Chi)$/
 test_bad	testm.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
 thermo	modules.f90	/^        subroutine thermo(tau,cs2b,opacity, dopaci/
@@ -331,3 +340,4 @@ trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(phi) result
 trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(phi_init_trial, alph/
 unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(y, &$/
 wint	halofit.f90	/^      subroutine wint(CAMB_Pk,itf,r,sig,d1,d2)$/
+zero_potential_ic	modpk_icsampling.f90	/^    subroutine zero_potential_ic(y,energy_scale)$/
