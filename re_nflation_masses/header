@@ -1,0 +1,16 @@
+ 	
+	integer NMAX,MAXPTS,ktop,kount,MAXFIELDS
+	Parameter(MAXFIELDS=1000,NMAX =2*MAXFIELDS+2,MAXPTS =10000)	
+	real*8 xp(MAXPTS),yp(MAXFIELDS,MAXPTS)
+	real*8 dxsav,msqd(MAXFIELDS)
+	real*8 PI
+	parameter(PI=3.1415926535897932385)
+
+	integer nval,pval,neqs
+	real*8 lambda,planck4,mass4
+
+	COMMON /path/ ktop,kount,dxsav,xp,yp
+	COMMON /params/ lambda,mass4,planck4,beta
+	COMMON /masses/msqd
+	
+	COMMON /size/nval,pval,neqs
