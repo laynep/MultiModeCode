@@ -113,7 +113,9 @@ program test_mmodpk
 
     do i=1,numb_samples
 
-      print*, "sample numb", i, "of", numb_samples
+      print*, "---------------------------------------------"
+      print*, "Sample numb", i, "of", numb_samples
+      print*, "---------------------------------------------"
 
       call calculate_pk_observables_per_IC(k_pivot,dlnk)
 
@@ -130,7 +132,6 @@ program test_mmodpk
 #endif
 
   contains
-
 
     subroutine open_output_files()
 
@@ -300,7 +301,7 @@ program test_mmodpk
 
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice
-      write(*, e_fmt) "log10(m^2) =", vparams(1,1)
+      !write(*, e_fmt) "log10(m^2) =", vparams(1,1)
       write(*, e_fmt) "N_pivot =", N_pivot
       write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', sqrt(4*N_pivot + phi_infl_end(1)**2), ')'
       ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
@@ -308,18 +309,18 @@ program test_mmodpk
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure) 
       write(*, e2_fmt) "Ps =", As(1), '(', N_pivot*H_pivot**2/(4*PI**2), ')'
-      write(*, *), As(1), Az(1)
-      write(*, *), As(2), Az(2)
-      write(*, *), As(3), Az(3)
+      !write(*, *), As(1), Az(1)
+      !write(*, *), As(2), Az(2)
+      !write(*, *), As(3), Az(3)
       write(*, e2_fmt), "Isocurvature P =", A_iso(1)
-      write(*, e2_fmt), "Isocurvature P =", A_iso(2)
-      write(*, e2_fmt), "Isocurvature P =", A_iso(3)
+      !write(*, e2_fmt), "Isocurvature P =", A_iso(2)
+      !write(*, e2_fmt), "Isocurvature P =", A_iso(3)
       write(*, e2_fmt), "Pnad P =", A_pnad(1)
-      write(*, e2_fmt), "Pnad P =", A_pnad(2)
-      write(*, e2_fmt), "Pnad P =", A_pnad(3)
+      !write(*, e2_fmt), "Pnad P =", A_pnad(2)
+      !write(*, e2_fmt), "Pnad P =", A_pnad(3)
       write(*, e2_fmt), "Entropy P =", A_ent(1)
-      write(*, e2_fmt), "Entropy P =", A_ent(2)
-      write(*, e2_fmt), "Entropy P =", A_ent(3)
+      !write(*, e2_fmt), "Entropy P =", A_ent(2)
+      !write(*, e2_fmt), "Entropy P =", A_ent(3)
       write(*, e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
       write(*, e2_fmt) "Pt/Ps =", r, '(', 16*epsilon, ')'
 
@@ -380,15 +381,9 @@ program test_mmodpk
     end subroutine DEBUG_writing_etc
 
     !Calculate observables, but grab a new IC each time called
-    !subroutine calculate_pk_observables_per_IC(k_pivot,dlnk,As,ns,r,nt,&
-    !    alpha_s, A_iso, A_pnad, A_ent, A_bundle,&
-    !    n_iso, n_pnad, n_ent)
     subroutine calculate_pk_observables_per_IC(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
-      !real(dp), intent(out) :: As,ns,r,nt, alpha_s
-      !real(dp), intent(out) :: A_iso, A_pnad, A_ent, A_bundle
-      !real(dp), intent(out) :: n_iso, n_pnad, n_ent
       real(dp) :: As,ns,r,nt, alpha_s
       real(dp) :: A_iso, A_pnad, A_ent, A_bundle
       real(dp) :: n_iso, n_pnad, n_ent
@@ -438,7 +433,6 @@ program test_mmodpk
           leave)
         if (leave) return
 
-      !DEBUG
       ps0= pk0%adiab
       ps1= pk1%adiab
       ps2= pk2%adiab
@@ -458,6 +452,11 @@ program test_mmodpk
       pent1=pk1%entropy
       pent2=pk2%entropy
 
+      A_iso=ps0_iso
+      A_pnad=pnad0
+      A_ent=pent0
+      A_bundle=field_bundle%exp_scalar
+
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
       call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
 
@@ -473,10 +472,6 @@ program test_mmodpk
       n_pnad=log(pnad2/pnad1)/dlnk/2.d0
       n_ent=log(pent2/pent1)/dlnk/2.d0
 
-      A_iso=ps0_iso
-      A_pnad=pnad0
-      A_ent=pent0
-      A_bundle=field_bundle%exp_scalar
 
       call output_observables(pk_arr,pk_iso_arr, &
         (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &

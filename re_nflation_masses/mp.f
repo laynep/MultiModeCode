@@ -15,7 +15,7 @@
 
       beta = 0.5d0
       mass4 = 1d0
-      nval = 500
+      nval = 120
 
 
       if(beta.ne.0d0) then ! beta = 0 all masses identical

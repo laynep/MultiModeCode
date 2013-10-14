@@ -57,6 +57,7 @@ module modpk_icsampling
       integer :: i,j
 
       logical :: with_velocity
+      real(dp) :: beta, rand
 
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
@@ -107,7 +108,17 @@ module modpk_icsampling
         !Get new vparams
         if (potential_choice==1) then
           !N-quadratic -- m^2 phi^2
-          call n_quadratic_mass_looping(vparams)
+
+          !call n_quadratic_mass_looping(vparams)
+
+          if (numb_samples > 1) then
+            call random_number(rand)
+            beta = rand*(0.3d0) + 0.35d0
+          else
+            beta = 0.5d0
+          end if
+
+          call mass_spectrum_nflation(vparams,beta)
 
         else if (potential_choice==2) then
           !N-flation (axions-cosine)
@@ -940,11 +951,6 @@ print*, new_measure
 
     end subroutine zero_potential_ic
 
-    !Sets the masses in N-quadratic inflation according to hep-th/0512102
-    !Easther-McAllister
-    !........
-    !Not yet working.
-    !subroutine mass_spectrum_nflation(vpnew)
 
     !Chooses masses from flat/log priors
     subroutine n_quadratic_mass_looping(vpnew, mass_ratio)
@@ -1149,6 +1155,215 @@ print*, new_measure
 
 
     end subroutine n_flation_random_prior
+
+    !Sets the masses in N-quadratic inflation according to hep-th/0512102
+    !Easther-McAllister
+    !........
+
+    SUBROUTINE mass_spectrum_nflation(msqd, beta)
+      implicit none
+
+      !real(dp), Parameter ::  PI=3.1415926535897932385
+
+      integer argnum
+
+      Integer loop1
+      real(dp) h1,start,finish,deltaM,delta
+
+      real(dp) ::  mass4
+
+      real(dp), intent(in) :: beta
+      real(dp), dimension(:,:), intent(out) :: msqd
+      integer  :: nval
+
+      nval = size(msqd,2)
+
+      mass4 = 1d0
+
+      if(beta.ne.0d0) then ! beta = 0 all masses identical
+
+        ! set mass terms
+        msqd(1,1) = (1d0-sqrt(beta))**2
+
+        deltaM = ((1d0+sqrt(beta))**2 -(1d0-sqrt(beta))**2)/real(nval-1)
+
+        delta = 1d0/real(nval-1)
+
+        do loop1 = 2,nval-1
+        start = msqd(1,loop1-1)
+        finish = bisect(start,delta,start,start+deltaM)
+        msqd(1,loop1) = finish
+        enddo
+
+        msqd(1,nval) = (1d0+sqrt(beta))**2
+
+
+        do loop1 =1,nval
+        msqd(1,loop1) = mass4**2 * msqd(1,loop1)
+        enddo
+
+
+      else
+        do loop1=1,nval
+        msqd(1,loop1) = mass4**2
+        enddo
+      endif
+
+
+      !Setting mass scale by hand.
+      !See Eq 4.6 in hep-th/0512102
+      msqd = msqd*(1e-5_dp**2)
+
+
+
+      !Convert to vparams
+      msqd = log10(msqd)
+
+
+    contains
+
+
+      !----------------------------------------------------------------------------------------------
+      !
+      !
+      !
+      !
+      pure real(dp) function partial(x,y)
+        implicit none
+
+
+        real(dp), intent(in) :: x, y
+        real(dp) s
+
+        call qtrap(x,y,s)
+        partial = s
+
+      end function
+
+      !---------------------------------------------------------------------------------------------
+      !     marchenko-pastur distribution, with modification to exclude delta
+      !     -fn at origin. (Multiplied by beta)
+
+      pure function pdf(x)
+        implicit none
+
+        real(dp) :: pdf
+
+
+        real(dp) sb
+        real(dp), intent(in) :: x
+
+        sb = sqrt(beta)
+
+
+        if(x.lt.(1d0-sb)**2) then
+          pdf = 0d0
+          return
+        endif
+
+        if(x.gt.(1d0+sb)**2) then
+          pdf = 0d0
+          return
+        endif
+        pdf = sqrt((x-(1d0-sb)**2)*((1d0+sb)**2-x))/(2d0 *pi* x)/beta
+        return
+      end function
+
+      !----------------------------------------------------------------------------------------------
+      !
+      !     a quick and dirty bisection rountine.
+      !
+
+      pure real(dp) function bisect(base,target,lostart,histart)
+        implicit none
+
+
+        real(dp) hi,lo
+        real(dp), intent(in) :: target, base,lostart,histart
+
+        real(dp) midpt,midval,hival,loval
+
+        lo = lostart
+        hi = histart
+
+        hival = partial(base,hi)-target
+
+        loval = partial(base,lo)-target
+
+
+        do while(hival.lt.0d0)
+        hi = hi + (hi-lo)
+        hival = partial(base,hi) -target
+        enddo
+
+
+        do while( (hi-lo).gt.10d-10)
+        midpt = lo+(hi-lo)/2d0
+        midval = partial(base,midpt)-target
+        if(loval*midval.ge.0d0) then ! loval and midval have same sign
+          loval = midval
+          lo =midpt
+        else
+          hival=midval
+          hi = midpt
+        endif
+        enddo
+
+        bisect = lo + (hi-lo)/2d0
+        return
+      end function
+
+      pure SUBROUTINE qtrap(a,b,s)
+        implicit none
+        INTEGER JMAX
+        real(dp), intent(in) :: a,b
+        real(dp), intent(out) :: s
+        real(dp) :: EPS
+        PARAMETER (EPS=1.d-8, JMAX=200)
+        INTEGER j
+        real(dp) olds
+        olds=-1.d30
+
+        do j=1,JMAX
+        call trapzd(a,b,s,j)
+        if (abs(s-olds).lt.EPS*abs(olds)) return
+        if (s.eq.0.d0.and.olds.eq.0.d0.and.j.gt.6) return
+        olds=s
+        end do
+
+      END SUBROUTINE
+
+      pure SUBROUTINE trapzd(a,b,s,n)
+        implicit none
+        INTEGER, intent(in) :: n
+        real(dp), intent(in) :: a,b
+        real(dp), intent(out) :: s
+        INTEGER it,j
+        real(dp) del,sum,tnm,x
+
+
+        if (n.eq.1) then
+          s=0.5d0*(b-a)*(pdf(a)+pdf(b))
+        else
+
+          it=2**(n-2)
+          tnm=it
+          del=(b-a)/tnm
+          x=a+0.5d0*del
+          sum=0.d0
+
+          do j=1,it
+          sum=sum+pdf(x)
+          x=x+del
+          end do
+
+          s=0.5d0*(s+(b-a)*sum/tnm)
+        endif
+        return
+      END SUBROUTINE
+
+
+    end SUBROUTINE mass_spectrum_nflation
 
 
 end module modpk_icsampling
