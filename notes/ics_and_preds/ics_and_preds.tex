@@ -1,0 +1,240 @@
+\documentclass[a4paper,11pt]{article}
+\pdfoutput=1
+\usepackage{color}
+
+\usepackage{jcappub}
+%\usepackage{amsthm}
+%\usepackage{caption}
+%\usepackage{subcaption}
+%\usepackage{epstopdf}
+%\usepackage[utf8x]{inputenc}
+%\usepackage{amsmath}
+%\usepackage{amsfonts}
+%\usepackage{cleveref}
+%\usepackage{graphicx}
+%\numberwithin{equation}{section}
+
+%Macros.
+%======
+%Scientific notation.
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+%Summary environment.
+%\newtheorem{summary}{Summary}
+%Equal energy set notation.
+\newcommand{\sete}[1]{{\ensuremath{\mathcal{#1}_E}}}
+%Initial velocity (subscript 0).
+\newcommand{\ivel}[1]{{\ensuremath{\dot{#1}_0}}}
+%Planck mass.
+\newcommand{\mpl}{{\ensuremath{M_\mathrm{Pl}}}}
+%Big O notation.
+\newcommand{\order}[1]{\ensuremath{\mathcal{O}(#1)}}
+
+%Stretch out space above and below rows in table.
+\renewcommand{\arraystretch}{1.2}
+
+%Citations.
+%=========
+%Everyone who has worked on initial conditions.
+\newcommand{\prev}{Lazarides:1996rk, Lazarides:1997vv, Tetradis:1997kp, Mendes:2000sq, Ramos:2001zw}
+%Relevant initial conditions people.
+\newcommand{\relevantprev}{Goldwirth:1990pm,Goldwirth:1991rj,Lazarides:1996rk, Lazarides:1997vv, Tetradis:1997kp, Mendes:2000sq, Clesse:2008pf, Clesse:2009ur}
+%Hybrid or two-field chaos.
+\newcommand{\chaosprev}{Ramos:2001zw, Clesse:2009ur}
+%Belgian group: Clesse, et al
+\newcommand{\clesse}{Clesse:2008pf,Clesse:2009ur}
+
+
+%Equations of motion
+\newcommand{\eom}{\eqref{eqn:hybrideom}--\eqref{eqn:hybridv} }
+
+%Author comments.
+%===============
+\newcommand{\re}[1]{\textcolor{green}{[{\bf RE}: #1]}}
+\newcommand{\lp}[1]{\textcolor{red}{[{\bf LP}: #1]}}
+\newcommand{\hp}[1]{\textcolor{blue}{[{\bf HP}: #1]}}
+\newcommand{\jf}[1]{\textcolor{cyan}{[{\bf JF}: #1]}}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Building prior probabilities for multifield inflation}
+
+\author[1]{Richard Easther,}
+\author[2]{Jonathan Frazer,}
+\author[2]{Hiranya V. Peiris,}
+\author[1]{and Layne C. Price}
+
+\affiliation[1]{Department of Physics \\  University of Auckland \\ Private Bag 92019 \\  Auckland, New Zealand}
+\affiliation[2]{Department of Physics and Astronomy \\  University College London \\ London WC1E 6BT, UK}
+
+\emailAdd{r.easther@auckland.ac.nz}
+\emailAdd{lpri691@aucklanduni.ac.nz}
+
+%\arxivnumber{test}
+\keywords{...}
+
+
+\begin{document}
+
+\abstract{abstract
+}
+
+\maketitle
+\flushbottom
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Outline}
+\label{sect:outline}
+
+\begin{enumerate}
+
+  \item Introduction
+
+    \begin{enumerate}
+
+      \item Review constraints on single-field inflation from \cite{Ade:2013rta} (and other ModeCode papers \cite{Mortonson:2010er,Easther:2011yq,Norena:2012rs}).  Explain method to constrain single-field inflation and why this breaks down for multiple fields.
+
+      \item In the context of Bayesian inverse problems, explain how the predictions for these models become the Bayesian prior.  Talk about the dependence of observables on initial conditions and explain why we're going to only explore the initial conditions dependence here: kinematic (ICs) vs dynamical (V) parameters.
+
+      \item Briefly mention the measure problem and how this isn't what we're doing.  Also mention other problems with this approach: multiple minima, multiple distinct ways to inflate.
+
+      \item Review the paper conclusions: models are predictive; almost no initial conditions dependence; low entropy.
+
+    \end{enumerate}
+
+  \item Quick review of calculations
+
+    \begin{enumerate}
+
+      \item Perturbations, mode-matrix, and power spectra including $\mathcal P_{\mathrm{ent}}$; general citations \cite{Salopek:1988qh,Sasaki:1998ug,Kim:2006te,Wands:2000dp}
+
+      \item Clearly explain gauge
+
+      \item Sketch (mention) conservation of $\zeta$ superhorizon when $P=P(\rho)$.  Citation here?
+
+      \item Describe relevant observables: $A_s$, $n_s$, $\alpha_s$, $r$, $A_{ent}$, ($f_{NL}$?)
+
+      \item Describe ModeCode procedure.  Explain the ``evolve'' routine.
+
+    \end{enumerate}
+
+  \item Choices of initial conditions
+
+    \begin{enumerate}
+
+      \item Review Jonny's generic turning point argument
+
+      \item No constraint and iso-velocity surfaces; correlation of different initial conditions given a certain potential $V$, as in \cite{Easther:2013bga}, leading to a non--iid distribution for $P(IC)$.
+
+      \item Therefore need a conditional prior $P(\mathrm{IC},V) = P(V) P(\mathrm{IC}|V)$ on the model parameters, where $P(\mathrm{IC}|V) \ne P(\mathrm{IC}) P(V)$.
+
+      \item Iso-N surface \cite{Frazer:2013zoa} and issues with defining this
+
+      \item Iso-E surface \cite{Easther:2013bga}
+
+
+    \end{enumerate}
+
+  \item Results
+
+    \begin{enumerate}
+
+      \item Models --- $N_f$--quadratic and interaction models
+
+      \item Plots and tables:
+
+        \begin{itemize}
+
+          \item Predictions of $\alpha$ vs $n_s$ for $N_f=2,3,9$ in $N_f$--quadratic
+
+          \item Predictions of $\alpha$ vs $n_s$ for $N_f=2,3,9$ in interacting model
+
+          \item 1D PDF for $n_s$ for a few fields $N_f=2,\dots,10$ in interacting models
+
+          \item Table of Shannon entropies
+
+            \begin{table}
+              \centering
+              \begin{tabular}{| c  c  c  c |}
+                \hline
+                Model & $N_f$ & IC & S \\
+                \hline
+                $m_i^2 \phi_i^2$            & 3 & iso-$E$ & 1000.0 \\
+                $m_i^2 \phi_i^2$            & 3 & iso-$N$ & 72.7   \\
+                $m_i^2 \phi_i^2$            & 3 & iso-$\dot \phi$ & 114.6  \\
+                \hline
+              \end{tabular}
+              \caption{test}
+              \label{table:ratio}
+            \end{table}
+
+        \end{itemize}
+
+      \item Shannon entropy as measure of PDF's predictivity $S = \sum_i P_i \log P_i$
+
+      \item Note that the model's ``predictivity'' by this measure is independent of $\dot \zeta =0$, ie, the model's prediction here just means that we have a statistically significant prediction we can make about the value of the power spectra (and higher correlators).  It may be that the isocurvature modes have not decayed and we might say that our ignorance of reheating makes the model not predictive in the sense that the $P(k)$ we need for CAMB is not well-defined.
+
+      \item Explain outliers and bid-for-freedom
+
+      \item Mention we checked for $A_{iso}/A_s \ll 1$.
+
+      \item Greater attractor accumulation on iso-E surface
+
+    \end{enumerate}
+
+  \item Conclusion and Discussion
+
+    \begin{enumerate}
+
+      \item Bayesian evidence and ICs integrating out
+
+      \item Predictivity and reheating.  Mention reheating issue that Ed C brought up \cite{Leung:2012ve}.
+
+      \item Restricted to only a few fields ($<12$) for simplicity and with regards to future Bayesian constraints.  Possibility that with more fields the predictions change.  Mention assisted inflation.
+
+    \end{enumerate}
+
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+\label{sect:introduction}
+
+testing \jf{test} \hp{test} \re{test} \lp{test}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Misc Lit Review}
+\label{sect:litreview}
+
+\begin{itemize}
+
+  \item Inflationary predictions from Tegmark \cite{Tegmark:2004qd}
+
+  \item Algorithm ModeCode based on \cite{Adams:2001vc}
+
+  \item Relevant N-flation work: random matrices \cite{Easther:2005zr}; non-Gaussianity \cite{Kim:2011jea,Barnaby:2010vf,Kim:2006te}
+
+  \item Planck \cite{Ade:2013xsa,Ade:2013rta}
+
+\end{itemize}
+
+
+
+
+\acknowledgments
+
+The authors acknowledge the contribution of the NeSI high-performance computing facilities and the staff at the Centre for eResearch at the University of Auckland. New Zealand's national facilities are provided by the New Zealand eScience Infrastructure (NeSI) and funded jointly by NeSI's collaborator institutions and through the Ministry of Business, Innovation \& Employment's Research Infrastructure programme [{\url{http://www.nesi.org.nz}}].
+
+
+\bibliographystyle{JHEP}
+
+\bibliography{references}
+
+\end{document}
