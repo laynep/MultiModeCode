@@ -122,8 +122,8 @@ module modpk_icsampling
 
         else if (potential_choice==2) then
           !N-flation (axions-cosine)
-          !call n_flation_looping(vparams, energy_scale)
-          call n_flation_random_prior(vparams)
+          call n_flation_looping(vparams, energy_scale)
+          !call n_flation_random_prior(vparams)
         else if (potential_choice==11) then
           !N-quadratic w/intxn for lightest field
           !m^2 phi^2 + phi_lightest^2 phi_i^2
