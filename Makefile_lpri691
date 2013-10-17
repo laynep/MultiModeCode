@@ -3,6 +3,13 @@
 #Edit for your compiler
 #Note there are many ifc versions, some of which behave oddly
 
+ifdef DEBUG
+F90C     = ifort
+FFLAGS = -r8 -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
+
+else
+
+
 #Intel , -openmp toggles mutli-processor:
 #note version 10.0 gives wrong result for lensed when compiled with -openmp [fixed in 10.1]
 #F90C     = gfortran
@@ -12,6 +19,7 @@ FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
 #F90C     = mpif90
 #FFLAGS = -r8 -fpp -O0 -DMPI # -openmp  -fast # -DMPI
 
+endif
 
 #Settings for building camb_fits
 #Location of FITSIO and name of library
