@@ -109,7 +109,7 @@ CONTAINS
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
        !Uncomment to write the trajectories...
-       write(1,'(12E18.10)') x, y(:)
+       !write(1,'(12E18.10)') x, y(:)
 
        CALL derivs(x,y,dydx)
 
@@ -330,138 +330,193 @@ CONTAINS
     use_q = .false.
     compute_zpower = .true.
 
-    scalefac = a_init
-
     DO nstp=1,MAXSTP
 
-      call check_for_NaN()
+    !if (nstp==1) print*, "y from odeint_c", y
 
-      IF (use_q) THEN
-        ! super-h use Q
-        CALL qderivs(x, y, dydx)
-      ELSE
-        ! sub-h use psi
-        CALL derivs(x, y, dydx)
-      END IF
+       if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
+         print*, "ERROR in odeint_c"
+         print*, "ERROR: y has a NaN value."
+         print*, "E-fold",x
+         print*, "nstp",nstp
+         print*, "y", y
+         stop
+       end if
 
-      ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
-      yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
+       IF (use_q) THEN
+          ! super-h use Q
+          CALL qderivs(x, y, dydx)
+       ELSE
+          ! sub-h use psi
+          CALL derivs(x, y, dydx)
+       END IF
 
-      IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-        CALL save_a_step
+       ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
+       yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
 
-      IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
+       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
+            CALL save_a_step
 
-      IF (use_q) THEN
-        CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,qderivs)
-      ELSE
-        CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
-      END IF
+       IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
 
-      IF (hdid == h) THEN
-        nok=nok+1
-      ELSE
-        nbad=nbad+1
-      END IF
+       IF (use_q) THEN
+          CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,qderivs)
+       ELSE
+          CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+       END IF
 
-      call check_for_eternal_inflation()
+       IF (hdid == h) THEN
+          nok=nok+1
+       ELSE
+          nbad=nbad+1
+       END IF
 
-      !MULTIFIELD
-      phi = DBLE(y(1:num_inflaton))
-      delphi = DBLE(y(num_inflaton+1 : 2*num_inflaton))
-      dotphi = sqrt(dot_product(delphi, delphi))
-
-      scalefac = a_init*exp(x)
-      !END MULTIFIELD
-
-      IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
-
-
-      !Calculate power spectrum
-      IF(ode_ps_output) THEN
-
-        IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
-
-          !MULTIFIELD
-          IF (use_q) THEN
-
-            !Y's are in \bar{Q}=Q/a_switch
-            psi = y(index_ptb_y:index_ptb_vel_y-1) &
-              *scalefac/a_switch
-            dpsi = scalefac/a_switch*&
-              (y(index_ptb_vel_y:index_tensor_y-1) + &
-              y(index_ptb_y:index_ptb_vel_y-1))
-
-            ! with isocurv calculation
-            call powerspectrum(psi, dpsi, phi, delphi, &
-              scalefac, power_internal)
-
-            power_internal%tensor=tensorpower(y(index_tensor_y) &
-              *scalefac/a_switch, scalefac)
-          ELSE
-
-            psi = y(index_ptb_y:index_ptb_vel_y-1)
-            dpsi = y(index_ptb_vel_y:index_tensor_y-1)
-
-            call powerspectrum(psi, dpsi, phi, delphi, &
-              scalefac, power_internal)
-
-            power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
-          END IF
-
-
-          if (compute_zpower) then  !! compute only once upon horizon exit
-            power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
-            compute_zpower = .false.
-          end if
-
-          ! for single field, end mode evolution when the mode is frozen out of the horizon
-          ! for multifield, evolve modes until end of inflation to include superhorizon evolution
-          IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
-          !END MULTIFIELD
-        END IF
-      END IF
-
-      IF(ode_infl_end) THEN 
-        IF (slowroll_infl_end) THEN
-          IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
-        ELSE
-
-          call check_infl_ended_for_nonSRbreakmodels()
-
-          !MULTIFIELD
-          IF (SIZE(phi) .EQ. 1) THEN
-            IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
-            IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
-          ELSE 
-            ! for multifield, determine the total field distance travelled
-            IF (SQRT(DOT_PRODUCT(phi-phi_init, phi-phi_init)) .GT. (delsigma+0.1)) infl_ended = .TRUE.
-          END IF
-          !END MULTIFIELD
-        ENDIF
-
-        IF (infl_ended) THEN
-          IF (use_q) THEN
-            call convert_q_to_u()
-          ELSE
-            ystart(:) = y(:)
-          END IF
-          IF (save_steps) CALL save_a_step
+       IF ((x-x2)*(x2-x1) >= 0.0) THEN
+          PRINT*,'MODPK: This could be a model for which inflation does not end.'
+          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
+          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
+          PRINT*,'MODPK: QUITTING'
+          WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
+          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
+          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
+          STOP
           RETURN
-        END IF
-      ENDIF
+       END IF
 
-      IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
-        call start_using_q_var()
-      END IF
+       !MULTIFIELD
+       phi = DBLE(y(1:num_inflaton))
+       delphi = DBLE(y(num_inflaton+1 : 2*num_inflaton))
+       dotphi = sqrt(dot_product(delphi, delphi))
 
-      call check_for_underflow()
+       scalefac = a_init*exp(x)
+       !END MULTIFIELD
 
-      h=hnext
+       IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
+       
+      
+       IF(ode_ps_output) THEN
 
+          IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+
+             !MULTIFIELD
+             IF (use_q) THEN
+
+               !Y's are in \bar{Q}=Q/a_switch
+               psi = y(index_ptb_y:index_ptb_vel_y-1) &
+                    *scalefac/a_switch
+               dpsi = scalefac/a_switch*&
+                 (y(index_ptb_vel_y:index_tensor_y-1) + &
+                 y(index_ptb_y:index_ptb_vel_y-1))
+
+               ! with isocurv calculation
+               call powerspectrum(psi, dpsi, phi, delphi, &
+                 scalefac, power_internal)
+
+               power_internal%tensor=tensorpower(y(index_tensor_y) &
+                  *scalefac/a_switch, scalefac)
+             ELSE
+
+               psi = y(index_ptb_y:index_ptb_vel_y-1)
+               dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+
+               call powerspectrum(psi, dpsi, phi, delphi, &
+                 scalefac, power_internal)
+
+               power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
+             END IF
+
+
+             if (compute_zpower) then  !! compute only once upon horizon exit
+                power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
+                compute_zpower = .false.
+             end if
+
+             ! for single field, end mode evolution when the mode is frozen out of the horizon
+             ! for multifield, need to evolve the modes until the end of inflation to include superhorizon evolution
+             IF (num_inflaton .EQ. 1) infl_ended = .TRUE.  
+             !END MULTIFIELD
+          END IF
+       END IF
+
+       IF(ode_infl_end) THEN 
+          IF (slowroll_infl_end) THEN
+             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
+          ELSE
+             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
+                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
+                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
+                PRINT*,'MODPK: reached. Please take another look at your inputs.'
+                PRINT*,'MODPK: QUITTING'
+                PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
+                STOP
+             ENDIF
+
+             !MULTIFIELD
+             IF (SIZE(phi) .EQ. 1) THEN
+                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
+                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
+             ELSE 
+                ! for multifield, determine the total field distance travelled
+                IF (SQRT(DOT_PRODUCT(phi-phi_init, phi-phi_init)) .GT. (delsigma+0.1)) infl_ended = .TRUE.
+             END IF
+             !END MULTIFIELD
+          ENDIF
+
+          IF (infl_ended) THEN
+             IF (use_q) THEN
+                ytmp(:) = y(:)
+                ! bckgrd
+                ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
+
+                ! ptbs
+                ystart(index_ptb_y:index_ptb_vel_y-1) = &
+                  ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
+                ystart(index_ptb_vel_y:index_tensor_y-1) = &
+                  ytmp(index_ptb_vel_y:index_tensor_y-1)&
+                  *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
+
+                ! tensors
+                ystart(index_tensor_y) =&
+                  ytmp(index_tensor_y)*scalefac/a_switch
+                ystart(index_tensor_y+1) =&
+                  ytmp(index_tensor_y+1)*scalefac/a_switch&
+                  + ystart(index_tensor_y)
+             ELSE
+                ystart(:) = y(:)
+             END IF
+             IF (save_steps) CALL save_a_step
+             RETURN
+          END IF
+       ENDIF
+
+       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
+          !switch to the Q variable for super-horizon evolution
+          !only apply the switch on y(1:4*num_inflaton+2)
+          use_q = .TRUE.
+          a_switch = scalefac
+          !set intial condition in (Q*a_switch)
+          ytmp(:) = y(:)
+
+          y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
+          y(index_ptb_vel_y:index_tensor_y-1) = &
+            ytmp(index_ptb_vel_y:index_tensor_y-1) & 
+            - y(index_ptb_y:index_ptb_vel_y-1)
+
+          y(index_tensor_y) = ytmp(index_tensor_y)
+          y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
+            - y(index_tensor_y)
+       END IF
+
+       IF (ode_underflow) RETURN
+       IF (ABS(hnext) < hmin) THEN
+          WRITE(*,*) 'stepsize smaller than minimum in odeint'
+          STOP
+       END IF
+       h=hnext
     END DO
-
-    call check_for_too_many_steps()
+    PRINT*,'too many steps in odeint_c', x
+    PRINT*,'x =', x, 'h =', h 
+    ode_underflow=.TRUE.
 
 
   CONTAINS
@@ -500,113 +555,6 @@ CONTAINS
 
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
-
-
-
-    !-----------------------------------------------------------------------
-    !I couldn't follow this routine anymore, so moved some of the checks down
-    !here.
-    subroutine check_for_NaN()
-
-       if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
-         print*, "ERROR in odeint_c"
-         print*, "ERROR: y has a NaN value."
-         print*, "ERROR: Check if a_pivot=0."
-         print*, "E-fold",x
-         print*, "nstp",nstp
-         stop
-       end if
-
-    end subroutine check_for_NaN
-
-    subroutine check_for_eternal_inflation()
-
-       IF ((x-x2)*(x2-x1) >= 0.0) THEN
-          PRINT*,'MODPK: This could be a model for which inflation does not end.'
-          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
-          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING'
-          WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
-          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
-          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP
-          RETURN
-       END IF
-
-    end subroutine check_for_eternal_inflation
-
-    subroutine check_infl_ended_for_nonSRbreakmodels()
-
-      IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
-        PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-        PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-        PRINT*,'MODPK: reached. Please take another look at your inputs.'
-        PRINT*,'MODPK: QUITTING'
-        PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
-        STOP
-      ENDIF
-
-    end subroutine check_infl_ended_for_nonSRbreakmodels
-
-    subroutine convert_q_to_u()
-
-      ytmp(:) = y(:)
-      ! bckgrd
-      ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
-
-      ! ptbs
-      ystart(index_ptb_y:index_ptb_vel_y-1) = &
-        ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
-      ystart(index_ptb_vel_y:index_tensor_y-1) = &
-        ytmp(index_ptb_vel_y:index_tensor_y-1)&
-        *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
-
-      ! tensors
-      ystart(index_tensor_y) =&
-        ytmp(index_tensor_y)*scalefac/a_switch
-      ystart(index_tensor_y+1) =&
-        ytmp(index_tensor_y+1)*scalefac/a_switch&
-        + ystart(index_tensor_y)
-
-    end subroutine convert_q_to_u
-
-    subroutine start_using_q_var()
-
-      !switch to the Q variable for super-horizon evolution
-      !only apply the switch on y(1:4*num_inflaton+2)
-      use_q = .TRUE.
-      a_switch = scalefac
-      !set intial condition in (Q*a_switch)
-      ytmp(:) = y(:)
-
-      y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
-      y(index_ptb_vel_y:index_tensor_y-1) = &
-        ytmp(index_ptb_vel_y:index_tensor_y-1) & 
-        - y(index_ptb_y:index_ptb_vel_y-1)
-
-      y(index_tensor_y) = ytmp(index_tensor_y)
-      y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
-        - y(index_tensor_y)
-
-    end subroutine start_using_q_var
-
-    subroutine check_for_underflow()
-
-       IF (ode_underflow) RETURN
-       IF (ABS(hnext) < hmin) THEN
-          WRITE(*,*) 'stepsize smaller than minimum in odeint'
-          STOP
-       END IF
-
-    end subroutine check_for_underflow
-
-    subroutine check_for_too_many_steps()
-
-      PRINT*,'too many steps in odeint_c', x
-      PRINT*,'x =', x, 'h =', h 
-      ode_underflow=.TRUE.
-
-    end subroutine check_for_too_many_steps
 
   END SUBROUTINE odeint_c
 
