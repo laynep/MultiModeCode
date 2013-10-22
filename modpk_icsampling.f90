@@ -71,6 +71,11 @@ module modpk_icsampling
         !but not on "attractor"
         if (slowroll_start) slowroll_start = .false.
 
+        call eqen_ic(y_background, energy_scale, &
+          phi0_priors_min, phi0_priors_max, &
+          dphi0_priors_min, dphi0_priors_max, &
+          velconst=.true.)
+
         !Not ready for primetime
         !call implicit_surface_sampling(sample,energy_scale, &
         !  numb_samples,&
@@ -83,10 +88,6 @@ module modpk_icsampling
         !  phi0_priors_min, phi0_priors_max, &
         !  dphi0_priors_min, dphi0_priors_max)
 
-        call eqen_ic(y_background, energy_scale, &
-          phi0_priors_min, phi0_priors_max, &
-          dphi0_priors_min, dphi0_priors_max, &
-          velconst=.true.)
 
       else if (sampling_techn == slowroll_samp) then
 
@@ -100,7 +101,8 @@ module modpk_icsampling
 
       else if (sampling_techn==parameter_loop_samp) then
 
-        if (potential_choice>2 .and. potential_choice/=11) then
+        if (potential_choice>2 .and. potential_choice/=11 .and. &
+          potential_choice/=12) then
           print*, "parameter_loop_samp doesn't work for potential_choice=", potential_choice
           stop
         end if
@@ -120,11 +122,18 @@ module modpk_icsampling
 
           call mass_spectrum_nflation(vparams,beta)
 
+          !DEBUG
+          print*, "vparams from mass_spectrum_nflation"
+          print*, vparams
+
         else if (potential_choice==2) then
           !N-flation (axions-cosine)
           call n_flation_looping(vparams, energy_scale)
           !call n_flation_random_prior(vparams)
-        else if (potential_choice==11) then
+
+        !DEBUG
+        !else if (potential_choice==11) then
+        else if (potential_choice==11 .or. potential_choice==12) then
           !N-quadratic w/intxn for lightest field
           !m^2 phi^2 + phi_lightest^2 phi_i^2
           call n_quadratic_mass_intxn_looping(vparams)
@@ -379,7 +388,7 @@ print*, new_measure
 
 
     !Require the background ICs to start with the same energy.
-    !Alternates selecting the fields and vels 
+    !Alternates selecting the fields and vels
     !Assumes canonical kinetic term
     subroutine eqen_ic(y, energy_scale, &
         phi0_priors_min, phi0_priors_max, &
@@ -416,6 +425,7 @@ print*, new_measure
           !Use prior on angles since model indep assuming canon KE
           !Gives "uniform area" sample on vels
 
+
 	        !Energy density not allocated
           phi = y(1:num_inflaton)
           dphi=y(num_inflaton+1:2*num_inflaton)
@@ -429,12 +439,10 @@ print*, new_measure
     	    rho_not_alloc = energy_scale**4 - pot(phi) -&
             0.5e0_dp*sum(dphi*dphi)
 
-          !DEBUG
-          print*, "rho_not_alloc", rho_not_alloc
-
-
 	    	  if (abs(rho_not_alloc)<1e-25 .or. isnan(rho_not_alloc)) then
-            print*, "IC off shell ------------- cycling", ll
+            if(mod(maxtry,ll)==20) then
+              print*, "IC off shell ------------- cycling", ll
+            end if
             if (ll==maxtry) then
               print*, "    Energy overrun =", rho_not_alloc
               print*, "    E**4 =", energy_scale**4
@@ -917,7 +925,7 @@ print*, new_measure
 
       !N-quadratic with intxn w/lightest field, m^2*phi^2+phi_light^2 phi_i^2
       !Just displace same as m^2phi^2
-      else if (potential_choice==11) then
+      else if (potential_choice==11 .or. potential_choice==12) then
         !Masses
         m2 = 10.d0**(vparams(1,:))
 
@@ -1010,10 +1018,19 @@ print*, new_measure
       !Set masses as in N-quadratic
       call n_quadratic_mass_looping(vpnew(1,:))
 
+      !DEBUG
+      if (potential_choice==12) then
+        print*, "-------------------------------------------"
+        print*, "Not varying interaction term in mass matrix"
+        print*, "for potential_choice==", potential_choice
+        print*, "-------------------------------------------"
+        return
+      end if
+
       !Set intxn term over interval
 
       intxn_max = 1e-12_dp
-      prior = log_param
+      prior = unif_param
 
       do i=1, size(vpnew,2)
         call random_number(rand)

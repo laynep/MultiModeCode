@@ -556,8 +556,8 @@ program test_mmodpk
       integer :: u, i
 
       namelist /priors/ phi0_priors_min, phi0_priors_max, &
-        dphi0_priors_min, dphi0_priors_max, &
-        penalty_fact
+        dphi0_priors_min, dphi0_priors_max!, &
+        !penalty_fact
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."

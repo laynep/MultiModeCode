@@ -52,6 +52,10 @@ CONTAINS
 
     integer :: phi_light_index
     real(dp) :: lambda4(num_inflaton)
+
+    real(dp) :: lambda2
+    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
+    integer :: i,j
     
     select case(potential_choice)
     case(1) 
@@ -114,14 +118,35 @@ CONTAINS
                  Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/2.
       pot=potlarge+potsmall
     case(11)
-      !N-quadratic w/one intxn term
+      !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
+
       m2_V = 10.d0**(vparams(1,:))
       lambda4 = 10.d0**vparams(2,:)
       phi_light_index = minloc(m2_V,1)
 
       pot = 0.5d0*sum(m2_V*phi*phi)+ &
         (1.0d0/24.0d0)*(phi(phi_light_index)**2)*sum(lambda4*phi*phi)
+
+    case(12)
+      !Mass matrix with diagonal terms = m_i^2
+      !Off-diagonal terms = \eps
+      m2_V = 10.d0**(vparams(1,:))
+      lambda2 = 10.d0**(vparams(2,1))
+      pot = 0e0_dp
+
+      do i=1, num_inflaton
+        do j=1, num_inflaton
+          if (i==j) then
+            m2_matrix(i,j) = m2_V(i)
+            pot = pot +0.5e0_dp* m2_matrix(i,j)*phi(i)*phi(j)
+          else
+            m2_matrix(i,j) = lambda2
+            pot = pot + m2_matrix(i,j)*phi(i)*phi(j)
+          end if
+
+        end do
+      end do
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
@@ -142,13 +167,16 @@ CONTAINS
     real(dp) :: dphi(size(phi)), phiplus(size(phi))
     real(dp) :: m2_V(size(phi)),  c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
-    integer :: i
+    integer :: i, j
 
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
       mass_hybrid
 
     integer :: phi_light_index
     real(dp) :: lambda4(num_inflaton)
+
+    real(dp) :: lambda2
+    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -244,6 +272,25 @@ CONTAINS
          dVdphi(phi_light_index) = m2_V(phi_light_index)*phi(phi_light_index) + &
            (1.0d0/6.0d0)*(phi(phi_light_index)**3)*lambda4(phi_light_index)
 
+       case(12)
+
+         !Mass matrix with diagonal terms = m_i^2
+         !Off-diagonal terms = \eps
+         m2_V = 10.d0**(vparams(1,:))
+         lambda2 = 10.d0**(vparams(2,1))
+         dVdphi = 0e0_dp
+
+         do i=1, num_inflaton
+           do j=1, num_inflaton
+             if (i==j) then
+               m2_matrix(i,j) = m2_V(i)
+             else
+               m2_matrix(i,j) = lambda2
+             end if
+
+             dVdphi(i) = dVdphi(i) + m2_matrix(i,j)*phi(j)
+           end do
+         end do
 
        !END MULTIFIELD
        case default
@@ -275,6 +322,9 @@ CONTAINS
 
     integer :: phi_light_index
     real(dp) :: lambda4(num_inflaton)
+
+    real(dp) :: lambda2
+    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
 
     if (vnderivs) then
        !MULTIFIELD
@@ -482,7 +532,26 @@ CONTAINS
            
          end do
 
+       case(12)
 
+         !Mass matrix with diagonal terms = m_i^2
+         !Off-diagonal terms = \eps
+         m2_V = 10.d0**(vparams(1,:))
+         lambda2 = 10.d0**(vparams(2,1))
+         d2Vdphi2 = 0e0_dp
+
+         do i=1, num_inflaton
+           do j=1, num_inflaton
+             if (i==j) then
+               m2_matrix(i,j) = m2_V(i)
+             else
+               m2_matrix(i,j) = lambda2
+             end if
+
+           end do
+         end do
+
+         d2Vdphi2 = m2_matrix
 
 
        case default

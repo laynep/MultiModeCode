@@ -263,10 +263,12 @@ lens_Cls	lensing.f90	/^subroutine lens_Cls$/
 locate	modpk_utils.f90	/^  FUNCTION locate(xx,x)$/
 make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
 make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
+mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(msqd, beta)$/
 min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
 mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize()$/
 n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(vpnew, energy_sca/
 n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(vpnew)$/
+n_quadratic_mass_intxn_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_intxn_looping(vpne/
 n_quadratic_mass_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_looping(vpnew, mas/
 normal_array	modpk_rng.f90	/^function normal_array(n,mean,std) result(normal)$/
 normal_scalar	modpk_rng.f90	/^function normal_scalar(mean,std) result(scalar)$/
