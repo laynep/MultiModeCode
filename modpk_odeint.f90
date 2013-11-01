@@ -110,7 +110,7 @@ CONTAINS
 
        !Uncomment to write the trajectories...
        !write(1,'(12E18.10)') x, y(:)
-       write(1,'(12E18.10)') x, y(1:num_inflaton)
+       !write(1,'(12E18.10)') x, y(1:num_inflaton)
 
        CALL derivs(x,y,dydx)
 
@@ -405,26 +405,26 @@ CONTAINS
 
             !DEBUG
             !fnl from Vernizzi-Wands, delta-N superhorizon
-            nk_sum=0e0_dp
-            fnl = 0e0_dp
+            !nk_sum=0e0_dp
+            !fnl = 0e0_dp
 
-            Nprime = dNdphi(delphi)
-            Nprimeprime = d2Ndphi2(phi,delphi)
-            do kk=1,size(phi)
-              nk_sum = nk_sum + Nprime(kk)**2
-            end do
-            nk_sum = nk_sum**2
+            !Nprime = dNdphi(delphi)
+            !Nprimeprime = d2Ndphi2(phi,delphi)
+            !do kk=1,size(phi)
+            !  nk_sum = nk_sum + Nprime(kk)**2
+            !end do
+            !nk_sum = nk_sum**2
 
-            do ii=1,size(phi)
-              do jj=1,size(phi)
-                fnl = fnl + Nprime(ii)*Nprime(jj)*Nprimeprime(ii,jj)
-              end do
-            end do
-            fnl = (-5e0_dp/6e0_dp)*fnl/nk_sum
+            !do ii=1,size(phi)
+            !  do jj=1,size(phi)
+            !    fnl = fnl + Nprime(ii)*Nprime(jj)*Nprimeprime(ii,jj)
+            !  end do
+            !end do
+            !fnl = (-5e0_dp/6e0_dp)*fnl/nk_sum
 
             !DEBUG
             !print*, "fnl=", fnl
-            write(21,*),fnl
+            !write(21,*),fnl
 
              !MULTIFIELD
              IF (use_q) THEN
