@@ -15,7 +15,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp}
 
 &ic_sampling
-  sampling_techn = 2
+  sampling_techn = 3
   numb_samples = 10000
 
   energy_scale = .01
@@ -36,7 +36,7 @@ the smallest mass; others are discarded.
 
   phi_init0 = 2.0
 
- vparams(1,:)= -10.965, -10.4878
+ vparams(1,:)= -10.965, -10.0106
 
 
 

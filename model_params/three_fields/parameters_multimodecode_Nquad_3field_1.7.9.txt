@@ -36,8 +36,7 @@ the smallest mass; others are discarded.
 
   phi_init0 = 2.0
 
- vparams(1,:)= -10.965, -10.6639, -10.4878
-
+ vparams(1,:)= -10.965, -10.1198, -10.0106
 
 
 

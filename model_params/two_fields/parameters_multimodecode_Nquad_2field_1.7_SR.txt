@@ -2,7 +2,7 @@
 
 ----------------
 &init
-  num_inflaton=3
+  num_inflaton=2
   potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
@@ -36,7 +36,7 @@ the smallest mass; others are discarded.
 
   phi_init0 = 2.0
 
- vparams(1,:)= -10.965, -10.6639, -10.4878
+ vparams(1,:)= -10.965, -10.1198
 
 
 
@@ -51,8 +51,8 @@ the smallest mass; others are discarded.
 ----------------
 !Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0, 0, 0
-  phi0_priors_max = 25.0, 25.0, 25.0
+  phi0_priors_min = 0, 0
+  phi0_priors_max = 25.0, 25.0
 
   dphi0_priors_min = -2.262e-3, -2.262e-3
   dphi0_priors_max =  2.262e-3,  2.262e-3

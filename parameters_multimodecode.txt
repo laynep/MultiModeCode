@@ -2,12 +2,12 @@
 
 ----------------
 &init
-  num_inflaton=3
-  potential_choice=11
+  num_inflaton=2
+  potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 2
+  vparam_rows = 1
 /
 
 ----------------
@@ -15,10 +15,10 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp}
 
 &ic_sampling
-  sampling_techn = 5
+  sampling_techn = 2
   numb_samples = 10
 
-  energy_scale = .02
+  energy_scale = .01
 
   save_iso_N = .true.
   N_iso_ref = 55
@@ -36,10 +36,9 @@ the smallest mass; others are discarded.
 
   phi_init0 = 2.0
 
- vparams(1,:)= -10.965, -10.965, -10.965
+ vparams(1,:)= -10.965, -10.965
 
 
- vparams(2,:)= -10.0314719633951,-10.0314719633951,-10.0314719633951
 
 
 
@@ -52,8 +51,8 @@ the smallest mass; others are discarded.
 ----------------
 !Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0, 0, 0
-  phi0_priors_max = 25.0, 25.0, 25.0
+  phi0_priors_min = 0, 0
+  phi0_priors_max = 25.0, 25.0
 
 
   dphi0_priors_min = -2.262e-3, -2.262e-3
