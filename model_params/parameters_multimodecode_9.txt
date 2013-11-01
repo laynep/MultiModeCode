@@ -15,7 +15,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp}
 
 &ic_sampling
   sampling_techn = 2
-  numb_samples = 20
+  numb_samples = 10000
 
   energy_scale = .04
 

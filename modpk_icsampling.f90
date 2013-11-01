@@ -56,7 +56,7 @@ module modpk_icsampling
       real(dp) :: H, rho
       integer :: i,j
 
-      logical :: with_velocity
+      logical :: with_velocity, with_eqen
       real(dp) :: beta, rand
 
       phi0_priors_max=priors_max(1,:)
@@ -111,7 +111,7 @@ module modpk_icsampling
         if (potential_choice==1) then
           !N-quadratic -- m^2 phi^2
 
-          !call n_quadratic_mass_looping(vparams)
+          call n_quadratic_mass_looping(vparams)
 
           if (numb_samples > 1) then
             call random_number(rand)
@@ -120,7 +120,7 @@ module modpk_icsampling
             beta = 0.5d0
           end if
 
-          call mass_spectrum_nflation(vparams,beta)
+          !call mass_spectrum_nflation(vparams,beta)
 
           !DEBUG
           print*, "vparams from mass_spectrum_nflation"
@@ -143,9 +143,17 @@ module modpk_icsampling
 
         !Set IC with either (V=0 and KE) or (KE=0 and V)
         with_velocity = .false.
+        with_eqen = .true.
+        if (with_eqen) then
+          !Set IC with equal energy over pre-defined field range
+          print*, "Setting IC with equal energy over range"
 
+          call eqen_ic(y_background, energy_scale, &
+            phi0_priors_min, phi0_priors_max, &
+            dphi0_priors_min, dphi0_priors_max, &
+            velconst=.true.)
 
-        if (with_velocity) then
+        else if (with_velocity) then
           !Set IC with zero potential
           print*, "Setting IC with zero potential"
           call zero_potential_ic(y_background, energy_scale)
@@ -405,7 +413,7 @@ print*, new_measure
 	    real(dp) :: rand, rho_not_alloc, KE
 
 	    integer :: param_constr, i, ll, j
-      integer, parameter :: maxtry=200
+      integer, parameter :: maxtry=1000
 
 
 	    do ll=1,maxtry
@@ -981,7 +989,7 @@ print*, new_measure
       if (present(mass_ratio)) then
         ratio_max = mass_ratio
       else
-        ratio_max = 10.0e0_dp
+        ratio_max = 9.0e0_dp
       end if
 
       !prior = log_param
@@ -1012,6 +1020,7 @@ print*, new_measure
 
       real(dp), intent(inout), dimension(2,num_inflaton) :: vpnew
       real(dp) :: rand, intxn_min, intxn_max
+      real(dp) :: log_intxn_min, log_intxn_max
       integer :: i, prior
       integer, parameter :: unif_param=0, log_param=1
 
@@ -1029,19 +1038,22 @@ print*, new_measure
 
       !Set intxn term over interval
 
-      intxn_max = 1e-12_dp
-      prior = unif_param
+
+
+      prior = log_param
 
       do i=1, size(vpnew,2)
         call random_number(rand)
         if (prior==unif_param) then
+          intxn_max = 1e-12_dp
           intxn_min = 0e0_dp
           vpnew(2,i) = log10(rand*(intxn_max-intxn_min)+intxn_min)
 
         else if (prior==log_param) then
-          intxn_min = -20e0_dp
+          log_intxn_max = 2e0_dp + minval(vpnew(1,:))
+          log_intxn_min = -4e0_dp +minval(vpnew(1,:))
 
-          vpnew(2,i) = rand*(log10(intxn_max)-intxn_min)+intxn_min
+          vpnew(2,i) = rand*(log_intxn_max-log_intxn_min)+log_intxn_min
 
         else
           write(*,*) "Prior not supported. prior=", prior
@@ -1050,11 +1062,10 @@ print*, new_measure
       end do
 
       !DEBUG
-      print*, "Vparams from n_quadratic_mass_intxn_looping"
-      do i=1,2
-        write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
-      end do
-
+      !print*, "Vparams from n_quadratic_mass_intxn_looping"
+      !do i=1,2
+      !  write(*, '(A8,I1,A5,100E18.7)'), "vparams(",i,",:) =", vparams(i,:)
+      !end do
 
 
     end subroutine n_quadratic_mass_intxn_looping
@@ -1228,8 +1239,11 @@ print*, new_measure
 
 
       !Setting mass scale by hand.
-      !See Eq 4.6 in hep-th/0512102
-      msqd = msqd*(1e-5_dp**2)
+      !See Eq 4.6 in arXiv: hep-th/0512102
+      !msqd = msqd*(1e-5_dp**2)
+
+      !For Planck-normalization on SR, single-field attractor solution
+      msqd = msqd*(1.0842e-11_dp)
 
 
 

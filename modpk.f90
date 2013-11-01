@@ -40,7 +40,6 @@ CONTAINS
     !When scanning ICs, let some backgrnd errors override
     if (sampling_techn/=reg_samp) then
       if (pk_bad == bad_ic) then
-        !DEBUG
         print*, "--------------- BAD IC; RESTARTING -------------------"
         return
       end if

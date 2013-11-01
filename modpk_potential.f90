@@ -4,7 +4,7 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower
+       tensorpower, initialphi, geteta, zpower, dNdphi, d2Ndphi2
 
   public :: norm
   public :: bundle, field_bundle
@@ -22,16 +22,6 @@ MODULE potential
 
 CONTAINS
 
-  FUNCTION MySech(x)
-    real(dp)  :: x,MySech
-
-    IF(ABS(x).GT.40.0) THEN
-       MySech=0.0
-    ELSE
-       MySech=1.0/COSH(x)
-    END IF
-    RETURN
-  END FUNCTION MySech
 
   FUNCTION pot(phi)
     !
@@ -730,14 +720,18 @@ CONTAINS
     !proj along adiab dir
     real(dp), dimension(size(dphi)) :: omega_z
     !proj along isocurv dirs
-    real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso
+    real(dp), dimension(size(dphi)-1,size(dphi)) :: s_iso, d_s_iso
     real(dp), parameter :: div_zero_tol=1e-20_dp
 
     real(dp) :: zeta2, phi_dot_0_scaled, prefactor
     integer :: numb_infl
-    integer :: i, j, ll
+    integer :: i, j, ll, kk
 
-    real(dp) :: prod_exponent
+    real(dp) :: prod_exponent, phi_adiab, d_phi_adiab, hubble
+    real(dp), dimension(size(s_iso)) :: phi_iso, d_phi_iso
+    real(dp), dimension(size(phi)) :: d_omega_z, Vprime
+
+    real(dp) :: power_total
 
     numb_infl=size(dphi)
 
@@ -751,6 +745,18 @@ CONTAINS
     ! NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
+
+    !Cosmology params to make phi_adiab and d_phi_adiab
+    hubble = getH(phi,dphi)
+    Vprime = dVdphi(phi)
+    !domega/dalpha
+    d_omega_z = (1e0_dp/(hubble**2)*phi_dot_0_scaled)* &
+      (omega_z*sum(omega_z*Vprime) - Vprime )
+
+    phi_adiab = sum(omega_z*phi)
+    !d phi_adiab/dalpha
+    d_phi_adiab = sum(omega_z*dphi + d_omega_z*phi)
+
 
     !Build power matrices for fields, vels, and cross correls
     power_matrix=0e0_dp
@@ -771,16 +777,24 @@ CONTAINS
 
     end do; end do; end do
 
+    !------------------------------------------------------------
     !Adiabatic power spectrum
     power_adiab = 0e0_dp
-    do i=1,numb_infl; do j=1,numb_infl
+    do i=1,numb_infl
+      do j=1,numb_infl
       power_adiab = power_adiab + omega_z(i)*omega_z(j)*power_matrix(i,j)
-    end do; end do
-    power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
+      end do
+    end do
+
+    !DEBUG
+    !power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
+    power_adiab = (1e0_dp/d_phi_adiab**2)*power_adiab
+    !------------------------------------------------------------
 
     !Isocurvature power spectra
     if (numb_infl>1) then
 
+      !------------------------------------------------------------
       !Build the isocurv unit vects
       call build_isocurv_basis()
 
@@ -791,10 +805,13 @@ CONTAINS
         pk_iso_vect(i) = pk_iso_vect(i) + &
           s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
       end do; end do; end do
+
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
       power_isocurv = 0e0_dp
       power_isocurv = sum(pk_iso_vect)
+
+      !------------------------------------------------------------
 
       !P(k) of total non-adiab pressure ptbs
       !dP_nad_i(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*Psi_ij)*\hat{a}_j
@@ -865,16 +882,18 @@ CONTAINS
       real(dp), dimension(size(dphi),size(dphi)) :: spanning
       !field dirs
       real(dp), dimension(size(dphi),size(dphi)) :: phi_hat
+      real(dp), dimension(size(dphi)-1,size(dphi)) :: field_basis
       real(dp), dimension(size(dphi)) :: phi_hat_temp
       real(dp) :: check_dot
+      real(dp), dimension(size(dphi)-1) :: normalization, dnormalization
       integer :: i, j, adiab_index
 
       !Build field space vects
       do i=1,size(phi_hat,1); do j=1,size(phi_hat,2)
         if (i==j) then
-          phi_hat(i,j) = 0e0_dp
-        else
           phi_hat(i,j) = 1e0_dp
+        else
+          phi_hat(i,j) = 0e0_dp
         end if
       end do; end do
 
@@ -889,7 +908,7 @@ CONTAINS
         end if
       end do
       if (adiab_index ==0) then
-        print*, "It appears all field space directions are aligned with"
+        print*, "It appears no field space directions are aligned with"
         print*, "the adiab direction."
         stop
       end if
@@ -902,7 +921,7 @@ CONTAINS
       end if
 
       spanning = 0e0_dp
-      spanning(1,:)=omega_z/norm(omega_z)
+      spanning(1,:) = omega_z/norm(omega_z)
 
       s_iso = 0e0_dp
       do i=2,size(spanning,1)
@@ -915,6 +934,7 @@ CONTAINS
 
         if (norm(spanning(i,:)) > div_zero_tol) then
           s_iso(i-1,:) = spanning(i,:)/norm(spanning(i,:))
+
         else
           print*, "spanning(",i,",:) has zero norm..."
           stop
@@ -925,7 +945,54 @@ CONTAINS
           write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
           stop
         end if
+
       end do
+
+      !Get the rate of change of isocurv directions
+      !DEBUG
+      !if (size(s_iso)<2) return
+
+      !d_s_iso = 0e0_dp
+      !field_basis = phi_hat(2:size(phi_hat),:)
+
+
+      !!Build the normalization vector and its deriv
+      !!Use to build the ds_iso/dalpha vectors
+      !normalization = 1e0_dp
+      !dnormalization = 0e0_dp
+      !d_s_iso = 0e0_dp
+      !do i=1,size(s_iso,1)
+      !  if (i==1) then
+      !    normalization(i) = normalization(i) - (sum(field_basis(i,:)*omega_z))**2
+
+      !    dnormalization(i) = -2e0_dp* &
+      !      sum(field_basis(i,:)*omega_z)*sum(field_basis(i,:)*d_omega_z)
+
+      !    d_s_iso(i,:) = (-1e0_dp/normalization)*&
+      !      (sum(field_basis(i,:)*d_omega_z)*omega_z +&
+      !      sum(field_basis(i,:)*omega_z)*d_omega_z + &
+      !      s_iso(i,:)*dnormalization(i))
+      !  else
+      !    do j=1, i-1
+
+      !      normalization(i) = normalization(i) - &
+      !        (sum(field_basis(i,:)*s_iso(j,:)))**2
+
+      !      dnormalization(i) = dnormalization(i) - 2e0_dp* &
+      !        sum(field_basis(i,:)*s_iso(j,:))*sum(field_basis(i,:)*d_s_iso(j,:))
+      !    end do
+
+      !    do j=1, i-1
+      !      d_s_iso(i,:) = d_s_iso(i,:) + &
+      !        sum(field_basis(i,:)*d_s_iso(j,:))*s_iso(j,:) + &
+      !        sum(field_basis(i,:)*s_iso(j,:))*d_s_iso(j,:)
+      !    end do
+
+      !    d_s_iso(i,:) = (-1e0_dp/normalization)*(d_s_iso(i,:) + s_iso(i,:)*dnormalization(i))
+
+      !  end if
+
+      !end do
 
 
     end subroutine build_isocurv_basis
@@ -1100,11 +1167,53 @@ CONTAINS
 
     this%N=efold
 
-    !DEBUG
-    !print*, "this%exp_scalar",this%exp_scalar
-
   end subroutine bundle_exp_scalar
 
+  !Calc dNdphi on a flat surface as function of dphi=dphi/dalpha
+  function dNdphi(dphi)
 
+    real(dp), dimension(:), intent(in) :: dphi
+    integer :: i
+    real(dp), dimension(size(dphi)) :: dNdphi
+
+    do i=1,size(dphi)
+      dNdphi(i) = -1e0_dp/ dphi(i)
+    end do
+
+  end function dNdphi
+
+  !Calc d2Ndphi2 on a flat surface as function of dphi=dphi/dalpha
+  function d2Ndphi2(phi,dphi)
+
+    real(dp), dimension(:), intent(in) :: phi, dphi
+    real(dp), dimension(size(dphi),size(dphi)) :: d2Ndphi2
+    integer :: i, j
+    real(dp) :: hprime, hubble, Vprime(size(dphi))
+
+    hprime = getdHdalpha(phi,dphi)
+    hubble = getH(phi,dphi)
+    Vprime = dVdphi(phi)
+
+    do i=1,size(dphi)
+      do j=1, size(dphi)
+        d2Ndphi2(i,j) = -(hprime/hubble)/(dphi(i)*dphi(j)) &
+                        -(3e0_dp)/(dphi(i)*dphi(j)) &
+                        -(Vprime(i)/hubble**2)/(dphi(i)*dphi(i)*dphi(j))
+      end do
+    end do
+
+  end function d2Ndphi2
+
+
+  FUNCTION MySech(x)
+    real(dp)  :: x,MySech
+
+    IF(ABS(x).GT.40.0) THEN
+       MySech=0.0
+    ELSE
+       MySech=1.0/COSH(x)
+    END IF
+    RETURN
+  END FUNCTION MySech
 
 END MODULE potential

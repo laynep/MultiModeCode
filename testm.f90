@@ -364,23 +364,20 @@ program test_mmodpk
 
 
     subroutine DEBUG_writing_etc()
-      integer :: j
-
       PRINT*, "Writing background solution to phiarr.txt"
       open(1, file='phiarr.txt')
-      j = 1
-      do while ( lna(j+1) > 1e-8 )
-        !PRINT*, lna(i), phiarr(:,i)
-        !write(*, '(200E14.6)'), lna(j), phiarr(:,j)
-        write(1, '(200E14.6)'), lna(j), phiarr(:,j)
-        j = j + 1
+      i = 1
+      do while ( lna(i+1) > 1e-8 )
+      !PRINT*, lna(i), phiarr(:,i)
+      write(1, *), lna(i), phiarr(:,i)
+      i = i + 1
       end do
       close(1)
       PRINT*, "Done writing"
-      !PRINT*, "Writing powerspectrum solution to pow.txt"
-      !open (unit = 20, file = "pow.txt", status = 'replace')
-      !PRINT*, "Writing field correlation solution to powmatrix.txt"
-      !open (unit = 3, file = "powmatrix.txt", status = 'replace')
+      PRINT*, "Writing powerspectrum solution to pow.txt"
+      open (unit = 20, file = "pow.txt", status = 'replace')
+      PRINT*, "Writing field correlation solution to powmatrix.txt"
+      open (unit = 3, file = "powmatrix.txt", status = 'replace')
     end subroutine DEBUG_writing_etc
 
     !Calculate observables, but grab a new IC each time called
@@ -410,9 +407,6 @@ program test_mmodpk
 
       !Initialize potential and calc background
       call potinit
-
-      !DEBUG
-      !call DEBUG_writing_etc()
 
       call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
         A_iso, A_pnad, A_ent, A_bundle, &
@@ -503,8 +497,6 @@ program test_mmodpk
         end if
       end if
 
-      if (allocated(pk_arr)) deallocate(pk_arr)
-      if (allocated(pk_iso_arr)) deallocate(pk_iso_arr)
 
     end subroutine calculate_pk_observables_per_IC
 
@@ -556,8 +548,8 @@ program test_mmodpk
       integer :: u, i
 
       namelist /priors/ phi0_priors_min, phi0_priors_max, &
-        dphi0_priors_min, dphi0_priors_max!, &
-        !penalty_fact
+        dphi0_priors_min, dphi0_priors_max, &
+        penalty_fact
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."

@@ -187,18 +187,14 @@ bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi,
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
 calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
 calculate_pk_observables_per_IC	testm.f90	/^    subroutine calculate_pk_observables_per_IC(k_p/
-check_for_NaN	modpk_odeint.f90	/^    subroutine check_for_NaN()$/
-check_for_eternal_inflation	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation()$/
-check_for_too_many_steps	modpk_odeint.f90	/^    subroutine check_for_too_many_steps()$/
-check_for_underflow	modpk_odeint.f90	/^    subroutine check_for_underflow()$/
-check_infl_ended_for_nonSRbreakmodels	modpk_odeint.f90	/^    subroutine check_infl_ended_for_nonSRbreakmode/
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
 constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(y, radius)$/
-convert_q_to_u	modpk_odeint.f90	/^    subroutine convert_q_to_u()$/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
+d2Ndphi2	modpk_potential.f90	/^  function d2Ndphi2(phi,dphi)$/
 d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
 dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
+dNdphi	modpk_potential.f90	/^  function dNdphi(dphi)$/
 dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(phi)$/
 ddragoptdepth_dz	modules.f90	/^        function ddragoptdepth_dz(z)$/
 derivpolevl	recfast.f90	/^          function derivpolevl(x,coef,N)$/
@@ -333,7 +329,6 @@ spline_integrate	subroutines.f90	/^      subroutine spline_integrate(x,y,y2,yint
 splinepow	power_tilt.f90	/^     SUBROUTINE splinepow(x,y,n,yp1,ypn,y2)$/
 splini	subroutines.f90	/^        subroutine splini(g,n)$/
 splint	subroutines.f90	/^        subroutine splint(y,z,n)$/
-start_using_q_var	modpk_odeint.f90	/^    subroutine start_using_q_var()$/
 tanfunc	modules.f90	/^         function tanfunc(Chi)$/
 test_bad	testm.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
 thermo	modules.f90	/^        subroutine thermo(tau,cs2b,opacity, dopaci/

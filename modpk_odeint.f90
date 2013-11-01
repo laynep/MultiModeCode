@@ -110,6 +110,7 @@ CONTAINS
 
        !Uncomment to write the trajectories...
        !write(1,'(12E18.10)') x, y(:)
+       write(1,'(12E18.10)') x, y(1:num_inflaton)
 
        CALL derivs(x,y,dydx)
 
@@ -252,7 +253,8 @@ CONTAINS
     USE internals
     USE powersp
     USE modpkparams
-    USE potential
+    USE potential, only : dNdphi, tensorpower, getH, getEps, zpower, d2Ndphi2,&
+      powerspectrum
     USE modpk_utils, only : reallocate_rv, reallocate_rm
 
     IMPLICIT NONE
@@ -307,6 +309,9 @@ CONTAINS
     real(dp) :: scalefac, hubble, a_switch, dotphi
 
     complex(dp), dimension(num_inflaton**2) :: psi, dpsi
+
+    real(dp) :: fnl, nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
+    integer :: ii, jj, kk
 
 
     ode_underflow=.FALSE.
@@ -392,11 +397,34 @@ CONTAINS
        !END MULTIFIELD
 
        IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
-       
-      
+
+
        IF(ode_ps_output) THEN
 
           IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+
+            !DEBUG
+            !fnl from Vernizzi-Wands, delta-N superhorizon
+            nk_sum=0e0_dp
+            fnl = 0e0_dp
+
+            Nprime = dNdphi(delphi)
+            Nprimeprime = d2Ndphi2(phi,delphi)
+            do kk=1,size(phi)
+              nk_sum = nk_sum + Nprime(kk)**2
+            end do
+            nk_sum = nk_sum**2
+
+            do ii=1,size(phi)
+              do jj=1,size(phi)
+                fnl = fnl + Nprime(ii)*Nprime(jj)*Nprimeprime(ii,jj)
+              end do
+            end do
+            fnl = (-5e0_dp/6e0_dp)*fnl/nk_sum
+
+            !DEBUG
+            !print*, "fnl=", fnl
+            write(21,*),fnl
 
              !MULTIFIELD
              IF (use_q) THEN

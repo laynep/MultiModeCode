@@ -74,5 +74,7 @@ utils.o:
 
 clean:
 	-rm -f *.o *.a *.d core *.mod
+	-rm fort.*
+	-rm powspec
 
 
