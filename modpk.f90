@@ -173,6 +173,13 @@ CONTAINS
        PRINT*,'MODPK: The phi_init you specified is too small to give'
        PRINT*,'MODPK: sufficient efolds of inflation. We cannot self-consistently'
        PRINT*,'MODPK: solve this for you. Please adjust phi_init and try again.'
+
+       !Override the stop.
+       if (sampling_techn/=reg_samp) then
+         pk_bad=bad_ic
+         return
+       end if
+
        PRINT*,'MODPK: QUITTING'
        STOP
     END IF
