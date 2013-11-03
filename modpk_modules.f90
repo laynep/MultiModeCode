@@ -102,6 +102,8 @@ module powersp
     real(dp) :: powz
     !Proj ptb spectra onto directions perpend to adiab
     real(dp) :: isocurv
+    !Cross-spectrum for isocurv + adiab
+    real(dp) :: cross_ad_iso
     !Total non-adiab pressure ptb spectrum
     real(dp) :: pnad
     !Total entropic ptb spectrum, proportional to non-adiab pressure ptb
