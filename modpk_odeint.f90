@@ -90,6 +90,7 @@ CONTAINS
 
     DO nstp=1,MAXSTP
 
+
        if (any(isnan(y))) then
          print*, "ERROR in odeint_r"
          print*, "ERROR: y has a NaN value."
@@ -110,6 +111,7 @@ CONTAINS
 
        !Uncomment to write the trajectories...
        !write(1,'(12E18.10)') x, y(:)
+       !record trajectory
        !write(1,'(12E18.10)') x, y(1:num_inflaton)
 
        CALL derivs(x,y,dydx)
@@ -149,6 +151,9 @@ CONTAINS
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton)
 
+    !DEBUG
+    !print*, "writing phi_light, eps"
+    !write(50,*), y(1),  getEps(p,delp)
 
 
        IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
@@ -253,13 +258,15 @@ CONTAINS
     USE internals
     USE powersp
     USE modpkparams
-    USE potential, only : dNdphi, tensorpower, getH, getEps, zpower, d2Ndphi2,&
+    USE potential, only : tensorpower, getH, getEps, zpower,&
       powerspectrum
     USE modpk_utils, only : reallocate_rv, reallocate_rm
 
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: ystart
     real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
+    real(dp) :: eps_adjust
+
     real(dp), DIMENSION(num_inflaton) :: phi, delphi  ! the classical field phi and dphi are real
     COMPLEX(KIND=DP), DIMENSION(size(ystart)) :: ytmp
     LOGICAL :: use_q, compute_zpower
@@ -310,7 +317,7 @@ CONTAINS
 
     complex(dp), dimension(num_inflaton**2) :: psi, dpsi
 
-    real(dp) :: fnl, nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
+    real(dp) :: nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
     integer :: ii, jj, kk
 
 
@@ -334,10 +341,9 @@ CONTAINS
 
     use_q = .false.
     compute_zpower = .true.
+    eps_adjust = eps
 
-    DO nstp=1,MAXSTP
-
-    !if (nstp==1) print*, "y from odeint_c", y
+   DO nstp=1,MAXSTP
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
          print*, "ERROR in odeint_c"
@@ -357,6 +363,9 @@ CONTAINS
        END IF
 
        ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
+
+       !"Trick" to get constant fractional errors except very near
+       !zero-crossings. (Numerical Recipes)
        yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
@@ -365,9 +374,9 @@ CONTAINS
        IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
 
        IF (use_q) THEN
-          CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,qderivs)
+          CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,qderivs)
        ELSE
-          CALL rkqs_c(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+          CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,derivs)
        END IF
 
        IF (hdid == h) THEN
@@ -393,38 +402,26 @@ CONTAINS
        delphi = DBLE(y(num_inflaton+1 : 2*num_inflaton))
        dotphi = sqrt(dot_product(delphi, delphi))
 
+       !DEBUG
+       !print*, "printing modes"
+       !write(500,*) x, real(psi(1))
+
        scalefac = a_init*exp(x)
+
+       !Increase accuracy requirements when not in SR
+       if (getEps(phi,delphi)>0.5_dp) then
+         eps_adjust=1e-10_dp
+         !eps_adjust=eps/1e4_dp
+       else
+         eps_adjust = eps
+       end if
        !END MULTIFIELD
 
        IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
 
-
        IF(ode_ps_output) THEN
 
           IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
-
-            !DEBUG
-            !fnl from Vernizzi-Wands, delta-N superhorizon
-            !nk_sum=0e0_dp
-            !fnl = 0e0_dp
-
-            !Nprime = dNdphi(delphi)
-            !Nprimeprime = d2Ndphi2(phi,delphi)
-            !do kk=1,size(phi)
-            !  nk_sum = nk_sum + Nprime(kk)**2
-            !end do
-            !nk_sum = nk_sum**2
-
-            !do ii=1,size(phi)
-            !  do jj=1,size(phi)
-            !    fnl = fnl + Nprime(ii)*Nprime(jj)*Nprimeprime(ii,jj)
-            !  end do
-            !end do
-            !fnl = (-5e0_dp/6e0_dp)*fnl/nk_sum
-
-            !DEBUG
-            !print*, "fnl=", fnl
-            !write(21,*),fnl
 
              !MULTIFIELD
              IF (use_q) THEN
@@ -439,6 +436,11 @@ CONTAINS
                ! with isocurv calculation
                call powerspectrum(psi, dpsi, phi, delphi, &
                  scalefac, power_internal)
+
+              !Record spectrum
+              !print*, "writing spectra"
+              !write(2,'(5E17.8)') N_tot-x, power_internal%adiab, power_internal%isocurv,&
+              !  power_internal%entropy, power_internal%pnad
 
                power_internal%tensor=tensorpower(y(index_tensor_y) &
                   *scalefac/a_switch, scalefac)

@@ -16,6 +16,16 @@
 \setlength{\parindent}{0pt}
 \def\tilC{{\tilde C}}
 \def\calR{{\cal R}}
+\def\calS{{\cal S}}
+\def\df {{\dot \phi_0}}
+
+\def\PIJ{{\mathcal{P}_{\delta \phi}^{IJ}}}
+\def\Pten{{\mathcal P_h}}
+\def\Pent{{\mathcal P_\mathrm{ent}}}
+\def\Ppnad{{\mathcal P_\mathrm{Pnad}}}
+\def\Cross{{\mathcal C_\mathrm{\calR \calS}}}
+\def\PR{{\mathcal P_\calR}}
+\def\PS{{\mathcal P_\calS}}
 
 %Author comments.
 %===============
@@ -242,6 +252,72 @@ There are then $N-1$ iso-curvature spectra given by
   P_{\alpha}^S (k) = \sum_{IJ} s_\alpha^I s_\alpha^J P_Q^{IJ}.
 \end{equation}
 This gives 
+
+\section{Orphans}
+
+Mainly orphaned statements from the original draft of the ICs+preds paper
+
+   The \textbf{comoving entropy perturbation spectrum} $\Pent$ is...
+
+   The \textbf{non-adiabatic pressure perturbation spectrum} $\Ppnad$ is ...
+
+    \lp{ Note the issue with double-precision calculations of $\mathcal P_\mathrm{Pnad}$.}
+
+However, we can see that a different quantity source the change in $\calR$.  Differentiating Eq.~\eqref{eqn:rginvariant} gives
+\begin{equation}
+  \dot \calR = -\frac{H}{\df^2} \delta P_\mathrm{nad}
+  \label{eqn:XXX}
+\end{equation}
+where the non-adiabatic pressure perturbation $\delta P_\mathrm{nad}$ is the difference between the total pressure perturbation $\delta P$ and the adiabatic pressure perturbation $\delta P_\mathrm{ad}$ :
+\begin{equation}
+  \delta P_\mathrm{nad} \equiv \delta P - c_s^2 \delta \rho
+  \label{eqn:XXX}
+\end{equation}
+is  given in terms of the total pressure perturbation
+\begin{equation}
+  \delta P = test \, ;
+  \label{eqn:XXX}
+\end{equation}
+the total density perturbation
+\begin{equation}
+  test
+  \label{eqn:XXX}
+\end{equation}
+and the speed of sound $c_s^2 = \dot {\bar P} / \dot {\bar \rho}$.
+
+\section{Observables}
+
+\begin{table}
+  \centering
+  \begin{tabular}{  c  c c  c }
+    \hline
+    Observable &  Name & Description & Reference \\
+    \hline
+    $A_s$ \dotfill             &   Scalar amplitude & $\PR(k_*)$  & Eq.~\eqref{eqn:pad}  \\
+    $A_\mathrm{iso}$  \dotfill &   Isocurvature amplitude & $\PS(k_*)$ & Eq.~\eqref{eqn:piso}  \\
+   $A_\mathrm{Cross}$ \dotfill &   Cross-spectra ampl.& $\Cross(k_*)$ & Eq.~\eqref{eqn:cross}  \\
+    $A_\mathrm{ent}$  \dotfill &   Entropy amplitude& $\Pent(k_*)$ & Eq.~\eqref{eqn:pent}  \\
+    $A_\mathrm{Pnad}$ \dotfill &   Non-adiab. pressure ampl.& $\Ppnad(k_*)$ & Eq.~\eqref{eqn:ppnad}  \\
+    \hline
+
+    $n_s$  \dotfill            &    Spectral tilt & $\mathcal D_* \log \PR+1$& Eq. XXX  \\
+    $n_T$  \dotfill            &    Tensor spectral tilt & $\mathcal D_* \log \Pten$& Eq. XXX  \\
+    $n_\mathrm{iso}$  \dotfill &    Isocurv. tilt & $\mathcal D_* \log \PS$& Eq. XXX  \\
+    $n_\mathrm{ent}$  \dotfill &    Entropy tilt & $\mathcal D_* \log \Pent$& Eq. XXX \\
+    $n_\mathrm{Pnad}$ \dotfill &    Non-adiab. pressure tilt & $\mathcal D_* \log \Ppnad$& Eq. XXX  \\
+    \hline
+
+    $\alpha_s$  \dotfill     &  Spectral running & $\mathcal D_*^2 \log \PR$ & Eq. XXX  \\
+    $r$    \dotfill          &  Tensor-to-scalar ampl. & $\Pten(k_*)/\PR(k_*)$ & Eq. XXX  \\
+    $\Theta$ \dotfill            &  Bundle width?  & \lp{Jonny}  & Eq. XXX  \\
+    $\cos \Delta$ \dotfill            &  $\omega-s$ correl. angle & $\Cross/\sqrt{\mathcal P_{\mathcal R} \mathcal P_{\mathcal S}}$ at $k_*$   & Eq. XXX  \\
+    \hline
+  \end{tabular}
+
+  \caption{Typical observables; $k_*=0.002 \, \mathrm{Mpc}^{-1}$ is the pivot scale.    $\mathcal D_* \equiv d/d \log k$ evaluated at $k=k_*$.}
+  \label{table:observables}
+\end{table}
+
 
 \section{Lit Review}
 

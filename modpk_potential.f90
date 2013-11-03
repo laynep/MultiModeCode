@@ -4,7 +4,7 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, dNdphi, d2Ndphi2
+       tensorpower, initialphi, geteta, zpower
 
   public :: norm
   public :: bundle, field_bundle
@@ -703,6 +703,7 @@ CONTAINS
     real(dp) :: power_adiab
     real(dp) :: power_isocurv
     real(dp) :: power_pnad
+    real(dp) :: power_cross
     real(dp) :: power_entropy
 
     real(dp) :: AAprod, ABprod, BAprod, BBprod
@@ -786,9 +787,7 @@ CONTAINS
       end do
     end do
 
-    !DEBUG
-    !power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
-    power_adiab = (1e0_dp/d_phi_adiab**2)*power_adiab
+    power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !------------------------------------------------------------
 
     !Isocurvature power spectra
@@ -810,6 +809,20 @@ CONTAINS
 
       power_isocurv = 0e0_dp
       power_isocurv = sum(pk_iso_vect)
+
+      !------------------------------------------------------------
+      !Cross spectra between adiab and "projected" isocurvature
+      power_cross = 0e0_dp
+      do i =1, numb_infl
+        do j=1, numb_infl
+          do ll=1, size(s_iso,1)
+            power_cross = power_cross + &
+              omega_z(i)*s_iso(ll,j)*&
+              (power_matrix(i,j) + power_matrix(j,i))
+          end do
+        end do
+      end do
+      power_cross = power_cross/(phi_dot_0_scaled**2)
 
       !------------------------------------------------------------
 
@@ -871,6 +884,8 @@ CONTAINS
     power_spectrum%isocurv =  power_isocurv
     power_spectrum%pnad    =  power_pnad
     power_spectrum%entropy =  power_entropy
+    power_spectrum%cross_ad_iso =  power_cross
+
 
 
     contains
@@ -1168,41 +1183,6 @@ CONTAINS
     this%N=efold
 
   end subroutine bundle_exp_scalar
-
-  !Calc dNdphi on a flat surface as function of dphi=dphi/dalpha
-  function dNdphi(dphi)
-
-    real(dp), dimension(:), intent(in) :: dphi
-    integer :: i
-    real(dp), dimension(size(dphi)) :: dNdphi
-
-    do i=1,size(dphi)
-      dNdphi(i) = -1e0_dp/ dphi(i)
-    end do
-
-  end function dNdphi
-
-  !Calc d2Ndphi2 on a flat surface as function of dphi=dphi/dalpha
-  function d2Ndphi2(phi,dphi)
-
-    real(dp), dimension(:), intent(in) :: phi, dphi
-    real(dp), dimension(size(dphi),size(dphi)) :: d2Ndphi2
-    integer :: i, j
-    real(dp) :: hprime, hubble, Vprime(size(dphi))
-
-    hprime = getdHdalpha(phi,dphi)
-    hubble = getH(phi,dphi)
-    Vprime = dVdphi(phi)
-
-    do i=1,size(dphi)
-      do j=1, size(dphi)
-        d2Ndphi2(i,j) = -(hprime/hubble)/(dphi(i)*dphi(j)) &
-                        -(3e0_dp)/(dphi(i)*dphi(j)) &
-                        -(Vprime(i)/hubble**2)/(dphi(i)*dphi(i)*dphi(j))
-      end do
-    end do
-
-  end function d2Ndphi2
 
 
   FUNCTION MySech(x)

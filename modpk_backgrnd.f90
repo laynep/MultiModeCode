@@ -48,7 +48,7 @@ CONTAINS
     end if
 
     if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
-    if (modpkoutput .and. sampling_techn/=slowroll_samp) &
+    if (modpkoutput) &
       write(*, array_fmt) 'dphi_init =', dphi_init0
 
 
@@ -120,7 +120,7 @@ CONTAINS
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
           if (modpkoutput) write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
-          print*, "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
+          if (modpkoutput) write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
           pk_bad = 6
           return
 

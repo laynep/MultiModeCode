@@ -55,7 +55,7 @@ program test_mmodpk
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref,output_badic
 
-  namelist /params/ phi_init0, vparams, &
+  namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
 
 
@@ -78,7 +78,7 @@ program test_mmodpk
 
   if (sampling_techn==reg_samp) then
 
-    call calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
+    call calculate_pk_observables(k_pivot,dlnk)
 
   !Eqen sampling
   else if (sampling_techn == eqen_samp .or. &
@@ -113,11 +113,11 @@ program test_mmodpk
 
     do i=1,numb_samples
 
-      print*, "---------------------------------------------"
-      print*, "Sample numb", i, "of", numb_samples
-      print*, "---------------------------------------------"
+        if (modpkoutput) write(*,*) "---------------------------------------------"
+        if (modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
+        if (modpkoutput) write(*,*) "---------------------------------------------"
 
-      call calculate_pk_observables_per_IC(k_pivot,dlnk)
+      call calculate_pk_observables(k_pivot,dlnk)
 
     end do
 
@@ -146,73 +146,6 @@ program test_mmodpk
       if (save_iso_N) open(unit=outsamp_N_iso,status='new',file=isoNname)
 
     end subroutine open_output_files
-
-    subroutine calculate_pk_observables(k_pivot,dlnk,As,ns,r,nt)
-
-      real(dp), intent(in) :: k_pivot,dlnk
-      real(dp), intent(out) :: As,ns,r,nt
-      real(dp) :: epsilon, eta
-      real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
-      real(dp) :: ps0_iso,ps1_iso,ps2_iso
-      real(dp) :: pnad0, pnad1, pnad2
-      real(dp) :: pent0, pent1, pent2
-      real(dp) :: pz0, pz1, pz2
-      real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
-      logical :: calc_full_pk
-
-      type(power_spectra) :: pk0, pk1, pk2
-
-      !Initialize potential and calc background
-      call potinit
-
-      !DEBUG
-      call DEBUG_writing_etc()
-
-      call evolve(k_pivot, pk0)
-      call evolve(k_pivot*exp(-dlnk), pk1)
-      call evolve(k_pivot*exp(dlnk), pk2)
-
-      !DEBUG
-      ps0= pk0%adiab
-      ps1= pk1%adiab
-      ps2= pk2%adiab
-      pt0= pk0%tensor
-      pt1= pk1%tensor
-      pt2= pk2%tensor
-      ps0_iso=  pk0%isocurv
-      ps1_iso=  pk1%isocurv
-      ps2_iso=  pk2%isocurv
-      pz0= pk0%powz
-      pz1= pk1%powz
-      pz2= pk2%powz
-      pnad0=pk0%pnad
-      pnad1=pk1%pnad
-      pnad2=pk2%pnad
-      pent0=pk0%entropy
-      pent1=pk1%entropy
-      pent2=pk2%entropy
-
-
-      !Get full spectrum for adiab and isocurv at equal intvs in lnk
-      call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
-
-      !SR vars at horizon
-      epsilon = getEps(phi_pivot, dphi_pivot)
-      eta = geteta(phi_pivot, dphi_pivot)
-
-      As = ps0
-      ns = 1.d0+log(ps2/ps1)/dlnk/2.d0
-      r=pt0/ps0
-      nt=log(pt2/pt1)/dlnk/2.d0
-
-      call output_observables(pk_arr,pk_iso_arr, &
-        (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
-        (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
-        (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        (/ns/),r,nt, alpha_s, epsilon,eta,calc_full_pk)
-
-
-    end subroutine calculate_pk_observables
 
 
     subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
@@ -286,7 +219,7 @@ program test_mmodpk
     end subroutine allocate_vars
 
     subroutine output_observables(pk_arr, pk_iso_arr,&
-        As,At,Az,A_iso,A_pnad,A_ent,ns,r,nt, alpha_s,&
+        As,At,Az,A_iso,A_pnad,A_ent,A_cross,ns,r,nt, alpha_s,&
         epsilon,eta,calc_full_pk)
 
       real(dp), dimension(:,:), intent(in) :: pk_arr
@@ -294,6 +227,7 @@ program test_mmodpk
       real(dp), intent(in) :: r,nt, epsilon,eta, alpha_s
       real(dp), dimension(:), intent(in) :: As, At, Az, A_iso, &
         A_pnad,A_ent, ns
+      real(dp), intent(in) :: A_cross
 
       logical :: calc_full_pk
 
@@ -313,14 +247,9 @@ program test_mmodpk
       !write(*, *), As(2), Az(2)
       !write(*, *), As(3), Az(3)
       write(*, e2_fmt), "Isocurvature P =", A_iso(1)
-      !write(*, e2_fmt), "Isocurvature P =", A_iso(2)
-      !write(*, e2_fmt), "Isocurvature P =", A_iso(3)
       write(*, e2_fmt), "Pnad P =", A_pnad(1)
-      !write(*, e2_fmt), "Pnad P =", A_pnad(2)
-      !write(*, e2_fmt), "Pnad P =", A_pnad(3)
       write(*, e2_fmt), "Entropy P =", A_ent(1)
-      !write(*, e2_fmt), "Entropy P =", A_ent(2)
-      !write(*, e2_fmt), "Entropy P =", A_ent(3)
+      write(*, e2_fmt), "Cross Ad-Iso P =", A_cross
       write(*, e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
       write(*, e2_fmt) "Pt/Ps =", r, '(', 16*epsilon, ')'
 
@@ -335,6 +264,7 @@ program test_mmodpk
       write(*, e2_fmt) "alpha_s =", alpha_s, '(', 8.0*epsilon*(2.0*eta -&
         3.0*epsilon), ')'
 
+
       if (calc_full_pk) then
         do i=1,size(pk_arr,1)
           write(101,*) pk_arr(i,:)
@@ -343,6 +273,12 @@ program test_mmodpk
         write(*,*) "Adiab P(k) written to file #101"
         if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to file #102"
       end if
+
+!DEBUG
+if (abs(alpha_s)>1.0) then
+  print*, "ALPHA IS HUGE!"
+  stop
+end if
 
     end subroutine output_observables
 
@@ -381,11 +317,11 @@ program test_mmodpk
     end subroutine DEBUG_writing_etc
 
     !Calculate observables, but grab a new IC each time called
-    subroutine calculate_pk_observables_per_IC(k_pivot,dlnk)
+    subroutine calculate_pk_observables(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
       real(dp) :: As,ns,r,nt, alpha_s
-      real(dp) :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross
       real(dp) :: n_iso, n_pnad, n_ent
       real(dp) :: epsilon, eta
       real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
@@ -401,9 +337,11 @@ program test_mmodpk
       pk_bad=0
       leave = .false.
 
-      call get_ic(phi_init0, dphi_init0, sampling_techn, &
-        priors_min, priors_max, &
-         numb_samples,energy_scale)
+      if (sampling_techn/=reg_samp) then
+        call get_ic(phi_init0, dphi_init0, sampling_techn, &
+          priors_min, priors_max, &
+          numb_samples,energy_scale)
+      end if
 
       !Initialize potential and calc background
       call potinit
@@ -455,6 +393,8 @@ program test_mmodpk
       A_iso=ps0_iso
       A_pnad=pnad0
       A_ent=pent0
+      A_cross = pk0%cross_ad_iso
+
       A_bundle=field_bundle%exp_scalar
 
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
@@ -472,33 +412,39 @@ program test_mmodpk
       n_pnad=log(pnad2/pnad1)/dlnk/2.d0
       n_ent=log(pent2/pent1)/dlnk/2.d0
 
+      if (modpkoutput) then
+        call output_observables(pk_arr,pk_iso_arr, &
+          (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
+          (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
+          (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),A_cross,&
+          (/ns,n_iso,n_pnad,n_ent/),r,nt,alpha_s, &
+          epsilon,eta,calc_full_pk)
+      end if
 
-      call output_observables(pk_arr,pk_iso_arr, &
-        (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
-        (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
-        (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),&
-        (/ns,n_iso,n_pnad,n_ent/),r,nt,alpha_s, epsilon,eta,calc_full_pk)
-
-      !Load & print output array
-      !Save in ic_output in case want to post-process.
-      !Comment-out if don't want to keep and just do write(1,*)
-      call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
-      alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
-      if (output_badic .or. pk_bad/=bad_ic) then
-        call ic_output(i)%printout(outsamp)
-      endif
-
-      if (save_iso_N) then
-        call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
-          As,ns,r,nt, alpha_s,&
-          A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent)
+      if (sampling_techn/=reg_samp) then
+        !Load & print output array
+        !Save in ic_output in case want to post-process.
+        !Comment-out if don't want to keep and just do write(1,*)
+        call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
+        alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
+        A_cross)
         if (output_badic .or. pk_bad/=bad_ic) then
-          call ic_output_iso_N(i)%printout(outsamp_N_iso)
+          call ic_output(i)%printout(outsamp)
+        endif
+
+        if (save_iso_N) then
+          call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
+            As,ns,r,nt, alpha_s,&
+            A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
+            A_cross)
+          if (output_badic .or. pk_bad/=bad_ic) then
+            call ic_output_iso_N(i)%printout(outsamp_N_iso)
+          end if
         end if
       end if
 
 
-    end subroutine calculate_pk_observables_per_IC
+    end subroutine calculate_pk_observables
 
 
     subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,&

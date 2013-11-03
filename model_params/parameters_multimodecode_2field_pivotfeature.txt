@@ -15,8 +15,8 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp}
 
 &ic_sampling
-  sampling_techn = 3
-  numb_samples = 10000
+  sampling_techn = 1
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -63,13 +63,14 @@ the smallest mass; others are discarded.
 
 ----------------
 &full_pk
-  calc_full_pk=.false.
+  calc_full_pk=.true.
+  steps = 500
+  kmin=0.0019
+  kmax=0.0022
+/
   steps = 500
   kmin=5.0e-4
   kmax=5.0e0
-/
-  kmin=0.0019
-  kmax=0.0022
 
 ---------------
 #MISC STUFF

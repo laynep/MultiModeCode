@@ -25,7 +25,7 @@ module modpk_icsampling
     real(dp), dimension(:), allocatable :: ic
     real(dp) :: As, ns, r, nt, alpha_s
     real(dp) :: n_iso, n_pnad,n_ent
-    real(dp) :: A_iso, A_pnad, A_ent, A_bundle
+    real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross_ad_iso
     contains
       procedure :: printout => ic_print_observables
       procedure :: load_observables => ic_load_observables
@@ -805,18 +805,20 @@ print*, new_measure
 
       write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
         this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
-        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent
+        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent, &
+        this%A_cross_ad_iso
 
     end subroutine ic_print_observables
 
     !Load the cosmo observables into the ic_and_observables type
     subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt,&
-      alpha_s, A_iso, A_pnad, A_ent, A_bundle, &
-      n_iso, n_pnad, n_ent)
+      alpha_s, A_iso, A_pnad, A_ent, A_bundle,  &
+      n_iso, n_pnad, n_ent, A_cross)
 
       class(ic_and_observables) :: this
       real(dp), intent(in) :: As, ns, r, nt, alpha_s
       real(dp), intent(in) :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp), intent(in) :: A_cross
       real(dp), intent(in) :: n_iso, n_pnad, n_ent
       real(dp), dimension(:), intent(in) :: phi0, dphi0
 
@@ -846,6 +848,7 @@ print*, new_measure
       this%n_iso= n_iso
       this%n_pnad=n_pnad
       this%n_ent=n_ent
+      this%A_cross_ad_iso=A_cross
 
     end subroutine ic_load_observables
 

@@ -26,6 +26,7 @@ CONTAINS
     real(dp) :: k,klo,khi
 
     k_start = 1.d2
+
     eval_ps = 5.d2
     useq_ps = 1.d2
     !
@@ -40,7 +41,9 @@ CONTAINS
     !When scanning ICs, let some backgrnd errors override
     if (sampling_techn/=reg_samp) then
       if (pk_bad == bad_ic) then
-        print*, "--------------- BAD IC; RESTARTING -------------------"
+        if (modpkoutput) then
+          print*, "--------------- BAD IC; RESTARTING -------------------"
+        end if
         return
       end if
     end if
@@ -173,12 +176,16 @@ CONTAINS
        PRINT*,'MODPK: The phi_init you specified is too small to give'
        PRINT*,'MODPK: sufficient efolds of inflation. We cannot self-consistently'
        PRINT*,'MODPK: solve this for you. Please adjust phi_init and try again.'
+       print*, "alpha=",x1
+
+       print*, "lna", lna
+       print*, "dalpha", dalpha
 
        !Override the stop.
-       if (sampling_techn/=reg_samp) then
-         pk_bad=bad_ic
-         return
-       end if
+       !if (sampling_techn/=reg_samp) then
+       !  pk_bad=bad_ic
+       !  return
+       !end if
 
        PRINT*,'MODPK: QUITTING'
        STOP
@@ -187,6 +194,12 @@ CONTAINS
        PRINT*,'MODPK: The interpolation in SUBROUTINE EVOLVE has suspiciously large'
        PRINT*,'MODPK: errors. Your model smells fishy.'
        PRINT*,'MODPK: QUITTING'
+       if ((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1)&
+         print*, "sqrt(2 delphi.delphi)/N_f",&
+         (sqrt(dot_product(delphi,delphi))/num_inflaton)
+       if (dalpha .GT. 0.1) print*, "dalpha", dalpha
+       if (dh > 0.1) print*, "dh", dh
+
        STOP
     ENDIF
 
@@ -200,8 +213,6 @@ CONTAINS
     ode_ps_output = .true.
     ode_infl_end = .true.
 
-    !DEBUG
-    !save_steps = .true.
     save_steps = .false.
 
     pk_bad = 0
@@ -212,7 +223,13 @@ CONTAINS
 
 
     h1=0.1 !guessed start stepsize
-    accuracy=1.0d-8 !has a big impact on the speed of the code
+
+    ![ LP: ] Some fast-roll cases need high accuracy
+    !accuracy=1.0e-9_dp !has a big impact on the speed of the code
+
+    !DEBUG
+    accuracy=1.0e-6_dp !has a big impact on the speed of the code
+
     hmin=1e-30_dp !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
