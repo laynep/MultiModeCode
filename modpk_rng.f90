@@ -252,7 +252,7 @@ function make_blob(n, center, sigma)
 	if (present(sigma)) then
 		std = sigma
 	else
-		std = 1_dp
+		std = 1e0_dp
 	end if
 
 	call init_random_seed()

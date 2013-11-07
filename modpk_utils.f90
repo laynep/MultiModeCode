@@ -675,25 +675,4 @@ CONTAINS
   end function convert_matrix_to_hacked_vector
 
 
-  !From Numerical Recipes section 9.5
-  !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
-
-  !Finding the root of a plynomial by laguerre method
-  !function laguerre_root_finder(coeff,poly_degree,x0,iters) &
-  !    result(root)
-
-  !  integer, intent(in) :: poly_degree
-  !  integer, intent(out), optional :: iters
-  !  complex(dp), dimension(poly_degree+1), intent(in) :: coeff
-  !  complex(dp), intent(in) :: x0
-  !  complex(dp) :: root
-
-  !  !DEBUG
-  !  print*, "Finding the root of a polynomial by laguerre method"
-  !  stop
-
-  !  root = 0e0_dp
-
-  !end function laguerre_root_finder
-
 END MODULE modpk_utils

@@ -50,26 +50,26 @@ CONTAINS
     select case(potential_choice)
     case(1) 
       ! m_i^2 phi_i^2 --- N-quadratic
-       m2_V = 10.d0**(vparams(1,:))
-       pot = 0.5d0*sum(m2_V*phi*phi)
+       m2_V = 10.e0_dp**(vparams(1,:))
+       pot = 0.5e0_dp*sum(m2_V*phi*phi)
     case(2)
       ! N-flation (axions)
-       lambda = 10.d0**vparams(1,:)
-       finv = 1.d0/(10.d0**vparams(2,:))
-       pot = sum(lambda**4*(1.d0+cos(finv*phi)))
+       lambda = 10.e0_dp**vparams(1,:)
+       finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+       pot = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
     case(3)
-       lambda = 10.d0**vparams(1,:)
-       pot = sum(0.25*lambda*phi**4)
+       lambda = 10.e0_dp**vparams(1,:)
+       pot = sum(0.25e0_dp*lambda*phi**4)
     case(4)
-       lambda = 10.d0**vparams(1,:)
+       lambda = 10.e0_dp**vparams(1,:)
        pot = sum(lambda*phi)
     case(5)
-       lambda = 10.d0**vparams(1,:)
-       pot = sum(lambda*1.5d0*phi**(2./3.))
+       lambda = 10.e0_dp**vparams(1,:)
+       pot = sum(lambda*1.5d0*phi**(2.e0_dp/3.e0_dp))
     case(6)
-       lambda = 10.d0**vparams(1,:)
-       mu = 10.d0**vparams(2,:)
-       pot = sum(lambda**4 - mu*phi**4/4.d0)
+       lambda = 10.e0_dp**vparams(1,:)
+       mu = 10.e0_dp**vparams(2,:)
+       pot = sum(lambda**4 - mu*phi**4/4.e0_dp)
     case(7) !product of exponentials
        lambda = vparams(2, :)
        pot = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl)) 
@@ -90,7 +90,7 @@ CONTAINS
      case(9)
        m2_V = vparams(1,:)
        c1_V = vparams(2,:)
-       pot = 0.5*sum(m2_V*phi*phi) + sum(c1_V)
+       pot = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
      case(10)
       ! pot = 0.5*M2**2*cos(0.5*theta2)*(sin(0.5*theta2)*(phi(1)-c2)+&
       !       cos(0.5*theta2)phi(2)+tan((1/pi)*theta2*atan(s2*(cos(0.5*theta2)*(phi(1)-c2)-&
@@ -111,18 +111,18 @@ CONTAINS
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
 
-      m2_V = 10.d0**(vparams(1,:))
-      lambda4 = 10.d0**vparams(2,:)
+      m2_V = 10.e0_dp**(vparams(1,:))
+      lambda4 = 10.e0_dp**vparams(2,:)
       phi_light_index = minloc(m2_V,1)
 
-      pot = 0.5d0*sum(m2_V*phi*phi)+ &
-        (1.0d0/24.0d0)*(phi(phi_light_index)**2)*sum(lambda4*phi*phi)
+      pot = 0.5e0_dp*sum(m2_V*phi*phi)+ &
+        (1.0e0_dp/24.0e0_dp)*(phi(phi_light_index)**2)*sum(lambda4*phi*phi)
 
     case(12)
       !Mass matrix with diagonal terms = m_i^2
       !Off-diagonal terms = \eps
-      m2_V = 10.d0**(vparams(1,:))
-      lambda2 = 10.d0**(vparams(2,1))
+      m2_V = 10.e0_dp**(vparams(1,:))
+      lambda2 = 10.e0_dp**(vparams(2,1))
       pot = 0e0_dp
 
       do i=1, num_inflaton
@@ -686,13 +686,16 @@ CONTAINS
 
   ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
   !adiabatic P(k), and isocurv P(k); includes cross correlations
-  !subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_matrix, power_adiab, power_isocurv)
-  subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_spectrum)
+  subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_spectrum, using_q)
     use internals
     use powersp
 
     type(power_spectra), intent(inout) :: power_spectrum
     real(dp), dimension(:), intent(in) :: dphi, phi
+
+    logical, optional, intent(in) :: using_q
+    logical :: use_q
+
     ! Hacked matrix to vect
     complex(dp), dimension(:), intent(in) :: psi, dpsi
     real(dp), intent(in) :: a
@@ -707,6 +710,7 @@ CONTAINS
     real(dp) :: power_entropy
 
     real(dp) :: AAprod, ABprod, BAprod, BBprod
+    type(KahanSum) :: pnad_sumAA, pnad_sumAB, pnad_sumBA, pnad_sumBB
 
     real(dp) :: H, Pdot
 
@@ -714,8 +718,8 @@ CONTAINS
     real(dp), dimension(num_inflaton) :: A_vect, B_vect
 
     ! size(dphi)=num_inflaton
-    complex(kind=dp), dimension(size(dphi),size(dphi)) :: psi_matrix,&
-      dpsi_matrix
+    complex(kind=dp), dimension(size(dphi),size(dphi)) :: ptb_matrix,&
+      dptb_matrix
     real(dp), dimension(size(dphi)-1) :: pk_iso_vect
 
     !proj along adiab dir
@@ -734,18 +738,37 @@ CONTAINS
 
     real(dp) :: power_total
 
+    !Variable passed to powerspectrum
+    !Psi_ij =a q_ij is default
+    !q_ij optional
+    if (present(using_q)) then
+      use_q = using_q
+    else
+      use_q =.false.
+    end if
+
     numb_infl=size(dphi)
 
     ! Convert hacked vector to matrix
     do i=1,numb_infl; do j=1, numb_infl
-      psi_matrix(i,j) = psi((i-1)*numb_infl+j)
-      dpsi_matrix(i,j) = dpsi((i-1)*numb_infl+j)
+      ptb_matrix(i,j) = psi((i-1)*numb_infl+j)
+      dptb_matrix(i,j) = dpsi((i-1)*numb_infl+j)
     end do; end do
 
     ! Make projection vector along adiabatic and isocurv directions
     ! NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
+
+    !DEBUG
+    !If there's a major hierarchy in scales for the vector components, then
+    !there can be a spurious component of the isocurvature direction
+    !oriented along the adiabatic one.  When you're approaching the
+    !adiabatic limit this can be the dominant contribution, so we force the
+    !smallest term to be zero whenever adding it doesn't affect the value of
+    !the norm.
+    call renormalize_remove_smallest(omega_z)
+
 
     !Cosmology params to make phi_adiab and d_phi_adiab
     hubble = getH(phi,dphi)
@@ -760,33 +783,51 @@ CONTAINS
 
 
     !Build power matrices for fields, vels, and cross correls
+    !All other quantities are background, so only power matrices dependent on
+    !choice of \psi vs q ptb variable
+
+    !NB: These are different for \psi_ij and q_ij variables
+    !NB: Default is for \psi_ij, making the q_ij eqns a little more complicated
+    !NB: \psi_ij = a*q_ij
+    !NB: d\psi_ij = a*(q_ij + dq_ij)
     power_matrix=0e0_dp
     d_power_matrix=0e0_dp
     cross_matrix=0e0_dp
 
-    prefactor= (k**3/2.0e0_dp/(pi**2)/a**2)/(2e0_dp*k)
-    do i=1,numb_infl;do j=1, numb_infl; do ll=1,numb_infl
+    if (use_q) then
+      !Don't divide out by scalefact
+      prefactor= (k**3/2.0e0_dp/(pi**2))/(2e0_dp*k)
+    else
+      prefactor= (k**3/2.0e0_dp/(pi**2)/a**2)/(2e0_dp*k)
+    end if
+
+    do i=1,numb_infl; do j=1, numb_infl; do ll=1,numb_infl
 
       power_matrix(i,j) =power_matrix(i,j)+ &
-        psi_matrix(i,ll)*conjg(psi_matrix(j,ll))*prefactor
+        ptb_matrix(i,ll)*conjg(ptb_matrix(j,ll))*prefactor
 
-      d_power_matrix(i,j) =d_power_matrix(i,j)+&
-        dpsi_matrix(i,ll)*conjg(dpsi_matrix(j,ll))*prefactor
+      if (.not. use_q) then
+        cross_matrix(i,j) =cross_matrix(i,j)+ &
+          ptb_matrix(i,ll)*conjg(dptb_matrix(j,ll))*prefactor
+      else
+        cross_matrix(i,j) =cross_matrix(i,j)+ &
+          ptb_matrix(i,ll)*conjg(ptb_matrix(j,ll) + dptb_matrix(j,ll))*prefactor
+      end if
 
-      cross_matrix(i,j) =cross_matrix(i,j)+ &
-        psi_matrix(i,ll)*conjg(dpsi_matrix(j,ll))*prefactor
+      if (.not. use_q) then
+        d_power_matrix(i,j) =d_power_matrix(i,j)+&
+          dptb_matrix(i,ll)*conjg(dptb_matrix(j,ll))*prefactor
+      else
+        d_power_matrix(i,j) =d_power_matrix(i,j)+&
+          (ptb_matrix(i,ll)+dptb_matrix(i,ll))*&
+          conjg(ptb_matrix(j,ll)+dptb_matrix(j,ll))*prefactor
+      end if
 
     end do; end do; end do
 
     !------------------------------------------------------------
     !Adiabatic power spectrum
-    power_adiab = 0e0_dp
-    do i=1,numb_infl
-      do j=1,numb_infl
-      power_adiab = power_adiab + omega_z(i)*omega_z(j)*power_matrix(i,j)
-      end do
-    end do
-
+    power_adiab = dot_product(matmul(power_matrix,omega_z),omega_z)
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !------------------------------------------------------------
 
@@ -797,13 +838,27 @@ CONTAINS
       !Build the isocurv unit vects
       call build_isocurv_basis()
 
+      !DEBUG
+      !call build_isocurv_basisALTERNATIVE()
+
       !Vector of iso-spectra
       !Project power_matrix onto directs perpend to adiab direction
       pk_iso_vect = 0e0_dp
       do i=1,size(s_iso,1); do j=1, numb_infl; do ll=1,numb_infl
         pk_iso_vect(i) = pk_iso_vect(i) + &
           s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
+        !DEBUG
+        !print*, "-------------------------"
+        !print*, "s_iso",s_iso(i,j)
+        !print*, "s_iso",s_iso(i,ll)
+        !print*, "power_matrix",power_matrix(j,ll)
+        !print*, "pk_iso_vect",pk_iso_vect(i)
+        !print*, "addition",s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
       end do; end do; end do
+
+      !DEBUG
+      !print*, "stopping after calc pk_iso_vect"
+      !stop
 
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
@@ -813,21 +868,17 @@ CONTAINS
       !------------------------------------------------------------
       !Cross spectra between adiab and "projected" isocurvature
       power_cross = 0e0_dp
-      do i =1, numb_infl
-        do j=1, numb_infl
-          do ll=1, size(s_iso,1)
-            power_cross = power_cross + &
-              omega_z(i)*s_iso(ll,j)*&
-              (power_matrix(i,j) + power_matrix(j,i))
-          end do
-        end do
-      end do
+      do i =1, numb_infl; do j=1, numb_infl; do ll=1, size(s_iso,1)
+        power_cross = power_cross + &
+          omega_z(i)*s_iso(ll,j)*&
+          (power_matrix(i,j) + power_matrix(j,i))
+      end do; end do; end do
       power_cross = power_cross/(phi_dot_0_scaled**2)
 
       !------------------------------------------------------------
 
       !P(k) of total non-adiab pressure ptbs
-      !dP_nad_i(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*Psi_ij)*\hat{a}_j
+      !dP_nad_i(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*dPsi_ij)*\hat{a}_j
       power_pnad =0e0_dp
 
       A_vect = get_A_vect(phi,dphi)
@@ -837,6 +888,11 @@ CONTAINS
       ABprod = 0e0_dp
       BAprod = 0e0_dp
       BBprod = 0e0_dp
+      call pnad_sumAA%clear()
+      call pnad_sumAB%clear()
+      call pnad_sumBA%clear()
+      call pnad_sumBB%clear()
+
       do i=1,numb_infl; do j=1,numb_infl
 
         AAprod = AAprod +A_vect(i)*A_vect(j)*power_matrix(i,j)
@@ -844,8 +900,39 @@ CONTAINS
         BAprod = BAprod +B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
         BBprod = BBprod +B_vect(i)*B_vect(j)*d_power_matrix(i,j)
 
+        !DEBUG
+        call pnad_sumAA%add(real(A_vect(i)*A_vect(j)*power_matrix(i,j)))
+        call pnad_sumAB%add(real(A_vect(i)*B_vect(j)*cross_matrix(i,j)))
+        call pnad_sumBA%add(real(B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))))
+        call pnad_sumBB%add(real(B_vect(i)*B_vect(j)*d_power_matrix(i,j)))
+
+!        !DEBUG
+!        print*, "========================"
+!        print*, "AAprod" , A_vect(i)*A_vect(j)*power_matrix(i,j)
+!        print*, "ABprod" , A_vect(i)*B_vect(j)*cross_matrix(i,j)
+!        print*, "BAprod" , B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
+!        print*, "BBprod" , B_vect(i)*B_vect(j)*d_power_matrix(i,j)
+
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !DEBUG
+!      print*, "---------------------"
+!      print*, "POINT0 kahan sum", pnad_sumAA%summand
+!      print*, "POINT0 kahan remainder", pnad_sumAA%remainder
+!call pnad_sumAA%add(pnad_sumAB%summand)
+!call pnad_sumAA%add(pnad_sumBA%summand)
+!call pnad_sumAA%add(pnad_sumBB%summand)
+!
+!call pnad_sumAA%add(pnad_sumAB%remainder)
+!call pnad_sumAA%add(pnad_sumAB%remainder)
+!call pnad_sumAA%add(pnad_sumBA%remainder)
+!call pnad_sumAA%add(pnad_sumBB%remainder)
+!      print*, "POINT0 total kahan sum", pnad_sumAA%summand
+!      print*, "POINT0 total kahan remainder", pnad_sumAA%remainder
+!      print*, "POINT1 power_pnad simple", power_pnad
+!      print*, "POINT3 regular terms", (AAprod + BBprod) , (ABprod + BAprod)
+!      print*, "POINT3 regular terms", AAprod , BBprod , ABprod , BAprod
 
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
@@ -867,6 +954,9 @@ CONTAINS
         power_pnad=0e0_dp
       endif
 
+      !DEBUG
+      !stop
+
 
       !Rescale so spectrum for S=(H/Pdot)dP_nad - total entropy ptb
       H=getH(phi,dphi)
@@ -887,8 +977,56 @@ CONTAINS
     power_spectrum%cross_ad_iso =  power_cross
 
 
-
     contains
+
+    !subroutine build_isocurv_basisALTERNATIVE(omega)
+    subroutine build_isocurv_basisALTERNATIVE()
+
+      !real(dp), dimension(num_inflaton), intent(in) :: omega_z
+      real(dp), dimension(num_inflaton) :: Vprime
+      integer :: i, j
+      real(dp), dimension(num_inflaton,num_inflaton) :: perp
+      real(dp) :: s_1_norm
+
+      Vprime = dVdphi(phi)
+
+      !Align first isocurv vector perpendicular to omega_z
+      !NB: only works with trivial field-space metric
+      !NB: need to upgrade delta_ij --> G_ij
+      do i=1, num_inflaton; do j=1, num_inflaton
+          if (i==j) then
+            perp(i,j) = 1.0e0_dp - omega_z(i)*omega_z(j)
+          else
+            perp(i,j) = - omega_z(i)*omega_z(j)
+          end if
+      end do; end do
+
+      s_1_norm = 0e0_dp
+      s_iso = 0e0_dp
+      do i=1,num_inflaton
+        do j=1,num_inflaton
+          s_iso(1,i) = s_iso(1,i) - &
+            perp(i,j)*Vprime(j)
+
+          s_1_norm = s_1_norm + &
+            perp(i,j)*Vprime(i)*Vprime(j)
+        end do
+      end do
+      s_iso(1,:) = s_iso(1,:)/sqrt(s_1_norm)
+
+      !DEBUG
+      print*, "from build_isocurv_basisALTERNATIVE"
+      print*, "s_iso", s_iso(1,:)
+      print*, "omega_z", omega_z
+      print*, "s1.omega_z",dot_product(s_iso(1,:),omega_z)
+      print*, "first comp", s_iso(1,1)*omega_z(1)
+      print*, "second comp", s_iso(1,2)*omega_z(2)
+      print*, "norm(omega)", norm(omega_z)
+      print*, "norm(s1)", norm(s_iso(1,:))
+      !stop
+
+       
+    end subroutine build_isocurv_basisALTERNATIVE
 
 
     !Basis perpend to adiab direction.  Gram-Schmidt
@@ -923,8 +1061,8 @@ CONTAINS
         end if
       end do
       if (adiab_index ==0) then
-        print*, "It appears no field space directions are aligned with"
-        print*, "the adiab direction."
+        print*, "It appears no field space directions have projection"
+        print*, "along the adiab direction."
         stop
       end if
 
@@ -939,6 +1077,7 @@ CONTAINS
       spanning(1,:) = omega_z/norm(omega_z)
 
       s_iso = 0e0_dp
+
       do i=2,size(spanning,1)
 
         spanning(i,:) = phi_hat(i,:)
@@ -949,19 +1088,49 @@ CONTAINS
 
         if (norm(spanning(i,:)) > div_zero_tol) then
           s_iso(i-1,:) = spanning(i,:)/norm(spanning(i,:))
-
         else
-          print*, "spanning(",i,",:) has zero norm..."
+          print*, "spanning(",i,",:) has zero norm."
           stop
         end if
 
-        if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-12) then
+        !DEBUG
+        !if(abs(dot_product(omega_z,s_iso(i-1,:)))>0) then
+        !  print*,"omega_z.iso",abs(dot_product(omega_z,s_iso(i-1,:))) 
+        !  print*, "omega_z", omega_z
+        !  print*, "s_iso", s_iso(i-1,:)
+        !  print*, "first", omega_z(1)*s_iso(i-1,1)
+        !  print*, "second", omega_z(2)*s_iso(i-1,2)
+        !  print*, "norm omega", norm(omega_z(:))
+        !  print*, "norm s", norm(s_iso(i-1,:))
+        !end if
+
+        !DEBUG
+        !If there's a major hierarchy in scales for the vector components, then
+        !there can be a spurious component of the isocurvature direction
+        !oriented along the adiabatic one.  When you're approaching the
+        !adiabatic limit this can be the dominant contribution, so we force the
+        !smallest term to be zero whenever adding it doesn't affect the value of
+        !the norm.
+        call renormalize_remove_smallest(s_iso(i-1,:))
+
+
+        !DEBUG
+        !print*, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+        !print*, "omega", omega_z
+        !print*, "omega.s", dot_product(omega_z,s_iso(i-1,:))
+        !print*, "s_iso", s_iso(i-1,:)
+        
+
+        if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-12 .or.&
+          isnan(abs(dot_product(omega_z,s_iso(i-1,:))))) then
+
           print*, "Isocurv projection has large adiab component."
           write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
           stop
         end if
 
       end do
+
 
       !Get the rate of change of isocurv directions
       !DEBUG
@@ -1012,10 +1181,50 @@ CONTAINS
 
     end subroutine build_isocurv_basis
 
+    !Takes a vector and sets to zero those elements that are so small they're
+    !not affecting the normalization
+
+    !If there's a major hierarchy in scales for the vector components, then
+    !there can be a spurious component of the isocurvature direction
+    !oriented along the adiabatic one.  When you're approaching the
+    !adiabatic limit this can be the dominant contribution, so we force the
+    !smallest term to be zero whenever adding it doesn't affect the value of
+    !the norm.
+    subroutine renormalize_remove_smallest(vect)
+
+      real(dp), dimension(:), intent(inout) :: vect
+      real(dp), dimension(size(vect)) :: vect_temp
+      real(dp) :: check
+      integer :: smallest_index
+      integer :: j
+
+      check= 1e10_dp
+      vect_temp = vect
+      smallest_index= 1
+      do j=1,size(vect)
+        if (abs(vect(j)) < check) then
+          check= abs(vect(j))
+          smallest_index= j
+        end if
+      end do
+      vect_temp(smallest_index) = 0e0_dp
+
+      !DEBUG
+      !print*, "vect", vect
+      !print*, "vect_temp", vect_temp
+      !print*, "diff norms", abs(norm(vect)-norm(vect_temp))
+
+      !1e-14 for double-precision round-off error
+      if (abs(norm(vect)-norm(vect_temp)) < 1e-14) then
+        vect = vect_temp/norm(vect_temp)
+      end if
+
+    end subroutine renormalize_remove_smallest
+
     !Functions for calculating the total non-adiabatic pressure perturbation
     !matrices
 
-    !dP_nad(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*Psi_ij)*\hat{a}_j
+    !dP_nad(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*dPsi_ij)*\hat{a}_j
     function get_A_vect(phi,dphi) result(A)
 
       real(dp), dimension(:), intent(in) :: phi, dphi

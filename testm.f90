@@ -18,7 +18,7 @@ program test_mmodpk
 
   !Writing fmts
   character(16), parameter:: e_fmt = '(a25, es12.4)'
-  character(36), parameter:: e2_fmt = '(a25, es12.4, a3, es11.4, a1)'
+  character(36), parameter:: e2_fmt = '(a25, es17.9, a3, es11.4, a1)'
   character(16), parameter:: i_fmt = '(a25,I3)'
   character(16) :: array_fmt
   character(len=2) :: ci
@@ -47,6 +47,10 @@ program test_mmodpk
 
   integer :: u
 	character(len=15) :: isoNname, sampname
+
+  !DEBUG
+  !testing for outliers
+  logical :: outlier
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -148,11 +152,10 @@ program test_mmodpk
     end subroutine open_output_files
 
 
-    subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
+    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
 
       real(dp), dimension(:,:), allocatable, intent(out) :: pk_arr
       real(dp), allocatable, optional, intent(out) :: pk_iso_arr(:,:)
-      real(dp), intent(in) :: dlnk
 
       real(dp) :: kmin, kmax, incr
       logical, intent(inout) :: calc_full_pk
@@ -199,12 +202,8 @@ program test_mmodpk
 
       !Model dependent
       allocate(vparams(vparam_rows,num_inflaton))
-      if (sampling_techn/=reg_samp) then
-        allocate(priors_max(2,num_inflaton))
-        allocate(priors_min(2,num_inflaton))
-        allocate(dphi_init0(num_inflaton))
-        allocate(dphi_init(num_inflaton))
-      end if
+      allocate(priors_max(2,num_inflaton))
+      allocate(priors_min(2,num_inflaton))
 
       allocate(phi_init0(num_inflaton))
       allocate(phi_init(num_inflaton))
@@ -214,17 +213,19 @@ program test_mmodpk
       allocate(phi_infl_end(num_inflaton))
       allocate(phi_pivot(num_inflaton))
       allocate(dphi_pivot(num_inflaton))
+      allocate(dphi_init0(num_inflaton))
+      allocate(dphi_init(num_inflaton))
 
 
     end subroutine allocate_vars
 
     subroutine output_observables(pk_arr, pk_iso_arr,&
         As,At,Az,A_iso,A_pnad,A_ent,A_cross,ns,r,nt, alpha_s,&
-        epsilon,eta,calc_full_pk)
+        eps,eta,calc_full_pk)
 
       real(dp), dimension(:,:), intent(in) :: pk_arr
       real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
-      real(dp), intent(in) :: r,nt, epsilon,eta, alpha_s
+      real(dp), intent(in) :: r,nt, eps,eta, alpha_s
       real(dp), dimension(:), intent(in) :: As, At, Az, A_iso, &
         A_pnad,A_ent, ns
       real(dp), intent(in) :: A_cross
@@ -233,36 +234,47 @@ program test_mmodpk
 
       integer :: i
 
+      real(dp) :: phi_piv_pred, N_tot_pred, Ps_pred, r_pred, ns_pred, nt_pred,&
+      alphas_pred
+
+      !Predictions for N-quad
+      phi_piv_pred = sqrt(4*N_pivot + phi_infl_end(1)**2)
+      N_tot_pred = 0.25*dot_product(phi_init, phi_init)
+      Ps_pred = N_pivot*H_pivot**2/(4*PI**2)
+      r_pred = 16*eps
+      ns_pred = 1-2*eps-1/(N_pivot)
+      nt_pred = -2*eps
+      alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps)
+
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice
       !write(*, e_fmt) "log10(m^2) =", vparams(1,1)
       write(*, e_fmt) "N_pivot =", N_pivot
-      write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', sqrt(4*N_pivot + phi_infl_end(1)**2), ')'
+      write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
       ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
-      write(*, e2_fmt) "N_tot =", N_tot,'(', 0.25*dot_product(phi_init, phi_init), ')'
+      write(*, e2_fmt) "N_tot =", N_tot,'(', N_tot_pred , ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure) 
-      write(*, e2_fmt) "Ps =", As(1), '(', N_pivot*H_pivot**2/(4*PI**2), ')'
+      write(*, e2_fmt) "Ps =", As(1), '(', Ps_pred , ')'
       !write(*, *), As(1), Az(1)
       !write(*, *), As(2), Az(2)
       !write(*, *), As(3), Az(3)
       write(*, e2_fmt), "Isocurvature P =", A_iso(1)
       write(*, e2_fmt), "Pnad P =", A_pnad(1)
       write(*, e2_fmt), "Entropy P =", A_ent(1)
-      write(*, e2_fmt), "Cross Ad-Iso P =", A_cross
+      write(*, e2_fmt), "(TEST) Cross Ad-Iso P =", A_cross
       write(*, e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
-      write(*, e2_fmt) "Pt/Ps =", r, '(', 16*epsilon, ')'
+      write(*, e2_fmt) "r = Pt/Ps =", r, '(', r_pred, ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, e2_fmt) "n_s =", ns(1), '(', 1-2*epsilon-1/(N_pivot),')'
+      write(*, e2_fmt) "n_s =", ns(1), '(', ns_pred ,')'
       if (size(ns)>1) then
         write(*, e2_fmt) "n_iso =", ns(2)
         write(*, e2_fmt) "n_pnad =", ns(3)
         write(*, e2_fmt) "n_ent =", ns(4)
       end if
-      write(*, e2_fmt) "n_t =", nt, '(', -2*epsilon, ')'
-      write(*, e2_fmt) "alpha_s =", alpha_s, '(', 8.0*epsilon*(2.0*eta -&
-        3.0*epsilon), ')'
+      write(*, e2_fmt) "n_t =", nt, '(', nt_pred , ')'
+      write(*, e2_fmt) "alpha_s =", alpha_s, '(', alphas_pred , ')'
 
 
       if (calc_full_pk) then
@@ -275,8 +287,9 @@ program test_mmodpk
       end if
 
 !DEBUG
-if (abs(alpha_s)>1.0) then
-  print*, "ALPHA IS HUGE!"
+!if (ns(1)<0.92 .or. ns(1)>0.97) then
+if (A_iso(1)>1e-12) then
+  print*, 'Outlier'
   stop
 end if
 
@@ -397,8 +410,6 @@ end if
 
       A_bundle=field_bundle%exp_scalar
 
-      !Get full spectrum for adiab and isocurv at equal intvs in lnk
-      call get_full_pk(pk_arr,pk_iso_arr,dlnk,calc_full_pk)
 
       epsilon = getEps(phi_pivot, dphi_pivot)
       eta = geteta(phi_pivot, dphi_pivot)
@@ -411,6 +422,18 @@ end if
       n_iso=log(ps2_iso/ps1_iso)/dlnk/2.d0
       n_pnad=log(pnad2/pnad1)/dlnk/2.d0
       n_ent=log(pent2/pent1)/dlnk/2.d0
+
+
+      !FOR N-quad
+      outlier=.false.
+      outlier = ns <0.93 .or. ns >0.97 .or. &
+        alpha_s <-0.0025 .or. alpha_s >0.0015
+
+
+
+
+      !Get full spectrum for adiab and isocurv at equal intvs in lnk
+      call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
 
       if (modpkoutput) then
         call output_observables(pk_arr,pk_iso_arr, &

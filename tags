@@ -181,20 +181,18 @@ backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/
 bderivs	modpk_utils.f90	/^  SUBROUTINE bderivs(x,y,yprime)$/
 bessj0	lensing.f90	/^      FUNCTION bessj0(x)$/
 build_isocurv_basis	modpk_potential.f90	/^    subroutine build_isocurv_basis()$/
+build_isocurv_basisALTERNATIVE	modpk_potential.f90	/^    subroutine build_isocurv_basisALTERNATIVE()$/
 build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(mass_matrix)$/
 build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(sample,n/
 bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi, efold)$/
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
 calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
-calculate_pk_observables_per_IC	testm.f90	/^    subroutine calculate_pk_observables_per_IC(k_p/
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
 constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(y, radius)$/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
-d2Ndphi2	modpk_potential.f90	/^  function d2Ndphi2(phi,dphi)$/
 d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
 dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
-dNdphi	modpk_potential.f90	/^  function dNdphi(dphi)$/
 dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(phi)$/
 ddragoptdepth_dz	modules.f90	/^        function ddragoptdepth_dz(z)$/
 derivpolevl	recfast.f90	/^          function derivpolevl(x,coef,N)$/
@@ -229,7 +227,7 @@ getH	modpk_potential.f90	/^  FUNCTION getH(phi,dphi)$/
 getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
 get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
 get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
-get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,dlnk,/
+get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_/
 get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
 getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
 getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(phi,dphi)$/
@@ -252,6 +250,8 @@ initialt	equations.f90	/^        subroutine initialt(EV,yt,tau)$/
 initialv	equations.f90	/^        subroutine initialv(EV,yv,tau)$/
 initlval	modules.f90	/^        subroutine initlval(lSet,max_l)$/
 invsinfunc	modules.f90	/^         function invsinfunc(x)$/
+kahan_clear_mem	modpk_modules.f90	/^  subroutine kahan_clear_mem(this)$/
+kahan_summation	modpk_modules.f90	/^  subroutine kahan_summation(this,val)$/
 kappa_HH_21cm	recfast.f90	/^        function kappa_HH_21cm(T, deriv)$/
 kappa_eH_21cm	recfast.f90	/^        function kappa_eH_21cm(T, deriv)$/
 kappa_pH_21cm	recfast.f90	/^        function kappa_pH_21cm(T, deriv) ! from as/
@@ -303,6 +303,7 @@ rand_sign	modpk_rng.f90	/^function rand_sign() result(sign)$/
 reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(p,n,m)$/
 reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(p,n)$/
 rec3jj	lensing.f90	/^subroutine rec3jj(thrcof,l2,l3,m2,m3)$/
+renormalize_remove_smallest	modpk_potential.f90	/^    subroutine renormalize_remove_smallest(vect)$/
 rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(y,dydx,x,h,yout,yerr,derivs)$/
 rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(y,dydx,x,h,yout,yerr,derivs)$/
 rkqs_c	modpk_odeint.f90	/^       SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,h/

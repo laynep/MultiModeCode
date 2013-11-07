@@ -10,6 +10,9 @@ MODULE modpkparams
   !Double precision.
   INTEGER, parameter :: DP = selected_real_kind(15, 307)
 
+  !Quad precision; remember to compile with -r16
+  !INTEGER, parameter :: DP = selected_real_kind(33, 4931)
+
   LOGICAL :: use_modpk, vnderivs, instreheat
 
 ! increase max_vparams to use more potential parameters
@@ -19,16 +22,14 @@ MODULE modpkparams
 
   INTEGER*4 :: nactual_bg, nactual_mode
   INTEGER, PARAMETER :: nsteps=100000
-  real(dp), PARAMETER :: M_Pl=1.0d0
-  real(dp), PARAMETER :: Mpc2Mpl=2.6245d-57
+  real(dp), PARAMETER :: M_Pl=1.0e0_dp
+  real(dp), PARAMETER :: Mpc2Mpl=2.6245e-57_dp
   real(dp) :: k_pivot, N_pivot, N_tot, H_pivot
   real(dp) :: a_end, a_pivot
   real(dp) :: a_init
   real(dp) :: h_init, rescale_factor
 
   real(dp), ALLOCATABLE :: phidot_sign(:)
-  !DEBUG
-  !real(dp) :: Nefold_max=10000.
   real(dp) :: Nefold_max=100000.
   real(dp) :: lna(nsteps)
   real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
@@ -115,5 +116,42 @@ module powersp
 
   !For temporary calc of spectra in odeint
   type(power_spectra) :: power_internal
+
+  type, public :: KahanSum
+    real(dp) :: summand = 0e0_dp
+    real(dp) :: remainder = 0e0_dp
+    contains
+      procedure :: add => kahan_summation
+      procedure :: clear => kahan_clear_mem
+  end type
+
+
+  contains
+
+  !Procedures for Kahan summation objects
+
+  !Algorithm for Kahan summation
+  subroutine kahan_summation(this,val)
+
+    class(KahanSum) :: this
+    real(dp), intent(in) :: val
+    real(dp) :: ytemp, ttemp
+
+    ytemp = val - this%remainder
+    ttemp = this%summand + ytemp
+    this%remainder = (ttemp - this%summand) - ytemp
+    this%summand = ttemp
+
+  end subroutine kahan_summation
+
+  subroutine kahan_clear_mem(this)
+
+    class(KahanSum) :: this
+
+    this%remainder=0e0_dp
+    this%summand=0e0_dp
+
+  end subroutine kahan_clear_mem
+
 
 end module powersp

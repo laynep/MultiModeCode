@@ -27,8 +27,13 @@ CONTAINS
 
     k_start = 1.d2
 
+    !When to start evaluating P(k)
     eval_ps = 5.d2
+
+    !When to switch variables to q=\delta \phi (k<aH/useq_ps)
+    !from \psi_ij=a q_ij (k>aH/useq_ps)
     useq_ps = 1.d2
+
     !
     !     Solve the background equations
     !
@@ -178,7 +183,6 @@ CONTAINS
        PRINT*,'MODPK: solve this for you. Please adjust phi_init and try again.'
        print*, "alpha=",x1
 
-       print*, "lna", lna
        print*, "dalpha", dalpha
 
        !Override the stop.
@@ -195,10 +199,10 @@ CONTAINS
        PRINT*,'MODPK: errors. Your model smells fishy.'
        PRINT*,'MODPK: QUITTING'
        if ((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1)&
-         print*, "sqrt(2 delphi.delphi)/N_f",&
+         print*, "MODPK: Error in dphi interpolation.",&
          (sqrt(dot_product(delphi,delphi))/num_inflaton)
-       if (dalpha .GT. 0.1) print*, "dalpha", dalpha
-       if (dh > 0.1) print*, "dh", dh
+       if (dalpha .GT. 0.1) print*, "MODPK: Error in alpha interpolation.", dalpha
+       if (dh > 0.1) print*, "MODPK: Error in Hubble interpolation", dh
 
        STOP
     ENDIF
@@ -224,10 +228,7 @@ CONTAINS
 
     h1=0.1 !guessed start stepsize
 
-    ![ LP: ] Some fast-roll cases need high accuracy
-    !accuracy=1.0e-9_dp !has a big impact on the speed of the code
-
-    !DEBUG
+    ![ LP: ] Some fast-roll cases need high accuracy; activate conditionally in odeint_c
     accuracy=1.0e-6_dp !has a big impact on the speed of the code
 
     hmin=1e-30_dp !minimum stepsize

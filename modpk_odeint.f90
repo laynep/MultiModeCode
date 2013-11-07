@@ -151,11 +151,6 @@ CONTAINS
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton)
 
-    !DEBUG
-    !print*, "writing phi_light, eps"
-    !write(50,*), y(1),  getEps(p,delp)
-
-
        IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
          if (sampling_techn==reg_samp) then
            slowroll_start=.true.
@@ -316,6 +311,7 @@ CONTAINS
     real(dp) :: scalefac, hubble, a_switch, dotphi
 
     complex(dp), dimension(num_inflaton**2) :: psi, dpsi
+    complex(dp), dimension(num_inflaton**2) :: qij, dqij
 
     real(dp) :: nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
     integer :: ii, jj, kk
@@ -403,15 +399,21 @@ CONTAINS
        dotphi = sqrt(dot_product(delphi, delphi))
 
        !DEBUG
-       !print*, "printing modes"
-       !write(500,*) x, real(psi(1))
+       !print*, "printing real part of modes"
+       !print*, "printing imaginary part of modes"
+       !if (.not. use_q) then
+       ! write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
+       ! write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
+       !else                                                                                   !
+       !  write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
+       !  write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
+       !end if
 
        scalefac = a_init*exp(x)
 
        !Increase accuracy requirements when not in SR
-       if (getEps(phi,delphi)>0.5_dp) then
-         eps_adjust=1e-10_dp
-         !eps_adjust=eps/1e4_dp
+       if (getEps(phi,delphi)>0.2e0_dp) then
+         eps_adjust=1e-12_dp
        else
          eps_adjust = eps
        end if
@@ -427,15 +429,23 @@ CONTAINS
              IF (use_q) THEN
 
                !Y's are in \bar{Q}=Q/a_switch
-               psi = y(index_ptb_y:index_ptb_vel_y-1) &
-                    *scalefac/a_switch
-               dpsi = scalefac/a_switch*&
-                 (y(index_ptb_vel_y:index_tensor_y-1) + &
-                 y(index_ptb_y:index_ptb_vel_y-1))
+               !psi = y(index_ptb_y:index_ptb_vel_y-1) &
+               !     *scalefac/a_switch
+               !dpsi = scalefac/a_switch*&
+               !  (y(index_ptb_vel_y:index_tensor_y-1) + &
+               !  y(index_ptb_y:index_ptb_vel_y-1))
 
                ! with isocurv calculation
-               call powerspectrum(psi, dpsi, phi, delphi, &
-                 scalefac, power_internal)
+               !call powerspectrum(psi, dpsi, phi, delphi, &
+               !  scalefac, power_internal)
+
+               !Y's are in \bar{Q}=Q/a_switch
+               qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
+               dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
+
+               ! with isocurv calculation
+               call powerspectrum(qij, dqij, phi, delphi, &
+                 scalefac, power_internal, using_q=.true.)
 
               !Record spectrum
               !print*, "writing spectra"
@@ -470,7 +480,9 @@ CONTAINS
 
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
+             !DEBUG
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
+             !IF(getEps(phi, delphi) .GT. 1e0_dp*0.90e0_dp .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
                 PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'

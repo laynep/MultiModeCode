@@ -5,7 +5,13 @@
 
 ifdef DEBUG
 F90C     = ifort
-FFLAGS = -r8 -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
+FFLAGS = -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
+
+ifdef QUAD
+FFLAGS+= -r16
+else
+FFLAGS+= -r8
+endif
 
 else
 
@@ -16,8 +22,6 @@ else
 #FFLAGS = -O3 -cpp -fopenmp -ffast-math # -fdefault-real-8
 F90C     = ifort
 FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
-#F90C     = mpif90
-#FFLAGS = -r8 -fpp -O0 -DMPI # -openmp  -fast # -DMPI
 
 endif
 

@@ -23,7 +23,7 @@ CONTAINS
     real(dp) :: V_i, ph, alpha_pivot, bb(size(phi_init))
     real(dp) :: Np_last
 
-    CHARACTER(16) :: fmt = '(a25,es10.3)'
+    CHARACTER(16) :: fmt = '(a25,es15.7)'
 
     !MULTIFIELD
     CHARACTER(19) :: array_fmt
@@ -31,10 +31,9 @@ CONTAINS
 
     real(dp) :: alpha_iso_N
 
-
     write(ci, '(I5)'), size(phi_init)
     ci = adjustl(ci)
-    array_fmt = '(a25,'//trim(ci)//'es10.3)'
+    array_fmt = '(a25,'//trim(ci)//'es13.5)'
     !END MULTIFIELD
 
     !     Set initial conditions
@@ -47,10 +46,16 @@ CONTAINS
       stop
     end if
 
-    if (modpkoutput) write(*, array_fmt) 'phi_init =', phi_init
+    if (modpkoutput) write(*, array_fmt) 'phi_init0 =', phi_init
     if (modpkoutput) &
-      write(*, array_fmt) 'dphi_init =', dphi_init0
+      write(*, array_fmt) 'dphi_init0 =', dphi_init0
 
+    !Initialize e-folds and background traj
+    alpha_e=0e0_dp
+    lna = 0e0_dp
+    epsarr = 0e0_dp
+    phiarr = 0e0_dp
+    dphiarr = 0e0_dp
 
     if (size(phi_init) .eq. 1) then !! for single field
 
@@ -78,7 +83,7 @@ CONTAINS
 
        !Try the background evolution for a user-defined phi_init and rescale if necessary
        rescl_count=0
-       rescale_factor = 0.1d0
+       rescale_factor = 0.1e0_dp
 
 
        DO
@@ -86,6 +91,7 @@ CONTAINS
           CALL trial_background(phi_init_trial, alpha_e, V_end)
           !! no rescaling implemented for multifield, so the code will exit here for multifield
           IF ((pk_bad/=0) .OR. phi_init_trial(1).EQ.phi_init(1)) EXIT
+
           rescl_count=rescl_count+1
           IF (rescl_count .EQ. 50) THEN
              pk_bad=2
@@ -101,7 +107,11 @@ CONTAINS
     !MULTIFIELD
     else
 
+      !!DEBUG
+      !print*, "alpha_e start", alpha_e
+
        CALL trial_background(phi_init, alpha_e, V_end)
+
 
        if (pk_bad .ne. 0) then
          !Override specific errors when doing IC sampling
@@ -134,9 +144,9 @@ CONTAINS
 
        IF (instreheat) THEN
 
-          a_init = EXP(-71.1d0 - alpha_e + LOG(V_i/V_end)/4.d0 + LOG((M_Pl**4)/V_i)/4.d0)
-          Np_last = 0.5d0*N_pivot
-          do while (abs(N_pivot-Np_last)>0.01d0)  ! determine N_pivot iteratively
+          a_init = EXP(-71.1e0_dp - alpha_e + LOG(V_i/V_end)/4.e0_dp + LOG((M_Pl**4)/V_i)/4.e0_dp)
+          Np_last = 0.5e0_dp*N_pivot
+          do while (abs(N_pivot-Np_last)>0.01e0_dp)  ! determine N_pivot iteratively
              Np_last = N_pivot
              alpha_pivot = alpha_e-N_pivot
 
@@ -145,7 +155,7 @@ CONTAINS
              CALL polint(lna(j:j+4), hubarr(j:j+4), alpha_pivot, H_pivot, dh)
              CALL array_polint(lna(j:j+4), phiarr(:, j:j+4), alpha_pivot, phi_pivot, bb)
              CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), alpha_pivot, dphi_pivot, bb)
-             N_pivot = -71.1d0-log(V_end/(M_Pl**4))/4.d0-log(k_pivot*Mpc2Mpl/H_pivot)
+             N_pivot = -71.1e0_dp-log(V_end/(M_Pl**4))/4.e0_dp-log(k_pivot*Mpc2Mpl/H_pivot)
           end do
           a_end = EXP(alpha_e)*a_init
        ELSE
@@ -185,9 +195,9 @@ CONTAINS
 
           a_end=EXP(alpha_e)*a_init
 
-          a_end_inst=EXP(-71.1d0+LOG(V_i/V_end)/4.d0+LOG((M_Pl**4)/V_i)/4.d0)
+          a_end_inst=EXP(-71.1e0_dp+LOG(V_i/V_end)/4.e0_dp+LOG((M_Pl**4)/V_i)/4.e0_dp)
 
-          if (isnan(a_end) .or. a_end<1.0d-100) then
+          if (isnan(a_end) .or. a_end<1.0e-100_dp) then
             print*, "MODPK: a_end=", a_end
             print*, "MODPK: N_efold=", alpha_pivot
             print*, "MODPK: likely too many efolds before"
@@ -249,7 +259,7 @@ CONTAINS
     real(dp), DIMENSION(:) :: Vp(num_inflaton)
     real(dp) :: Vz, dotphi, thetaN, grad_V
 
-    CHARACTER(16) :: fmt = '(a25,es10.3)'
+    CHARACTER(16) :: fmt = '(a25,es15.7)'
 
     !MULTIFIELD
     CHARACTER(19) :: array_fmt
@@ -257,13 +267,9 @@ CONTAINS
 
     write(ci, '(I5)'), size(phi_init_trial)
     ci = adjustl(ci)
-    array_fmt = '(a25, '//trim(ci)//'es10.3)'
+    array_fmt = '(a25,'//trim(ci)//'es13.5)'
     !END MULTIFIELD
 
-    !MULTIFIELD
-    h_init=SQRT(pot(phi_init_trial)/(6.d0*M_Pl**2) * &
-         (1.+SQRT(1.+2./3.* M_Pl**2 * dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) / pot(phi_init_trial)**2.)))
-    !END MULTIFIELD
 
     x1=0.0 !starting value
     x2=Nefold_max !ending value
@@ -272,14 +278,31 @@ CONTAINS
     !Set the ICS
     y(1 : size(y)/2) = phi_init_trial  !phi(x1)
 
-    if (sampling_techn==slowroll_samp .or. sampling_techn==reg_samp) then
+    vv = 0e0_dp
+
+    !DEBUG
+    if (sampling_techn==slowroll_samp) then
+    !if (sampling_techn==slowroll_samp .or. sampling_techn==reg_samp) then
+
       !dphi/dalpha(x1) slowroll approx
+      !MULTIFIELD
+      h_init=SQRT(pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
+           (1.e0_dp+SQRT(1.e0_dp+2.e0_dp/3.e0_dp* M_Pl**2 *&
+           dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) &
+           / pot(phi_init_trial)**2.)))
+      !END MULTIFIELD
       y(size(y)/2+1 : (size(y))) = &
-        -dVdphi(phi_init_trial)/3./h_init/h_init
+        -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
+
+      dphi_init0 = y(size(y)/2+1 : (size(y)))
 
     else
+
+      h_init = getH(phi_init_trial,dphi_init0)
+
       !Set w/equal energy, not necess close to SR
       y(size(y)/2+1 : (size(y))) = dphi_init0
+
     end if
     !END MULTIFIELD
 
@@ -292,7 +315,7 @@ CONTAINS
     pk_bad = 0
 
     !MULTIFIELD
-    IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 1.) THEN
+    IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
        slowroll_start=.FALSE.
     ELSE
        slowroll_start=.TRUE.
@@ -302,19 +325,17 @@ CONTAINS
 
     !guessed start stepsize
     if (potential_choice.eq.6) then
-       h1 = 0.001
+       h1 = 0.001e0_dp
     else
-       h1 = 0.1
+       h1 = 0.1e0_dp
     end if
-    dxsav=1.d-7
-    accuracy=1.0d-7
-    hmin=0.0 !minimum stepsize
+    dxsav=1.e-7_dp
+    accuracy=1.0e-7_dp
+    hmin=0.0e0_dp !minimum stepsize
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
-    if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) then
-      return
-    end if
+    if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
 
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
@@ -346,13 +367,28 @@ CONTAINS
        !
        nactual_bg=kount
        IF(slowroll_infl_end) THEN
-          ep=1.d0
+          ep = 1.0e0_dp
           i=locate(epsarr(1:kount),ep)
           j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
           CALL polint(epsarr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
           CALL polint(epsarr(j:j+4), vv(j:j+4), ep, V_end, dv)
           !MULTIFIELD
           CALL array_polint(epsarr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
+
+
+          !Check for interpolation errors
+          if(dalpha > 0.1 .or. dv > 0.1 .or. bb(1) > 0.1) THEN
+             print*,'MODPK: The interpolation in SUBROUTINE trial_background has suspiciously large'
+             print*,'MODPK: errors. Your model smells fishy.'
+             print*,'MODPK: QUITTING'
+             print*,"MODPK: dalpha", dalpha
+             print*,"MODPK: dv", dv
+             print*,"MODPK: bb", bb
+             print*,"MODPK: lna", lna(kount-10:kount), "alpha_e", alpha_e
+             print*,"MODPK: epsarr", epsarr(kount-10:kount), "ep", ep
+             stop
+           endif
+          
        ELSE
           if (size(phi_init) .eq. 1) then
              ep = abs(phi_init(1) - phi_infl_end(1))
@@ -387,17 +423,17 @@ CONTAINS
        !
 
        IF (size(phi_init) .eq. 1) THEN
-          IF(alpha_e.LT.(N_pivot+20.)) THEN
-             IF ((potential_choice.eq.6).and.(vparams(1,1)<-2.d0)) THEN
-                phi_init_trial = phi_init*0.9d0
+          IF(alpha_e.LT.(N_pivot+20.e0_dp)) THEN
+             IF ((potential_choice.eq.6).and.(vparams(1,1)<-2.e0_dp)) THEN
+                phi_init_trial = phi_init*0.9e0_dp
              ELSE
                 phi_init_trial = phi_init+(phi_init-phi_infl_end)*rescale_factor
              ENDIF
              RETURN
           END IF
 
-          IF (alpha_e.GT.N_pivot+55) THEN
-             ep = alpha_e-(N_pivot+50)
+          IF (alpha_e.GT.N_pivot+55e0_dp) THEN
+             ep = alpha_e-(N_pivot+50e0_dp)
              i = locate(lna(1:kount),ep)
              j = MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
              CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), ep, aa, bb)
@@ -446,13 +482,13 @@ CONTAINS
 
     !guessed start stepsize
     if (potential_choice.eq.6) then
-       h1 = 0.001
+       h1 = 0.001e0_dp
     else
-       h1 = 0.1
+       h1 = 0.1e0_dp
     end if
-    dxsav=1.d-7
-    accuracy=1.0d-6
-    hmin=0.0 !minimum stepsize
+    dxsav=1.e-7_dp
+    accuracy=1.0e-6_dp
+    hmin=0.0e0_dp !minimum stepsize
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
     IF(.NOT. ode_underflow) THEN

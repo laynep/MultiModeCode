@@ -18,7 +18,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
   sampling_techn = 3
   numb_samples = 10000
 
-  energy_scale = .1
+  energy_scale = 0.1
 
   save_iso_N = .false.
   N_iso_ref = 55
@@ -32,28 +32,30 @@ the smallest mass; others are discarded.
 &params
   N_pivot = 55
   k_pivot = 0.002
-  dlnk = 0.05
+  dlnk = 0.5
 
-  phi_init0 =  0.2864586827E+01,  0.2069510045E+02
-  dphi_init0 = -0.8005012295E-04,  0.1603896246E-04
-   
+  phi_init0 =  20.31001, 0.93651
+  dphi_init0 =  -0.00150931, -0.153398
 
- vparams(1,:)= -10.965, -10.0106
+  vparams(1,:)=  -10.422895047377294, -8.5441
 
 /
+  phi_init0 =  1.4749728210143207007831734E+01  7.3369691067572455622780581E+00
+  dphi_init0 = -7.5211202776277426892276301E-05  3.1747725473223066658314678E-05
+
+  dlnk = 0.05
+  phi_init0 =  0.2864586827E+01,  0.2069510045E+02
+  dphi_init0 = -0.8005012295E-04,  0.1603896246E-04
 
  vparams(1,:)= -10.965, -10.1198, -10.0106
 
- vparams(2,:)= -30.0,-30.0,-30.0,-30.0,-30.0,-30.0,-30.0,-30.0,-30.0,-30.0
-  vparams(1,:)= -12.0, -11.0
-  vparams(2,:)= -13.0
-  vparams(2,:)= -15.0, -17.0
+ vparams(1,:)= -10.965, -9.05651
 
 ----------------
 !Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0, 0
-  phi0_priors_max = 25.0, 25.0
+  phi0_priors_min = 2, 2
+  phi0_priors_max = 15.0, 15.0
 
 
   dphi0_priors_min = -2.262e-3, -2.262e-3
@@ -68,8 +70,8 @@ the smallest mass; others are discarded.
   kmin=5.0e-4
   kmax=5.0e0
 /
-  kmin=0.0019
-  kmax=0.0022
+  kmin=0.0012
+  kmax=0.0033
 
 ---------------
 #MISC STUFF
