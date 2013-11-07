@@ -15,7 +15,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp}
 
 &ic_sampling
-  sampling_techn = 3
+  sampling_techn = 1
   numb_samples = 10000
 
   energy_scale = 0.1
@@ -34,7 +34,7 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.5
 
-  phi_init0 =  20.31001, 0.93651
+  phi_init0 =  00.31001, 25.93651
   dphi_init0 =  -0.00150931, -0.153398
 
   vparams(1,:)=  -10.422895047377294, -8.5441
@@ -65,7 +65,7 @@ the smallest mass; others are discarded.
 
 ----------------
 &full_pk
-  calc_full_pk=.false.
+  calc_full_pk=.true.
   steps = 500
   kmin=5.0e-4
   kmax=5.0e0
