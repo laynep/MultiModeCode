@@ -12,7 +12,7 @@ module modpk_icsampling
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4, parameter_loop_samp=5
+    fromfile_samp=4, parameter_loop_samp=5, iso_N=6
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
@@ -76,18 +76,23 @@ module modpk_icsampling
           dphi0_priors_min, dphi0_priors_max, &
           velconst=.true.)
 
-        !Not ready for primetime
-        !call implicit_surface_sampling(sample,energy_scale, &
-        !  numb_samples,&
-        !  phi0_priors_min, phi0_priors_max, &
-        !  dphi0_priors_min, dphi0_priors_max)
+      else if (sampling_techn == iso_N) then
 
-        !Not ready for primetime
-        !call penalized_constrained_montecarlo(sample,energy_scale, &
-        !  numb_samples, penalty_fact,&
-        !  phi0_priors_min, phi0_priors_max, &
-        !  dphi0_priors_min, dphi0_priors_max)
+        !Start in SR with ICs sampled N_iso_ref before inflation ends
+        !Only works for N-quadratic
 
+        if (potential_choice /= 1) then
+          print*, "Can't implicitly define iso_N surface for potential_choice=",&
+            potential_choice
+          stop
+        end if
+
+        !Can't also record iso-N, since using N_iso_ref as override
+        save_iso_N = .false.
+
+        y_background = 0e0_dp
+
+        call constrain_via_thetas(y_background(1:num_inflaton),2e0_dp*sqrt(N_iso_ref))
 
       else if (sampling_techn == slowroll_samp) then
 

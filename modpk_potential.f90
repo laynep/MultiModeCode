@@ -767,7 +767,7 @@ CONTAINS
     !adiabatic limit this can be the dominant contribution, so we force the
     !smallest term to be zero whenever adding it doesn't affect the value of
     !the norm.
-    call renormalize_remove_smallest(omega_z)
+    !call renormalize_remove_smallest(omega_z)
 
 
     !Cosmology params to make phi_adiab and d_phi_adiab
@@ -1111,7 +1111,7 @@ CONTAINS
         !adiabatic limit this can be the dominant contribution, so we force the
         !smallest term to be zero whenever adding it doesn't affect the value of
         !the norm.
-        call renormalize_remove_smallest(s_iso(i-1,:))
+        !call renormalize_remove_smallest(s_iso(i-1,:))
 
 
         !DEBUG
@@ -1215,7 +1215,7 @@ CONTAINS
       !print*, "diff norms", abs(norm(vect)-norm(vect_temp))
 
       !1e-14 for double-precision round-off error
-      if (abs(norm(vect)-norm(vect_temp)) < 1e-14) then
+      if (abs(norm(vect)-norm(vect_temp))/abs(norm(vect)) < 1e-14) then
         vect = vect_temp/norm(vect_temp)
       end if
 

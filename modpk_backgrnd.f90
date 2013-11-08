@@ -13,7 +13,8 @@ CONTAINS
 
   SUBROUTINE backgrnd
     use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
-      dphi_iso_N, sampling_techn, eqen_samp, bad_ic, slowroll_samp, reg_samp
+      dphi_iso_N, sampling_techn, eqen_samp, bad_ic, slowroll_samp, reg_samp,&
+      iso_N
 
     INTEGER*4 :: i,j, rescl_count
 
@@ -241,7 +242,7 @@ CONTAINS
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
     use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic,&
-      slowroll_samp
+      slowroll_samp, iso_N
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -281,8 +282,11 @@ CONTAINS
     vv = 0e0_dp
 
     !DEBUG
-    if (sampling_techn==slowroll_samp) then
-    !if (sampling_techn==slowroll_samp .or. sampling_techn==reg_samp) then
+    !print*, "SETTING VEL SR"
+    !if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
+    !sampling_techn==reg_samp) then
+    if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N) then
+
 
       !dphi/dalpha(x1) slowroll approx
       !MULTIFIELD

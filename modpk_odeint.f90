@@ -415,7 +415,7 @@ CONTAINS
        if (getEps(phi,delphi)>0.2e0_dp) then
          eps_adjust=1e-12_dp
          if (getEps(phi,delphi)>0.9e0_dp) then
-           eps_adjust=1e-18_dp
+           eps_adjust=1e-17_dp
          end if
        else
          eps_adjust = eps

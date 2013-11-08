@@ -350,6 +350,20 @@ and the speed of sound $c_s^2 = \dot {\bar P} / \dot {\bar \rho}$.
 
 \end{itemize}
 
+\section{Notes on numerical checks}
+
+\begin{itemize}
+
+  \item Isocurvature spurious projection onto the adiabatic direction can be dominant contribution whenthe isocurvature is small.  Optional fix in modpk\_potential.f90 with renormalize\_remove\_smallest(omega\_z).
+
+  \item Requires increase in accuracy whenever $\epsilon \sim 1$ since $Q_{ij}$ grows quasi-exponentially
+
+  \item For certain trajectories the second-order finite difference breaks down for the calculation of $\alpha_s$ when it should be approximately zero.  Can fix this by increasing the distance between evaluated points $h \equiv \Delta \ln k$.
+
+  \item Importantly, when calculating $\delta P_\mathrm{nad} \equiv \delta P - c_s^2 \delta \rho$, $\delta P$ remains of the same order of magnitude throughout the evolution, but during the approach to the adiabatic limit the adiabatic pressure perturbation increases to this level.  Consequently, we run into roundoff error problems and a loss of significance in this calculation.  This is fixed to a large extent by calculating the projected isocurvature power spectrum since the amplitude of the isocurvature modes should decrease as we approach the adiabatic limit, making any differences calculated $X-Y$ of the same order.  We can therefore trust this comparison to a much higher degree of accuracy.
+
+\end{itemize}
+
 
 
 \bibliographystyle{plain}

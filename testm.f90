@@ -48,10 +48,6 @@ program test_mmodpk
   integer :: u
 	character(len=15) :: isoNname, sampname
 
-  !DEBUG
-  !testing for outliers
-  logical :: outlier
-
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     modpkoutput, slowroll_infl_end, instreheat, vparam_rows
@@ -86,6 +82,8 @@ program test_mmodpk
 
   !Eqen sampling
   else if (sampling_techn == eqen_samp .or. &
+    !Set vels in SR and fields on iso-N surface for N-quad
+    sampling_techn == iso_N .or.&
     !Set vels in SR
     sampling_techn == slowroll_samp .or.&
     !Grab IC from file
@@ -288,8 +286,10 @@ program test_mmodpk
 
 !DEBUG
 !if (ns(1)<0.92 .or. ns(1)>0.97) then
-if (A_iso(1)>1e-12) then
+!if (A_iso(1)>1e-12) then
+if (abs(ns(1)-0.963)<1e-5 .and. abs(alpha_s)>5e-3) then
   print*, 'Outlier'
+  print*, ns(1), alpha_s
   stop
 end if
 
@@ -329,7 +329,7 @@ end if
       open (unit = 3, file = "powmatrix.txt", status = 'replace')
     end subroutine DEBUG_writing_etc
 
-    !Calculate observables, but grab a new IC each time called
+    !Calculate observables, optionally grab a new IC each time called
     subroutine calculate_pk_observables(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
@@ -345,7 +345,7 @@ end if
       real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
       logical :: calc_full_pk, leave
 
-      type(power_spectra) :: pk0, pk1, pk2
+      type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
 
       pk_bad=0
       leave = .false.
@@ -384,6 +384,20 @@ end if
           leave)
         if (leave) return
 
+      !Uncomment here and below for alpha_s from 5-pt stencil
+      !call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
+      !  call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
+      !    A_iso, A_pnad, A_ent, A_bundle, &
+      !    n_iso, n_pnad, n_ent, &
+      !    leave)
+      !  if (leave) return
+      !call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
+      !  call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
+      !    A_iso, A_pnad, A_ent, A_bundle, &
+      !    n_iso, n_pnad, n_ent, &
+      !    leave)
+      !  if (leave) return
+
       ps0= pk0%adiab
       ps1= pk1%adiab
       ps2= pk2%adiab
@@ -418,18 +432,18 @@ end if
       ns = 1.d0+log(ps2/ps1)/dlnk/2.d0
       r=pt0/ps0
       nt=log(pt2/pt1)/dlnk/2.d0
-      alpha_s = (log(ps2) + log(ps1)-2.0e0_dp*log(ps0))/dlnk**2
+
+      alpha_s = log(ps2*ps1/ps0**2)/dlnk**2
+
+      !alpha_s from 5-pt stencil
+      !alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
+      !  (-log(pk4%adiab) + 16.0e0_dp*log(pk2%adiab) - &
+      !  30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pk1%adiab) - &
+      !  log(pk3%adiab))
+
       n_iso=log(ps2_iso/ps1_iso)/dlnk/2.d0
       n_pnad=log(pnad2/pnad1)/dlnk/2.d0
       n_ent=log(pent2/pent1)/dlnk/2.d0
-
-
-      !FOR N-quad
-      outlier=.false.
-      outlier = ns <0.93 .or. ns >0.97 .or. &
-        alpha_s <-0.0025 .or. alpha_s >0.0015
-
-
 
 
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
