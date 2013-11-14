@@ -112,7 +112,9 @@ CONTAINS
        !Uncomment to write the trajectories...
        !write(1,'(12E18.10)') x, y(:)
        !record trajectory
+       !print*, "writing trajectory"
        !write(1,'(12E18.10)') x, y(1:num_inflaton)
+       !write(1,'(12E18.10)') x, y(1:2*num_inflaton), getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
 
        CALL derivs(x,y,dydx)
 
@@ -402,11 +404,11 @@ CONTAINS
        !print*, "printing real part of modes"
        !print*, "printing imaginary part of modes"
        !if (.not. use_q) then
-       ! write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
-       ! write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
-       !else                                                                                   !
-       !  write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
-       !  write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))!/(2*k)
+       ! write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       ! write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !else                                                                                   
+       !  write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !  write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
        !end if
 
        scalefac = a_init*exp(x)
@@ -452,7 +454,7 @@ CONTAINS
 
               !Record spectrum
               !print*, "writing spectra"
-              !write(2,'(5E17.8)') N_tot-x, power_internal%adiab, power_internal%isocurv,&
+              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab, power_internal%isocurv,&
               !  power_internal%entropy, power_internal%pnad
 
                power_internal%tensor=tensorpower(y(index_tensor_y) &
@@ -464,6 +466,12 @@ CONTAINS
 
                call powerspectrum(psi, dpsi, phi, delphi, &
                  scalefac, power_internal)
+
+              !Record spectrum
+              !print*, "writing spectra"
+              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab, power_internal%isocurv,&
+              !  power_internal%entropy, power_internal%pnad
+
 
                power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
              END IF
@@ -483,9 +491,7 @@ CONTAINS
 
        IF(ode_infl_end) THEN 
           IF (slowroll_infl_end) THEN
-             !DEBUG
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
-             !IF(getEps(phi, delphi) .GT. 1e0_dp*0.90e0_dp .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
                 PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
@@ -534,6 +540,8 @@ CONTAINS
           END IF
        ENDIF
 
+       !DEBUG
+       !print*, "not switching to the q variable...."
        IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
           !switch to the Q variable for super-horizon evolution
           !only apply the switch on y(1:4*num_inflaton+2)

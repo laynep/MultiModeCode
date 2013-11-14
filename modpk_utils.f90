@@ -145,11 +145,13 @@ CONTAINS
        write(*,*) "Dphi=",delphi
 
        !Can sometimes get here when IC sampling
-       !Overriding this error
+       !close to the point where V=0, since H^2=V/(3-eps)
+
+       !Can override this error
        if (sampling_techn/=reg_samp) then
          !Override this error and return
          pk_bad=bad_ic
-         return
+         !return
        end if
 
        WRITE(*,*) 'MODPK: QUITTING'

@@ -334,6 +334,7 @@ end if
 
       real(dp), intent(in) :: k_pivot,dlnk
       real(dp) :: As,ns,r,nt, alpha_s
+      real(dp) :: runofrun
       real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross
       real(dp) :: n_iso, n_pnad, n_ent
       real(dp) :: epsilon, eta
@@ -371,6 +372,8 @@ end if
           n_iso, n_pnad, n_ent, &
           leave)
         if (leave) return
+!DEBUG
+!print*, "Not evaluating second and third evolve routines"
       call evolve(k_pivot*exp(-dlnk), pk1)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
@@ -384,7 +387,8 @@ end if
           leave)
         if (leave) return
 
-      !Uncomment here and below for alpha_s from 5-pt stencil
+      !!Uncomment here and below for alpha_s from 5-pt stencil
+      !!or running of running
       !call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
       !  call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
       !    A_iso, A_pnad, A_ent, A_bundle, &
@@ -435,11 +439,17 @@ end if
 
       alpha_s = log(ps2*ps1/ps0**2)/dlnk**2
 
+
       !alpha_s from 5-pt stencil
       !alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
       !  (-log(pk4%adiab) + 16.0e0_dp*log(pk2%adiab) - &
       !  30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pk1%adiab) - &
       !  log(pk3%adiab))
+
+      !runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
+      !  (log(pk4%adiab) -2* log(pk2%adiab) + 2*log(pk1%adiab) -log(pk3%adiab))
+
+      !print*, "running of running =", runofrun
 
       n_iso=log(ps2_iso/ps1_iso)/dlnk/2.d0
       n_pnad=log(pnad2/pnad1)/dlnk/2.d0

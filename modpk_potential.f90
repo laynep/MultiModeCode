@@ -1094,17 +1094,6 @@ CONTAINS
         end if
 
         !DEBUG
-        !if(abs(dot_product(omega_z,s_iso(i-1,:)))>0) then
-        !  print*,"omega_z.iso",abs(dot_product(omega_z,s_iso(i-1,:))) 
-        !  print*, "omega_z", omega_z
-        !  print*, "s_iso", s_iso(i-1,:)
-        !  print*, "first", omega_z(1)*s_iso(i-1,1)
-        !  print*, "second", omega_z(2)*s_iso(i-1,2)
-        !  print*, "norm omega", norm(omega_z(:))
-        !  print*, "norm s", norm(s_iso(i-1,:))
-        !end if
-
-        !DEBUG
         !If there's a major hierarchy in scales for the vector components, then
         !there can be a spurious component of the isocurvature direction
         !oriented along the adiabatic one.  When you're approaching the
@@ -1113,13 +1102,6 @@ CONTAINS
         !the norm.
         !call renormalize_remove_smallest(s_iso(i-1,:))
 
-
-        !DEBUG
-        !print*, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-        !print*, "omega", omega_z
-        !print*, "omega.s", dot_product(omega_z,s_iso(i-1,:))
-        !print*, "s_iso", s_iso(i-1,:)
-        
 
         if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-12 .or.&
           isnan(abs(dot_product(omega_z,s_iso(i-1,:))))) then

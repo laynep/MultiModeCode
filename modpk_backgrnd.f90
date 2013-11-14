@@ -281,11 +281,12 @@ CONTAINS
 
     vv = 0e0_dp
 
+    if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
+    sampling_techn==reg_samp) then
+
     !DEBUG
-    !print*, "SETTING VEL SR"
-    !if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
-    !sampling_techn==reg_samp) then
-    if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N) then
+    !if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N) then
+      if( sampling_techn == reg_samp) print*, "SETTING VEL SR"
 
 
       !dphi/dalpha(x1) slowroll approx

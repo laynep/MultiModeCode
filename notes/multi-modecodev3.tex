@@ -16,7 +16,9 @@
 \setlength{\parindent}{0pt}
 \def\tilC{{\tilde C}}
 \def\calR{{\cal R}}
+\def\calP{{\cal P}}
 \def\calS{{\cal S}}
+\def\calO{{\cal O}}
 \def\df {{\dot \phi_0}}
 
 \def\PIJ{{\mathcal{P}_{\delta \phi}^{IJ}}}
@@ -79,10 +81,26 @@ The Friedmann equations gives
 2\dot{H} \mpl^2 &=& - {\dot\f}_0^2 ~. \label{fr_2}
 \end{eqnarray}
 
-We can regard the composite field $\phi_0$ as the clock of multifield inflation. It is the classical field defined along the 
-inflaton trajectory, and represents the length of the classical path. 
+We can regard the composite field $\phi_0$ as the clock of multifield inflation. It is the classical field defined along the inflaton trajectory, and represents the length of the classical path.
 
 \section{The Mode Equation}
+
+\paragraph{Scalar perturbations:} To get a first order equation of motion for the perturbations $\delta \phi_I$, we need to consider the expansion of the action~\eqref{eqn:scalaraction} to second-order as well as the first-order scalar perturbations to the FLRW metric, given by
+\begin{equation}
+  ds^2 = -  \left(1 + 2 \Phi \right) dt^2 - 2 \, a^2 B_{,i} \, dt \,  dx^i + a^2 \left[ \left(1 - 2\Psi \right) \delta_{ij} - 2E_{,ij} \right] dx^i dx^j \, .
+  \label{eqn:XXX}
+\end{equation}
+We can vary the first-order expanded action $\delta S_\phi$ with respect to the perturbations $\delta \phi_i$ to get the first-order equation of motion for the free-field perturbations \lp{expression without specifying gauge}
+\begin{equation}
+  test
+  \label{eqn:XXX}
+\end{equation}
+With the Einstein field equations we have XXX equations for XXX variables.  \lp{Clearly explain gauge}  We choose the gauge XXX with XXX, leaving \lp{expression for lapse, etc}
+\begin{equation}
+  test
+  \label{eqn:XXX}
+\end{equation}
+Substituting THIS into THAT, Fourier-transforming the scalar perturbations to $\delta \phi_I(\bk)$, and changing $t$ to $\alpha$ gives the mode equation as
 
 Let $Q^a_\bk$ denote the scalar field perturbation in flat gauge, the mode equation reads \cite{Sasaki:1995aw}
 \begin{equation}
@@ -350,17 +368,57 @@ and the speed of sound $c_s^2 = \dot {\bar P} / \dot {\bar \rho}$.
 
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 \section{Notes on numerical checks}
+
+\subsection{Integrator accuracy}
+
+Requires increase in accuracy whenever $\epsilon \sim 1$ since $Q_{ij}$ grows quasi-exponentially
+
+\subsection{$P(k)$ observables}
+
+Errors associated with approximating the full numerical $P(k)$ with finite difference.
+
+It is often assumed that in the range of modes that are relevant for CMB analysis the power spectrum is well-approximated in log-space as
+\begin{equation}
+  \log \left( \frac{\mathcal P}{A_s} \right) = \left[ n_s - 1 + \frac{1}{2} \alpha_s \log \left( \frac{k}{k_*} \right) \right]\log \left( \frac{k}{k_*} \right) \, .
+  \label{eqn:runningpk}
+\end{equation}
+We estimate $n_s$ using first-order central finite difference between two amplitudes $\calP_1$ and $\calP_2$ evaluated at the scales $k_1 = k_* \exp (-\delta)$ and $k_2= k_* \exp \delta$,
+\begin{equation}
+  n_s \approx 1 + \frac{1}{2\delta}\log \left( \frac{ \calP_2 }{ \calP_1} \right),
+  \label{eqn:nsapprox}
+\end{equation}
+which is an $\calO(\delta^2)$ accurate estimate for $d\log \calP/d \log k$ (and consequently $n_s$ if Eq.~\eqref{eqn:runningpk} holds).  Similarly, we use second-order central finite difference to estimate the running of the spectral index $\alpha_s$ as
+\begin{equation}
+  \alpha_s \approx \frac{1}{\delta^2} \log \left( \frac{\calP_2 \calP_1}{A_s} \right).
+  \label{eqn:alphaapprox}
+\end{equation}
+
+However, the power spectrum for many background trajectories is not well-approximated by Eq.~\eqref{eqn:runningpk}.  Define the deviation from Eq.~\eqref{eqn:runningpk} at a scale $k_i$ by $\Delta_i$  and assume that numerical error at the pivot scale is negligible \lp{expand}. While Eqs.~\eqref{eqn:nsapprox}--\eqref{eqn:alphaapprox} are $\calO (\delta^2)$ approximations to the first-- and second-order derivatives of $\log \calP$, respectively, the error $\mathbb E$ between these derivatives and $n_s$ or $\alpha_s$ depends on how well the ansatz fits the real spectrum.  This can be approximated by
+\begin{eqnarray}
+  \mathbb E (n_s) = \Delta/2 \delta \, , \\
+  \mathbb E (\alpha_s) = \Delta/\delta^2 \, ,
+  \label{eqn:XXX}
+\end{eqnarray}
+where $\Delta \equiv \Delta_2 - \Delta_1$.  The estimates for $n_s$ and $\alpha_s$ are then dependent on the step-size $\delta$ used in the finite-difference calculation, in particular requiring $\delta^2 \gg \Delta$, where $\Delta$ is obviously hard to estimate \emph{a priori} for general models and all allowed initial conditions.  One would ideally like $\delta \ll 1$ to minimize the $\calO (\delta^2)$ finite-difference error.
+
+Note that there is only a marginal improvement in the finite-difference estimates when using a 5-point stencil over the central difference approximations and it requires two more calls to the evolve routine.
+
+
+For certain trajectories the second-order finite difference breaks down for the calculation of $\alpha_s$ when it should be approximately zero.  Can fix this by increasing the distance between evaluated points $h \equiv \Delta \ln k$.
+
+
+\subsection{$\delta P_\mathrm{nad}$ calculation}
+
+Importantly, when calculating $\delta P_\mathrm{nad} \equiv \delta P - c_s^2 \delta \rho$, $\delta P$ remains of the same order of magnitude throughout the evolution, but during the approach to the adiabatic limit the adiabatic pressure perturbation increases to this level.  Consequently, we run into roundoff error problems and a loss of significance in this calculation.  This is fixed to a large extent by calculating the projected isocurvature power spectrum since the amplitude of the isocurvature modes should decrease as we approach the adiabatic limit, making any differences calculated $X-Y$ of the same order.  We can therefore trust this comparison to a much higher degree of accuracy.
+
+\subsection{Other}
 
 \begin{itemize}
 
   \item Isocurvature spurious projection onto the adiabatic direction can be dominant contribution whenthe isocurvature is small.  Optional fix in modpk\_potential.f90 with renormalize\_remove\_smallest(omega\_z).
 
-  \item Requires increase in accuracy whenever $\epsilon \sim 1$ since $Q_{ij}$ grows quasi-exponentially
-
-  \item For certain trajectories the second-order finite difference breaks down for the calculation of $\alpha_s$ when it should be approximately zero.  Can fix this by increasing the distance between evaluated points $h \equiv \Delta \ln k$.
-
-  \item Importantly, when calculating $\delta P_\mathrm{nad} \equiv \delta P - c_s^2 \delta \rho$, $\delta P$ remains of the same order of magnitude throughout the evolution, but during the approach to the adiabatic limit the adiabatic pressure perturbation increases to this level.  Consequently, we run into roundoff error problems and a loss of significance in this calculation.  This is fixed to a large extent by calculating the projected isocurvature power spectrum since the amplitude of the isocurvature modes should decrease as we approach the adiabatic limit, making any differences calculated $X-Y$ of the same order.  We can therefore trust this comparison to a much higher degree of accuracy.
 
 \end{itemize}
 
