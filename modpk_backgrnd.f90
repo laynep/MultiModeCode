@@ -335,7 +335,8 @@ CONTAINS
        h1 = 0.1e0_dp
     end if
     dxsav=1.e-7_dp
-    accuracy=1.0e-7_dp
+    accuracy=1.0e-8_dp
+
     hmin=0.0e0_dp !minimum stepsize
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
@@ -389,8 +390,8 @@ CONTAINS
              print*,"MODPK: dalpha", dalpha
              print*,"MODPK: dv", dv
              print*,"MODPK: bb", bb
-             print*,"MODPK: lna", lna(kount-10:kount), "alpha_e", alpha_e
-             print*,"MODPK: epsarr", epsarr(kount-10:kount), "ep", ep
+             print*,"MODPK: lna", lna(kount-5:kount), "alpha_e", alpha_e
+             print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
              stop
            endif
           
