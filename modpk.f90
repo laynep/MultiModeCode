@@ -43,7 +43,7 @@ CONTAINS
     !NB: For eqen sampling, dphi_init set in trial_background
     CALL backgrnd
 
-    !When scanning ICs, let some backgrnd errors override
+    !When scanning ICs, let some backgrnd errors be overridden
     if (sampling_techn/=reg_samp) then
       if (pk_bad == bad_ic) then
         if (modpkoutput) then

@@ -42,8 +42,11 @@ program test_mmodpk
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
   logical :: output_badic
 
-  type(ic_and_observables), dimension(:), allocatable :: ic_output
-  type(ic_and_observables), dimension(:), allocatable :: ic_output_iso_N
+  !Other sampling params
+  real(dp) :: N_pivot_prior_min, N_pivot_prior_max
+  logical :: varying_N_pivot
+
+  type(ic_and_observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
 
   integer :: u
 	character(len=15) :: isoNname, sampname
@@ -53,7 +56,7 @@ program test_mmodpk
     modpkoutput, slowroll_infl_end, instreheat, vparam_rows
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
-    save_iso_N, N_iso_ref,output_badic
+    save_iso_N, N_iso_ref,output_badic, varying_N_pivot
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -89,7 +92,8 @@ program test_mmodpk
     !Grab IC from file
     sampling_techn == fromfile_samp .or. &
     !Loop over different vparams for given num_inflaton
-    sampling_techn == parameter_loop_samp) then
+    sampling_techn == parameter_loop_samp .or. &
+    sampling_techn == param_unif_prior) then
 
 #ifdef MPI
 
@@ -244,6 +248,10 @@ program test_mmodpk
       nt_pred = -2*eps
       alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps)
 
+      !DEBUG
+      print*, "vparams", vparams(1,:)
+      print*, "vparams", vparams(2,:)
+
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice
       !write(*, e_fmt) "log10(m^2) =", vparams(1,1)
@@ -287,11 +295,11 @@ program test_mmodpk
 !DEBUG
 !if (ns(1)<0.92 .or. ns(1)>0.97) then
 !if (A_iso(1)>1e-12) then
-if (abs(ns(1)-0.963)<1e-5 .and. abs(alpha_s)>5e-3) then
-  print*, 'Outlier'
-  print*, ns(1), alpha_s
-  stop
-end if
+!if (abs(ns(1)-0.963)<1e-5 .and. abs(alpha_s)>5e-3) then
+!  print*, 'Outlier'
+!  print*, ns(1), alpha_s
+!  stop
+!end if
 
     end subroutine output_observables
 
@@ -355,6 +363,12 @@ end if
         call get_ic(phi_init0, dphi_init0, sampling_techn, &
           priors_min, priors_max, &
           numb_samples,energy_scale)
+
+        if (varying_N_pivot) then
+          save_iso_N = .false.
+          call get_new_N_pivot(N_pivot, N_pivot_prior_min, N_pivot_prior_max)
+        end if
+
       end if
 
       !Initialize potential and calc background
@@ -542,7 +556,7 @@ end if
 
       namelist /priors/ phi0_priors_min, phi0_priors_max, &
         dphi0_priors_min, dphi0_priors_max, &
-        penalty_fact
+        N_pivot_prior_min, N_pivot_prior_max
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."

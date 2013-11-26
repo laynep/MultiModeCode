@@ -2,7 +2,7 @@
 
 ----------------
 &init
-  num_inflaton=1
+  num_inflaton=3
   potential_choice=11
   modpkoutput = .true.
   slowroll_infl_end = .true.
@@ -37,10 +37,10 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 5.0
+  phi_init0 = 5.0, 5.0, 5.0
 
-  vparams(1,:)= -10.965
-  vparams(2,:)= -10.965
+  vparams(1,:)= -10.965, -10.965, -10.965
+  vparams(2,:)= -10.965, -10.965, -10.965
 
 
 
@@ -55,11 +55,11 @@ the smallest mass; others are discarded.
 ----------------
 !Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 2
-  phi0_priors_max = 25.0
+  phi0_priors_min = 2, 2, 2
+  phi0_priors_max = 25.0, 25.0, 25.0
 
-  dphi0_priors_min = 2
-  dphi0_priors_max =  2.262e-3
+  dphi0_priors_min = 2, 2, 2
+  dphi0_priors_max =  2.262e-3, 2.262e-3, 2.262e-3
 
   N_pivot_prior_min = 30
   N_pivot_prior_max = 70

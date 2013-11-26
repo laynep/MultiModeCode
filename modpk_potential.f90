@@ -111,8 +111,8 @@ CONTAINS
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
 
-      m2_V = 10.e0_dp**(vparams(1,:))
-      lambda4 = 10.e0_dp**vparams(2,:)
+      m2_V = 10.0e0_dp**(vparams(1,:))
+      lambda4 = 10.0e0_dp**vparams(2,:)
       phi_light_index = minloc(m2_V,1)
 
       pot = 0.5e0_dp*sum(m2_V*phi*phi)+ &
@@ -967,6 +967,7 @@ CONTAINS
       power_spectrum%isocurv =  0e0_dp
       power_spectrum%pnad    =  0e0_dp
       power_spectrum%entropy =  0e0_dp
+      power_spectrum%cross_ad_iso =  0e0_dp
     end if
 
     power_spectrum%matrix  =  power_matrix

@@ -12,7 +12,7 @@ module modpk_icsampling
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4, parameter_loop_samp=5, iso_N=6
+    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
@@ -59,11 +59,19 @@ module modpk_icsampling
       logical :: with_velocity, with_eqen
       real(dp) :: beta, rand
 
+      !DEBUG
+      !Hard-coded parameter priors for potential_choice==11
+      real(dp), dimension(size(vparams,1),size(vparams,2)) :: &
+        vparams_priors_min, vparams_priors_max
+
+
+
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
       dphi0_priors_max=priors_max(2,:)
       dphi0_priors_min=priors_min(2,:)
 
+      !-----------------------------------------
       if (sampling_techn == eqen_samp) then
 
         !Tell solver starting out of SR, even if in SR
@@ -76,6 +84,9 @@ module modpk_icsampling
           dphi0_priors_min, dphi0_priors_max, &
           velconst=.true.)
 
+
+
+      !-----------------------------------------
       else if (sampling_techn == iso_N) then
 
         !Start in SR with ICs sampled N_iso_ref before inflation ends
@@ -94,6 +105,9 @@ module modpk_icsampling
 
         call constrain_via_thetas(y_background(1:num_inflaton),2e0_dp*sqrt(N_iso_ref))
 
+
+
+      !-----------------------------------------
       else if (sampling_techn == slowroll_samp) then
 
         !Force solver to start in SR
@@ -104,6 +118,9 @@ module modpk_icsampling
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
+
+
+      !-----------------------------------------
       else if (sampling_techn==parameter_loop_samp) then
 
         if (potential_choice>2 .and. potential_choice/=11 .and. &
@@ -149,7 +166,12 @@ module modpk_icsampling
         !Set IC with either (V=0 and KE) or (KE=0 and V)
         with_velocity = .false.
         with_eqen = .true.
-        if (with_eqen) then
+        if (num_inflaton==1) then
+
+          y_background(1:num_inflaton) = 20.0e0_dp
+          y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
+        else if (with_eqen) then
           !Set IC with equal energy over pre-defined field range
           print*, "Setting IC with equal energy over range"
 
@@ -168,6 +190,54 @@ module modpk_icsampling
           call equal_displacement_ic(y_background, energy_scale)
         end if
 
+
+      !-----------------------------------------
+      else if (sampling_techn==param_unif_prior) then
+
+        if (potential_choice /= 11) then
+          print*, "potential_choice", potential_choice, "not supported"
+          print*, "for sampling_techn = param_unif_prior"
+          stop
+        end if
+
+        print*, "Naughty! Parameter priors hard-coded in..."
+
+        !Some inspiration for these priors from 1112.0326
+
+        !Masses: m^2 = 10**vparams(1,:)
+        vparams_priors_min(1,:) = -13.5e0_dp
+        vparams_priors_max(1,:) = -8.0e0_dp
+
+        !Intxn:  lambda^4 = 10**vparams(2,:)
+        vparams_priors_min(2,:) = -20.0e0_dp
+        vparams_priors_max(2,:) = -10.0e0_dp
+
+        do i=1,size(vparams,1); do j=1,size(vparams,2)
+          call random_number(rand)
+          vparams(i,j) = (vparams_priors_max(i,j)-vparams_priors_min(i,j))*rand + &
+            vparams_priors_min(i,j)
+        end do; end do
+
+
+
+        !Get IC
+        if (num_inflaton==1) then
+
+          y_background(1:num_inflaton) = 25.0e0_dp
+          y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
+        else
+          !Set IC with equal energy over pre-defined field range
+          print*, "Setting IC with equal energy over range"
+
+          call eqen_ic(y_background, energy_scale, &
+            phi0_priors_min, phi0_priors_max, &
+            dphi0_priors_min, dphi0_priors_max, &
+            velconst=.true.)
+        end if
+
+
+      !-----------------------------------------
       else
         print*, "ERROR: Sampling technique hasn't been implemented."
         stop
@@ -1403,6 +1473,18 @@ print*, new_measure
 
 
     end SUBROUTINE mass_spectrum_nflation
+
+    subroutine get_new_N_pivot(Npiv, prior_min, prior_max)
+
+      real(dp), intent(inout) :: Npiv
+      real(dp), intent(in) :: prior_max, prior_min
+
+      real(dp) :: rand
+
+      call random_number(rand)
+      Npiv = (prior_max - prior_min)*rand + prior_min
+
+    end subroutine get_new_N_pivot
 
 
 end module modpk_icsampling
