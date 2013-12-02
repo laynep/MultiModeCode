@@ -142,7 +142,7 @@ module modpk_icsampling
             beta = 0.5d0
           end if
 
-          !call mass_spectrum_nflation(vparams,beta)
+          call mass_spectrum_nflation(vparams,beta)
 
           !DEBUG
           print*, "vparams from mass_spectrum_nflation"
