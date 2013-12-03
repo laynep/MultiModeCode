@@ -22,8 +22,8 @@ alpha=1000*data[:,2]
 #alpha=1000*data[1:datarange,2]
 
 ns_min, ns_max = min(ns),max(ns)
-#r_min, r_max =0.95* min(r),max(r)
-r_min, r_max = 0.1440, 0.146
+r_min, r_max =0.95* min(r),max(r)
+rzoom_min, rzoom_max = 0.1440, 0.146
 alpha_min, alpha_max =min(alpha),max(alpha)
 
 # Generate some test data
@@ -41,12 +41,18 @@ nsr, xedges1, yedges1 = np.histogram2d(ns, r,
         range=[[ns_min, ns_max],[r_min, r_max]],
         bins=bins, normed=norm)
 
-extent_nsr = [xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]]
-
-
 nsalpha, xedges2, yedges2 = np.histogram2d(ns, alpha, bins=bins,
         normed=norm)
+
+nsr_zoom, xedges_zoom, yedges_zoom = np.histogram2d(ns, r,
+        range=[[ns_min, ns_max],[rzoom_min, rzoom_max]],
+        bins=bins, normed=norm)
+
+extent_nsr = [xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]]
+extent_nsr_zoom = [xedges_zoom[0], xedges_zoom[-1],
+        yedges_zoom[0], yedges_zoom[-1]]
 extent_nsalpha = [xedges1[0], xedges1[-1], yedges2[0], yedges2[-1]]
+
 
 #Normalize to "probability"
 nsr = nsr/len(ns)
@@ -85,16 +91,16 @@ adjustprops = dict(left=0.16, bottom=0.07, right=0.97, top=0.99,
 imshowasp = 'auto'
 
 #Got these from http://matplotlib.org/examples/color/colormaps_reference.html
-#color_map = plt.get_cmap('jet')  #DEFAULT
+color_map = plt.get_cmap('jet')  #DEFAULT
 
 #color_map = plt.get_cmap('PuBu')
 #color_map = plt.get_cmap('seismic')
-color_map = plt.get_cmap('hot_r')
+#color_map = plt.get_cmap('hot_r')
 #color_map = plt.get_cmap('gist_heat')
 #color_map = plt.get_cmap('binary')
 
 #Interpolation for imshow
-interp = 'bilinear'
+interp = 'nearest'
 
 
 #-----------
@@ -125,6 +131,9 @@ if doing_kde:
 else:
     plt.imshow(nsalpha.T, origin='lower', extent=extent_nsalpha, aspect=imshowasp,
             cmap=color_map, interpolation=interp)
+    #inset_plot = fig.add_axes([0.275,0.675,0.4,0.25])
+    #plt.imshow(nsr_zoom.T, origin='lower', extent=extent_nsr_zoom,
+    #        aspect=imshowasp, cmap=color_map, interpolation=interp)
 
 
 plt.setp(ax1.get_xticklabels(), visible=False) #Remove x-axis label top fig (ax1)
@@ -132,8 +141,9 @@ plt.setp(ax1.get_xticklabels(), visible=False) #Remove x-axis label top fig (ax1
 save=True
 name = 'matplotlibtest'
 if save:
-    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
-    plt.savefig(direct+name+'.png', dpi=250)
+    #direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    direct='./'
+    #plt.savefig(direct+name+'.png', dpi=250)
     plt.savefig(direct+name+'.pdf')
 
 #cbaxes= fig.add_axes([0.8,0.1,0.03,0.8])
