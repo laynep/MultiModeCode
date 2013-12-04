@@ -21,11 +21,14 @@ alpha=1000*data[:,2]
 #r=data[1:datarange,1]
 #alpha=1000*data[1:datarange,2]
 
-#ns_min, ns_max = min(ns),max(ns)
-ns_min, ns_max = 0.945, 0.955
-r_min, r_max =min(r)-0.02,max(r)
+ns_min, ns_max = min(ns),max(ns)
+#ns_min, ns_max = 0.945, 0.955
+#r_min, r_max =min(r)-0.001,max(r)+0.001
+r_min, r_max =min(r),max(r)
 rzoom_min, rzoom_max = 0.1440, 0.146
 alpha_min, alpha_max =min(alpha),max(alpha)
+
+r_tick_min, r_tick_max, r_units = -0.8405, r_max, 0.0005
 
 # Generate some test data
 #numb=1000000
@@ -35,7 +38,7 @@ alpha_min, alpha_max =min(alpha),max(alpha)
 
 
 #Histogram
-bins=100
+bins=65
 norm=False
 
 nsr, xedges1, yedges1 = np.histogram2d(ns, r,
@@ -56,8 +59,8 @@ extent_nsalpha = [xedges1[0], xedges1[-1], yedges2[0], yedges2[-1]]
 
 
 #Normalize to "probability"
-nsr = nsr/len(ns)
-nsalpha = nsalpha/len(ns)
+nsr = nsr/float(len(ns))
+nsalpha = nsalpha/float(len(ns))
 
 
 # Perform a kernel density estimate (KDE) on the data
@@ -84,9 +87,9 @@ if doing_kde:
 #!!!!!!!!!!!
 #Figure options
 
-
 figprops = dict(figsize=(1.0*pyplotsetup.fig_width, 2.0*pyplotsetup.fig_height))
-adjustprops = dict(left=0.18, bottom=0.07, right=0.97, top=0.99,
+
+adjustprops = dict(left=0.22, bottom=0.09, right=0.97, top=0.99,
     wspace=0.1, hspace=0.02)
 
 imshowasp = 'auto'
@@ -117,6 +120,7 @@ if doing_kde:
     plt.imshow(f_nsr.T, origin='lower', extent=extent_nsr, aspect=imshowasp,
             cmap=color_map, interpolation=interp)
 else:
+    plt.yticks(np.arange(r_tick_min, r_tick_max, r_units))
     plt.imshow(nsr.T, origin='lower', extent=extent_nsr, aspect=imshowasp,
             cmap=color_map, interpolation=interp)
 
@@ -140,11 +144,11 @@ else:
 plt.setp(ax1.get_xticklabels(), visible=False) #Remove x-axis label top fig (ax1)
 
 save=True
-name = 'matplotlibtest'
+name = 'nsralpha_100field'
 if save:
-    #direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
-    direct='./'
-    #plt.savefig(direct+name+'.png', dpi=250)
+    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    #direct='./'
+    plt.savefig(direct+name+'.png', dpi=250)
     plt.savefig(direct+name+'.pdf')
 
 #cbaxes= fig.add_axes([0.8,0.1,0.03,0.8])
