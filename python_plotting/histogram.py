@@ -12,7 +12,7 @@ import sys
 data=np.loadtxt('nsralpha.txt')
 
 ns=data[:,0]
-r=data[:,1]
+r=np.log10(data[:,1])
 alpha=1000*data[:,2]
 
 #Data subset for testing
@@ -21,8 +21,9 @@ alpha=1000*data[:,2]
 #r=data[1:datarange,1]
 #alpha=1000*data[1:datarange,2]
 
-ns_min, ns_max = min(ns),max(ns)
-r_min, r_max =0.95* min(r),max(r)
+#ns_min, ns_max = min(ns),max(ns)
+ns_min, ns_max = 0.945, 0.955
+r_min, r_max =min(r)-0.02,max(r)
 rzoom_min, rzoom_max = 0.1440, 0.146
 alpha_min, alpha_max =min(alpha),max(alpha)
 
@@ -34,7 +35,7 @@ alpha_min, alpha_max =min(alpha),max(alpha)
 
 
 #Histogram
-bins=75
+bins=100
 norm=False
 
 nsr, xedges1, yedges1 = np.histogram2d(ns, r,
@@ -85,7 +86,7 @@ if doing_kde:
 
 
 figprops = dict(figsize=(1.0*pyplotsetup.fig_width, 2.0*pyplotsetup.fig_height))
-adjustprops = dict(left=0.16, bottom=0.07, right=0.97, top=0.99,
+adjustprops = dict(left=0.18, bottom=0.07, right=0.97, top=0.99,
     wspace=0.1, hspace=0.02)
 
 imshowasp = 'auto'
@@ -110,7 +111,7 @@ fig.subplots_adjust(**adjustprops)
 
 ax1 = fig.add_subplot(211)
 
-ax1.set_ylabel(r'$r$')
+ax1.set_ylabel(r'$\log_{10} (r)$')
 
 if doing_kde:
     plt.imshow(f_nsr.T, origin='lower', extent=extent_nsr, aspect=imshowasp,
