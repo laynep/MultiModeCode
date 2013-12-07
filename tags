@@ -1,4 +1,33 @@
+O	powspec	3237
+$	powspec	405
+$	powspec	449
+$	powspec	822
+$ï†	powspec	805
+$ï†	powspec	805
+$›	powspec	6
+@	modpk_potential.o	40
+@	powspec	345
+@1	powspec	345
+A@	powspec	815
+A@	powspec	816
+ACCURACY	readme.html	/^Accuracy<\/H3>$/
 AngularDiameterDistance	modules.f90	/^        function AngularDiameterDistance(z)$/
+B	modpk_odeint.o	33
+B	modpk_potential.o	78
+B	powspec	69
+B	powspec	314
+B	powspec	455
+B	powspec	459
+B	powspec	462
+B	powspec	463
+B	powspec	466
+B	powspec	467
+B	powspec	2664
+B	powspec	814
+BB	plotcls.m	43
+BB	plotcls.m	45
+BB	plotdiffs.m	36
+BB	plotdiffs.m	38
 BESSI	lensing.f90	/^      FUNCTION BESSI(N,X)$/
 BESSI0	lensing.f90	/^      FUNCTION BESSI0(X)$/
 BESSI1	lensing.f90	/^      FUNCTION BESSI1(X)$/
@@ -8,6 +37,10 @@ BJL	bessels.f90	/^         SUBROUTINE BJL(L,X,JL)$/
 BJL_EXTERNAL	bessels.f90	/^        SUBROUTINE BJL_EXTERNAL(L,X,JL)$/
 BadHarmonic	lensing.f90	/^subroutine BadHarmonic$/
 Bessels_Free	bessels.f90	/^     subroutine Bessels_Free$/
+C	modpk_backgrnd.o	27
+C	modpk_utils.o	13
+C	powspec	344
+C	powspec	2664
 CAMBParams_Set	modules.f90	/^         subroutine CAMBParams_Set(P, error, DoRei/
 CAMB_FreeCAMBdata	camb.f90	/^       subroutine CAMB_FreeCAMBdata(Dat)$/
 CAMB_GetAge	camb.f90	/^        function CAMB_GetAge(P)$/
@@ -20,7 +53,10 @@ CAMB_SetDefParams	camb.f90	/^        subroutine CAMB_SetDefParams(P)$/
 CAMB_TransfersToPowers	camb.f90	/^       subroutine CAMB_TransfersToPowers(CData)$/
 CAMB_ValidateParams	camb.f90	/^         function CAMB_ValidateParams(P) result(OK/
 CAMB_cleanup	camb.f90	/^         subroutine CAMB_cleanup$/
+CAUCHY1	utils.F90	/^     double precision function CAUCHY1()$/
+CFG	camb.dsp	7
 COBEnormalize	modules.f90	/^        subroutine COBEnormalize$/
+COMPARE	readme.html	/^Comparison with CMBFAST<\/H3>$/
 CalcScalCls	cmbmain.f90	/^        subroutine CalcScalCls(CTrans)$/
 CalcScalCls2	cmbmain.f90	/^        subroutine CalcScalCls2(CTrans)$/
 CalcScalarSources	cmbmain.f90	/^      subroutine CalcScalarSources(EV,taustart)$/
@@ -28,11 +64,24 @@ CalcTensCls	cmbmain.f90	/^        subroutine CalcTensCls(CTrans, GetInitPowe/
 CalcTensorSources	cmbmain.f90	/^      subroutine CalcTensorSources(EV,taustart)$/
 CalcVecCls	cmbmain.f90	/^        subroutine CalcVecCls(CTrans, GetInitPower/
 CalcVectorSources	cmbmain.f90	/^      subroutine CalcVectorSources(EV,taustart)$/
+ChangeFileExt	utils.F90	/^ function ChangeFileExt(aname,ext)$/
+CheckTrailingSlash	utils.F90	/^  function CheckTrailingSlash(aname)$/
 ClTransferToCl	cmbmain.f90	/^     subroutine ClTransferToCl(CTransS,CTransT, CT/
+ClearFileUnit	utils.F90	/^ subroutine ClearFileUnit(i)$/
+CloseFile	utils.F90	/^ subroutine CloseFile(i)$/
 CorrFuncFlatSky	lensing.f90	/^subroutine CorrFuncFlatSky$/
 CorrFuncFullSky	lensing.f90	/^subroutine CorrFuncFullSky$/
 CosmomcTheta	modules.f90	/^       function CosmomcTheta()$/
+CreateFile	utils.F90	/^ subroutine CreateFile(aname, aunit,mode)$/
+CreateOpenFile	utils.F90	/^ subroutine CreateOpenFile(aname, aunit,mode, appe/
+CreateOpenTxtFile	utils.F90	/^subroutine CreateOpenTxtFile(aname, aunit, append)/
+CreateTxtFile	utils.F90	/^ subroutine CreateTxtFile(aname, aunit)$/
+D	powspec	801
+D0	modpk_potential.o	46
+D0	powspec	36
 DEBUG_writing_etc	testm.f90	/^    subroutine DEBUG_writing_etc()$/
+DLGAMMA	utils.F90	/^      function DLGAMMA(x)$/
+DeleteFile	utils.F90	/^  subroutine DeleteFile(aname)$/
 DeltaTime	modules.f90	/^        function DeltaTime(a1,a2)$/
 DoFlatIntegration	cmbmain.f90	/^        subroutine DoFlatIntegration(IV, llmax)$/
 DoRangeInt	cmbmain.f90	/^ subroutine DoRangeInt(IV,chi,chiDisp,nstart,nend,/
@@ -40,8 +89,53 @@ DoRangeIntTensor	cmbmain.f90	/^      subroutine DoRangeIntTensor(IV,chi,chiDisp,
 DoSourceIntegration	cmbmain.f90	/^      subroutine DoSourceIntegration(IV) !for part/
 DoSourcek	cmbmain.f90	/^      subroutine DoSourcek(EV,q_ix)$/
 DoThermoSpline	modules.f90	/^        subroutine DoThermoSpline(j2,tau)$/
+Dˇˇ	modpk_potential.o	44
+E	powspec	921
+E	powspec	3226
+EE	plotcls.m	39
+EE	plotdiffs.m	31
+ELF	modpk_odeint.o	1
+EQUATIONS	Makefile_main	3
+EQUATIONS	Makefile_main_modpk	3
+Exchange	utils.F90	/^  subroutine Exchange(i1,i2)$/
+ExtractFileExt	utils.F90	/^  function ExtractFileExt(aname)$/
+ExtractFileName	utils.F90	/^ function ExtractFileName(aname)$/
+ExtractFilePath	utils.F90	/^  function ExtractFilePath(aname)$/
+EÄ	modpk_utils.o	29
+E∞r÷	modpk_utils.o	112
+E∞r÷	powspec	292
+E‰	powspec	571
+E¯	modpk_postprocessing.o	4
+E¯	powspec	347
+Eˇ	powspec	563
+Eˇˇˇ	modpk_potential.o	30
+Eˇˇˇ	powspec	20
+F	modpk_odeint.o	22
+F	modpk_odeint.o	24
+F	modpk_odeint.o	38
+F	modpk_potential.o	42
+F	modpk_potential.o	80
+F	modpk_utils.o	121
+F	powspec	73
+F	powspec	299
+F	powspec	305
+F	powspec	319
+F	powspec	541
+F90C	Makefile_jonny	8
+F90C	Makefile_lpri691	7
+FILES	readme.html	/^The source files<\/H3>$/
+FOA	powspec	931
+FileColumns	utils.F90	/^ function FileColumns(aunit) result(n)$/
+FileExists	utils.F90	/^  function FileExists(aname)$/
+FileLines	utils.F90	/^ function FileLines(aunit) result(n)$/
+FlushFile	utils.F90	/^  subroutine FlushFile(aunit)$/
 FreeSourceMem	cmbmain.f90	/^       subroutine FreeSourceMem$/
 Free_ClTransfer	modules.f90	/^        subroutine Free_ClTransfer(CTrans)$/
+G	modpk_odeint.o	21
+G	powspec	301
+G	powspec	953
+GAMMA	utils.F90	/^    DOUBLE PRECISION FUNCTION GAMMA(X)$/
+GAUSSIAN1	utils.F90	/^  double precision function GAUSSIAN1()$/
 GET_INIT	recfast.f90	/^        subroutine GET_INIT(z,x_H0,x_He0,x0)$/
 GaugeInterface_EvolveScal	equations.f90	/^         subroutine GaugeInterface_EvolveScal(EV,t/
 GaugeInterface_Init	equations.f90	/^        subroutine GaugeInterface_Init$/
@@ -50,13 +144,27 @@ GenerateBessels	bessels.f90	/^     subroutine GenerateBessels$/
 GetBessels	lensing.f90	/^      subroutine GetBessels(MaxArg)$/
 GetInitPowerArrayTens	cmbmain.f90	/^        subroutine GetInitPowerArrayTens(pows,ks, /
 GetInitPowerArrayVec	cmbmain.f90	/^        subroutine GetInitPowerArrayVec(pows,ks, n/
+GetMpiRank	utils.F90	/^  function GetMpiRank()$/
 GetNumEqns	equations.f90	/^        subroutine GetNumEqns(EV)$/
 GetOmegak	equations.f90	/^        function GetOmegak()$/
+GetParam	utils.F90	/^  function GetParam(i)$/
+GetParamCount	utils.F90	/^  function GetParamCount()$/
 GetSourceMem	cmbmain.f90	/^       subroutine GetSourceMem$/
 GetTauStart	cmbmain.f90	/^      function GetTauStart(q)$/
 GetTestTime	modules.f90	/^         function GetTestTime()$/
+GetThreeJs	utils.F90	/^    subroutine GetThreeJs(thrcof,l2in,l3in,m2in,m3/
 GetTransfer	cmbmain.f90	/^     subroutine GetTransfer(EV,tau)$/
+Gç	modpk_potential.o	71
+Gç	powspec	61
+H˚	modpk_potential.o	79
+H˚	powspec	72
+H˛	modpk_utils.o	34
+H˛	powspec	277
+I	powspec	557
+I	powspec	632
+I	powspec	638
 ION	recfast.f90	/^        subroutine ION(Recomb,Ndim,z,Y,f)$/
+IndexOf	utils.F90	/^  function IndexOf(aval,arr, n)$/
 Ini_Close	inifile.f90	/^  subroutine Ini_Close$/
 Ini_Close_File	inifile.f90	/^  subroutine Ini_Close_File(Ini)$/
 Ini_HasKey	inifile.f90	/^  function Ini_HasKey(Key) result(AValue)$/
@@ -94,11 +202,31 @@ Init_ClTransfer	modules.f90	/^        subroutine Init_ClTransfer(CTrans)$/
 Init_Cls	modules.f90	/^        subroutine Init_Cls$/
 InitialPower_ReadParams	power_tilt.f90	/^       subroutine InitialPower_ReadParams(InitPowe/
 InitializePowers	power_tilt.f90	/^       subroutine InitializePowers(AParamSet,acurv/
+IntToLogical	utils.F90	/^  function IntToLogical(I)$/
+IntToStr	utils.F90	/^  function IntToStr(I, minlen)$/
 IntegrateSourcesBessels	cmbmain.f90	/^      subroutine IntegrateSourcesBessels(IV,j,l,nu/
 IntegrationVars_Init	cmbmain.f90	/^      subroutine IntegrationVars_Init(IV)$/
 InterpolateClArr	modules.f90	/^      subroutine InterpolateClArr(lSet,iCl, all_Cl/
 InterpolateCls	cmbmain.f90	/^    subroutine InterpolateCls(CTransS,CTransT,CTra/
 InterpolateSources	cmbmain.f90	/^      subroutine InterpolateSources(IV)$/
+IsMainMPI	utils.F90	/^  function IsMainMPI()$/
+J	modpk_potential.o	46
+J	powspec	36
+J	powspec	689
+K	modpk_utils.o	26
+K	powspec	266
+L	modpk_postprocessing.o	6
+L	powspec	349
+L	powspec	351
+L	powspec	782
+L	modpk_odeint.o	33
+L6	modpk_rng.o	5
+L6	powspec	75
+LastFileLine	utils.F90	/^ function LastFileLine(aname)$/
+LogGamma	utils.F90	/^      function LogGamma(x)$/
+LogicalToint	utils.F90	/^  function LogicalToint(B)$/
+M	powspec	779
+MâM	powspec	689
 MassiveNuVars	equations.f90	/^     subroutine MassiveNuVars(EV,y,a,grho,gpres,dg/
 MassiveNuVarsOut	equations.f90	/^       subroutine MassiveNuVarsOut(EV,y,yprime,a,g/
 MatterPowerData_Load	modules.f90	/^        subroutine MatterPowerData_Load(PK_data,fn/
@@ -106,8 +234,17 @@ MatterPowerData_k	modules.f90	/^        function MatterPowerData_k(PK,  kh, itf)
 MatterPowerdata_Free	modules.f90	/^        subroutine MatterPowerdata_Free(PK_data)$/
 MatterPowerdata_MakeNonlinear	modules.f90	/^        subroutine MatterPowerdata_MakeNonlinear(P/
 MatterPowerdata_getsplines	modules.f90	/^        subroutine MatterPowerdata_getsplines(PK_d/
+MaxIndex	utils.F90	/^  function MaxIndex(arr, n)$/
+MinIndex	utils.F90	/^  function MinIndex(arr, n)$/
 ModelData_Free	modules.f90	/^         subroutine ModelData_Free$/
+MpiStat	utils.F90	/^   subroutine MpiStat(MpiID, MpiSize)$/
+MpiStop	utils.F90	/^  subroutine MpiStop(Msg)$/
 MySech	modpk_potential.f90	/^  FUNCTION MySech(x)$/
+M†ãE	modpk_utils.o	112
+M†ãE	powspec	292
+Mº	modpk_utils.o	83
+Mº	powspec	287
+N_pivot	parameters_multimodecode.txt	36
 NonLinearLensing	cmbmain.f90	/^     subroutine NonLinearLensing$/
 NonLinear_GetNonLinRatios	halofit.f90	/^     subroutine NonLinear_GetNonLinRatios(CAMB_Pk)/
 NonLinear_GetRatios	halofit.f90	/^     subroutine NonLinear_GetRatios(CAMB_Pk)$/
@@ -121,7 +258,29 @@ Nu_background	modules.f90	/^       subroutine Nu_background(am,rhonu,pnu)$/
 Nu_derivs	modules.f90	/^        subroutine Nu_derivs(am,adotoa,rhonu,rhonu/
 Nu_init	modules.f90	/^        subroutine Nu_init$/
 Nu_rho	modules.f90	/^       subroutine Nu_rho(am,rhonu)$/
+O	powspec	2664
+OpenFile	utils.F90	/^ subroutine OpenFile(aname, aunit,mode)$/
+OpenTxtFile	utils.F90	/^ subroutine OpenTxtFile(aname, aunit)$/
 Power_Descript	power_tilt.f90	/^     function Power_Descript(in, Scal, Tens, Keys,/
+Q	powspec	782
+QuickSortArr	utils.F90	/^    recursive subroutine QuickSortArr(Arr, Lin, R,/
+QuickSortArr_Real	utils.F90	/^      recursive subroutine QuickSortArr_Real(Arr, /
+Q¿Ú	powspec	29
+RANDEXP1	utils.F90	/^     real FUNCTION RANDEXP1()$/
+RANMAR	utils.F90	/^      double precision function RANMAR()$/
+RMARIN	utils.F90	/^      subroutine RMARIN(IJ,KL)$/
+RandIndices	utils.F90	/^  subroutine RandIndices(indices, nmax, n)$/
+RandRotation	utils.F90	/^  subroutine RandRotation(R, N)$/
+Ranges_Add	utils.F90	/^   subroutine Ranges_Add(Reg, t_start, t_end, nste/
+Ranges_Add_delta	utils.F90	/^   subroutine Ranges_Add_delta(Reg, t_start, t_end/
+Ranges_Free	utils.F90	/^   subroutine Ranges_Free(R)$/
+Ranges_GetArray	utils.F90	/^   subroutine Ranges_GetArray(Reg, want_dpoints)$/
+Ranges_Getdpoints	utils.F90	/^   subroutine Ranges_Getdpoints(Reg, half_ends)$/
+Ranges_IndexOf	utils.F90	/^   function Ranges_IndexOf(Reg, tau) result(points/
+Ranges_Init	utils.F90	/^   subroutine Ranges_Init(R)$/
+Ranges_Nullify	utils.F90	/^  subroutine Ranges_Nullify(R)$/
+Ranges_Write	utils.F90	/^   subroutine Ranges_Write(Reg) $/
+RealToStr	utils.F90	/^   function RealToStr(R, figs)$/
 Recombination_ReadParams	recfast.f90	/^         subroutine Recombination_ReadParams(R, In/
 Recombination_SetDefParams	recfast.f90	/^        subroutine Recombination_SetDefParams(R)$/
 Recombination_Validate	recfast.f90	/^        subroutine Recombination_Validate(R, OK)$/
@@ -140,14 +299,35 @@ Reionization_doptdepth_dz	reionization.f90	/^ function Reionization_doptdepth_dz
 Reionization_timesteps	reionization.f90	/^ function Reionization_timesteps(ReionHist)$/
 Reionization_xe	reionization.f90	/^ function Reionization_xe(a, tau, xe_recomb)$/
 Reionization_zreFromOptDepth	reionization.f90	/^ subroutine Reionization_zreFromOptDepth(Reion, Re/
+S	powspec	3284
 ScalarPower	power_tilt.f90	/^      function ScalarPower(k,in)$/
 SetClosedkValuesFromArr	cmbmain.f90	/^      subroutine SetClosedkValuesFromArr(R)$/
 SetDefPowerParams	power_tilt.f90	/^       subroutine SetDefPowerParams(AP)$/
+SetIdle	inidriver.F90	/^   subroutine SetIdle$/
+SetIdlePriority	utils.F90	/^  subroutine SetIdlePriority$/
 SetTimeSteps	modules.f90	/^        subroutine SetTimeSteps$/
 SetkValuesForInt	cmbmain.f90	/^     subroutine SetkValuesForInt$/
 SetkValuesForSources	cmbmain.f90	/^      subroutine SetkValuesForSources$/
 SourceToTransfers	cmbmain.f90	/^     subroutine SourceToTransfers(q_ix)$/
+StrToInt	utils.F90	/^  function StrToInt(S)$/
+StringReplace	utils.F90	/^  subroutine StringReplace(FindS, RepS, S)$/
 SwitchToMassiveNuApprox	equations.f90	/^        subroutine SwitchToMassiveNuApprox(EV,y)$/
+Sã	powspec	795
+T8	modpk_rng.o	5
+T8	powspec	75
+TE	plotcls.m	46
+TE	plotdiffs.m	35
+TE	plotdiffs.m	39
+TList_RealArr_Add	utils.F90	/^   subroutine TList_RealArr_Add(L, P)$/
+TList_RealArr_Clear	utils.F90	/^   subroutine TList_RealArr_Clear(L)$/
+TList_RealArr_ConfidVal	utils.F90	/^   subroutine TList_RealArr_ConfidVal(L, ix, limfr/
+TList_RealArr_Delete	utils.F90	/^   subroutine TList_RealArr_Delete(L, i)$/
+TList_RealArr_Init	utils.F90	/^   subroutine TList_RealArr_Init(L)$/
+TList_RealArr_ReadBinary	utils.F90	/^   subroutine TList_RealArr_ReadBinary(L,fid)$/
+TList_RealArr_SaveBinary	utils.F90	/^   subroutine TList_RealArr_SaveBinary(L,fid)$/
+TList_RealArr_SaveToFile	utils.F90	/^   subroutine TList_RealArr_SaveToFile(L,fname)$/
+TList_RealArr_SetCapacity	utils.F90	/^   subroutine TList_RealArr_SetCapacity(L, C)$/
+TList_RealArr_Thin	utils.F90	/^   subroutine TList_RealArr_Thin(L, i)$/
 TNameValueList_Add	inifile.f90	/^  subroutine TNameValueList_Add(L, AName, AValue)$/
 TNameValueList_Clear	inifile.f90	/^  subroutine TNameValueList_Clear(L)$/
 TNameValueList_Delete	inifile.f90	/^  subroutine TNameValueList_Delete(L, i)$/
@@ -155,6 +335,17 @@ TNameValueList_HasKey	inifile.f90	/^  function TNameValueList_HasKey(L, AName) r
 TNameValueList_Init	inifile.f90	/^  subroutine TNameValueList_Init(L)$/
 TNameValueList_SetCapacity	inifile.f90	/^  subroutine TNameValueList_SetCapacity(L, C)$/
 TNameValueList_ValueOf	inifile.f90	/^  subroutine TNameValueList_ValueOf(L, AName, AVal/
+TS	powspec	254
+TStringList_Add	utils.F90	/^   subroutine TStringList_Add(L, P)$/
+TStringList_Clear	utils.F90	/^   subroutine TStringList_Clear(L)$/
+TStringList_Delete	utils.F90	/^   subroutine TStringList_Delete(L, i)$/
+TStringList_IndexOf	utils.F90	/^   function TStringList_IndexOf(L, S)$/
+TStringList_Init	utils.F90	/^   subroutine TStringList_Init(L)$/
+TStringList_SetCapacity	utils.F90	/^   subroutine TStringList_SetCapacity(L, C)$/
+TStringList_SetFromString	utils.F90	/^   subroutine TStringList_SetFromString(L, S, vali/
+TT	plotcls.m	38
+TT	plotdiffs.m	30
+TT	plotTT.m	33
 TensorPower	power_tilt.f90	/^      function TensorPower(k,in)$/
 ThermoData_Free	modules.f90	/^        subroutine ThermoData_Free$/
 Thermo_OpacityToTime	modules.f90	/^       function Thermo_OpacityToTime(opacity)$/
@@ -170,9 +361,33 @@ Transfer_SaveToFiles	modules.f90	/^        subroutine Transfer_SaveToFiles(MTran
 Transfer_SetForNonlinearLensing	modules.f90	/^       subroutine Transfer_SetForNonlinearLensing(/
 Transfer_output_Sig8	modules.f90	/^        subroutine Transfer_output_Sig8(MTrans)$/
 Transfer_output_Sig8AndNorm	modules.f90	/^        subroutine Transfer_output_Sig8AndNorm(MTr/
+TxtFileColumns	utils.F90	/^ function TxtFileColumns(aname) result(n)$/
+U	powspec	535
+U	powspec	707
+U	powspec	3255
 USpherBesselWithDeriv	bessels.f90	/^        subroutine USpherBesselWithDeriv(closed,Ch/
 UseLimber	cmbmain.f90	/^      function UseLimber(l,k)$/
+Uÿ	modpk_postprocessing.o	4
+Uÿ	powspec	347
+UÿçBâEÿã	powspec	846
+UB	modpk_postprocessing.o	4
+V	modpk_utils.o	39
+V	powspec	280
 WriteFitsCls	writefits.f90	/^ subroutine WriteFitsCls(Clsfile, lmx)$/
+WriteS	utils.F90	/^  subroutine WriteS(S)$/
+X	modpk_utils.o	28
+X	modpk_utils.o	28
+X	modpk_potential.o	41
+X¡rÏÚ	modpk_potential.o	59
+X¡rÏÚ	powspec	49
+X˛ˇ	powspec	987
+X˛ˇˇã	modpk_potential.o	33
+X˛ˇˇã	powspec	23
+Yr	modpk_potential.o	71
+Yr	powspec	61
+_	modpk_utils.o	26
+_	powspec	266
+adds	readme.html	/^Add-ons, extensions, external sites<\/H3>$/
 airy_ai	bessels.f90	/^      function airy_ai(x)$/
 allocate_vars	testm.f90	/^    subroutine allocate_vars()$/
 array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(xa, ya, x, y, dy)$/
@@ -187,10 +402,27 @@ build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstra
 bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi, efold)$/
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
 calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
+clf	plotpk.m	6
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
+cmp	plotdiffs.m	62
+cmp	plotdiffs.m	81
+cmp	plotdiffs.m	96
+cmp	plotdiffs.m	111
+col	plotcls.m	35
+col	plotdiffs.m	27
+col	plotpk.m	12
+col	plotTT.m	29
+colours	plotpk.m	4
+compEE	plotcls.m	51
+compEE	plotdiffs.m	44
+compTE	plotcls.m	52
+compTE	plotdiffs.m	45
+compiling	readme.html	/^Compiling and running<\/B>$/
+concat_s	utils.F90	/^  function concat_s(S1,S2,S3,S4,S5,S6,S7,S8) resul/
+concat_s_n	utils.F90	/^ function concat_s_n(SS1,N2,SS3,N4,SS5,N6,SS7,N8,S/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
-constrain_via_thetas	modpk_icsampling.f90	/^    subroutine constrain_via_thetas(y, radius)$/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
+d	powspec	345
 d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
 dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
 dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(phi)$/
@@ -207,21 +439,39 @@ derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
 derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
 derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
 derivst	equations.f90	/^        subroutine derivst(EV,n,tau,ayt,aytprime)$/
+dm	plotdiffs.m	61
 doptdepth_dz	modules.f90	/^        function doptdepth_dz(z)$/
 dragoptdepth	modules.f90	/^        function dragoptdepth(z)$/
 dsound_da	modules.f90	/^       function dsound_da(a)$/
 dtauda	equations.f90	/^        function dtauda(a)$/
 dtda	camb.f90	/^  function dtda(a)$/
 dverk	subroutines.f90	/^      subroutine dverk (EV,n, fcn, x, y, xend, tol/
+e	plotcls.m	86
+end	plotcls.m	152
+end	plotdiffs.m	127
 energy_measure	modpk_icsampling.f90	/^    function energy_measure(vect,energy_scale) res/
 eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(y, energy_scale, &$/
 equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(y,energy_scal/
 evolve	modpk.f90	/^  SUBROUTINE evolve(kin, powerspectrum_out)$/
+f	modpk_potential.o	47
+f	modpk_utils.o	112
+f	powspec	292
+f	modpk_odeint.o	21
+f	powspec	301
+f	modpk_potential.o	44
+f	modpk_potential.o	78
+f	powspec	69
+fY	modpk_potential.o	47
+fY–Ú	modpk_utils.o	29
+fY–Ú	powspec	272
+fYÒfXÔf	modpk_utils.o	31
+fYÒfXÔf	powspec	274
 f_K	modules.f90	/^        function f_K(x)$/
 fderivs	equations.f90	/^        subroutine fderivs(EV,n,tau,ay,ayprime)$/
 fderivst	equations.f90	/^        subroutine fderivst(EV,n,tau,ayt,aytprime)/
 fderivsv	equations.f90	/^        subroutine fderivsv(EV,n,tau,yv,yvprime)$/
 find_z	modules.f90	/^       subroutine find_z(func,zout)  !find redshif/
+fâ	powspec	809
 getEps	modpk_potential.f90	/^  FUNCTION getEps(phi,dphi)$/
 getH	modpk_potential.f90	/^  FUNCTION getH(phi,dphi)$/
 getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
@@ -229,15 +479,25 @@ get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
 get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
 get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_/
 get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
+get_new_N_pivot	modpk_icsampling.f90	/^    subroutine get_new_N_pivot(Npiv, prior_min, pr/
+getarg	utils.F90	/^  subroutine getarg(num, res)$/
 getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
 getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(phi,dphi)$/
 getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(phi,dphi)$/
 geteta	modpk_potential.f90	/^  FUNCTION geteta(phi, dphi)$/
 getrhodot	modpk_potential.f90	/^    function getrhodot(phi,dphi) result(rhodot)$/
+h	plotcls.m	151
+h	powspec	403
 halofit	halofit.f90	/^      subroutine halofit(rk,rn,rncur,rknl,plin,pnl/
+h˚ˇˇ	modpk_utils.o	19
+h˚ˇˇ	powspec	258
+i	powspec	2701
+i	powspec	2722
+iargc	utils.F90	/^  function iargc ()$/
 ic_load_observables	modpk_icsampling.f90	/^    subroutine ic_load_observables(this, phi0,dphi/
 ic_print_observables	modpk_icsampling.f90	/^    subroutine ic_print_observables(this, outunit)/
 implicit_surface_sampling	modpk_icsampling.f90	/^    subroutine implicit_surface_sampling(sample,en/
+initRandom	utils.F90	/^  subroutine initRandom(i)$/
 init_background	equations.f90	/^       subroutine init_background$/
 init_massive_nu	modules.f90	/^      subroutine init_massive_nu(has_massive_nu)$/
 init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(rank)$/
@@ -250,29 +510,128 @@ initialt	equations.f90	/^        subroutine initialt(EV,yt,tau)$/
 initialv	equations.f90	/^        subroutine initialv(EV,yv,tau)$/
 initlval	modules.f90	/^        subroutine initlval(lSet,max_l)$/
 invsinfunc	modules.f90	/^         function invsinfunc(x)$/
+j	powspec	3225
+jË	powspec	402
 kahan_clear_mem	modpk_modules.f90	/^  subroutine kahan_clear_mem(this)$/
 kahan_summation	modpk_modules.f90	/^  subroutine kahan_summation(this,val)$/
 kappa_HH_21cm	recfast.f90	/^        function kappa_HH_21cm(T, deriv)$/
 kappa_eH_21cm	recfast.f90	/^        function kappa_eH_21cm(T, deriv)$/
 kappa_pH_21cm	recfast.f90	/^        function kappa_pH_21cm(T, deriv) ! from as/
+kh	plotpk.m	13
+lmnopq	powspec	2662
+l	powspec	3238
+l	powspec	3239
+l	powspec	3240
+l	powspec	3241
+l	powspec	3242
+l	powspec	3243
+l	powspec	3244
+l	powspec	3245
+l	powspec	3246
+l	powspec	3247
+l	powspec	3248
+l	powspec	3249
+l	powspec	3250
+l	powspec	3256
+l	powspec	3257
+l	powspec	3258
+l	powspec	3259
+l	powspec	3260
+l	powspec	3261
+l	powspec	3262
+l	powspec	3263
+l	powspec	3264
+l	powspec	3265
+l	powspec	3266
+l	powspec	3267
+l	powspec	3268
+l6	powspec	2704
+l6	powspec	2725
 lens_Cls	lensing.f90	/^subroutine lens_Cls$/
+lmax	plotcls.m	24
+lmax	plotcls.m	63
+lmax	plotdiffs.m	20
+lmax	plotTT.m	18
+lmax	plotTT.m	43
+lmin	plotcls.m	23
+lmin	plotcls.m	62
+lmin	plotdiffs.m	19
+lmin	plotdiffs.m	51
+lmin	plotTT.m	17
+lmin	plotTT.m	42
 locate	modpk_utils.f90	/^  FUNCTION locate(xx,x)$/
+ls	plotcls.m	36
+ls	plotdiffs.m	28
+ls	plotTT.m	30
+l¯	modpk_utils.o	33
+l¯	modpk_utils.o	50
+l¯	modpk_utils.o	51
+l¯	powspec	276
+l¯	powspec	282
+l¯	powspec	283
+l¸ˇˇ	modpk_potential.o	30
+l¸ˇˇ	powspec	20
+lˇ	modpk_potential.o	33
+lˇ	modpk_potential.o	38
+lˇ	powspec	23
+lˇ	powspec	28
 make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
 make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
 mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(msqd, beta)$/
+maxEE	plotcls.m	26
+maxEE	plotcls.m	58
+maxEE	plotTT.m	20
+maxTE	plotcls.m	26
+maxTE	plotcls.m	57
+maxTE	plotTT.m	20
+maxTT	plotcls.m	26
+maxTT	plotcls.m	56
+maxTT	plotTT.m	20
+maxTT	plotTT.m	40
+maxcmp	plotdiffs.m	97
+maxcmp	plotdiffs.m	112
+maxk	plotpk.m	7
+maxk	plotpk.m	15
+minEE	plotcls.m	25
+minEE	plotcls.m	60
+minEE	plotTT.m	19
+minTE	plotcls.m	25
+minTE	plotcls.m	59
+minTE	plotTT.m	19
+minTT	plotcls.m	25
+minTT	plotcls.m	55
+minTT	plotTT.m	19
+minTT	plotTT.m	39
 min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
+mink	plotpk.m	5
 mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize()$/
 n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(vpnew, energy_sca/
 n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(vpnew)$/
 n_quadratic_mass_intxn_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_intxn_looping(vpne/
 n_quadratic_mass_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_looping(vpnew, mas/
+new_file_unit	utils.F90	/^ function new_file_unit()$/
+noB	plotcls.m	40
+noB	plotdiffs.m	32
 normal_array	modpk_rng.f90	/^function normal_array(n,mean,std) result(normal)$/
 normal_scalar	modpk_rng.f90	/^function normal_scalar(mean,std) result(scalar)$/
 nuRhoPres	modules.f90	/^        subroutine nuRhoPres(am,rhonu,pnu)$/
+num_inflaton	parameters_multimodecode.txt	5
+numcat	utils.F90	/^  function numcat(S, num)$/
+nÓ	modpk_utils.o	28
+nÓ	powspec	271
 odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmi/
 odeint_r	modpk_odeint.f90	/^  SUBROUTINE odeint_r(ystart,x1,x2,eps,h1,hmin,der/
+off	plotpk.m	24
 omega_m	halofit.f90	/^      function omega_m(aa,om_m0,om_v0,wval)$/
 omega_v	halofit.f90	/^      function omega_v(aa,om_m0,om_v0,wval)      $/
+on	plotcls.m	91
+on	plotcls.m	102
+on	plotcls.m	148
+on	plotdiffs.m	65
+on	plotdiffs.m	84
+on	plotdiffs.m	100
+on	plotdiffs.m	115
+on	plotpk.m	17
 open_output_files	testm.f90	/^    subroutine open_output_files()$/
 optdepth	modules.f90	/^        function optdepth(z)$/
 output	equations.f90	/^        subroutine output(EV,y, n,j,tau,sources)$/
@@ -281,21 +640,39 @@ output_cl_files	modules.f90	/^        subroutine output_cl_files(ScalFile,TensFi
 output_initial_data	testm.f90	/^    subroutine output_initial_data()$/
 output_lens_pot_files	modules.f90	/^        subroutine output_lens_pot_files(LensPotFi/
 output_observables	testm.f90	/^    subroutine output_observables(pk_arr, pk_iso_a/
+output_root	params.ini	4
+output_root	params_modpk.ini	4
 output_veccl_files	modules.f90	/^        subroutine output_veccl_files(VecFile, fac/
+outputs	readme.html	/^Outputs<\/H3>$/
 outputt	equations.f90	/^        subroutine outputt(EV,yt,n,j,tau,dt,dte,dt/
 outputv	equations.f90	/^        subroutine outputv(EV,yv,n,j,tau,dt,dte,dt/
 outtransf	equations.f90	/^      subroutine outtransf(EV, y, Arr)$/
+overflow	powspec	3217
 p1evl	bessels.f90	/^      function p1evl(x,coef,N)$/
 penalized_constrained_montecarlo	modpk_icsampling.f90	/^    subroutine penalized_constrained_montecarlo(sa/
 phi_langer	bessels.f90	/^      function phi_langer(l,K,beta,chi)$/
 phi_recurs	bessels.f90	/^  function phi_recurs(l, K, beta, chi)$/
 phi_small_closed_int	bessels.f90	/^   subroutine phi_small_closed_int(l,beta,chi,y1,y/
+plotcls	plotcls.m	/^function plotcls(varargin)$/
+plotcls	plotTT.m	/^function plotcls(varargin)$/
+plotdiffs	plotdiffs.m	/^function plotdiffs(varargin)$/
+plotx	plotcls.m	27
+plotx	plotdiffs.m	22
+plotx	plotTT.m	21
+ploty	plotcls.m	27
+ploty	plotdiffs.m	22
+ploty	plotTT.m	21
 polevl	bessels.f90	/^      function polevl(x,coef,N)$/
 polevl	recfast.f90	/^          function polevl(x,coef,N)$/
 polint	modpk_utils.f90	/^  SUBROUTINE polint(xa,ya,x,y,dy)$/
 pot	modpk_potential.f90	/^  FUNCTION pot(phi)$/
 potinit	modpk.f90	/^  SUBROUTINE potinit$/
 powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(psi, dpsi, phi, dphi, a/
+ps	plotcls.m	155
+ps	plotdiffs.m	129
+q	powspec	306
+qG	modpk_potential.o	76
+qG	powspec	67
 qderivs	modpk_odeint.f90	/^       SUBROUTINE qderivs(x, y, dydx)$/
 qderivs	modpk_utils.f90	/^  subroutine qderivs(x,y,yprime)$/
 qintegral	bessels.f90	/^      function qintegral(sin_K,alpha, K)$/
@@ -303,21 +680,48 @@ rand_sign	modpk_rng.f90	/^function rand_sign() result(sign)$/
 reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(p,n,m)$/
 reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(p,n)$/
 rec3jj	lensing.f90	/^subroutine rec3jj(thrcof,l2,l3,m2,m3)$/
+refs	readme.html	/^REFERENCES<\/H3>$/
 renormalize_remove_smallest	modpk_potential.f90	/^    subroutine renormalize_remove_smallest(vect)$/
+rexp	utils.F90	/^FUNCTION rexp( ) RESULT( fn_val )$/
 rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(y,dydx,x,h,yout,yerr,derivs)$/
 rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(y,dydx,x,h,yout,yerr,derivs)$/
 rkqs_c	modpk_odeint.f90	/^       SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,h/
 rkqs_c	modpk_utils.f90	/^  SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,hdid,h/
 rkqs_r	modpk_odeint.f90	/^       SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,h/
 rkqs_r	modpk_utils.f90	/^  SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,h/
+rnor	utils.F90	/^FUNCTION rnor( ) RESULT( fn_val )$/
 rofChi	modules.f90	/^         function rofChi(Chi) !sinh(chi) for open,/
 rombint	subroutines.f90	/^        function rombint(f,a,b,tol)$/
 rombint2	subroutines.f90	/^        function rombint2(f,a,b,tol, maxit, minste/
 rombint_obj	subroutines.f90	/^        function rombint_obj(obj,f,a,b,tol, maxit)/
+rﬂ	modpk_potential.o	49
+rﬂ	powspec	39
+r‚ãu	modpk_utils.o	120
+r‚ãu	modpk_utils.o	121
+r‚ãu	powspec	298
+r‚ãu	powspec	299
+r„ã	modpk_odeint.o	24
+r„ã	powspec	305
+rÓÉƒçM	modpk_odeint.o	22
+rÓÉƒçM¯ã	powspec	303
+rÔ	modpk_potential.o	78
+rÔ	modpk_potential.o	78
+rÔ	powspec	69
+rÔ	powspec	69
+rÔã	modpk_odeint.o	24
+rÔã	powspec	305
+rÔãÖ¸ˇˇã‡ãÖ¸ˇˇÚ	powspec	301
+sample_nsphere	modpk_icsampling.f90	/^    subroutine sample_nsphere(y, radius)$/
+sampling_techn	parameters_multimodecode.txt	19
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
 set_ic	modpk.f90	/^      subroutine set_ic(y)$/
 set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(y, const/
+seth	plotcls.m	/^   seth(h)$/
+seth	plotcls.m	/^   seth(h)$/
+seth	plotcls.m	/^function seth(h)$/
+seth	plotTT.m	/^   seth(h)$/
+shr3	utils.F90	/^FUNCTION shr3( ) RESULT( ival )$/
 shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(setA, setB, n)$/
 shuffle_dp_1	modpk_rng.f90	/^subroutine shuffle_dp_1(a)$/
 shuffle_dp_dimn	modpk_rng.f90	/^subroutine shuffle_dp_dimn(a)$/
@@ -326,16 +730,69 @@ shuffle_int_dimn	modpk_rng.f90	/^subroutine shuffle_int_dimn(a)$/
 splder	subroutines.f90	/^        subroutine splder(y,dy,n, g)$/
 spline	subroutines.f90	/^      SUBROUTINE spline(x,y,n,yp1,ypn,y2)$/
 spline_deriv	subroutines.f90	/^     SUBROUTINE spline_deriv(x,y,y2,y1,n)$/
+spline_double	utils.F90	/^      subroutine spline_double(x,y,n,y2)$/
 spline_integrate	subroutines.f90	/^      subroutine spline_integrate(x,y,y2,yint,n)$/
+spline_real	utils.F90	/^      subroutine spline_real(x,y,n,y2)$/
 splinepow	power_tilt.f90	/^     SUBROUTINE splinepow(x,y,n,yp1,ypn,y2)$/
 splini	subroutines.f90	/^        subroutine splini(g,n)$/
 splint	subroutines.f90	/^        subroutine splint(y,z,n)$/
+sz	plotpk.m	14
+t	modpk_backgrnd.o	27
+t	plotcls.m	87
+t	powspec	344
+t	powspec	446
+t	powspec	794
+tãM	powspec	636
 tanfunc	modules.f90	/^         function tanfunc(Chi)$/
 test_bad	testm.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
 thermo	modules.f90	/^        subroutine thermo(tau,cs2b,opacity, dopaci/
+ticks	plotTT.m	48
 total_efold	modpk.f90	/^  SUBROUTINE total_efold$/
 trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(phi) result(trace)$/
 trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(phi_init_trial, alph/
+u	modpk_utils.o	112
+u	powspec	292
+u	powspec	439
+u	powspec	3226
+uV	powspec	784
 unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(y, &$/
+uni	utils.F90	/^FUNCTION uni( ) RESULT( fn_val )$/
+u§	modpk_potential.o	65
+u§	modpk_potential.o	71
+u§	modpk_potential.o	76
+u§	powspec	55
+u§	powspec	61
+u§	powspec	67
+u∫	powspec	805
+uº	modpk_utils.o	112
+uº	powspec	292
+uÿ	modpk_rng.o	5
+uÿ	powspec	75
+uÿ	powspec	815
+uÿ	powspec	816
+u‹	modpk_rng.o	5
+u‹	powspec	75
+uÏ	powspec	337
+version	camb.vfproj	1
+version	readme.html	/^Version History<\/H3>$/
+vn	powspec	413
+w	modpk_utils.o	121
+w	powspec	299
+wf	modpk_potential.o	78
+wf	powspec	69
 wint	halofit.f90	/^      subroutine wint(CAMB_Pk,itf,r,sig,d1,d2)$/
+x	plotcls.m	19
+x	plotdiffs.m	15
+x	plotTT.m	13
+x	powspec	805
+x	powspec	854
+x	powspec	2382
+x	powspec	548
+xu	powspec	805
+xu	powspec	805
+z	powspec	3226
 zero_potential_ic	modpk_icsampling.f90	/^    subroutine zero_potential_ic(y,energy_scale)$/
+zigset	utils.F90	/^SUBROUTINE zigset( jsrseed )$/
+~üÉˇâÖ	powspec	540
+ΩXˇ	modpk_potential.o	77
+ΩXˇ	powspec	68
