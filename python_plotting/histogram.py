@@ -5,62 +5,80 @@ from scipy import stats
 
 import pyplotsetup
 
-#import shannon_entropy
 import sys
 
-#Cosmology data
-data=np.loadtxt('nsralpha.txt')
 
-ns=data[:,0]
-r=np.log10(data[:,1])
-alpha=1000*data[:,2]
+iso_E = True
 
-#Data subset for testing
-#datarange=10000
-#ns=data[1:datarange,0]
-#r=data[1:datarange,1]
-#alpha=1000*data[1:datarange,2]
+if iso_E:
 
-ns_min, ns_max = min(ns),max(ns)
-#ns_min, ns_max = 0.945, 0.955
-#r_min, r_max =min(r)-0.001,max(r)+0.001
-r_min, r_max =min(r),max(r)
-rzoom_min, rzoom_max = 0.1440, 0.146
-alpha_min, alpha_max =min(alpha),max(alpha)
+    #Cosmology data
+    data=np.loadtxt('nsralpha_isoE_100fields.txt')
 
-r_tick_min, r_tick_max, r_units = -0.8405, r_max, 0.0005
+    ns=data[:,0]
+    r=np.log10(data[:,1])
+    alpha=1000*data[:,2]
 
-# Generate some test data
-#numb=1000000
-#ns = np.random.randn(numb)
-#r = np.random.randn(numb)
-#alpha = np.random.randn(numb)
+    ns_min, ns_max = min(ns),max(ns)
+    #ns_min, ns_max = 0.945, 0.955
+    #r_min, r_max =min(r)-0.001,max(r)+0.001
+    r_min, r_max =min(r),max(r)
+    rzoom_min, rzoom_max = 0.1440, 0.146
+    alpha_min, alpha_max =min(alpha),max(alpha)
+
+    r_tick_min, r_tick_max, r_units = -0.8405, r_max, 0.0005
+
+else:
+
+    #Cosmology data
+    data=np.loadtxt('nsralpha_isoN_100fields.txt')
+
+    ns=data[:,0]
+    r=np.log10(data[:,1])
+    #r=data[:,1]
+    alpha=1000*data[:,2]
+
+    #ns_min, ns_max = min(ns),max(ns)
+    ns_min, ns_max = 0.962,1.0001*max(ns)
+    #ns_min, ns_max = 0.9625, 0.9645
+
+    #r_min, r_max =min(r),max(r)
+    r_min, r_max =np.log10([0.144030, 0.1441])
+
+
+    rzoom_min, rzoom_max = 0.1440, 0.146
+    alpha_min, alpha_max =min(alpha),max(alpha)
+
+    #r_tick_min, r_tick_max, r_units = -0.8405, r_max, 0.0005
 
 
 #Histogram
-bins=65
-norm=False
+doing_histogram = True
+if doing_histogram:
+    bins=120
+    norm=False
 
-nsr, xedges1, yedges1 = np.histogram2d(ns, r,
-        range=[[ns_min, ns_max],[r_min, r_max]],
-        bins=bins, normed=norm)
+    nsr, xedges1, yedges1 = np.histogram2d(ns, r,
+            range=[[ns_min, ns_max],[r_min, r_max]],
+            bins=bins, normed=norm)
 
-nsalpha, xedges2, yedges2 = np.histogram2d(ns, alpha, bins=bins,
-        normed=norm)
+    nsalpha, xedges2, yedges2 = np.histogram2d(ns, alpha,
+            range=[[ns_min, ns_max],[alpha_min, alpha_max]],
+            bins=bins, normed=norm)
 
-nsr_zoom, xedges_zoom, yedges_zoom = np.histogram2d(ns, r,
-        range=[[ns_min, ns_max],[rzoom_min, rzoom_max]],
-        bins=bins, normed=norm)
+    nsr_zoom, xedges_zoom, yedges_zoom = np.histogram2d(ns, r,
+            range=[[ns_min, ns_max],[rzoom_min, rzoom_max]],
+            bins=bins, normed=norm)
 
-extent_nsr = [xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]]
-extent_nsr_zoom = [xedges_zoom[0], xedges_zoom[-1],
-        yedges_zoom[0], yedges_zoom[-1]]
-extent_nsalpha = [xedges1[0], xedges1[-1], yedges2[0], yedges2[-1]]
+    extent_nsr = [xedges1[0], xedges1[-1], yedges1[0], yedges1[-1]]
+    extent_nsr_zoom = [xedges_zoom[0], xedges_zoom[-1],
+            yedges_zoom[0], yedges_zoom[-1]]
+    extent_nsalpha = [xedges1[0], xedges1[-1], yedges2[0], yedges2[-1]]
 
 
-#Normalize to "probability"
-nsr = nsr/float(len(ns))
-nsalpha = nsalpha/float(len(ns))
+    #Normalize to "probability"
+    nsr = nsr/float(len(ns))
+    nsalpha = nsalpha/float(len(ns))
 
 
 # Perform a kernel density estimate (KDE) on the data
@@ -72,9 +90,8 @@ if doing_kde:
     kernel_nsr = stats.gaussian_kde(values_nsr)
     kernel_nsalpha = stats.gaussian_kde(values_nsalpha)
 
-
-    x_nsr, y_nsr = np.mgrid[ns_min:ns_max:100j, r_min:r_max:100j]
-    x_nsalpha, y_nsalpha = np.mgrid[ns_min:ns_max:100j, alpha_min:alpha_max:100j]
+    x_nsr, y_nsr = np.mgrid[ns_min:ns_max:150j, r_min:r_max:150j]
+    x_nsalpha, y_nsalpha = np.mgrid[ns_min:ns_max:150j, alpha_min:alpha_max:150j]
 
     positions_nsr = np.vstack([x_nsr.ravel(), y_nsr.ravel()])
     positions_nsalpha = np.vstack([x_nsalpha.ravel(), y_nsalpha.ravel()])
@@ -89,7 +106,7 @@ if doing_kde:
 
 figprops = dict(figsize=(1.0*pyplotsetup.fig_width, 2.0*pyplotsetup.fig_height))
 
-adjustprops = dict(left=0.22, bottom=0.09, right=0.97, top=0.99,
+adjustprops = dict(left=0.22, bottom=0.09, right=0.97, top=0.95,
     wspace=0.1, hspace=0.02)
 
 imshowasp = 'auto'
@@ -114,15 +131,17 @@ fig.subplots_adjust(**adjustprops)
 
 ax1 = fig.add_subplot(211)
 
+ax1.set_title(r'test')
 ax1.set_ylabel(r'$\log_{10} (r)$')
 
 if doing_kde:
     plt.imshow(f_nsr.T, origin='lower', extent=extent_nsr, aspect=imshowasp,
             cmap=color_map, interpolation=interp)
 else:
-    plt.yticks(np.arange(r_tick_min, r_tick_max, r_units))
+    #plt.yticks(np.arange(r_tick_min, r_tick_max, r_units))
     plt.imshow(nsr.T, origin='lower', extent=extent_nsr, aspect=imshowasp,
             cmap=color_map, interpolation=interp)
+
 
 #-----------
 
@@ -140,11 +159,20 @@ else:
     #plt.imshow(nsr_zoom.T, origin='lower', extent=extent_nsr_zoom,
     #        aspect=imshowasp, cmap=color_map, interpolation=interp)
 
-
-plt.setp(ax1.get_xticklabels(), visible=False) #Remove x-axis label top fig (ax1)
+#Remove x-axis label top fig (ax1)
+plt.setp(ax1.get_xticklabels(), visible=False)
 
 save=True
-name = 'nsralpha_100field'
+if iso_E:
+    if doing_kde:
+        name = 'nsralpha_100field_kde'
+    else:
+        name = 'nsralpha_100field'
+else:
+    if doing_kde:
+        name = 'nsralpha_100field_kde_isoN'
+    else:
+        name = 'nsralpha_100field_isoN'
 if save:
     direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
     #direct='./'
