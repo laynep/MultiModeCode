@@ -103,8 +103,7 @@ module modpk_icsampling
 
         y_background = 0e0_dp
 
-        call constrain_via_thetas(y_background(1:num_inflaton),2e0_dp*sqrt(N_iso_ref))
-
+        call sample_nsphere(y_background(1:num_inflaton),2e0_dp*sqrt(N_iso_ref))
 
 
       !-----------------------------------------
@@ -514,7 +513,7 @@ print*, new_measure
           dphi=y(num_inflaton+1:2*num_inflaton)
 	        KE = energy_scale**4 - pot(phi)
 
-          call constrain_via_thetas(dphi,sqrt(2.0e0_dp*KE))
+          call sample_nsphere(dphi,sqrt(2.0e0_dp*KE))
 
           y(num_inflaton+1:2*num_inflaton) = dphi
 
@@ -927,55 +926,18 @@ print*, new_measure
 
     end subroutine ic_load_observables
 
-    subroutine constrain_via_thetas(y, radius)
+    subroutine sample_nsphere(y, radius)
+      use modpk_rng, only : normal_array
 
       real(dp), dimension(:), intent(out) :: y
-      real(dp), dimension(size(y)) :: dphi
-      real(dp), allocatable :: theta(:)
       real(dp), intent(in) :: radius
-      real(dp) :: rand
-      integer :: n, i, j
 
-      n = size(y)
-      y=0e0_dp
+      !Sample Gaussian with zero mean and fixed std
+      y = normal_array(size(y), 0e0_dp, 1e0_dp)
+      y = (radius/norm(y))*y
 
-      if (n>1) then
-        allocate(theta(n-1))
-      else
-        print*, "Eqen sampling doesn't work for num_inflaton=1"
-        stop
-      end if
+    end subroutine sample_nsphere
 
-      !Get the angles with unif priors
-      call random_number(rand)
-      theta(size(theta)) = rand*2.0e0_dp*pi
-      if (size(theta)>1) then
-        do i=1,size(theta)-1
-          call random_number(rand)
-          theta(i) =rand*pi
-        end do
-      end if
-
-      !Change to Cartesian, i.e., field-space coords
-      dphi = radius
-      do i=1,n-1
-        dphi(i) = dphi(i)*cos(theta(i))
-
-        if (i>1) then
-          do j=1,i-1
-            dphi(i) = dphi(i)*sin(theta(j))
-          end do
-        end if
-
-      end do
-
-      do j=1,size(theta)
-        dphi(n) = dphi(n)*sin(theta(j))
-      end do
-
-      y = dphi
-
-    end subroutine constrain_via_thetas
 
     !For a sum-separable potential only
     !Set IC for each field at an equal displacement from the local minimum
@@ -1040,7 +1002,7 @@ print*, new_measure
 
       KE = energy_scale**4 - pot(y(1:num_inflaton))
 
-      call constrain_via_thetas(y(num_inflaton+1:2*num_inflaton),&
+      call sample_nsphere(y(num_inflaton+1:2*num_inflaton),&
         sqrt(2.0e0_dp*KE))
 
     end subroutine zero_potential_ic
