@@ -249,8 +249,9 @@ program test_mmodpk
       alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps)
 
       !DEBUG
-      print*, "vparams", vparams(1,:)
-      print*, "vparams", vparams(2,:)
+      do i=1,size(vparams,1)
+        print*, "vparams", vparams(i,:)
+      end do
 
       write(*, i_fmt) "Number of Inflaton =", num_inflaton
       write(*, i_fmt) "Potential Choice =", potential_choice

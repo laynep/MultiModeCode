@@ -16,13 +16,13 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 2
-  numb_samples = 1
+  sampling_techn = 6
+  numb_samples = 1000
 
-  energy_scale = 0.1
+  energy_scale = .1
 
   save_iso_N = .false.
-  N_iso_ref = 55
+  N_iso_ref = 100
   output_badic=.false.
 
   varying_N_pivot = .false.
@@ -66,10 +66,10 @@ the smallest mass; others are discarded.
 
 ----------------
 &full_pk
-  calc_full_pk=.true.
-  steps = 10
-  kmin=0.001
-  kmax=0.005
+  calc_full_pk=.false.
+  steps = 100
+  kmin=5.0e-4
+  kmax=5.0e0
 /
 
 ---------------
