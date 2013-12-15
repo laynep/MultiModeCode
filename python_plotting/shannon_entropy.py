@@ -72,7 +72,10 @@ if __name__=='__main__':
     import matplotlib.pyplot as plt
 
     #Cosmology data
-    data=np.loadtxt('nsralpha.txt')
+    #data=np.loadtxt('100field_nsralpha_isoE.txt')
+    #data=np.loadtxt('100field_nsralpha_isoN_60.txt')
+    #data=np.loadtxt('3field_nsralpha.txt')
+    data=np.loadtxt('3field_nsralpha_isoN_60.txt')
 
     ns=data[:,0]
     r=data[:,1]
@@ -80,7 +83,19 @@ if __name__=='__main__':
 
 
 
-    nbins = 10
+    nbins = 120
+
+
+    hist_ns = histogram_probability(ns,nbins)
+    hist_nsalpha = histogram_probability(np.column_stack((ns,alpha)),nbins)
+    hist_nsalphar = histogram_probability(np.column_stack((ns,alpha,r)),nbins)
+
+    print 'ns: ', shannon_entropy(hist_ns)
+    print 'ns-alpha: ', shannon_entropy(hist_nsalpha)
+    print 'ns-alpha-r: ', shannon_entropy(hist_nsalphar)
+
+    sys.exit()
+
 
 
     #Test data
