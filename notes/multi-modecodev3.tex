@@ -37,8 +37,8 @@
 \newcommand{\jx}[1]{\textcolor{red}{[{\bf JX}: #1]}}
 \newcommand{\hp}[1]{\textcolor{red}{[{\bf HP}: #1]}}
 
-\title{Equations for Multifield Modecode v3.0}
-\author{Jiajun Xu}
+\title{\textsc{MultiModeCode}: \\ multifield perturbation solver}
+\author{Richard Easther, Jonathan Frazer, Hiranya V. Peiris, Layne C. Price, and Jiajun Xu}
 \date{\today}
 
 \begin{document}
@@ -421,6 +421,42 @@ Importantly, when calculating $\delta P_\mathrm{nad} \equiv \delta P - c_s^2 \de
 
 
 \end{itemize}
+
+
+\section{Gram-Schmidt orthogonalization}
+\label{sect:gsorthog}
+
+\lp{Explain the Gram-Schmidt better.}
+  Since Eqs.XXX are expressed in terms of the fields $\phi_I$, we define the field-space orthonormal basis as $\phi_I = \phi_I/||\phi_I||$ and order them at each time step so that the first field-basis vector is 
+\begin{equation}
+  \phi_0 \equiv \mathrm{max} [\phi_i \cdot \omega ]
+  \label{eqn:XXX}
+\end{equation}
+which is the one most-aligned with $\omega$.  We do this since $\phi_0$ might be almost identical to $\omega$, for instance when inflation is being effectively driven by only one field.  The first isocurvature direction\footnote{This differs from setting the first isocurvature direction in the direction proportional to $\ddot \phi$, the direction of curvature, which according to Wikipedia is called the Frenet-Serret basis.}
+is then the projection of the first field-direction $\phi_1$ orthogonal to $\phi_0$,
+\begin{equation}
+  s_1 = \frac{\phi_1 - ( \phi_1 \cdot \omega ) \omega}{1-(\phi_1 \cdot \omega)^2},
+  \label{eqn:s1_gs}
+\end{equation}
+and the remaining $N_f-2$ isocurvature directions are built from $s_1$ by
+\begin{equation}
+   s_K = \frac{  \phi_K - \sum_{J=1}^{K-1} (  \phi_K \cdot  s_J )  s_J}{1-\sum_{J=1}^{K-1} (  \phi_K \cdot  s_J )^2} \qquad \mathrm{for} \qquad K>1 \, .
+  \label{eqn:sk_gs}
+\end{equation}
+
+
+%    \lp{Be careful with $s_J$, which is the $J$-th vector and $\omega_J$ which is the $J$-th component} The $\phi_{\mathrm{iso},K}^\prime$ can be determined iteratively by differentiating Eqs.~\eqref{eqn:s1_gs},~\eqref{eqn:sk_gs},~and~\eqref{eqn:phiad} to get
+%    \begin{equation}
+%       s_K^\prime = -\frac{1}{||s_K||} \left[ \sum_{J=1}^{K-1} \left( ( \phi_K \cdot  s_J^\prime)  s_J + ( \phi_K \cdot  s_J)  s_J^\prime \right) +  s_K ||s_K||^\prime \right]
+%      \label{eqn:XXX}
+%    \end{equation}
+%    where the normalization factor and its derivative is
+%    \begin{eqnarray}
+%      ||s_K|| &\equiv& 1-\sum_{J=1}^{K-1}(  \phi_K \cdot  s_J )^2 \, , \\
+%      ||s_K||^\prime &\equiv& - 2 \sum_{J=1}^{K-1} \left(  \phi_K \cdot  s_J \right) \left( \phi_K \cdot  s_J^\prime \right)
+%      \label{eqn:XXX}
+%    \end{eqnarray}
+%    for $K>1$.  \lp{To get $ s_1^\prime$ use $\omega$.}
 
 
 
