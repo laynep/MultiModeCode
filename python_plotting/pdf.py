@@ -25,9 +25,9 @@ pdf_100_isoN_60=np.loadtxt('risoN_60_PDF.txt')
 plt.ylim([0,1200.])
 
 
-p1, = plt.plot(pdf_100_isoN[:,0], pdf_100_isoN[:,1],'r')
-p2, = plt.plot(pdf_100_isoE[:,0], pdf_100_isoE[:,1],'b')
-p3, = plt.plot(pdf_100_isoN_60[:,0], pdf_100_isoN_60[:,1],'k')
+p1, = plt.plot(pdf_100_isoN[:,0], pdf_100_isoN[:,1]      ,color='r', linestyle='-')
+p2, = plt.plot(pdf_100_isoE[:,0], pdf_100_isoE[:,1]      ,color='b', linestyle='--')
+p3, = plt.plot(pdf_100_isoN_60[:,0], pdf_100_isoN_60[:,1],color='k', linestyle=':')
 
 
 plt.rc('legend',**{'fontsize':8})
@@ -51,7 +51,8 @@ plt.yticks(np.arange(0.00, 1200, 550))
 save=True
 if save:
     name = 'ratio_iso_100field'
-    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    #direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/prl/prl_submit/'
     #direct='./'
     plt.savefig(direct+name+'.png', dpi=250)
     plt.savefig(direct+name+'.pdf')

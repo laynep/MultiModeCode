@@ -34,10 +34,9 @@ pdf_3_isoN_60=np.loadtxt('3field_pdf_ns_isoN_60.txt')
 #plt.xlim([0.93,0.96001])
 plt.xlim([0.94,0.96001])
 
-p1, = plt.plot(pdf_100_isoE[:,0], pdf_100_isoE[:,1],'r')
-p2, = plt.plot(pdf_100_isoN[:,0], pdf_100_isoN[:,1],'b')
-p3, = plt.plot(pdf_100_isoN_60[:,0], pdf_100_isoN_60[:,1],'k')
-
+p1, = plt.plot(pdf_100_isoE[:,0], pdf_100_isoE[:,1],color='r',linestyle='-')
+p2, = plt.plot(pdf_100_isoN[:,0], pdf_100_isoN[:,1],color='b',linestyle='--')
+p3, = plt.plot(pdf_100_isoN_60[:,0], pdf_100_isoN_60[:,1],color='k',linestyle=':')
 
 #plt.rc('legend',**{'fontsize':8})
 #plt.legend([p1,p2,p3],
@@ -59,9 +58,9 @@ ax2 = fig.add_subplot(211)
 #plt.ylim([0,1.1])
 plt.xlim([0.94,0.970])
 
-p1, = plt.plot(pdf_3_isoE[:,0], pdf_3_isoE[:,1],'r')
-p2, = plt.plot(pdf_3_isoN[:,0], pdf_3_isoN[:,1],'b')
-p3, = plt.plot(pdf_3_isoN_60[:,0],   pdf_3_isoN_60[:,1],'k')
+p1, = plt.plot(pdf_3_isoE[:,0], pdf_3_isoE[:,1],color='r',linestyle='-')
+p2, = plt.plot(pdf_3_isoN[:,0], pdf_3_isoN[:,1],color='b',linestyle='--')
+p3, = plt.plot(pdf_3_isoN_60[:,0],   pdf_3_isoN_60[:,1],color='k',linestyle=':')
 
 
 plt.rc('legend',**{'fontsize':8})
@@ -81,7 +80,8 @@ save=True
 if save:
     #name = 'pdf_100field'
     name = 'pdf_100_3field'
-    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    #direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/plots/'
+    direct='/home/lpri691/LaTex/multifield_modecode/ics_and_preds/prl/prl_submit/'
     #direct='./'
     plt.savefig(direct+name+'.png', dpi=250)
     plt.savefig(direct+name+'.pdf')
