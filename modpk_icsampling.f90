@@ -13,12 +13,17 @@ module modpk_icsampling
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
     fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7
+
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
   real(dp) :: penalty_fact
   logical :: save_iso_N=.false.
   real(dp) :: N_iso_ref
   real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N
+
+  !For choosing an equal-energy prior
+  integer, parameter, private :: equal_area_prior=1, unif_prior=2
+  integer, parameter, private :: eqen_prior = equal_area_prior
 
   !Type to save the ICs and observs. Add new observables here
   type :: ic_and_observables
@@ -79,12 +84,11 @@ module modpk_icsampling
         !but not on "attractor"
         if (slowroll_start) slowroll_start = .false.
 
+
         call eqen_ic(y_background, energy_scale, &
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max, &
           velconst=.true.)
-
-
 
       !-----------------------------------------
       else if (sampling_techn == iso_N) then
@@ -487,72 +491,162 @@ print*, new_measure
 	    real(dp) :: rand, rho_not_alloc, KE
 
 	    integer :: param_constr, i, ll, j
-      integer, parameter :: maxtry=1000
+      integer, parameter :: maxtry=1000, maxtry_unif=10*maxtry
+
+      !For unif_prior
+      real(dp), dimension(num_inflaton) :: phi0_min, &
+        phi0_max, dphi0_min, dphi0_max
+
+      print*, "IC with equal energy and eqen_prior=", eqen_prior
+
+      if (eqen_prior==equal_area_prior) then
+        !Use the pseudo--"equal-area" prior of Easther-Price (1304.4244)
+
+	      do ll=1,maxtry
+
+          y = 0e0_dp
+
+          call unconstrained_ic(y, &
+            phi0_priors_min, phi0_priors_max, &
+            dphi0_priors_min, dphi0_priors_max)
+
+          !Pick a dimn to set by energy constraint
+          call random_number(rand)
+          if (velconst) then
+            !Parameterize the closed surface in velocity space:
+            !KE = (1/2)sum(dotphi*dotphi)
+            !by spherical coords.
+            !Use prior on angles since model indep assuming canon KE
+            !Gives "uniform area" sample on vels
 
 
-	    do ll=1,maxtry
+	          !Energy density not allocated
+            phi = y(1:num_inflaton)
+            dphi=y(num_inflaton+1:2*num_inflaton)
+	          KE = energy_scale**4 - pot(phi)
 
-        y = 0e0_dp
+            call sample_nsphere(dphi,sqrt(2.0e0_dp*KE))
 
-        call unconstrained_ic(y, &
-          phi0_priors_min, phi0_priors_max, &
-          dphi0_priors_min, dphi0_priors_max)
+            y(num_inflaton+1:2*num_inflaton) = dphi
 
-        !Pick a dimn to set by energy constraint
-        call random_number(rand)
-        if (velconst) then
-          !Parameterize the closed surface in velocity space:
-          !KE = (1/2)sum(dotphi*dotphi)
-          !by spherical coords.
-          !Use prior on angles since model indep assuming canon KE
-          !Gives "uniform area" sample on vels
+    	      !Energy density not allocated
+    	      rho_not_alloc = energy_scale**4 - pot(phi) -&
+              0.5e0_dp*sum(dphi*dphi)
 
-
-	        !Energy density not allocated
-          phi = y(1:num_inflaton)
-          dphi=y(num_inflaton+1:2*num_inflaton)
-	        KE = energy_scale**4 - pot(phi)
-
-          call sample_nsphere(dphi,sqrt(2.0e0_dp*KE))
-
-          y(num_inflaton+1:2*num_inflaton) = dphi
-
-    	    !Energy density not allocated
-    	    rho_not_alloc = energy_scale**4 - pot(phi) -&
-            0.5e0_dp*sum(dphi*dphi)
-
-	    	  if (abs(rho_not_alloc)<1e-25 .or. isnan(rho_not_alloc)) then
-            if(mod(maxtry,ll)==20) then
-              print*, "IC off shell ------------- cycling", ll
+	      	  if (abs(rho_not_alloc)<1e-25 .or. isnan(rho_not_alloc)) then
+              if(mod(maxtry,ll)==20) then
+                if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
+              end if
+              if (ll==maxtry) then
+                print*, "    Energy overrun =", rho_not_alloc
+                print*, "    E**4 =", energy_scale**4
+                print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "    PE =", pot(phi)
+                exit
+              end if
+              cycle
+            else
+              return
             end if
-            if (ll==maxtry) then
-              print*, "    Energy overrun =", rho_not_alloc
-              print*, "    E**4 =", energy_scale**4
-              print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
-              print*, "    PE =", pot(phi)
-              exit
-            end if
-            cycle
+
+
           else
-            return
+            param_constr = ceiling(rand*size(y))
+
+            !Set y(constraint) to minim energy value
+            y(param_constr) = min_fixed_energy(param_constr)
+
+            phi = y(1:num_inflaton)
+            dphi = y(num_inflaton+1:2*num_inflaton)
+
+	      	  !Energy density not allocated
+	      	  rho_not_alloc = energy_scale**4 - pot(phi) -&
+              0.5e0_dp*sum(dphi*dphi)
+
+	      	  if (rho_not_alloc<1e-25_dp) then
+              print*, "IC off shell ------------- cycling", ll
+              if (ll==maxtry) then
+                print*, "    Energy overrun =", rho_not_alloc
+                print*, "    E**4 =", energy_scale**4
+                print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "    PE =", pot(phi)
+                exit
+              end if
+              cycle
+            else
+
+	            !Set y(constraint) to fix total energy
+              call set_y_by_energy_constraint(y, param_constr, energy_scale)
+              phi = y(1:num_inflaton)
+              dphi = y(num_inflaton+1:2*num_inflaton)
+
+              !DEBUG
+              return
+
+              !if (any(phi<phi0_priors_min) .or. any(dphi<dphi0_priors_min) &
+              !  .or. any(phi>phi0_priors_max) &
+              !  .or. any(dphi>dphi0_priors_max)) then
+              !  if(any(phi<phi0_priors_min)) then
+              !    print*,"phi<phi0_priors_min"
+              !  endif
+              !  if(any(dphi<dphi0_priors_min)) then
+              !    print*,"dphi<dphi0_priors_min"
+              !  endif
+              !  if(any(phi>phi0_priors_max)) then
+              !    print*,"phi>phi0_priors_max"
+              !  endif
+              !  if(any(dphi>dphi0_priors_max)) then
+              !    print*,"dphi>dphi0_priors_max"
+              !    !DEBUG
+              !    !do i=1, size(phi)
+              !    !  if (dphi(i)>dphi0_priors_max(i)) then
+              !    !    print*, "vals", dphi(i), dphi0_priors_max(i)
+              !    !  end if
+              !    !end do
+              !  endif
+              !  !DEBUG
+              !  !stop
+              !  cycle
+              !else
+              !  return
+              !end if
+
+            end if
           end if
 
+	      end do
 
-        else
-          param_constr = ceiling(rand*size(y))
 
-          !Set y(constraint) to minim energy value
-          y(param_constr) = min_fixed_energy(param_constr)
+      else if (eqen_prior==unif_prior) then
+        !Define the constraint surface with the first velocity
+        !v_1^2 = 2E_0^4 - 2V - v_2^2 - v_3^2 - ...
+        !Then does a uniform sampling over the remaining fields and velocities.
+
+        !Useful because we can then re-weight the ICs in post-processing
+        !\Integral d(IC_constrained) --> \Integral P(IC_constraint) d(IC_constrained) 
+
+        !Uses the prior ranges in parameters_multimodecode.txt
+
+	      do ll=1,maxtry_unif
+
+          y = 0e0_dp
+
+          call unconstrained_ic(y, &
+            phi0_priors_min, phi0_priors_max, &
+            dphi0_priors_min, dphi0_priors_max)
 
           phi = y(1:num_inflaton)
           dphi = y(num_inflaton+1:2*num_inflaton)
+
+          !Constrain first velocity
+          dphi(1) = 0e0_dp
 
 	    	  !Energy density not allocated
 	    	  rho_not_alloc = energy_scale**4 - pot(phi) -&
             0.5e0_dp*sum(dphi*dphi)
 
-	    	  if (abs(rho_not_alloc)<1e-25_dp) then
-            print*, "IC off shell ------------- cycling", ll
+	      	if (rho_not_alloc<1e-25_dp) then
+            if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
             if (ll==maxtry) then
               print*, "    Energy overrun =", rho_not_alloc
               print*, "    E**4 =", energy_scale**4
@@ -562,47 +656,24 @@ print*, new_measure
             end if
             cycle
           else
-
 	          !Set y(constraint) to fix total energy
-            call set_y_by_energy_constraint(y, param_constr, energy_scale)
+            call set_y_by_energy_constraint(y, num_inflaton+1, energy_scale)
             phi = y(1:num_inflaton)
             dphi = y(num_inflaton+1:2*num_inflaton)
 
-            !DEBUG
             return
-
-            !if (any(phi<phi0_priors_min) .or. any(dphi<dphi0_priors_min) &
-            !  .or. any(phi>phi0_priors_max) &
-            !  .or. any(dphi>dphi0_priors_max)) then
-            !  if(any(phi<phi0_priors_min)) then
-            !    print*,"phi<phi0_priors_min"
-            !  endif
-            !  if(any(dphi<dphi0_priors_min)) then
-            !    print*,"dphi<dphi0_priors_min"
-            !  endif
-            !  if(any(phi>phi0_priors_max)) then
-            !    print*,"phi>phi0_priors_max"
-            !  endif
-            !  if(any(dphi>dphi0_priors_max)) then
-            !    print*,"dphi>dphi0_priors_max"
-            !    !DEBUG
-            !    !do i=1, size(phi)
-            !    !  if (dphi(i)>dphi0_priors_max(i)) then
-            !    !    print*, "vals", dphi(i), dphi0_priors_max(i)
-            !    !  end if
-            !    !end do
-            !  endif
-            !  !DEBUG
-            !  !stop
-            !  cycle
-            !else
-            !  return
-            !end if
-
           end if
-        end if
 
-	    end do
+        end do
+
+
+
+      else
+        print*, "The prior for the equal energy sampler is not recognized."
+        print*, "eqen_prior = ", eqen_prior
+        stop
+
+      end if
 
       print*, "Couldn't find an IC with energy=energy_scale in the max"
       print*, "number of tries."
@@ -642,7 +713,6 @@ print*, new_measure
           y(i) = y(i) + phi0_priors_min(i)
         end if
       end do
-
 
     end subroutine unconstrained_ic
 

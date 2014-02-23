@@ -13,12 +13,15 @@ MODULE modpk_utils
   !If true, then switch to using cosmic time; for pre-inflation integration
   logical, private :: using_cosmic_time=.false.
 
+  logical :: use_t
+
 CONTAINS
 
   !Background derivatives y'=f(y)
   SUBROUTINE bderivs(x,y,yprime)
     USE modpkparams
-    USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getdHdalpha
+    USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getdHdalpha,getEps, &
+      getEps_with_t, getH_with_t
     USE camb_interface, ONLY : pk_bad
     real(dp), INTENT(IN) :: x
     real(dp), DIMENSION(:), INTENT(IN) :: y
@@ -26,7 +29,7 @@ CONTAINS
 
     !MULTIFIELD
     real(dp), DIMENSION(size(y)/2) :: p, delp
-    real(dp) :: hubble,dhubble
+    real(dp) :: hubble,dhubble, eps
     !END MULTIFIEND
 
     integer :: i
@@ -41,14 +44,28 @@ CONTAINS
     delp = y(size(y)/2+1 : size(y))
     !END MULTIFIELD
 
-    IF(dot_product(delp,delp) .gt. 6.0d0) THEN
+    if (.not. use_t) then
+      eps = getEps(p,delp)
+    else
+      eps = getEps_with_t(p,delp)
+    end if
+
+    !Instability check since H^2=V/(3-eps) is not numerically stable as V~0 for
+    !H>0
+    IF(eps .gt. 3.0e0_dp) THEN
        WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
        write(*,*) 'Check if V~=0, since makes H unstable'
        write(*,*) 'Pot=', pot(p)
-       write(*,*) 'Eps=',0.5*dot_product(delp,delp)
-       write(*,*) 'E-fold=',x
+       write(*,*) 'Eps=',eps
+       write(*,*) 'Using t?', use_t
+       if (use_t) then
+         write(*,*) 't=',x
+       else
+         write(*,*) 'E-fold=',x
+       end if
        write(*,*) "Phi=",p
        write(*,*) "Dphi=",delp
+
        !In the case of the hilltop potential, the integrator
        !in a trial step can go here very occasionally because
        !the trial step is too large and it has come too close to V=0.
@@ -60,29 +77,38 @@ CONTAINS
           yprime(2)=0.0d0
           RETURN
        ENDIF
-       if (sampling_techn==reg_samp .or. sampling_techn==parameter_loop_samp) then
+       !if (sampling_techn==reg_samp .or. sampling_techn==parameter_loop_samp) then
          WRITE(*,*) 'MODPK: QUITTING'
          write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
          if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
          STOP
-       else
+       !else
          !Override this error and return
-         pk_bad=bad_ic
-         return
-       end if
+         !pk_bad=bad_ic
+         !return
+       !end if
     END IF
 
-    hubble=getH(p,delp)
-    dhubble=getdHdalpha(p,delp)
-
     !MULTIFIELD
-    yprime(1 : size(y)/2) = delp
-    yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delp+&
-      dVdphi(p)/hubble/hubble)
+    if (.not. use_t) then
+      !Derivs wrt e-folds
+      hubble=getH(p,delp)
+      dhubble=getdHdalpha(p,delp)
 
-    !DEBUG
-    !Derivs in cosmic time
-    !yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delp - dVdphi(p)
+      yprime(1 : size(y)/2) = delp
+      yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delp+&
+        dVdphi(p)/hubble/hubble)
+    else
+
+      !Derivs in cosmic time
+      hubble = getH_with_t(p,delp)
+
+      yprime(1 : size(y)/2) = delp
+      yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delp - dVdphi(p)
+
+      !E-folds
+      yprime(2*num_inflaton+1) = hubble
+    end if
 
     !END MULTIFIELD
 

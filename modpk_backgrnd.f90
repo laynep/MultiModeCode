@@ -4,8 +4,9 @@ MODULE background_evolution
   USE modpk_odeint
   USE ode_path
   USE powersp
-  USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2
-  USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint
+  USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
+    getH_with_t, stability_check_on_H, getEps_with_t
+  USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint, use_t
   IMPLICIT NONE
   PUBLIC :: backgrnd
 
@@ -111,16 +112,15 @@ CONTAINS
       !!DEBUG
       !print*, "alpha_e start", alpha_e
 
-       CALL trial_background(phi_init, alpha_e, V_end)
+      CALL trial_background(phi_init, alpha_e, V_end)
 
+      if (pk_bad .ne. 0) then
+        !Override specific errors when doing IC sampling
+        if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
 
-       if (pk_bad .ne. 0) then
-         !Override specific errors when doing IC sampling
-         if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
-
-         print*, 'MODPK: pk_bad = ', pk_bad
-         stop
-       end if
+        print*, 'MODPK: pk_bad = ', pk_bad
+        stop
+      end if
     end if
     !END MULTIFIELD
 
@@ -254,6 +254,10 @@ CONTAINS
     !! MULTIFIELD
     real(dp), DIMENSION(:), INTENT(INOUT) :: phi_init_trial
     real(dp), DIMENSION(:) :: y(BNVAR*size(phi_init_trial))
+
+    real(dp), DIMENSION(:) :: z_int_with_t(BNVAR*size(phi_init_trial)+1)
+
+    logical :: H_stable
     !! END MUTLTIFIELD
 
     real(dp) :: accuracy, h1, hmin, x1, x2
@@ -343,6 +347,64 @@ CONTAINS
     accuracy=1.0e-8_dp
 
     hmin=0.0e0_dp !minimum stepsize
+
+    !Check if ICs give instability in H^2=V/(3-eps)
+    !If unstable, then integrate in cosmic time t until reach stable region
+    !for e-fold integrator
+    H_stable = .false.
+    call stability_check_on_H(H_stable,y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton),&
+      using_t=.false.)
+
+    !print*, "H_stable try 1", H_stable
+
+    if (.not. H_stable) then
+      use_t = .true.
+
+      !Convert from using N to using t as integ variable
+      z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
+      z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
+      z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
+
+      !Integrate in t until H is stable for integration with N
+      call odeint_with_t(z_int_with_t,0e0_dp, 1e15_dp, accuracy, h1, hmin, bderivs, rkqs_r)
+      if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+
+      call stability_check_on_H(H_stable,z_int_with_t(1:num_inflaton), &
+        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
+
+      if (.not. H_stable) then
+!DEBUG
+print*, "-------------------"
+print*, "H_stable try 2", H_stable
+print*, "eps", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+print*, "eps w/t", getEps_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+print*, "hub", getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+print*, "hub w/t", getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+stop
+endif
+
+
+      !H_stable = .true.
+      use_t=.false.
+
+      !Convert back to N
+      h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+      y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
+      y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
+
+      !Start N-integration at e-fold=z_int_with_t(last)
+      x1=z_int_with_t(2*num_inflaton+1)
+
+
+!DEBUG
+!print*, "H_stable try 2", H_stable
+!print*, "eps", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+!print*, "eps w/t", getEps_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+!print*, "hub", getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+!print*, "hub w/t", getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+
+    end if
+
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 

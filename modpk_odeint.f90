@@ -68,6 +68,7 @@ CONTAINS
     logical :: infl_checking
 
 
+
     !Inits for checking whether in
     !extended inflation period (for IC scan)
     infl_checking = .false.
@@ -89,6 +90,14 @@ CONTAINS
     END IF
 
     DO nstp=1,MAXSTP
+
+    !DEBUG
+    !p = y(1:num_inflaton)
+    !delp = y(num_inflaton+1 : 2*num_inflaton)
+    !print*, nstp
+    !print*, "y", y
+    !print*, "N=", x
+    !print*, "eps=", getEps(p,delp)
 
 
        if (any(isnan(y))) then
@@ -223,6 +232,22 @@ CONTAINS
           ENDIF
        ENDIF
 
+      if (abs(x2-x)<1e-10) then
+        print*, "reached end of N-integration...."
+    !DEBUG
+    print*, "phi", p
+    print*, "dphi", delp
+    print*, "slowroll_start", slowroll_start
+    print*, "infl_efolds", infl_efolds
+    print*, "infl_efolds_start", infl_efolds_start
+    print*, "infl_checking", infl_checking
+    print*, "N", x
+    print*, "eps", getEps_with_t(p, delp)
+    print*, "N_end", x2
+    print*, "nstp", nstp
+        stop
+      end if
+
        IF (ode_underflow) RETURN
        IF (ABS(hnext) < hmin) THEN
           write(*,*) 'stepsize smaller than minimum in odeint'
@@ -233,6 +258,7 @@ CONTAINS
 
     PRINT*,'too many steps in odeint_r', nstp
     PRINT*,"E-fold", x, "Step size", h
+    PRINT*,"y=", y
     ode_underflow=.TRUE.
 
   CONTAINS
@@ -611,6 +637,240 @@ CONTAINS
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
 
   END SUBROUTINE odeint_c
+
+
+  !Uses t as integration variable, copy of odeint_r --- only to be used with
+  !background
+  SUBROUTINE odeint_with_t(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
+    USE ode_path
+    USE internals
+    USE powersp
+    USE modpkparams
+    USE potential
+    USE modpk_utils, ONLY : reallocate_rv, reallocate_rm, use_t
+
+    IMPLICIT NONE
+    real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
+    real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
+    !MULTIFIELD
+    real(dp), DIMENSION(num_inflaton) :: p, delp
+    !END MULTIFIELD
+
+    INTERFACE
+       SUBROUTINE derivs(x,y,dydx)
+         use modpkparams
+         IMPLICIT NONE
+         real(dp), INTENT(IN) :: x
+         real(dp), DIMENSION(:), INTENT(IN) :: y
+         real(dp), DIMENSION(:), INTENT(OUT) :: dydx
+       END SUBROUTINE derivs
+
+       SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,hnext,derivs)
+         use modpkparams
+         IMPLICIT NONE
+         real(dp), DIMENSION(:), INTENT(INOUT) :: y
+         real(dp), DIMENSION(:), INTENT(IN) :: dydx,yscal
+         real(dp), INTENT(INOUT) :: x
+         real(dp), INTENT(IN) :: htry,eps
+         real(dp), INTENT(OUT) :: hdid,hnext
+         INTERFACE
+            SUBROUTINE derivs(x,y,dydx)
+              use modpkparams
+              IMPLICIT NONE
+              real(dp), INTENT(IN) :: x
+              real(dp), DIMENSION(:), INTENT(IN) :: y
+              real(dp), DIMENSION(:), INTENT(OUT) :: dydx
+            END SUBROUTINE derivs
+         END INTERFACE
+       END SUBROUTINE rkqs_r
+    END INTERFACE
+
+    real(dp), PARAMETER :: TINY=1.0d-30
+    INTEGER, PARAMETER :: MAXSTP=nsteps
+    INTEGER*4 :: nstp,i
+    real(dp) :: h,hdid,hnext,x,xsav
+    real(dp), DIMENSION(SIZE(ystart)) :: dydx, y, yscal
+    real(dp) :: z, scalefac
+
+    real(dp) :: infl_efolds, infl_efolds_start
+    logical :: infl_checking, stability
+    real(dp) :: Nefolds
+
+    !Don't save_steps, bc interfere with N-integrator
+    !DEBUG
+    save_steps = .false.
+    stability = .false.
+
+    !Inits for checking whether in
+    !extended inflation period (for IC scan)
+    infl_checking = .false.
+    infl_efolds_start = 0e0_dp
+    infl_efolds = 0e0_dp
+
+    ode_underflow=.FALSE.
+    infl_ended=.FALSE.
+
+    x=x1
+    h=SIGN(h1,x2-x1)
+    nok=0
+    nbad=0
+    kount=0
+    y(:)=ystart(:)
+    NULLIFY(xp,yp)
+    IF (save_steps) THEN
+       xsav=x-2.d0*dxsav
+       ALLOCATE(xp(256))
+       ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
+    END IF
+
+    DO nstp=1,MAXSTP
+
+       if (any(isnan(y))) then
+         print*, "ERROR in odeint_r"
+         print*, "ERROR: y has a NaN value."
+         print*, "E-fold",x
+         print*, "nstp",nstp
+         print*, "y", y
+         stop
+       end if
+
+       !use_t = .true.
+
+       CALL derivs(x,y,dydx)
+
+       !If get bad deriv, then override this error when IC sampling
+       !if (pk_bad==bad_ic) then
+       !  return
+       !end if
+
+       yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
+
+       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
+            CALL save_a_step
+       IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
+
+       CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+
+       IF (hdid == h) THEN
+          nok=nok+1
+       ELSE
+          nbad=nbad+1
+       END IF
+
+       !MULTIFIELD
+       p = y(1:num_inflaton)
+       delp = y(num_inflaton+1 : 2*num_inflaton)
+
+       Nefolds = y(2*num_inflaton+1)
+
+
+       IF(getEps_with_t(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
+         if (sampling_techn==reg_samp) then
+           slowroll_start=.true.
+         else
+           !If scan ICs, say inflating iff eps<1 for "extended" period,
+           !3 efolds - protects against transient inflation epochs, i.e.,
+           !at traj turn-around or chance starting with dphi=0
+
+           if (.not. infl_checking) then
+             infl_checking = .true.
+             infl_efolds_start = Nefolds
+           else
+
+             infl_efolds = Nefolds - infl_efolds_start
+             if (infl_efolds > 3.0) then
+               slowroll_start=.true.
+             end if
+
+           end if
+         end if
+       else if (infl_checking) then
+         infl_checking=.false.
+       endif
+       !END MULTIFIELD
+
+       !Check if H is stable now, so switch to integrate w/N
+       call stability_check_on_H(stability,p,delp,using_t=.true.)
+       if (stability) then
+         print*, "H now stable!!"
+         stop
+
+         ystart = y
+         use_t=.false.
+         return
+       end if
+
+
+      if (abs(x2-x)<1e-10) then
+        use_t=.false.
+        print*, "reached end of t-integration...."
+
+    !DEBUG
+    print*, "N", Nefolds
+    print*, "eps", getEps_with_t(p, delp)
+    print*, "t", x
+    print*, "t_end", x2
+    print*, "nstp", nstp
+    print*, "N last", y(2*num_inflaton+1)
+    ystart = y
+        return
+      end if
+
+
+       !IF(ode_infl_end) THEN 
+       !   IF (slowroll_infl_end) THEN
+       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN 
+       !         infl_ended = .TRUE.
+       !         ystart(:) = y(:)
+       !         IF (save_steps) CALL save_a_step
+       !         RETURN
+       !      ENDIF
+       !   ELSE
+       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN
+       !         PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
+       !         PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
+       !         PRINT*,'MODPK: reached. Please take another look at your inputs.'
+       !         PRINT*,'MODPK: QUITTING'
+       !         PRINT*,'EPSILON =', getEps_with_t(p, delp)
+       !         STOP
+       !      ENDIF
+
+       !   ENDIF
+       !ENDIF
+
+       IF (ode_underflow) RETURN
+       IF (ABS(hnext) < hmin) THEN
+          write(*,*) 'stepsize smaller than minimum in odeint'
+          STOP
+       END IF
+       h=hnext
+    END DO
+
+    PRINT*,'too many steps in odeint_with_t', nstp
+    PRINT*,"t=", x, "Step size", h
+    !DEBUG
+    print*, "N", Nefolds
+    print*, "eps", getEps_with_t(p, delp)
+    print*, "t", x
+    print*, "t_end", x2
+    print*, "nstp", nstp
+
+    ode_underflow=.TRUE.
+
+  CONTAINS
+
+    SUBROUTINE save_a_step
+      kount=kount+1
+      IF (kount > SIZE(xp)) THEN
+         xp=>reallocate_rv(xp,2*SIZE(xp))
+         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))  
+      END IF
+      xp(kount)=x
+      yp(:,kount)=y(:)
+      xsav=x
+    END SUBROUTINE save_a_step
+    !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
+  END SUBROUTINE odeint_with_t
 
 END MODULE modpk_odeint
 

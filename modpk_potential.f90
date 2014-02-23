@@ -4,7 +4,7 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t
 
   public :: norm
   public :: bundle, field_bundle
@@ -46,7 +46,7 @@ CONTAINS
     real(dp) :: lambda2
     real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
     integer :: i,j
-    
+
     select case(potential_choice)
     case(1) 
       ! m_i^2 phi_i^2 --- N-quadratic
@@ -101,7 +101,7 @@ CONTAINS
       s2 = 100.0*sqrt(3.0)
       mphi1 = 1E-7
       phi1shift = 100.0
-      
+
       potlarge = (mphi1**2*(-phi1shift + phi(1))**2)/2.
       potsmall = (M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +&
                  (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
@@ -137,6 +137,9 @@ CONTAINS
 
         end do
       end do
+
+    case(13)
+      !Quasi--single-field/turning trajectory
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
@@ -618,9 +621,14 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:), dphi(:)
 
     !MULTIFIELD
-    getEps = 0.5d0*(M_Pl)**2 * dot_product(dphi,dphi)
+    getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
+
+    if (getEps >3.0e0_dp) then
+      print*, "ERROR: epsilon =", getEps, ">3.0"
+      print*, "ERROR: in getEps"
+    end if
+
     !END MULTIFIELD
-    RETURN
 
   END FUNCTION getEps
 
@@ -637,6 +645,43 @@ CONTAINS
     ! MULTIFIELD
     RETURN
   END FUNCTION getH
+
+  !For when using t-integrator
+  FUNCTION getH_with_t(phi,dphidt)
+    !
+    !     Returns H given phi and dphi/dt
+    !
+    real(dp) :: getH_with_t
+    real(dp), INTENT(IN) :: phi(:), dphidt(:)
+
+    ! MULTIFIELD
+    getH_with_t= sqrt((pot(phi) + 0.5e0_dp*dot_product(dphidt, dphidt))/ &
+      3.0e0_dp/M_pl**2)
+    ! MULTIFIELD
+    RETURN
+
+  END FUNCTION getH_with_t
+
+  FUNCTION getEps_with_t(phi,dphi)
+    !
+    !     Returns epsilon given phi and dphi/dt
+    !
+    real(dp) :: getEps_with_t, hubble
+    real(dp), INTENT(IN) :: phi(:), dphi(:)
+
+    !MULTIFIELD
+    hubble =getH_with_t(phi,dphi)
+    getEps_with_t = 0.5d0*(M_Pl)**2 * &
+      dot_product(dphi,dphi)/hubble**2
+
+    if (getEps_with_t >3.0e0_dp) then
+      print*, "ERROR: epsilon =", getEps_with_t, ">3.0"
+      print*, "ERROR: in getEps_with_t"
+    end if
+    !END MULTIFIELD
+    RETURN
+
+  END FUNCTION getEps_with_t
 
 
   FUNCTION getdHdalpha(phi,dphi)
@@ -1387,5 +1432,34 @@ CONTAINS
     END IF
     RETURN
   END FUNCTION MySech
+
+  !Checks to see if H^2=V/(3-eps) is stable, ie, if H>0 and if V~0, then it will
+  !return FALSE for unstable.
+  subroutine stability_check_on_H(stable,phi,dphi,using_t)
+    logical, intent(inout) :: stable
+    real(dp), dimension(:), intent(in) :: phi, dphi
+    logical, intent(in) :: using_t
+    real(dp) :: eps, V
+
+    !DEBUG
+    !overriding stability check...
+    stable = .true.
+
+    V=pot(phi)
+
+    if (using_t) then
+      eps = getEps_with_t(phi, dphi)
+    else
+      eps = getEps(phi, dphi)
+    end if
+
+    stable = (3.0e0_dp -eps >1.5e0)! .and. V>5e-3_dp**4
+    !print*, "stable???", stable, "eps=", eps, "V", V, "using_t", using_t
+
+    !DEBUG
+    !print*, "SETTING UNSTABLE SO USE_T"
+    !stable=.false.
+
+  end subroutine stability_check_on_H
 
 END MODULE potential

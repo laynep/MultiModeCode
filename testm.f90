@@ -203,7 +203,11 @@ program test_mmodpk
     subroutine allocate_vars()
 
       !Model dependent
-      allocate(vparams(vparam_rows,num_inflaton))
+      if (potential_choice==8) then
+        allocate(vparams(1,4))
+      else
+        allocate(vparams(vparam_rows,num_inflaton))
+      end if
       allocate(priors_max(2,num_inflaton))
       allocate(priors_min(2,num_inflaton))
 

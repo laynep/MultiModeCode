@@ -36,7 +36,8 @@ MODPKOBJ = modpk_modules.o modpk_potential.o \
 					 modpk_utils.o modpk_odeint.o \
 					 modpk_backgrnd.o modpk.o modpk_postprocessing.o
 
-default: camb
+default: powspec
+#default: camb
 
 all: camb $(CAMBLIB) powspec
 
