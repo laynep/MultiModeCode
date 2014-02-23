@@ -18,8 +18,8 @@
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 2
-  numb_samples = 100
+  sampling_techn = 1
+  numb_samples = 1
 
   energy_scale = 0.1
 
@@ -40,7 +40,7 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 5.0
+  phi_init0 = 20.0 25.0
 
   vparams(1,:) = -12.2789840467449       -12.1602803162336
 /
