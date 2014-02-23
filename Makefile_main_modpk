@@ -18,7 +18,7 @@ DRIVER        = inidriver.F90
 
 #Driver for standalone P(k) code
 #PKDRIVER	= driver_modpk.f90
-PKDRIVER	= testm.f90
+PKDRIVER	= multimodecode_driver.f90
 
 CAMBLIB       = libcamb.a
 
@@ -77,5 +77,6 @@ clean:
 	-rm -f *.o *.a *.d core *.mod
 	-rm fort.*
 	-rm powspec
+	-rm *.dat
 
 

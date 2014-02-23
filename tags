@@ -32,7 +32,7 @@ ClTransferToCl	cmbmain.f90	/^     subroutine ClTransferToCl(CTransS,CTransT, CT/
 CorrFuncFlatSky	lensing.f90	/^subroutine CorrFuncFlatSky$/
 CorrFuncFullSky	lensing.f90	/^subroutine CorrFuncFullSky$/
 CosmomcTheta	modules.f90	/^       function CosmomcTheta()$/
-DEBUG_writing_etc	testm.f90	/^    subroutine DEBUG_writing_etc()$/
+DEBUG_writing_etc	multimodecode_driver.f90	/^    subroutine DEBUG_writing_etc()$/
 DeltaTime	modules.f90	/^        function DeltaTime(a1,a2)$/
 DoFlatIntegration	cmbmain.f90	/^        subroutine DoFlatIntegration(IV, llmax)$/
 DoRangeInt	cmbmain.f90	/^ subroutine DoRangeInt(IV,chi,chiDisp,nstart,nend,/
@@ -174,7 +174,7 @@ USpherBesselWithDeriv	bessels.f90	/^        subroutine USpherBesselWithDeriv(clo
 UseLimber	cmbmain.f90	/^      function UseLimber(l,k)$/
 WriteFitsCls	writefits.f90	/^ subroutine WriteFitsCls(Clsfile, lmx)$/
 airy_ai	bessels.f90	/^      function airy_ai(x)$/
-allocate_vars	testm.f90	/^    subroutine allocate_vars()$/
+allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars()$/
 array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(xa, ya, x, y, dy)$/
 backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/
 backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/
@@ -186,7 +186,7 @@ build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(mass_matr
 build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(sample,n/
 bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi, efold)$/
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
-calculate_pk_observables	testm.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
+calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
@@ -230,7 +230,7 @@ getH_with_t	modpk_potential.f90	/^  FUNCTION getH_with_t(phi,dphidt)$/
 getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
 get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
 get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
-get_full_pk	testm.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_/
+get_full_pk	multimodecode_driver.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_/
 get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
 get_new_N_pivot	modpk_icsampling.f90	/^    subroutine get_new_N_pivot(Npiv, prior_min, pr/
 getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
@@ -246,7 +246,7 @@ init_background	equations.f90	/^       subroutine init_background$/
 init_massive_nu	modules.f90	/^      subroutine init_massive_nu(has_massive_nu)$/
 init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(rank)$/
 init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial()$/
-init_sampler	testm.f90	/^    subroutine init_sampler(priors_min, priors_max/
+init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(priors_min, priors_max/
 inithermo	modules.f90	/^     subroutine inithermo(taumin,taumax)$/
 initial	equations.f90	/^        subroutine initial(EV,y, tau)$/
 initialphi	modpk_potential.f90	/^  FUNCTION initialphi(phi0)$/
@@ -265,7 +265,7 @@ make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
 make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
 mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(msqd, beta)$/
 min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
-mpi_parallelize	testm.f90	/^    subroutine mpi_parallelize()$/
+mpi_parallelize	multimodecode_driver.f90	/^    subroutine mpi_parallelize()$/
 n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(vpnew, energy_sca/
 n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(vpnew)$/
 n_quadratic_mass_intxn_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_intxn_looping(vpne/
@@ -278,14 +278,14 @@ odeint_r	modpk_odeint.f90	/^  SUBROUTINE odeint_r(ystart,x1,x2,eps,h1,hmin,der/
 odeint_with_t	modpk_odeint.f90	/^  SUBROUTINE odeint_with_t(ystart,x1,x2,eps,h1,hmi/
 omega_m	halofit.f90	/^      function omega_m(aa,om_m0,om_v0,wval)$/
 omega_v	halofit.f90	/^      function omega_v(aa,om_m0,om_v0,wval)      $/
-open_output_files	testm.f90	/^    subroutine open_output_files()$/
+open_output_files	multimodecode_driver.f90	/^    subroutine open_output_files()$/
 optdepth	modules.f90	/^        function optdepth(z)$/
 output	equations.f90	/^        subroutine output(EV,y, n,j,tau,sources)$/
 output_COBElikelihood	modules.f90	/^        subroutine output_COBElikelihood$/
 output_cl_files	modules.f90	/^        subroutine output_cl_files(ScalFile,TensFi/
-output_initial_data	testm.f90	/^    subroutine output_initial_data()$/
+output_initial_data	multimodecode_driver.f90	/^    subroutine output_initial_data()$/
 output_lens_pot_files	modules.f90	/^        subroutine output_lens_pot_files(LensPotFi/
-output_observables	testm.f90	/^    subroutine output_observables(pk_arr, pk_iso_a/
+output_observables	multimodecode_driver.f90	/^    subroutine output_observables(pk_arr, pk_iso_a/
 output_veccl_files	modules.f90	/^        subroutine output_veccl_files(VecFile, fac/
 outputt	equations.f90	/^        subroutine outputt(EV,yt,n,j,tau,dt,dte,dt/
 outputv	equations.f90	/^        subroutine outputv(EV,yv,n,j,tau,dt,dte,dt/
@@ -340,7 +340,7 @@ splini	subroutines.f90	/^        subroutine splini(g,n)$/
 splint	subroutines.f90	/^        subroutine splint(y,z,n)$/
 stability_check_on_H	modpk_potential.f90	/^  subroutine stability_check_on_H(stable,phi,dphi,/
 tanfunc	modules.f90	/^         function tanfunc(Chi)$/
-test_bad	testm.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
+test_bad	multimodecode_driver.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
 thermo	modules.f90	/^        subroutine thermo(tau,cs2b,opacity, dopaci/
 total_efold	modpk.f90	/^  SUBROUTINE total_efold$/
 trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(phi) result(trace)$/

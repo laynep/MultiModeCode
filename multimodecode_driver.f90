@@ -106,8 +106,8 @@ program test_mmodpk
 #else
 
     !Open output files
-    open(newunit=outsamp,file="ic_eqen.txt")
-    open(newunit=outsamp_N_iso,file="ic_isoN.txt")
+    open(newunit=outsamp,file="ic_eqen.dat")
+    open(newunit=outsamp_N_iso,file="ic_isoN.dat")
 
 	  !Set random seed
 	  call init_random_seed()
@@ -145,8 +145,8 @@ program test_mmodpk
       outsamp=300+rank
       outsamp_N_iso=300+rank+numtasks
 
-		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.txt'
-		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.txt'
+		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.dat'
+		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.dat'
 
 		  open(unit=outsamp,status='new',file=sampname)
       if (save_iso_N) open(unit=outsamp_N_iso,status='new',file=isoNname)
@@ -326,8 +326,8 @@ program test_mmodpk
 
 
     subroutine DEBUG_writing_etc()
-      PRINT*, "Writing background solution to phiarr.txt"
-      open(1, file='phiarr.txt')
+      PRINT*, "Writing background solution to phiarr.dat"
+      open(1, file='phiarr.dat')
       i = 1
       do while ( lna(i+1) > 1e-8 )
       !PRINT*, lna(i), phiarr(:,i)
@@ -336,10 +336,10 @@ program test_mmodpk
       end do
       close(1)
       PRINT*, "Done writing"
-      PRINT*, "Writing powerspectrum solution to pow.txt"
-      open (unit = 20, file = "pow.txt", status = 'replace')
-      PRINT*, "Writing field correlation solution to powmatrix.txt"
-      open (unit = 3, file = "powmatrix.txt", status = 'replace')
+      PRINT*, "Writing powerspectrum solution to pow.dat"
+      open (unit = 20, file = "pow.dat", status = 'replace')
+      PRINT*, "Writing field correlation solution to powmatrix.dat"
+      open (unit = 3, file = "powmatrix.dat", status = 'replace')
     end subroutine DEBUG_writing_etc
 
     !Calculate observables, optionally grab a new IC each time called
