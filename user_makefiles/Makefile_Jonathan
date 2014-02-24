@@ -1,18 +1,12 @@
-#CAMB Makefile
-
-#Edit for your compiler
-#Note there are many ifc versions, some of which behave oddly
-
 ifdef DEBUG
 F90C     = gfortran
-FFLAGS = -cpp -O0 
+FFLAGS = -cpp -O0 -fdefault-real-8
 
 
 else
 
-
 F90C     = gfortran
-FFLAGS = -O3 -cpp -ffast-math  #-fopenmp -ffast-math #-fdefault-real-8
+FFLAGS = -O3 -cpp -ffast-math -funroll-loops -fdefault-real-8#-fopenmp -ffast-math #
 
 endif
 

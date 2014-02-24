@@ -73,8 +73,8 @@ CONTAINS
        !correct epsilon=1 point which has, by definition, to be
        !before this problematic region is reached.
        IF(potential_choice.eq.6) THEN
-          yprime(1)=0.0d0
-          yprime(2)=0.0d0
+          yprime(1)=0.0e0_dp
+          yprime(2)=0.0e0_dp
           RETURN
        ENDIF
        !if (sampling_techn==reg_samp .or. sampling_techn==parameter_loop_samp) then
@@ -329,8 +329,8 @@ CONTAINS
     INTEGER*4 :: ndum
     real(dp) :: errmax,h,htemp,xnew
     real(dp), DIMENSION(size(y)) :: yerr,ytemp
-    real(dp), PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
-         ERRCON=1.89e-4
+    real(dp), PARAMETER :: SAFETY=0.9e0_dp,PGROW=-0.2e0_dp,PSHRNK=-0.25e0_dp,&
+         ERRCON=1.89e-4_dp
     if (size(y)==size(dydx) .and. size(dydx)==size(yscal)) then
        ndum = size(y)
     else
@@ -345,9 +345,9 @@ CONTAINS
        if (pk_bad /= 0) return
 
        errmax=maxval(abs(yerr(:)/yscal(:)))/eps
-       if (errmax <= 1.0) exit
+       if (errmax <= 1.0e0_dp) exit
        htemp=SAFETY*h*(errmax**PSHRNK)
-       h=sign(max(abs(htemp),0.1d0*abs(h)),h)
+       h=sign(max(abs(htemp),0.1e0_dp*abs(h)),h)
        xnew=x+h
        !Errors if use xnew==x, as one might suspect
        !if (xnew == x) then 
@@ -360,7 +360,7 @@ CONTAINS
     if (errmax > ERRCON) then
        hnext=SAFETY*h*(errmax**PGROW)
     else
-       hnext=5.0d0*h
+       hnext=5.0e0_dp*h
     end if
     hdid=h
     x=x+h
@@ -390,8 +390,8 @@ CONTAINS
     INTEGER*4 :: ndum
     real(dp) :: errmax,h,htemp,xnew
     COMPLEX(KIND=DP), DIMENSION(size(y)) :: yerr,ytemp
-    real(dp), PARAMETER :: SAFETY=0.9d0,PGROW=-0.2d0,PSHRNK=-0.25d0,&
-         ERRCON=1.89e-4
+    real(dp), PARAMETER :: SAFETY=0.9e0_dp,PGROW=-0.2e0_dp,PSHRNK=-0.25e0_dp,&
+         ERRCON=1.89e-4_dp
 
     real(dp) :: yerr_r(2*size(y)), yscal_r(2*size(yscal))
 
@@ -414,10 +414,10 @@ CONTAINS
 
        errmax=maxval(abs(yerr_r(:)/yscal_r(:)))/eps
 
-       if (errmax <= 1.0) exit
+       if (errmax <= 1.0e0_dp) exit
 
        htemp=SAFETY*h*(errmax**PSHRNK)
-       h=sign(max(abs(htemp),0.1d0*abs(h)),h)
+       h=sign(max(abs(htemp),0.1e0_dp*abs(h)),h)
        xnew=x+h
 
        !Errors if use xnew==x, as one might suspect
@@ -431,7 +431,7 @@ CONTAINS
     if (errmax > ERRCON) then
        hnext=SAFETY*h*(errmax**PGROW)
     else
-       hnext=5.0d0*h
+       hnext=5.0e0_dp*h
     end if
     hdid=h
     x=x+h
@@ -455,17 +455,17 @@ CONTAINS
     END INTERFACE
     INTEGER*4 :: ndum
     real(dp), DIMENSION(size(y)) :: ak2,ak3,ak4,ak5,ak6,ytemp
-    real(dp), PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
-         A6=0.875d0,B21=0.2d0,B31=3.0d0/40.0d0,B32=9.0d0/40.0d0,&
-         B41=0.3d0,B42=-0.9d0,B43=1.2d0,B51=-11.0d0/54.0d0,&
-         B52=2.5d0,B53=-70.0d0/27.0d0,B54=35.0d0/27.0d0,&
-         B61=1631.0d0/55296.0d0,B62=175.0d0/512.0d0,&
-         B63=575.0d0/13824.0d0,B64=44275.0d0/110592.0d0,&
-         B65=253.0d0/4096.0d0,C1=37.0d0/378.0d0,&
-         C3=250.0d0/621.0d0,C4=125.0d0/594.0d0,&
-         C6=512.0d0/1771.0d0,DC1=C1-2825.0d0/27648.0d0,&
-         DC3=C3-18575.0d0/48384.0d0,DC4=C4-13525.0d0/55296.0d0,&
-         DC5=-277.0d0/14336.0d0,DC6=C6-0.25d0
+    real(dp), PARAMETER :: A2=0.2e0_dp,A3=0.3e0_dp,A4=0.6e0_dp,A5=1.0e0_dp,&
+         A6=0.875e0_dp,B21=0.2e0_dp,B31=3.0e0_dp/40.0e0_dp,B32=9.0e0_dp/40.0e0_dp,&
+         B41=0.3e0_dp,B42=-0.9e0_dp,B43=1.2e0_dp,B51=-11.0e0_dp/54.0e0_dp,&
+         B52=2.5e0_dp,B53=-70.0e0_dp/27.0e0_dp,B54=35.0e0_dp/27.0e0_dp,&
+         B61=1631.0e0_dp/55296.0e0_dp,B62=175.0e0_dp/512.0e0_dp,&
+         B63=575.0e0_dp/13824.0e0_dp,B64=44275.0e0_dp/110592.0e0_dp,&
+         B65=253.0e0_dp/4096.0e0_dp,C1=37.0e0_dp/378.0e0_dp,&
+         C3=250.0e0_dp/621.0e0_dp,C4=125.0e0_dp/594.0e0_dp,&
+         C6=512.0e0_dp/1771.0e0_dp,DC1=C1-2825.0e0_dp/27648.0e0_dp,&
+         DC3=C3-18575.0e0_dp/48384.0e0_dp,DC4=C4-13525.0e0_dp/55296.0e0_dp,&
+         DC5=-277.0e0_dp/14336.0e0_dp,DC6=C6-0.25e0_dp
     if (size(y)==size(dydx) .and. size(dydx)==size(yout) .and. size(yout)==size(yerr)) then
        ndum = size(y)
     else
@@ -504,17 +504,17 @@ CONTAINS
     END INTERFACE
     INTEGER*4 :: ndum
     COMPLEX(KIND=DP), DIMENSION(size(y)) :: ytemp, ak2,ak3,ak4,ak5,ak6
-    real(dp), PARAMETER :: A2=0.2d0,A3=0.3d0,A4=0.6d0,A5=1.0d0,&
-         A6=0.875d0,B21=0.2d0,B31=3.0d0/40.0d0,B32=9.0d0/40.0d0,&
-         B41=0.3d0,B42=-0.9d0,B43=1.2d0,B51=-11.0d0/54.0d0,&
-         B52=2.5d0,B53=-70.0d0/27.0d0,B54=35.0d0/27.0d0,&
-         B61=1631.0d0/55296.0d0,B62=175.0d0/512.0d0,&
-         B63=575.0d0/13824.0d0,B64=44275.0d0/110592.0d0,&
-         B65=253.0d0/4096.0d0,C1=37.0d0/378.0d0,&
-         C3=250.0d0/621.0d0,C4=125.0d0/594.0d0,&
-         C6=512.0d0/1771.0d0,DC1=C1-2825.0d0/27648.0d0,&
-         DC3=C3-18575.0d0/48384.0d0,DC4=C4-13525.0d0/55296.0d0,&
-         DC5=-277.0d0/14336.0d0,DC6=C6-0.25d0
+    real(dp), PARAMETER :: A2=0.2e0_dp,A3=0.3e0_dp,A4=0.6e0_dp,A5=1.0e0_dp,&
+         A6=0.875e0_dp,B21=0.2e0_dp,B31=3.0e0_dp/40.0e0_dp,B32=9.0e0_dp/40.0e0_dp,&
+         B41=0.3e0_dp,B42=-0.9e0_dp,B43=1.2e0_dp,B51=-11.0e0_dp/54.0e0_dp,&
+         B52=2.5e0_dp,B53=-70.0e0_dp/27.0e0_dp,B54=35.0e0_dp/27.0e0_dp,&
+         B61=1631.0e0_dp/55296.0e0_dp,B62=175.0e0_dp/512.0e0_dp,&
+         B63=575.0e0_dp/13824.0e0_dp,B64=44275.0e0_dp/110592.0e0_dp,&
+         B65=253.0e0_dp/4096.0e0_dp,C1=37.0e0_dp/378.0e0_dp,&
+         C3=250.0e0_dp/621.0e0_dp,C4=125.0e0_dp/594.0e0_dp,&
+         C6=512.0e0_dp/1771.0e0_dp,DC1=C1-2825.0e0_dp/27648.0e0_dp,&
+         DC3=C3-18575.0e0_dp/48384.0e0_dp,DC4=C4-13525.0e0_dp/55296.0e0_dp,&
+         DC5=-277.0e0_dp/14336.0e0_dp,DC6=C6-0.25e0_dp
     if (size(y)==size(dydx) .and. size(dydx)==size(yout) .and. size(yout)==size(yerr)) then
        ndum = size(y)
     else

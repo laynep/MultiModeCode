@@ -1,8 +1,3 @@
-#CAMB Makefile
-
-#Edit for your compiler
-#Note there are many ifc versions, some of which behave oddly
-
 ifdef DEBUG
 F90C     = ifort
 FFLAGS = -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
@@ -16,20 +11,11 @@ endif
 else
 
 
-#Intel , -openmp toggles mutli-processor:
-#note version 10.0 gives wrong result for lensed when compiled with -openmp [fixed in 10.1]
-F90C     = gfortran
-FFLAGS = -O3 -cpp -fopenmp -ffast-math # -fdefault-real-8
-#F90C     = ifort
-#FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
+#F90C     = gfortran
+#FFLAGS = -O3 -cpp -fopenmp -ffast-math # -fdefault-real-8
+F90C     = ifort
+FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
 
 endif
-
-#Settings for building camb_fits
-#Location of FITSIO and name of library
-FITSDIR       = /home/cpac/cpac-tools/lib
-FITSLIB       = cfitsio
-#Location of HEALPIX for building camb_fits
-HEALPIXDIR    = /home/cpac/cpac-tools/healpix
 
 include ./Makefile_main_modpk
