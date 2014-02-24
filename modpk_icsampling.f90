@@ -140,9 +140,9 @@ module modpk_icsampling
 
           if (numb_samples > 1) then
             call random_number(rand)
-            beta = rand*(0.3d0) + 0.35d0
+            beta = rand*(0.3e0_dp) + 0.35e0_dp
           else
-            beta = 0.5d0
+            beta = 0.5e0_dp
           end if
 
           call mass_spectrum_nflation(vparams,beta)
@@ -789,7 +789,7 @@ print*, new_measure
         !Try to do this by hand.
         if (potential_choice==1) then
 
-          m2_V = 10.d0**(vparams(1,:))
+          m2_V = 10.e0_dp**(vparams(1,:))
 
           y(constraint) = rand_sign()*sqrt((2e0_dp/m2_V(constraint))*&
             energy_remaining)
@@ -1025,15 +1025,15 @@ print*, new_measure
       !N-quadratic, m^2*phi^2
       if (potential_choice==1) then
         !Masses
-        m2 = 10.d0**(vparams(1,:))
+        m2 = 10.e0_dp**(vparams(1,:))
 
         y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
 
       else if (potential_choice==2) then
         !N-flation axions
 
-        l4 = 10.d0**vparams(1,:)
-        f = 10.d0**vparams(2,:)
+        l4 = 10.e0_dp**vparams(1,:)
+        f = 10.e0_dp**vparams(2,:)
 
         y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
         if (any(isnan(y))) then
@@ -1045,7 +1045,7 @@ print*, new_measure
       !Just displace same as m^2phi^2
       else if (potential_choice==11 .or. potential_choice==12) then
         !Masses
-        m2 = 10.d0**(vparams(1,:))
+        m2 = 10.e0_dp**(vparams(1,:))
 
         y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
       else
@@ -1281,8 +1281,8 @@ print*, new_measure
       real(dp), dimension(num_inflaton) :: ranges_l, ranges_f
       integer :: i
 
-      ranges_l = (/-5.0d0, -1.96d0  /)
-      ranges_f = (/ 0.5d0, 1.3d0  /)
+      ranges_l = (/-5.0e0_dp, -1.96e0_dp  /)
+      ranges_f = (/ 0.5e0_dp, 1.3e0_dp  /)
 
       do i=1,num_inflaton
         call random_number(rand)
@@ -1316,16 +1316,16 @@ print*, new_measure
 
       nval = size(msqd,2)
 
-      mass4 = 1d0
+      mass4 = 1e0_dp
 
-      if(beta.ne.0d0) then ! beta = 0 all masses identical
+      if(beta.ne.0e0_dp) then ! beta = 0 all masses identical
 
         ! set mass terms
-        msqd(1,1) = (1d0-sqrt(beta))**2
+        msqd(1,1) = (1e0_dp-sqrt(beta))**2
 
-        deltaM = ((1d0+sqrt(beta))**2 -(1d0-sqrt(beta))**2)/real(nval-1)
+        deltaM = ((1e0_dp+sqrt(beta))**2 -(1e0_dp-sqrt(beta))**2)/real(nval-1)
 
-        delta = 1d0/real(nval-1)
+        delta = 1e0_dp/real(nval-1)
 
         do loop1 = 2,nval-1
         start = msqd(1,loop1-1)
@@ -1333,7 +1333,7 @@ print*, new_measure
         msqd(1,loop1) = finish
         enddo
 
-        msqd(1,nval) = (1d0+sqrt(beta))**2
+        msqd(1,nval) = (1e0_dp+sqrt(beta))**2
 
 
         do loop1 =1,nval
@@ -1397,16 +1397,16 @@ print*, new_measure
         sb = sqrt(beta)
 
 
-        if(x.lt.(1d0-sb)**2) then
-          pdf = 0d0
+        if(x.lt.(1e0_dp-sb)**2) then
+          pdf = 0e0_dp
           return
         endif
 
-        if(x.gt.(1d0+sb)**2) then
-          pdf = 0d0
+        if(x.gt.(1e0_dp+sb)**2) then
+          pdf = 0e0_dp
           return
         endif
-        pdf = sqrt((x-(1d0-sb)**2)*((1d0+sb)**2-x))/(2d0 *pi* x)/beta
+        pdf = sqrt((x-(1e0_dp-sb)**2)*((1e0_dp+sb)**2-x))/(2e0_dp *pi* x)/beta
         return
       end function
 
@@ -1432,16 +1432,16 @@ print*, new_measure
         loval = partial(base,lo)-target
 
 
-        do while(hival.lt.0d0)
+        do while(hival.lt.0e0_dp)
         hi = hi + (hi-lo)
         hival = partial(base,hi) -target
         enddo
 
 
         do while( (hi-lo).gt.10d-10)
-        midpt = lo+(hi-lo)/2d0
+        midpt = lo+(hi-lo)/2e0_dp
         midval = partial(base,midpt)-target
-        if(loval*midval.ge.0d0) then ! loval and midval have same sign
+        if(loval*midval.ge.0e0_dp) then ! loval and midval have same sign
           loval = midval
           lo =midpt
         else
@@ -1450,7 +1450,7 @@ print*, new_measure
         endif
         enddo
 
-        bisect = lo + (hi-lo)/2d0
+        bisect = lo + (hi-lo)/2e0_dp
         return
       end function
 
@@ -1463,12 +1463,12 @@ print*, new_measure
         PARAMETER (EPS=1.d-8, JMAX=200)
         INTEGER j
         real(dp) olds
-        olds=-1.d30
+        olds=-1.e30_dp
 
         do j=1,JMAX
         call trapzd(a,b,s,j)
         if (abs(s-olds).lt.EPS*abs(olds)) return
-        if (s.eq.0.d0.and.olds.eq.0.d0.and.j.gt.6) return
+        if (s.eq.0.e0_dp.and.olds.eq.0.e0_dp.and.j.gt.6) return
         olds=s
         end do
 
@@ -1484,21 +1484,21 @@ print*, new_measure
 
 
         if (n.eq.1) then
-          s=0.5d0*(b-a)*(pdf(a)+pdf(b))
+          s=0.5e0_dp*(b-a)*(pdf(a)+pdf(b))
         else
 
           it=2**(n-2)
           tnm=it
           del=(b-a)/tnm
-          x=a+0.5d0*del
-          sum=0.d0
+          x=a+0.5e0_dp*del
+          sum=0.e0_dp
 
           do j=1,it
           sum=sum+pdf(x)
           x=x+del
           end do
 
-          s=0.5d0*(s+(b-a)*sum/tnm)
+          s=0.5e0_dp*(s+(b-a)*sum/tnm)
         endif
         return
       END SUBROUTINE

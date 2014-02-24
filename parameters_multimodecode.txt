@@ -18,8 +18,8 @@
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 1
-  numb_samples = 1
+  sampling_techn = 2
+  numb_samples = 1000
 
   energy_scale = 0.1
 
@@ -50,9 +50,9 @@ the smallest mass; others are discarded.
 ![ LP: ] Priors on the IC and N_pivot ranges
 ![ LP: ] Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0.5 0.5
+  phi0_priors_min = 0.0 0.0
 
-  phi0_priors_max = 20 20
+  phi0_priors_max = .0250 .0250
 
   dphi0_priors_min = -1.262e0, -1.262e0
   dphi0_priors_max =  1.262e0,  1.262e0

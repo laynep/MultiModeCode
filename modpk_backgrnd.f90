@@ -341,7 +341,9 @@ CONTAINS
     if (potential_choice.eq.6) then
        h1 = 0.001e0_dp
     else
-       h1 = 0.1e0_dp
+      !DEBUG
+      !h1 = 0.1e0_dp
+      h1 = 0.1e-4_dp
     end if
     dxsav=1.e-7_dp
     accuracy=1.0e-8_dp
@@ -530,14 +532,15 @@ endif
     real(dp) :: accuracy, h1, hmin, x1, x2
 
 
-    h_init=SQRT(pot(phi_init)/(6.d0*M_Pl**2) * &
-         (1.+SQRT(1.+2./3.* M_Pl**2 * dot_product(dVdphi(phi_init), dVdphi(phi_init)) / pot(phi_init)**2.)))
+    h_init=SQRT(pot(phi_init)/(6.0e0_dp*M_Pl**2) * &
+         (1.0e0_dp+SQRT(1.0e0_dp+2.0e0_dp/3.0e0_dp* M_Pl**2 &
+         * dot_product(dVdphi(phi_init), dVdphi(phi_init)) / pot(phi_init)**2.)))
 
-    x1=0.0 !starting value
+    x1=0.0e0_dp !starting value
     x2=Nefold_max !ending value
 
     y(1 : size(y)/2) = phi_init  !phi(x1)
-    y(size(y)/2+1 : (size(y))) = -dVdphi(phi_init)/3./h_init/h_init !dphi/dalpha(x1) slowroll approx
+    y(size(y)/2+1 : (size(y))) = -dVdphi(phi_init)/3.e0_dp/h_init/h_init !dphi/dalpha(x1) slowroll approx
 
     !Call the integrator
     ode_underflow = .FALSE.

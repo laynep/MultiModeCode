@@ -84,7 +84,7 @@ CONTAINS
     y(:)=ystart(:)
     NULLIFY(xp,yp)
     IF (save_steps) THEN
-       xsav=x-2.d0*dxsav
+       xsav=x-2.e0_dp*dxsav
        ALLOCATE(xp(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
@@ -146,7 +146,7 @@ CONTAINS
           nbad=nbad+1
        END IF
 
-       IF ((x-x2)*(x2-x1) > 0.0d0) THEN
+       IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
 
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
@@ -357,7 +357,7 @@ CONTAINS
     NULLIFY(xp,yp)
 
     IF (save_steps) THEN
-       xsav=x-2.d0*dxsav
+       xsav=x-2.e0_dp*dxsav
        ALLOCATE(xp(256))
        !MULTIFIELD
        ALLOCATE(yp(2*SIZE(ystart),SIZE(xp)))  !! store real and imiganary seperately
@@ -718,7 +718,7 @@ CONTAINS
     y(:)=ystart(:)
     NULLIFY(xp,yp)
     IF (save_steps) THEN
-       xsav=x-2.d0*dxsav
+       xsav=x-2.e0_dp*dxsav
        ALLOCATE(xp(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF

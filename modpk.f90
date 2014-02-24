@@ -25,14 +25,14 @@ CONTAINS
     IMPLICIT NONE
     real(dp) :: k,klo,khi
 
-    k_start = 1.d2
+    k_start = 1.0e2_dp
 
     !When to start evaluating P(k)
-    eval_ps = 5.d2
+    eval_ps = 5.0e2_dp
 
     !When to switch variables to q=\delta \phi (k<aH/useq_ps)
     !from \psi_ij=a q_ij (k>aH/useq_ps)
-    useq_ps = 1.d2
+    useq_ps = 1.0e2_dp
 
     !
     !     Solve the background equations
@@ -222,7 +222,7 @@ CONTAINS
     pk_bad = 0
 
     !MULTIFIELD, need to evolve towards the end of inflation
-    x2 = lna(nactual_bg) + 5.d0
+    x2 = lna(nactual_bg) + 5.e0_dp
     !END MULTIFIELD
 
 
@@ -257,11 +257,11 @@ CONTAINS
         real(dp), dimension(:), intent(out) :: identityvector
         integer :: i, j
 
-        identityvector=0d0
+        identityvector=0e0_dp
 
         do i=1,num_inflaton; do j=1, num_inflaton
           if (i==j) then
-            identityvector((i-1)*num_inflaton+j)=1d0
+            identityvector((i-1)*num_inflaton+j)=1e0_dp
           end if
         end do; end do
 
@@ -282,15 +282,15 @@ CONTAINS
         y(num_inflaton+1:2*num_inflaton) = cmplx(dp_ik) !Not in exact SR
 
         ! mode matrix - diagonalize, Bunch-Davies
-        y(index_ptb_y:index_ptb_vel_y-1) = (1.d0, 0)*identity  !cmplx(1/sqrt(2*k))
+        y(index_ptb_y:index_ptb_vel_y-1) = (1.e0_dp, 0)*identity  !cmplx(1/sqrt(2*k))
         y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
 
         ! tensors
-        y(index_tensor_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+        y(index_tensor_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
         y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
 
         ! u_zeta
-        y(index_uzeta_y) = (1.d0, 0) !cmplx(1/sqrt(2*k))
+        y(index_uzeta_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
         y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
 
       end subroutine set_ic

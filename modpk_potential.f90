@@ -65,7 +65,7 @@ CONTAINS
        pot = sum(lambda*phi)
     case(5)
        lambda = 10.e0_dp**vparams(1,:)
-       pot = sum(lambda*1.5d0*phi**(2.e0_dp/3.e0_dp))
+       pot = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
     case(6)
        lambda = 10.e0_dp**vparams(1,:)
        mu = 10.e0_dp**vparams(2,:)
@@ -178,7 +178,7 @@ CONTAINS
           phiplus(i) = phi(i) + 0.5*phi(i)*findiffdphi**(1./3.)
           dphi = phiplus - phi
           dVdphi(i) = (pot(phi+dphi)-pot(phi-dphi))/(2.*dphi(i))
-          if (dVdphi(i).eq.0.d0) then
+          if (dVdphi(i).eq.0.e0_dp) then
              write(*,*) 'MODPK: For i=', i
              write(*,*) 'MODPK: dVdphi(i)=0, possibly signaling a problem with accuracy of numerical derivatives.'
              write(*,*) 'MODPK: Try using vnderivs=F if possible.'
@@ -190,23 +190,23 @@ CONTAINS
        select case(potential_choice)
        !MULTIFIELD
        case(1)
-          m2_V = 10.d0**(vparams(1,:))
+          m2_V = 10.e0_dp**(vparams(1,:))
           dVdphi = m2_V*phi
        case(2)
-          lambda = 10.d0**vparams(1,:)
-          finv = 1.d0/(10.d0**vparams(2,:))
+          lambda = 10.e0_dp**vparams(1,:)
+          finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
           dVdphi = -lambda**4*finv*sin(finv*phi)
        case(3)
-          lambda = 10.d0**vparams(1,:)
+          lambda = 10.e0_dp**vparams(1,:)
           dVdphi = lambda*phi**3
        case(4)
-          lambda = 10.d0**vparams(1,:)
+          lambda = 10.e0_dp**vparams(1,:)
           dVdphi = lambda
        case(5)
-          lambda = 10.d0**vparams(1,:)
+          lambda = 10.e0_dp**vparams(1,:)
           dVdphi = lambda*phi**(-1./3.)
        case(6)
-          mu = 10.d0**vparams(2,:)
+          mu = 10.e0_dp**vparams(2,:)
           dVdphi = -mu*phi**3
        case(7) 
           lambda = vparams(2,:)
@@ -254,23 +254,23 @@ CONTAINS
                    /)
 
        case(11)
-         m2_V = 10.d0**(vparams(1,:))
-         lambda4 = 10.d0**vparams(2,:)
+         m2_V = 10.e0_dp**(vparams(1,:))
+         lambda4 = 10.e0_dp**vparams(2,:)
          phi_light_index = minloc(m2_V,1)
 
          !for i /= lightest
-         dVdphi = m2_V*phi + (1.0d0/12.0d0)*(phi(phi_light_index)**2)*lambda4*phi
+         dVdphi = m2_V*phi + (1.0e0_dp/12.0e0_dp)*(phi(phi_light_index)**2)*lambda4*phi
 
          !i=lightest
          dVdphi(phi_light_index) = m2_V(phi_light_index)*phi(phi_light_index) + &
-           (1.0d0/6.0d0)*(phi(phi_light_index)**3)*lambda4(phi_light_index)
+           (1.0e0_dp/6.0e0_dp)*(phi(phi_light_index)**3)*lambda4(phi_light_index)
 
        case(12)
 
          !Mass matrix with diagonal terms = m_i^2
          !Off-diagonal terms = \eps
-         m2_V = 10.d0**(vparams(1,:))
-         lambda2 = 10.d0**(vparams(2,1))
+         m2_V = 10.e0_dp**(vparams(1,:))
+         lambda2 = 10.e0_dp**(vparams(2,1))
          dVdphi = 0e0_dp
 
          do i=1, num_inflaton
@@ -334,23 +334,23 @@ CONTAINS
        
        select case(potential_choice)
        case(1)          
-          m2_V = 10.d0**(vparams(1,:))
+          m2_V = 10.e0_dp**(vparams(1,:))
           forall (i = 1:size(phi)) d2Vdphi2(i,i) = m2_V(i)   
        case(2)
-          lambda = 10.d0**vparams(1,:)
-          finv = 1.d0/(10.d0**vparams(2,:))
+          lambda = 10.e0_dp**vparams(1,:)
+          finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
           forall (i = 1:size(phi)) d2Vdphi2(i,i) = -lambda(i)**4*finv(i)*finv(i)*cos(finv(i)*phi(i))
        case(3)
-          lambda = 10.d0**vparams(1,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 3.d0*lambda(i)*phi(i)**2
+          lambda = 10.e0_dp**vparams(1,:)
+          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 3.e0_dp*lambda(i)*phi(i)**2
        case(4)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 0.d0
+          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 0.e0_dp
        case(5)
-          lambda = 10.d0**vparams(1,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -lambda(i)/3.d0*phi(i)**(-4./3.)
+          lambda = 10.e0_dp**vparams(1,:)
+          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -lambda(i)/3.e0_dp*phi(i)**(-4./3.)
        case(6)
-          mu = 10.d0**vparams(2,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -3.d0*mu(i)*phi(i)**2
+          mu = 10.e0_dp**vparams(2,:)
+          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -3.e0_dp*mu(i)*phi(i)**2
        case(7) 
           lambda = vparams(2, :)
           forall (i=1:size(phi), j=1:size(phi)) d2Vdphi2(i,j) = &
@@ -490,8 +490,8 @@ CONTAINS
             (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
        case(11)
-         M2_V = 10.d0**(vparams(1,:))
-         Lambda4 = 10.d0**vparams(2,:)
+         M2_V = 10.e0_dp**(vparams(1,:))
+         Lambda4 = 10.e0_dp**vparams(2,:)
          Phi_light_index = minloc(m2_V,1)
 
          do i=1,num_inflaton
@@ -502,7 +502,7 @@ CONTAINS
                  d2Vdphi2(i,j) = 0e0_dp
                else
                  d2Vdphi2(i,j) = m2_V(i) + &
-                   (1.0d0/12.0d0)*Lambda4(i)*phi(Phi_light_index)**2
+                   (1.0e0_dp/12.0e0_dp)*Lambda4(i)*phi(Phi_light_index)**2
                end if
 
              else if (i==Phi_light_index .and. j/=Phi_light_index) then
@@ -511,13 +511,13 @@ CONTAINS
 
              else if (i/=Phi_light_index .and. j==Phi_light_index) then
 
-               d2Vdphi2(i,j) = (1.0d0/6.0d0)*Lambda4(i)* &
+               d2Vdphi2(i,j) = (1.0e0_dp/6.0e0_dp)*Lambda4(i)* &
                  phi(Phi_light_index)*phi(i)
 
              else if (i==Phi_light_index .and. j==Phi_light_index) then
 
                d2Vdphi2(i,j) = m2_V(Phi_light_index) + &
-                 0.5d0*Lambda4(Phi_light_index)*phi(Phi_light_index)**2
+                 0.5e0_dp*Lambda4(Phi_light_index)*phi(Phi_light_index)**2
 
              end if
 
@@ -529,8 +529,8 @@ CONTAINS
 
          !Mass matrix with diagonal terms = m_i^2
          !Off-diagonal terms = \eps
-         m2_V = 10.d0**(vparams(1,:))
-         lambda2 = 10.d0**(vparams(2,1))
+         m2_V = 10.e0_dp**(vparams(1,:))
+         lambda2 = 10.e0_dp**(vparams(2,1))
          d2Vdphi2 = 0e0_dp
 
          do i=1, num_inflaton
@@ -572,34 +572,34 @@ CONTAINS
     real(dp) :: x1, x2
 
 
-    Ninit = 70.d0
+    Ninit = 70.e0_dp
 
     if (size(phi0) .gt. 1) then 
        phii = phi0 ! MULTIFIELD
     else  !SINGLE FIELD
        select case(potential_choice)
        case(1)
-          phii = 2.d0*sqrt(Ninit+0.5d0)
+          phii = 2.e0_dp*sqrt(Ninit+0.5e0_dp)
        case(2)
-          finv = 1.d0/(10.d0**vparams(2,1))
-          phii = 2.d0/finv*asin(exp(-0.5d0*Ninit*finv*finv)/ &
-               sqrt(1.d0+0.5d0*finv*finv))
+          finv = 1.e0_dp/(10.e0_dp**vparams(2,1))
+          phii = 2.e0_dp/finv*asin(exp(-0.5e0_dp*Ninit*finv*finv)/ &
+               sqrt(1.e0_dp+0.5e0_dp*finv*finv))
        case(3)
-          phii = sqrt(8.d0*(Ninit+1.d0))
+          phii = sqrt(8.e0_dp*(Ninit+1.e0_dp))
        case(4)
-          phii = sqrt(2.d0*Ninit+0.5d0)
+          phii = sqrt(2.e0_dp*Ninit+0.5e0_dp)
        case(5)
-          phii = sqrt(4.d0/3.d0*Ninit+2.d0/9.d0)
+          phii = sqrt(4.e0_dp/3.e0_dp*Ninit+2.e0_dp/9.e0_dp)
        case(6)
-          lambda = 10.d0**vparams(1,1)
-          mu = 10.d0**vparams(2,1)
+          lambda = 10.e0_dp**vparams(1,1)
+          mu = 10.e0_dp**vparams(2,1)
           x1 = lambda**4/mu
-          phesq = ((sqrt(2.d0)*x1)**(-4./3.)+1.d0/(4.d0*x1))**(-0.5)
-          if (vparams(1,1)<-3.d0) then
-             phii = sqrt(phesq/(2.d0**1.5*Ninit/sqrt(phesq)+1.d0))
+          phesq = ((sqrt(2.e0_dp)*x1)**(-4./3.)+1.e0_dp/(4.e0_dp*x1))**(-0.5)
+          if (vparams(1,1)<-3.e0_dp) then
+             phii = sqrt(phesq/(2.e0_dp**1.5*Ninit/sqrt(phesq)+1.e0_dp))
           else
-             x2 = 4.d0*Ninit + 2.d0*x1/phesq + 0.5d0*phesq
-             phii = sqrt(x2)*sqrt(1.d0-sqrt(1.d0-4.d0*x1/x2/x2))
+             x2 = 4.e0_dp*Ninit + 2.e0_dp*x1/phesq + 0.5e0_dp*phesq
+             phii = sqrt(x2)*sqrt(1.e0_dp-sqrt(1.e0_dp-4.e0_dp*x1/x2/x2))
           end if
        case default
           phii = phi0
@@ -641,7 +641,8 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:), dphi(:)
 
     ! MULTIFIELD
-    getH=SQRT(pot(phi)/3./M_Pl**2 / (1.0 - dot_product(dphi, dphi)/6.0/M_Pl**2))
+    getH=SQRT(pot(phi)/3.0e0_dp/M_Pl**2 / &
+      (1.0e0_dp - dot_product(dphi, dphi)/6.0e0_dp/M_Pl**2))
     ! MULTIFIELD
     RETURN
   END FUNCTION getH
@@ -671,7 +672,7 @@ CONTAINS
 
     !MULTIFIELD
     hubble =getH_with_t(phi,dphi)
-    getEps_with_t = 0.5d0*(M_Pl)**2 * &
+    getEps_with_t = 0.5e0_dp*(M_Pl)**2 * &
       dot_product(dphi,dphi)/hubble**2
 
     if (getEps_with_t >3.0e0_dp) then
@@ -691,7 +692,7 @@ CONTAINS
     real(dp) :: getdHdalpha
     real(dp), INTENT(IN) :: phi(:), dphi(:)
     ! MULTIFIELD
-    getdHdalpha = -dot_product(dphi, dphi) * getH(phi,dphi)/2./M_Pl**2
+    getdHdalpha = -dot_product(dphi, dphi) * getH(phi,dphi)/2.0e0_dp/M_Pl**2
     ! END MULTIFIELD
     RETURN
   END FUNCTION getdHdalpha
@@ -710,7 +711,8 @@ CONTAINS
     eps=getEps(phi,dphi)
 
     ! MULTIFIELD
-    getdepsdalpha=6.*dHdalpha/H*(1.-eps/3.)-dot_product(dVdphi(phi), dphi)/(H**2*M_Pl**2)
+    getdepsdalpha=6.0e0_dp*dHdalpha/H*(1.0e0_dp-eps/3.0e0_dp) &
+      -dot_product(dVdphi(phi), dphi)/(H**2*M_Pl**2)
     ! END MULTIFIELD
 
     RETURN
@@ -1365,7 +1367,7 @@ CONTAINS
     COMPLEX(KIND=DP), intent(in) :: v
 
     !MULTIFIELD: Calculates P_h(k) given v, a
-    tensorpower = abs(v)**2/(2*k) / a**2 * (k**3)*4./(PI**2)/(M_Pl**2)
+    tensorpower = abs(v)**2/(2.0e0_dp*k) / a**2 * (k**3)*4.0e0_dp/(PI**2)/(M_Pl**2)
     !END MULTIFIELD
 
   END FUNCTION tensorpower
@@ -1377,7 +1379,7 @@ CONTAINS
     real(dp), INTENT(IN) :: a
     COMPLEX(KIND=DP), INTENT(IN) :: u_zeta
 
-    zpower = abs(u_zeta**2)/dsigma**2/a**2 /(2*k) * (k**3)/(2*PI**2)
+    zpower = abs(u_zeta**2)/dsigma**2/a**2 /(2.0e0_dp*k) * (k**3)/(2.0e0_dp*PI**2)
 
   END FUNCTION zpower
 
