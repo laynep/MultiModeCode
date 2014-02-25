@@ -4,7 +4,8 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t,&
+       effective_V_choice, turning_choice
 
   public :: norm
   public :: bundle, field_bundle
@@ -19,11 +20,17 @@ MODULE potential
 
   type(bundle) :: field_bundle
 
+  integer :: effective_V_choice
+  !For turning trajs, set choice of turning function here.
+  !Need one choice for every heavy direction (assumes one light direction)
+  !Ref functions turning_function and derivs
+  integer, dimension(:), allocatable :: turning_choice
+
 
 CONTAINS
 
 
-  FUNCTION pot(phi)
+  recursive FUNCTION pot(phi)
     !
     !     Returns V(phi) given phi, phi can be an array for multifield, 
     !     The code implement multifield potential in the form of V = \sum V(phi_i), 
@@ -31,6 +38,7 @@ CONTAINS
     !
     real(dp) :: pot
     real(dp), INTENT(IN) :: phi(:)
+
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
     real(dp) :: c1_V(size(phi)) !! some constants for a more flexible potential construction in case 9
     real(dp) :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
@@ -41,11 +49,11 @@ CONTAINS
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton)
+    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
 
     real(dp) :: lambda2
     real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
-    integer :: i,j
+    integer :: i,j, temp_choice
 
     select case(potential_choice)
     case(1) 
@@ -127,6 +135,7 @@ CONTAINS
 
       do i=1, num_inflaton
         do j=1, num_inflaton
+
           if (i==j) then
             m2_matrix(i,j) = m2_V(i)
             pot = pot +0.5e0_dp* m2_matrix(i,j)*phi(i)*phi(j)
@@ -140,33 +149,59 @@ CONTAINS
 
     case(13)
       !Quasi--single-field/turning trajectory
+      !phi(1) = phi_light
+
+      !vparams(1,:)  = Veff vparams
+      !vparams(2,:)  = \lambda_i
+      !vparams(3,:)  = \alpha_i
+      !vparams(4+,:) = turn_funct params
+
+      !Only need vparams(X,2:num_inflaton)
+      lambda4  = 10.0e0_dp**vparams(2,:)
+      alpha2 = vparams(3,:)
+
+      !Run through potential with "effective" single-field potential_choice
+      temp_choice = potential_choice
+      potential_choice = effective_V_choice
+      pot = pot(phi)
+      potential_choice = temp_choice
+
+      !Choice of function to use set in parameters_multimodecode.txt
+#define PHI_I phi(1), i, turning_choice(i-1)
+#define EXPTERM exp( (-0.5e0_dp/alpha2(i))*(phi(i) - turning_function(PHI_I))**2)
+
+      do i=2, num_inflaton
+        pot = pot + lambda4(i)*(EXPTERM  - 1.0e0_dp)
+      end do
+
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
     end select
 
-    RETURN
   END FUNCTION pot
 
 
-  FUNCTION dVdphi(phi)
+  !Needs "result" because array-valued and recursive.
+  recursive function dVdphi(phi) result(first_deriv)
     !
     !     Returns dV/dPhi given phi
     !
 
     real(dp), INTENT(IN) :: phi(:)
-    real(dp) :: dVdphi(size(phi))
+    real(dp) :: first_deriv(size(phi))
+
     real(dp) :: dphi(size(phi)), phiplus(size(phi))
     real(dp) :: m2_V(size(phi)),  c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
-    integer :: i, j
+    integer :: i,j, temp_choice
 
     real(dp) :: lambda_hybrid, mu_hybrid, nu_hybrid, &
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton)
+    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
 
     real(dp) :: lambda2
     real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
@@ -175,12 +210,12 @@ CONTAINS
        ! MULTIFIELD
        do i=1, num_inflaton
           phiplus = phi
-          phiplus(i) = phi(i) + 0.5*phi(i)*findiffdphi**(1./3.)
+          phiplus(i) = phi(i) + 0.5e0_dp*phi(i)*findiffdphi**(1.0e0_dp/3.0e0_dp)
           dphi = phiplus - phi
-          dVdphi(i) = (pot(phi+dphi)-pot(phi-dphi))/(2.*dphi(i))
-          if (dVdphi(i).eq.0.e0_dp) then
+          first_deriv(i) = (pot(phi+dphi)-pot(phi-dphi))/(2.0e0_dp*dphi(i))
+          if (first_deriv(i).eq.0.e0_dp) then
              write(*,*) 'MODPK: For i=', i
-             write(*,*) 'MODPK: dVdphi(i)=0, possibly signaling a problem with accuracy of numerical derivatives.'
+             write(*,*) 'MODPK: first_deriv(i)=0, possibly signaling a problem with accuracy of numerical derivatives.'
              write(*,*) 'MODPK: Try using vnderivs=F if possible.'
              STOP
           end if
@@ -191,26 +226,26 @@ CONTAINS
        !MULTIFIELD
        case(1)
           m2_V = 10.e0_dp**(vparams(1,:))
-          dVdphi = m2_V*phi
+          first_deriv = m2_V*phi
        case(2)
           lambda = 10.e0_dp**vparams(1,:)
           finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-          dVdphi = -lambda**4*finv*sin(finv*phi)
+          first_deriv = -lambda**4*finv*sin(finv*phi)
        case(3)
           lambda = 10.e0_dp**vparams(1,:)
-          dVdphi = lambda*phi**3
+          first_deriv = lambda*phi**3
        case(4)
           lambda = 10.e0_dp**vparams(1,:)
-          dVdphi = lambda
+          first_deriv = lambda
        case(5)
           lambda = 10.e0_dp**vparams(1,:)
-          dVdphi = lambda*phi**(-1./3.)
+          first_deriv = lambda*phi**(-1./3.)
        case(6)
           mu = 10.e0_dp**vparams(2,:)
-          dVdphi = -mu*phi**3
+          first_deriv = -mu*phi**3
        case(7) 
           lambda = vparams(2,:)
-          dVdphi = lambda*vparams(1,1)*M_Pl**3 * exp(dot_product(lambda, phi/M_Pl))
+          first_deriv = lambda*vparams(1,1)*M_Pl**3 * exp(dot_product(lambda, phi/M_Pl))
        case(8)
           !Canonical two-field hybrid
           lambda_hybrid = vparams(1,1)
@@ -218,13 +253,13 @@ CONTAINS
           mu_hybrid =vparams(1,3)
           nu_hybrid =vparams(1,4)
 
-          dVdphi(1) = (lambda_hybrid**4)*(4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)*phi(1)/mass_hybrid**2 +&
+          first_deriv(1) = (lambda_hybrid**4)*(4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)*phi(1)/mass_hybrid**2 +&
             2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
-          dVdphi(2) = (lambda_hybrid**4)*(2.0_dp*phi(2)/mu_hybrid**2 +&
+          first_deriv(2) = (lambda_hybrid**4)*(2.0_dp*phi(2)/mu_hybrid**2 +&
             2.0_dp*phi(1)**2*phi(2)/nu_hybrid**4)
        case(9)!Saddle type things
           m2_V = (vparams(1,:))
-          dVdphi = m2_V*phi
+          first_deriv = m2_V*phi
        case(10)!Modified Langlois model
       theta2 = Pi/10.0
       c2 = 0.0
@@ -232,7 +267,7 @@ CONTAINS
       s2 = 100.0*sqrt(3.0)
       mphi1 = 1E-7
       phi1shift = 100.0
-          dVdphi = (/& 
+          first_deriv = (/& 
                      mphi1**2*(-phi1shift + phi(1)) + M2**2*Cos(theta2/2.)*&
          (Sin(theta2/2.) + (s2*theta2*Cos(theta2/2.)*&
               (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
@@ -259,10 +294,10 @@ CONTAINS
          phi_light_index = minloc(m2_V,1)
 
          !for i /= lightest
-         dVdphi = m2_V*phi + (1.0e0_dp/12.0e0_dp)*(phi(phi_light_index)**2)*lambda4*phi
+         first_deriv = m2_V*phi + (1.0e0_dp/12.0e0_dp)*(phi(phi_light_index)**2)*lambda4*phi
 
          !i=lightest
-         dVdphi(phi_light_index) = m2_V(phi_light_index)*phi(phi_light_index) + &
+         first_deriv(phi_light_index) = m2_V(phi_light_index)*phi(phi_light_index) + &
            (1.0e0_dp/6.0e0_dp)*(phi(phi_light_index)**3)*lambda4(phi_light_index)
 
        case(12)
@@ -271,7 +306,7 @@ CONTAINS
          !Off-diagonal terms = \eps
          m2_V = 10.e0_dp**(vparams(1,:))
          lambda2 = 10.e0_dp**(vparams(2,1))
-         dVdphi = 0e0_dp
+         first_deriv = 0e0_dp
 
          do i=1, num_inflaton
            do j=1, num_inflaton
@@ -281,32 +316,62 @@ CONTAINS
                m2_matrix(i,j) = lambda2
              end if
 
-             dVdphi(i) = dVdphi(i) + m2_matrix(i,j)*phi(j)
+             first_deriv(i) = first_deriv(i) + m2_matrix(i,j)*phi(j)
            end do
          end do
 
+       case(13)
+
+         lambda4  = 10.0e0_dp**vparams(2,:)
+         alpha2 = vparams(3,:)
+
+#define HEAVY 2:num_inflaton
+         !deriv wrt phi_light
+         temp_choice = potential_choice
+         potential_choice = effective_V_choice
+         first_deriv = dVdphi(phi)
+         first_deriv(HEAVY) = 0e0_dp
+         potential_choice = temp_choice
+
+         do i=2,num_inflaton
+          first_deriv(1) = first_deriv(1) &
+            - (lambda4(i)/alpha2(i)) * &
+            (phi(i) - turning_function(PHI_I)) * &
+            dturndphi(PHI_I) * &
+            EXPTERM
+         end do
+
+         !deriv wrt heavy fields
+         do i=2, num_inflaton
+           first_deriv(i) = (lambda4(i)/alpha2(i)) *&
+             (phi(i) -  turning_function(PHI_I)) * &
+             EXPTERM
+         end do
+
+
        !END MULTIFIELD
        case default
-          write(*,*) 'MODPK: Need to set dVdphi in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
+          write(*,*) 'MODPK: Need to set first_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
        end select
 
     end if
 
-    RETURN
   END FUNCTION dVdphi
 
 
-  FUNCTION d2Vdphi2(phi)
+  !Needs "result" because array-valued and recursive.
+  recursive function d2Vdphi2(phi) result(second_deriv)
     !
     !     Returns d^2V/dPhi^2 given phi
     !
 
     real(dp), INTENT(IN) :: phi(:)
-    real(dp) :: d2VdPhi2(size(phi),size(phi))
+    real(dp) :: second_deriv(size(phi),size(phi))
+
     real(dp) :: m2_V(size(phi)), c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
-    integer :: i, j
+    integer :: i,j, temp_choice
 
     real(dp) :: dphi,phiplus
     !  mass_infl, couple_water_infl
@@ -314,7 +379,7 @@ CONTAINS
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton)
+    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
 
     real(dp) :: lambda2
     real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
@@ -326,34 +391,35 @@ CONTAINS
           write(*,*), 'MODPK: 2nd order numerical derivative for multifield not implemented !'
           STOP
        end if
-       phiplus = phi(1) + 0.2*phi(1)*findiffdphi**(1./4.)
+       phiplus = phi(1) + 0.2e0_dp*phi(1)*findiffdphi**(1.e0_dp/4.e0_dp)
        dphi = phiplus - phi(1)
-       d2Vdphi2 = (pot(phi+2.*dphi)+pot(phi-2.*dphi)-2.*pot(phi))/(4.*dphi*dphi)
+       second_deriv = (pot(phi+2.e0_dp*dphi)+pot(phi-2.e0_dp*dphi)- &
+         2.e0_dp*pot(phi))/(4.e0_dp*dphi*dphi)
     else
-       d2Vdphi2(:,:) = 0
+       second_deriv(:,:) = 0
        
        select case(potential_choice)
        case(1)          
           m2_V = 10.e0_dp**(vparams(1,:))
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = m2_V(i)   
+          forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)   
        case(2)
           lambda = 10.e0_dp**vparams(1,:)
           finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -lambda(i)**4*finv(i)*finv(i)*cos(finv(i)*phi(i))
+          forall (i = 1:size(phi)) second_deriv(i,i) = -lambda(i)**4*finv(i)*finv(i)*cos(finv(i)*phi(i))
        case(3)
           lambda = 10.e0_dp**vparams(1,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 3.e0_dp*lambda(i)*phi(i)**2
+          forall (i = 1:size(phi)) second_deriv(i,i) = 3.e0_dp*lambda(i)*phi(i)**2
        case(4)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = 0.e0_dp
+          forall (i = 1:size(phi)) second_deriv(i,i) = 0.e0_dp
        case(5)
           lambda = 10.e0_dp**vparams(1,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -lambda(i)/3.e0_dp*phi(i)**(-4./3.)
+          forall (i = 1:size(phi)) second_deriv(i,i) = -lambda(i)/3.e0_dp*phi(i)**(-4./3.)
        case(6)
           mu = 10.e0_dp**vparams(2,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = -3.e0_dp*mu(i)*phi(i)**2
+          forall (i = 1:size(phi)) second_deriv(i,i) = -3.e0_dp*mu(i)*phi(i)**2
        case(7) 
           lambda = vparams(2, :)
-          forall (i=1:size(phi), j=1:size(phi)) d2Vdphi2(i,j) = &
+          forall (i=1:size(phi), j=1:size(phi)) second_deriv(i,j) = &
                lambda(i)*lambda(j)*vparams(1,1)*M_Pl**2 *exp(dot_product(lambda, phi/M_Pl))
        case(8)
           !Canonical two-field hybrid
@@ -362,19 +428,19 @@ CONTAINS
           mu_hybrid =vparams(1,3)
           nu_hybrid =vparams(1,4)
 
-          d2Vdphi2(1,1) = (lambda_hybrid**4)*(4.0_dp*(2.0_dp*phi(1)/mass_hybrid**2)*phi(1)/mass_hybrid**2 +&
+          second_deriv(1,1) = (lambda_hybrid**4)*(4.0_dp*(2.0_dp*phi(1)/mass_hybrid**2)*phi(1)/mass_hybrid**2 +&
           4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)/mass_hybrid**2 +&
             2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
 
-          d2Vdphi2(2,1) = (lambda_hybrid**4)*(4.0_dp*phi(1)*phi(2)/nu_hybrid**4)
+          second_deriv(2,1) = (lambda_hybrid**4)*(4.0_dp*phi(1)*phi(2)/nu_hybrid**4)
 
-          d2Vdphi2(1,2) = d2Vdphi2(2,1)
+          second_deriv(1,2) = second_deriv(2,1)
 
-          d2Vdphi2(2,2) = (lambda_hybrid**4)*(2.0_dp/mu_hybrid**2 +&
+          second_deriv(2,2) = (lambda_hybrid**4)*(2.0_dp/mu_hybrid**2 +&
             2.0_dp*phi(1)**2/nu_hybrid**4)
        case(9)          
           m2_V = vparams(1,:)
-          forall (i = 1:size(phi)) d2Vdphi2(i,i) = m2_V(i)
+          forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
       theta2 = Pi/10.0
       c2 = 0.0
@@ -382,7 +448,7 @@ CONTAINS
       s2 = 100.0*sqrt(3.0)
       mphi1 = 1E-7
       phi1shift = 100.0
-      d2Vdphi2(1,1) =  mphi1**2 + M2**2*Cos(theta2/2.)*(Sin(theta2/2.) +& 
+      second_deriv(1,1) =  mphi1**2 + M2**2*Cos(theta2/2.)*(Sin(theta2/2.) +& 
             (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
                     Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
                (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
@@ -406,7 +472,7 @@ CONTAINS
               Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
            (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
-       d2Vdphi2(1,2) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
+       second_deriv(1,2) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
            (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
                    Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
               (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
@@ -436,7 +502,7 @@ CONTAINS
               Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
             (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
-        d2Vdphi2(2,1) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
+        second_deriv(2,1) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
            (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
                    Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
               (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
@@ -466,7 +532,7 @@ CONTAINS
               Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
             (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
-        d2Vdphi2(2,2) = M2**2*Cos(theta2/2.)*(Cos(theta2/2.) -& 
+        second_deriv(2,2) = M2**2*Cos(theta2/2.)*(Cos(theta2/2.) -& 
             (s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
                   Pi))**2*Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
              (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +& 
@@ -499,24 +565,24 @@ CONTAINS
 
              if (i/=Phi_light_index .and. j/= Phi_light_index) then
                if (i/=j) then
-                 d2Vdphi2(i,j) = 0e0_dp
+                 second_deriv(i,j) = 0e0_dp
                else
-                 d2Vdphi2(i,j) = m2_V(i) + &
+                 second_deriv(i,j) = m2_V(i) + &
                    (1.0e0_dp/12.0e0_dp)*Lambda4(i)*phi(Phi_light_index)**2
                end if
 
              else if (i==Phi_light_index .and. j/=Phi_light_index) then
 
-               d2Vdphi2(i,j) = 0e0_dp
+               second_deriv(i,j) = 0e0_dp
 
              else if (i/=Phi_light_index .and. j==Phi_light_index) then
 
-               d2Vdphi2(i,j) = (1.0e0_dp/6.0e0_dp)*Lambda4(i)* &
+               second_deriv(i,j) = (1.0e0_dp/6.0e0_dp)*Lambda4(i)* &
                  phi(Phi_light_index)*phi(i)
 
              else if (i==Phi_light_index .and. j==Phi_light_index) then
 
-               d2Vdphi2(i,j) = m2_V(Phi_light_index) + &
+               second_deriv(i,j) = m2_V(Phi_light_index) + &
                  0.5e0_dp*Lambda4(Phi_light_index)*phi(Phi_light_index)**2
 
              end if
@@ -531,7 +597,7 @@ CONTAINS
          !Off-diagonal terms = \eps
          m2_V = 10.e0_dp**(vparams(1,:))
          lambda2 = 10.e0_dp**(vparams(2,1))
-         d2Vdphi2 = 0e0_dp
+         second_deriv = 0e0_dp
 
          do i=1, num_inflaton
            do j=1, num_inflaton
@@ -544,18 +610,175 @@ CONTAINS
            end do
          end do
 
-         d2Vdphi2 = m2_matrix
+         second_deriv = m2_matrix
 
+       case(13)
+         second_deriv = 0e0_dp
+
+         lambda4  = 10.0e0_dp**vparams(2,:)
+         alpha2 = vparams(3,:)
+
+         !d2V/dphi_light2
+         temp_choice = potential_choice
+         potential_choice = effective_V_choice
+         second_deriv = d2Vdphi2(phi)
+         second_deriv(1,HEAVY) = 0e0_dp
+         second_deriv(HEAVY,:) = 0e0_dp
+         potential_choice = temp_choice
+
+         do i=2,num_inflaton
+           second_deriv(1,1) = second_deriv(1,1) &
+             - (lambda4(i)/alpha2(i)) * &
+             ( -1e0_dp*dturndphi(PHI_I)**2 + &
+             (phi(i) - turning_function(PHI_I)) * d2turndphi2(PHI_I) + &
+             (1.0e0_dp/alpha2(i)) * &
+             ((phi(i) - turning_function(PHI_I))**2) *&
+             (dturndphi(PHI_I)**2)) * &
+             EXPTERM
+         end do
+
+         !d2V/dphi_light dphi_heavy
+         do i=2,num_inflaton
+           second_deriv(1,i) = (-lambda4(i)/alpha2(i)) * dturndphi(PHI_I) *&
+             (1.0e0_dp - ((phi(i) - turning_function(PHI_I))**2)/alpha2(i)) * &
+             EXPTERM
+         end do
+
+         !d2V/dphi_heavy dphi_heavy
+         do i=2, num_inflaton; do j=2, num_inflaton
+             if (i /= j) then
+               second_deriv(i,j) = 0e0_dp
+             else
+               second_deriv(i,j) = (lambda4(i)/alpha2(i)) * &
+                 (1.0e0_dp - ((phi(i) - turning_function(PHI_I))**2)/alpha2(i)) * &
+                 EXPTERM
+             end if
+         end do; end do
 
        case default
-          write(*,*) 'MODPK: Need to set d2Vdphi2 in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
+          write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
        end select
        !END MULTIFIELD
     end if
 
-    RETURN
   END FUNCTION d2Vdphi2
+
+  !Function that parameterizes the turn for quasi--single-field trajectories
+  !funct_i(phi_light)
+  !Function parameters passed here via vparams(4+,:)
+  real(dp) function turning_function(phi, heavy_field_index, turning_choice)
+    real(dp), intent(in) :: phi
+    integer, intent(in) :: turning_choice, heavy_field_index
+
+    !Hyperbola params
+    real(dp) :: offset_phi, asympt_angle, focal_length
+
+    !heavy_field_index => which heavy field? for picking (light,heavy_i) direction
+    !  This is the "i" in funct_i => need heavy_field_index>1
+
+    !turning_choice => pick a function for turn in (light,heavy_i) direction
+
+    !Parameters for turning_function are set in:
+    !vparams(j+4,heavy_field_index) = j^th param for turn in heavy_field_index
+    !   direction
+    
+
+    if (heavy_field_index <2) then
+      print*, "Set heavy_field_index>1. heavy_field_index=", heavy_field_index
+      stop
+    end if
+
+    select case(turning_choice)
+    case(1)
+      !No turn, effectively single-field 
+      turning_function = 0e0_dp
+    case(2)
+      !North-facing hyperbola, symm around y-axis, min at phi=0
+
+      if (size(vparams,1) <6) then
+        print*, "Not enough vparams to set turning_choice=", turning_choice
+        stop
+      end if
+
+      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
+      asympt_angle = vparams(5,heavy_field_index) !turn angle
+      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
+
+      turning_function = sqrt( (focal_length**2)*(sin(asympt_angle)**2) + &
+        ((phi - offset_phi)**2) * (tan(asympt_angle)**2) ) &
+        -focal_length*sin(asympt_angle)
+
+    case default
+       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+    end select
+
+  end function turning_function
+
+  !Function that parameterizes the turn for quasi--single-field trajectories
+  real(dp) function dturndphi(phi, heavy_field_index, turning_choice)
+    real(dp), intent(in) :: phi
+    integer, intent(in) :: turning_choice, heavy_field_index
+
+    !Hyperbola params
+    real(dp) :: offset_phi, asympt_angle, focal_length
+
+    select case(turning_choice)
+    case(1)
+      dturndphi = 0e0_dp
+    case(2)
+      !North-facing hyperbola, symm around y-axis, min at phi=0
+
+      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
+      asympt_angle = vparams(5,heavy_field_index) !turn angle
+      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
+
+#define funct turning_function(phi,heavy_field_index,turning_choice)
+      dturndphi = (tan(asympt_angle)**2)*(phi - offset_phi)/funct
+#undef funct
+
+    case default
+       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+    end select
+
+
+  end function dturndphi
+
+  !Function that parameterizes the turn for quasi--single-field trajectories
+  real(dp) function d2turndphi2(phi, heavy_field_index, turning_choice)
+    real(dp), intent(in) :: phi
+    integer, intent(in) :: turning_choice, heavy_field_index
+
+    !Hyperbola params
+    real(dp) :: offset_phi, asympt_angle, focal_length
+
+    select case(turning_choice)
+    case(1)
+      d2turndphi2 = 0e0_dp
+
+    case(2)
+      !North-facing hyperbola, symm around y-axis, min at phi=0
+
+      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
+      asympt_angle = vparams(5,heavy_field_index) !turn angle
+      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
+
+#define funct turning_function(phi,heavy_field_index,turning_choice)
+#define dfunct dturndphi(phi,heavy_field_index,turning_choice)
+
+      d2turndphi2 = ((tan(asympt_angle)**2)/funct) * &
+        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/funct))
+
+#undef funct
+#undef dfunct
+
+
+    case default
+       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+    end select
+
+
+  end function d2turndphi2
 
 
   FUNCTION initialphi(phi0)
@@ -608,7 +831,6 @@ CONTAINS
 
     initialphi = phii
 
-    RETURN
   END FUNCTION initialphi
 
   FUNCTION getEps(phi,dphi)
@@ -644,7 +866,6 @@ CONTAINS
     getH=SQRT(pot(phi)/3.0e0_dp/M_Pl**2 / &
       (1.0e0_dp - dot_product(dphi, dphi)/6.0e0_dp/M_Pl**2))
     ! MULTIFIELD
-    RETURN
   END FUNCTION getH
 
   !For when using t-integrator
@@ -659,7 +880,6 @@ CONTAINS
     getH_with_t= sqrt((pot(phi) + 0.5e0_dp*dot_product(dphidt, dphidt))/ &
       3.0e0_dp/M_pl**2)
     ! MULTIFIELD
-    RETURN
 
   END FUNCTION getH_with_t
 
@@ -680,7 +900,7 @@ CONTAINS
       print*, "ERROR: in getEps_with_t"
     end if
     !END MULTIFIELD
-    RETURN
+
 
   END FUNCTION getEps_with_t
 
@@ -694,7 +914,6 @@ CONTAINS
     ! MULTIFIELD
     getdHdalpha = -dot_product(dphi, dphi) * getH(phi,dphi)/2.0e0_dp/M_Pl**2
     ! END MULTIFIELD
-    RETURN
   END FUNCTION getdHdalpha
 
 
@@ -715,7 +934,6 @@ CONTAINS
       -dot_product(dVdphi(phi), dphi)/(H**2*M_Pl**2)
     ! END MULTIFIELD
 
-    RETURN
   END FUNCTION getdepsdalpha
 
   FUNCTION geteta(phi, dphi)
@@ -728,7 +946,6 @@ CONTAINS
     eps = getEps(phi, dphi)
     geteta = getdepsdalpha(phi, dphi) / eps
 
-    RETURN
   END FUNCTION geteta
 
   ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
@@ -1432,7 +1649,6 @@ CONTAINS
     ELSE
        MySech=1.0/COSH(x)
     END IF
-    RETURN
   END FUNCTION MySech
 
   !Checks to see if H^2=V/(3-eps) is stable, ie, if H>0 and if V~0, then it will

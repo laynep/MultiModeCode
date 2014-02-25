@@ -343,7 +343,7 @@ CONTAINS
     else
       !DEBUG
       !h1 = 0.1e0_dp
-      h1 = 0.1e-4_dp
+      h1 = 1.0e-6_dp
     end if
     dxsav=1.e-7_dp
     accuracy=1.0e-8_dp

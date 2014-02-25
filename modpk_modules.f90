@@ -30,7 +30,7 @@ MODULE modpkparams
   real(dp) :: h_init, rescale_factor
 
   real(dp), ALLOCATABLE :: phidot_sign(:)
-  real(dp) :: Nefold_max=100000.
+  real(dp) :: Nefold_max=100000.e0_dp
   real(dp) :: lna(nsteps)
   real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
   LOGICAL :: slowroll_infl_end
@@ -71,7 +71,7 @@ END MODULE ode_path
 MODULE internals
   use modpkparams, only : num_inflaton, dp
   IMPLICIT NONE
-  real(dp), PARAMETER :: PI=3.141592653589793238462643383279502884197
+  real(dp), PARAMETER :: PI=3.141592653589793238462643383279502884197e0_dp
   real(dp) :: h_ik
   !MULTIFIELD
   integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y

@@ -45,6 +45,7 @@ program test_mmodpk
   !Other sampling params
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
   logical :: varying_N_pivot
+  logical :: more_potential_params
 
   type(ic_and_observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
 
@@ -53,7 +54,8 @@ program test_mmodpk
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
-    modpkoutput, slowroll_infl_end, instreheat, vparam_rows
+    modpkoutput, slowroll_infl_end, instreheat, vparam_rows, &
+    more_potential_params
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref,output_badic, varying_N_pivot
@@ -61,6 +63,7 @@ program test_mmodpk
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
 
+  namelist /more_params/ effective_V_choice, turning_choice
 
   !------------------------------------------------
 
@@ -201,6 +204,12 @@ program test_mmodpk
 
 
     subroutine allocate_vars()
+
+      !Prepare extra params if necessary
+      if (more_potential_params) then
+        allocate(turning_choice(num_inflaton-1))
+        read(unit=u, nml=more_params)
+      end if
 
       !Model dependent
       if (potential_choice==8) then

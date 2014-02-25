@@ -55,6 +55,7 @@ CONTAINS
     IF(eps .gt. 3.0e0_dp) THEN
        WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
        write(*,*) 'Check if V~=0, since makes H unstable'
+       write(*,*) 'Or check if start step-size too large.'
        write(*,*) 'Pot=', pot(p)
        write(*,*) 'Eps=',eps
        write(*,*) 'Using t?', use_t
