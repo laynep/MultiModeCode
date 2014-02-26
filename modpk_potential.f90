@@ -174,7 +174,6 @@ CONTAINS
         pot = pot + lambda4(i)*(EXPTERM  - 1.0e0_dp)
       end do
 
-
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -708,7 +707,20 @@ CONTAINS
       turning_function = sqrt( (focal_length**2)*(sin(asympt_angle)**2) + &
         ((phi - offset_phi)**2) * (tan(asympt_angle)**2) ) &
         -focal_length*sin(asympt_angle)
+    case(3)
+      !hyperbolic tanjent
 
+      if (size(vparams,1) <6) then 
+        print*, "Not enough vparams to set turning_choice=", turning_choice
+        stop
+      end if
+
+      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
+      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
+      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
+      
+      turning_function = turn_magnitude*tanh(turn_sharpness*(phi - offset_phi))
+ 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
