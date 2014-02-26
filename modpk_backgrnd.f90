@@ -6,7 +6,9 @@ MODULE background_evolution
   USE powersp
   USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
     getH_with_t, stability_check_on_H, getEps_with_t
-  USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint, use_t
+  USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint, &
+    use_t, stupid_locate
+
   IMPLICIT NONE
   PUBLIC :: backgrnd
 
@@ -108,9 +110,6 @@ CONTAINS
        END DO
     !MULTIFIELD
     else
-
-      !!DEBUG
-      !print*, "alpha_e start", alpha_e
 
       CALL trial_background(phi_init, alpha_e, V_end)
 
@@ -257,8 +256,8 @@ CONTAINS
 
     real(dp), DIMENSION(:) :: z_int_with_t(BNVAR*size(phi_init_trial)+1)
 
-    logical :: H_stable
-    !! END MUTLTIFIELD
+    logical :: H_stable, slowroll_init
+    !! END MULTIFIELD
 
     real(dp) :: accuracy, h1, hmin, x1, x2
     real(dp) :: alpha_e, dalpha, V_end, dv, ep
@@ -334,21 +333,19 @@ CONTAINS
     ELSE
        slowroll_start=.TRUE.
     ENDIF
+
+    !Check to see if starts outside slowroll, then slow-rolls later
+    slowroll_init = slowroll_start
+
     if (modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
     !END MULTIFIELD
 
     !guessed start stepsize
     if (potential_choice.eq.6) then
        h1 = 0.001e0_dp
-    else
-      !DEBUG
-      !h1 = 0.1e0_dp
-      h1 = 1.0e-6_dp
     end if
-    dxsav=1.e-7_dp
-    accuracy=1.0e-8_dp
 
-    hmin=0.0e0_dp !minimum stepsize
+    dxsav=1.e-7_dp
 
     !Check if ICs give instability in H^2=V/(3-eps)
     !If unstable, then integrate in cosmic time t until reach stable region
@@ -357,55 +354,60 @@ CONTAINS
     call stability_check_on_H(H_stable,y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton),&
       using_t=.false.)
 
+    if (.not. H_stable) then
+      !Decrease initial stepsize guess in case near a point where H is approx unstable.
+      print*, "UNSTABLE"
+      h1 = 1.0e-12_dp
+      accuracy = 1.0e-15_dp
+      hmin = 0.0e0_dp
+    else
+      print*, "STABLE"
+      h1 = 1.0e-6_dp
+      accuracy=1.0e-8
+      hmin=1.0e-12_dp
+    end if
+
     !print*, "H_stable try 1", H_stable
 
-    if (.not. H_stable) then
-      use_t = .true.
-
-      !Convert from using N to using t as integ variable
-      z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
-      z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
-      z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
-
-      !Integrate in t until H is stable for integration with N
-      call odeint_with_t(z_int_with_t,0e0_dp, 1e15_dp, accuracy, h1, hmin, bderivs, rkqs_r)
-      if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
-
-      call stability_check_on_H(H_stable,z_int_with_t(1:num_inflaton), &
-        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
-
-      if (.not. H_stable) then
-!DEBUG
-print*, "-------------------"
-print*, "H_stable try 2", H_stable
-print*, "eps", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-print*, "eps w/t", getEps_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-print*, "hub", getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-print*, "hub w/t", getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-stop
-endif
-
-
-      !H_stable = .true.
-      use_t=.false.
-
-      !Convert back to N
-      h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-      y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
-      y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
-
-      !Start N-integration at e-fold=z_int_with_t(last)
-      x1=z_int_with_t(2*num_inflaton+1)
-
-
-!DEBUG
+!    if (.not. H_stable) then
+!      use_t = .true.
+!
+!      !Convert from using N to using t as integ variable
+!      z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
+!      z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
+!      z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
+!
+!      !Integrate in t until H is stable for integration with N
+!      call odeint_with_t(z_int_with_t,0e0_dp, 1e15_dp, accuracy, h1, hmin, bderivs, rkqs_r)
+!      if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+!
+!      call stability_check_on_H(H_stable,z_int_with_t(1:num_inflaton), &
+!        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
+!
+!      if (.not. H_stable) then
+!!DEBUG
+!print*, "-------------------"
 !print*, "H_stable try 2", H_stable
 !print*, "eps", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
 !print*, "eps w/t", getEps_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
 !print*, "hub", getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
 !print*, "hub w/t", getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-
-    end if
+!stop
+!endif
+!
+!
+!      !H_stable = .true.
+!      use_t=.false.
+!
+!      !Convert back to N
+!      h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+!      y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
+!      y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
+!
+!      !Start N-integration at e-fold=z_int_with_t(last)
+!      x1=z_int_with_t(2*num_inflaton+1)
+!
+!    end if
 
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
@@ -436,6 +438,7 @@ endif
           dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
        END DO
 
+
        !END MULTIFIELD
        !
        !     Determine the parameters needed for converting k(Mpc^-1) to K
@@ -443,13 +446,20 @@ endif
        nactual_bg=kount
        IF(slowroll_infl_end) THEN
           ep = 1.0e0_dp
+
           i=locate(epsarr(1:kount),ep)
+
+          !If didn't start in SR, but SR commenced and ended, then there are two
+          !points where epsilon=1.0e0_dp.  Need to find the last one
+          if (.not. slowroll_init) then
+            i=i+1 +locate(epsarr(i+2:kount),ep)
+          end if
+
           j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
           CALL polint(epsarr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
           CALL polint(epsarr(j:j+4), vv(j:j+4), ep, V_end, dv)
           !MULTIFIELD
           CALL array_polint(epsarr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
-
 
           !Check for interpolation errors
           if(dalpha > 0.1 .or. dv > 0.1 .or. bb(1) > 0.1) THEN
@@ -562,6 +572,7 @@ endif
     else
        h1 = 0.1e0_dp
     end if
+
     dxsav=1.e-7_dp
     accuracy=1.0e-6_dp
     hmin=0.0e0_dp !minimum stepsize

@@ -253,7 +253,8 @@ module modpk_icsampling
       !Convert dphidt-->dphidN
       rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)
       H=sqrt(rho/3.0e0_dp)
-      dphi0 = H*y_background(num_inflaton+1:2*num_inflaton)
+
+      dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
 
     end subroutine get_ic
 

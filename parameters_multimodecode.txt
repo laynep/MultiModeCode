@@ -5,12 +5,12 @@
 ![ LP: ] Set potential and its derivatives in modpk_potential.f90
 &init
   num_inflaton=2
-  potential_choice=13
+  potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 4
-  more_potential_params = .true.
+  vparam_rows = 1
+  more_potential_params = .false.
 /
 
 ![ LP: ] More optional parameters for specifying the potential.  Only
@@ -30,7 +30,7 @@
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 1
+  sampling_techn = 2
   numb_samples = 100
 
   energy_scale = 0.1
@@ -53,14 +53,17 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 20.0 0.0
+  phi_init0 = 20.0 1e-6
+
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
+
+/
+  vparams(1,:) = -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336
 
   vparams(1,:) = -12.2789840467449       -1000000.0
   vparams(2,:) = -12.2789840467449       -12.1602803162336
   vparams(3,:) =  12.2789840467449        12.1602803162336
   vparams(4,:) = -12.2789840467449       -12.1602803162336
-/
-
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges

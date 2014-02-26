@@ -57,7 +57,7 @@ CONTAINS
        END SUBROUTINE rkqs_r
     END INTERFACE
 
-    real(dp), PARAMETER :: TINY=1.0d-30
+    real(dp), PARAMETER :: TINY=1.0e-30_dp
     INTEGER, PARAMETER :: MAXSTP=nsteps
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
@@ -66,7 +66,6 @@ CONTAINS
 
     real(dp) :: infl_efolds, infl_efolds_start
     logical :: infl_checking
-
 
 
     !Inits for checking whether in
@@ -84,7 +83,7 @@ CONTAINS
     y(:)=ystart(:)
     NULLIFY(xp,yp)
     IF (save_steps) THEN
-       xsav=x-2.e0_dp*dxsav
+       xsav=x-2.0e0_dp*dxsav
        ALLOCATE(xp(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
@@ -94,10 +93,12 @@ CONTAINS
     !DEBUG
     !p = y(1:num_inflaton)
     !delp = y(num_inflaton+1 : 2*num_inflaton)
-    !print*, nstp
+    !print*, "-----------------------"
+    !print*, nstp, MAXSTP
     !print*, "y", y
-    !print*, "N=", x
-    !print*, "eps=", getEps(p,delp)
+    !print*, "eps=", getEps(p,delp), "N=", x, "step", nstp
+    !print*, "slowroll_start", slowroll_start
+    !print*, "infl_ended", infl_ended
 
 
        if (any(isnan(y))) then
@@ -128,9 +129,7 @@ CONTAINS
        CALL derivs(x,y,dydx)
 
        !If get bad deriv, then override this error when IC sampling
-       if (pk_bad==bad_ic) then
-         return
-       end if
+       if (pk_bad==bad_ic) return
 
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
@@ -234,17 +233,6 @@ CONTAINS
 
       if (abs(x2-x)<1e-10) then
         print*, "reached end of N-integration...."
-    !DEBUG
-    print*, "phi", p
-    print*, "dphi", delp
-    print*, "slowroll_start", slowroll_start
-    print*, "infl_efolds", infl_efolds
-    print*, "infl_efolds_start", infl_efolds_start
-    print*, "infl_checking", infl_checking
-    print*, "N", x
-    print*, "eps", getEps_with_t(p, delp)
-    print*, "N_end", x2
-    print*, "nstp", nstp
         stop
       end if
 
@@ -256,9 +244,22 @@ CONTAINS
        h=hnext
     END DO
 
-    PRINT*,'too many steps in odeint_r', nstp
-    PRINT*,"E-fold", x, "Step size", h
-    PRINT*,"y=", y
+    !It got to the end without going through enough inflation to even be called
+    !"slowroll_start"
+    if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+      pk_bad = bad_ic
+      print*, "MODPK: N-integration finished with eps>1.0 and"
+      print*, "MODPK: without inflating or only transient periods of inflation."
+      return
+    end if
+
+
+    PRINT*, 'too many steps in odeint_r', nstp, MAXSTP
+    PRINT*, "E-fold", x
+    print*, "Step size", h
+    print*, "epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+    print*, "V=", pot(y(1:num_inflaton))
+    PRINT*, "y=", y
     ode_underflow=.TRUE.
 
   CONTAINS
@@ -792,7 +793,8 @@ CONTAINS
        !Check if H is stable now, so switch to integrate w/N
        call stability_check_on_H(stability,p,delp,using_t=.true.)
        if (stability) then
-         print*, "H now stable!!"
+         !DEBUG
+         print*, "Was using t, but H now stable!!"
          stop
 
          ystart = y
