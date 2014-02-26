@@ -9,6 +9,7 @@ program test_mmodpk
   use internals
   use modpk_icsampling
   use modpk_rng, only : init_random_seed
+  use modpk_odeint, only : trajout
 
 #ifdef MPI
   use mpi
@@ -55,7 +56,7 @@ program test_mmodpk
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     modpkoutput, slowroll_infl_end, instreheat, vparam_rows, &
-    more_potential_params
+    more_potential_params, save_traj
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref,output_badic, varying_N_pivot
@@ -83,6 +84,9 @@ program test_mmodpk
   call output_initial_data()
 
   if (sampling_techn==reg_samp) then
+
+    trajout=1
+    if (save_traj) open(trajout, file="trajectory.txt")
 
     call calculate_pk_observables(k_pivot,dlnk)
 
@@ -387,6 +391,10 @@ program test_mmodpk
 
       !Initialize potential and calc background
       call potinit
+
+!DEBUG
+print*, "stopping here..."
+stop
 
       call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
         A_iso, A_pnad, A_ent, A_bundle, &

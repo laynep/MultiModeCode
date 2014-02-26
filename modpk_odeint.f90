@@ -11,6 +11,8 @@ MODULE modpk_odeint
 
   PUBLIC odeint
 
+  integer, public :: trajout
+
 CONTAINS
 
   SUBROUTINE odeint_r(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
@@ -113,7 +115,9 @@ CONTAINS
        !record trajectory
        !print*, "writing trajectory"
        !write(1,'(12E18.10)') x, y(1:num_inflaton)
-       !write(1,'(12E18.10)') x, y(1:2*num_inflaton), getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+       if (save_traj) write(trajout,'(12E18.10)') x, y(:), &
+         getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+         getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
 
        CALL derivs(x,y,dydx)
 
