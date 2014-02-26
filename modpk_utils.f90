@@ -538,7 +538,7 @@ CONTAINS
   END SUBROUTINE rkck_c
 
 
-  FUNCTION locate(xx,x)
+  pure FUNCTION locate(xx,x)
     IMPLICIT NONE
     real(dp), DIMENSION(:), INTENT(IN) :: xx
     real(dp), INTENT(IN) :: x
@@ -567,6 +567,28 @@ CONTAINS
     end if
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END FUNCTION locate
+
+  !Find first entry in array that is (1) less than x and (2) the next entry is greater
+  !than x
+  pure integer function stupid_locate(array,x)
+    real(dp), DIMENSION(:), intent(in) :: array
+    real(dp), intent(in) :: x
+
+    real(dp) :: check_point
+
+    integer :: i
+
+    check_point = 0
+    do i=1,size(array)-1
+      if (array(i) .le. x .and. array(i+1) > x) then
+        check_point = i
+        exit
+      end if
+    end do
+
+    stupid_locate=check_point
+
+  end function stupid_locate
 
   ! Polynomial interpolation
   ! Given array XA and YA (of same length) and given a value X, returns

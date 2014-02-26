@@ -30,14 +30,14 @@ MODULE potential
 CONTAINS
 
 
-  recursive FUNCTION pot(phi)
+  recursive function pot(phi)
     !
     !     Returns V(phi) given phi, phi can be an array for multifield, 
     !     The code implement multifield potential in the form of V = \sum V(phi_i), 
     !     More complicated form of potentials can be customized 
     !
     real(dp) :: pot
-    real(dp), INTENT(IN) :: phi(:)
+    real(dp), intent(in) :: phi(:)
 
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
     real(dp) :: c1_V(size(phi)) !! some constants for a more flexible potential construction in case 9
@@ -60,6 +60,7 @@ CONTAINS
       ! m_i^2 phi_i^2 --- N-quadratic
        m2_V = 10.e0_dp**(vparams(1,:))
        pot = 0.5e0_dp*sum(m2_V*phi*phi)
+
     case(2)
       ! N-flation (axions)
        lambda = 10.e0_dp**vparams(1,:)
@@ -151,6 +152,7 @@ CONTAINS
       !Quasi--single-field/turning trajectory
       !phi(1) = phi_light
 
+
       !vparams(1,:)  = Veff vparams
       !vparams(2,:)  = \lambda_i
       !vparams(3,:)  = \alpha_i
@@ -168,7 +170,19 @@ CONTAINS
 
       !Choice of function to use set in parameters_multimodecode.txt
 #define PHI_I phi(1), i, turning_choice(i-1)
+#define DELTAPHI (phi(i) - turning_function(PHI_I))
 #define EXPTERM exp( (-0.5e0_dp/alpha2(i))*(phi(i) - turning_function(PHI_I))**2)
+
+      !Check to see if too far outside valley in any massive field direction
+      do i=2,num_inflaton
+        if (abs(DELTAPHI**3/DELTAPHI**2)<0.5e0_dp) then
+          print*, "ERROR: Trajectory too far outside the valley for"
+          print*, "potential_choice=",potential_choice
+          print*, "to be applicable."
+          stop
+        end if
+      end do
+
 
       do i=2, num_inflaton
         pot = pot + lambda4(i)*(EXPTERM  - 1.0e0_dp)
@@ -746,7 +760,8 @@ CONTAINS
       focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
 
 #define funct turning_function(phi,heavy_field_index,turning_choice)
-      dturndphi = (tan(asympt_angle)**2)*(phi - offset_phi)/funct
+      dturndphi = (tan(asympt_angle)**2)* &
+        (phi - offset_phi)/(funct+focal_length*sin(asympt_angle))
 #undef funct
 
     case default
@@ -778,8 +793,8 @@ CONTAINS
 #define funct turning_function(phi,heavy_field_index,turning_choice)
 #define dfunct dturndphi(phi,heavy_field_index,turning_choice)
 
-      d2turndphi2 = ((tan(asympt_angle)**2)/funct) * &
-        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/funct))
+      d2turndphi2 = ((tan(asympt_angle)**2)/(funct+focal_length*sin(asympt_angle))) * &
+        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/(funct+focal_length*sin(asympt_angle))))
 
 #undef funct
 #undef dfunct
@@ -857,8 +872,8 @@ CONTAINS
     !MULTIFIELD
     getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
 
-    if (getEps >3.0e0_dp) then
-      print*, "ERROR: epsilon =", getEps, ">3.0"
+    if (getEps >=3.0e0_dp) then
+      print*, "ERROR: epsilon =", getEps, ">=3.0"
       print*, "ERROR: in getEps"
     end if
 
@@ -910,6 +925,7 @@ CONTAINS
     if (getEps_with_t >3.0e0_dp) then
       print*, "ERROR: epsilon =", getEps_with_t, ">3.0"
       print*, "ERROR: in getEps_with_t"
+      stop
     end if
     !END MULTIFIELD
 
@@ -1132,10 +1148,6 @@ CONTAINS
         !print*, "addition",s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
       end do; end do; end do
 
-      !DEBUG
-      !print*, "stopping after calc pk_iso_vect"
-      !stop
-
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
       power_isocurv = 0e0_dp
@@ -1182,33 +1194,8 @@ CONTAINS
         call pnad_sumBA%add(real(B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))))
         call pnad_sumBB%add(real(B_vect(i)*B_vect(j)*d_power_matrix(i,j)))
 
-!        !DEBUG
-!        print*, "========================"
-!        print*, "AAprod" , A_vect(i)*A_vect(j)*power_matrix(i,j)
-!        print*, "ABprod" , A_vect(i)*B_vect(j)*cross_matrix(i,j)
-!        print*, "BAprod" , B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
-!        print*, "BBprod" , B_vect(i)*B_vect(j)*d_power_matrix(i,j)
-
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
-
-      !DEBUG
-!      print*, "---------------------"
-!      print*, "POINT0 kahan sum", pnad_sumAA%summand
-!      print*, "POINT0 kahan remainder", pnad_sumAA%remainder
-!call pnad_sumAA%add(pnad_sumAB%summand)
-!call pnad_sumAA%add(pnad_sumBA%summand)
-!call pnad_sumAA%add(pnad_sumBB%summand)
-!
-!call pnad_sumAA%add(pnad_sumAB%remainder)
-!call pnad_sumAA%add(pnad_sumAB%remainder)
-!call pnad_sumAA%add(pnad_sumBA%remainder)
-!call pnad_sumAA%add(pnad_sumBB%remainder)
-!      print*, "POINT0 total kahan sum", pnad_sumAA%summand
-!      print*, "POINT0 total kahan remainder", pnad_sumAA%remainder
-!      print*, "POINT1 power_pnad simple", power_pnad
-!      print*, "POINT3 regular terms", (AAprod + BBprod) , (ABprod + BAprod)
-!      print*, "POINT3 regular terms", AAprod , BBprod , ABprod , BAprod
 
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
@@ -1229,9 +1216,6 @@ CONTAINS
       else
         power_pnad=0e0_dp
       endif
-
-      !DEBUG
-      !stop
 
 
       !Rescale so spectrum for S=(H/Pdot)dP_nad - total entropy ptb
@@ -1673,7 +1657,8 @@ CONTAINS
 
     !DEBUG
     !overriding stability check...
-    stable = .true.
+    !stable = .true.
+    !return
 
     V=pot(phi)
 
@@ -1683,7 +1668,9 @@ CONTAINS
       eps = getEps(phi, dphi)
     end if
 
-    stable = (3.0e0_dp -eps >1.5e0)! .and. V>5e-3_dp**4
+    stable = (3.0e0_dp -eps >1.0e-6)
+
+    !DEBUG
     !print*, "stable???", stable, "eps=", eps, "V", V, "using_t", using_t
 
     !DEBUG
@@ -1691,5 +1678,10 @@ CONTAINS
     !stable=.false.
 
   end subroutine stability_check_on_H
+
+#undef HEAVY
+#undef PHI_I
+#undef DELTAPHI
+#undef EXPTERM
 
 END MODULE potential

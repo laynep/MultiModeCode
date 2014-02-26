@@ -190,9 +190,9 @@ calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_
 cmbmain	cmbmain.f90	/^      subroutine cmbmain$/
 constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
 cosfunc	modules.f90	/^         function cosfunc (Chi)$/
-d2Vdphi2	modpk_potential.f90	/^  FUNCTION d2Vdphi2(phi)$/
+d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(phi) result(second_d/
 dDeltaxe_dtau	recfast.f90	/^        function dDeltaxe_dtau(a, Delta_xe,Delta_n/
-dVdphi	modpk_potential.f90	/^  FUNCTION dVdphi(phi)$/
+dVdphi	modpk_potential.f90	/^  recursive function dVdphi(phi) result(first_deri/
 ddragoptdepth_dz	modules.f90	/^        function ddragoptdepth_dz(z)$/
 derivpolevl	recfast.f90	/^          function derivpolevl(x,coef,N)$/
 derivs	equations.f90	/^        subroutine derivs(EV,n,tau,ay,ayprime)$/
@@ -260,7 +260,6 @@ kappa_HH_21cm	recfast.f90	/^        function kappa_HH_21cm(T, deriv)$/
 kappa_eH_21cm	recfast.f90	/^        function kappa_eH_21cm(T, deriv)$/
 kappa_pH_21cm	recfast.f90	/^        function kappa_pH_21cm(T, deriv) ! from as/
 lens_Cls	lensing.f90	/^subroutine lens_Cls$/
-locate	modpk_utils.f90	/^  FUNCTION locate(xx,x)$/
 make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
 make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
 mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(msqd, beta)$/
@@ -298,7 +297,7 @@ phi_small_closed_int	bessels.f90	/^   subroutine phi_small_closed_int(l,beta,chi
 polevl	bessels.f90	/^      function polevl(x,coef,N)$/
 polevl	recfast.f90	/^          function polevl(x,coef,N)$/
 polint	modpk_utils.f90	/^  SUBROUTINE polint(xa,ya,x,y,dy)$/
-pot	modpk_potential.f90	/^  FUNCTION pot(phi)$/
+pot	modpk_potential.f90	/^  recursive function pot(phi)$/
 potinit	modpk.f90	/^  SUBROUTINE potinit$/
 powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(psi, dpsi, phi, dphi, a/
 qderivs	modpk_odeint.f90	/^       SUBROUTINE qderivs(x, y, dydx)$/
@@ -324,6 +323,7 @@ sample_nsphere	modpk_icsampling.f90	/^    subroutine sample_nsphere(y, radius)$/
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
+set_consistent_BD_scale	modpk.f90	/^      subroutine set_consistent_BD_scale(k_start)$/
 set_ic	modpk.f90	/^      subroutine set_ic(y)$/
 set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(y, const/
 shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(setA, setB, n)$/

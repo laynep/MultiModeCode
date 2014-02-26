@@ -4,13 +4,13 @@
 ![ LP: ] Parameters to control the major functionality of ModeCode
 ![ LP: ] Set potential and its derivatives in modpk_potential.f90
 &init
-  num_inflaton=2
-  potential_choice=13
+  num_inflaton=20
+  potential_choice=1
   modpkoutput = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 4
-  more_potential_params = .true.
+  vparam_rows = 1
+  more_potential_params = .false.
 /
 
 ![ LP: ] More optional parameters for specifying the potential.  Only
@@ -30,10 +30,10 @@
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 1
+  sampling_techn = 2
   numb_samples = 100
 
-  energy_scale = 0.1
+  energy_scale = .10
 
   save_iso_N = .false.
   N_iso_ref = 60
@@ -53,22 +53,25 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 20.0 0.0
+  phi_init0 = 20.0 1e-6
+
+
+  vparams(1,:) = -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336
+/
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
 
   vparams(1,:) = -12.2789840467449       -1000000.0
   vparams(2,:) = -12.2789840467449       -12.1602803162336
   vparams(3,:) =  12.2789840467449        12.1602803162336
   vparams(4,:) = -12.2789840467449       -12.1602803162336
-/
-
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges
 ![ LP: ] Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 0.0 0.0
+  phi0_priors_min = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
 
-  phi0_priors_max = 25.0 25.0
+  phi0_priors_max = 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 5.0 
 
   dphi0_priors_min = -1.262e0, -1.262e0
   dphi0_priors_max =  1.262e0,  1.262e0

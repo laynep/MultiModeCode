@@ -25,9 +25,7 @@ CONTAINS
     IMPLICIT NONE
     real(dp) :: k,klo,khi
 
-    k_start = 1.0e2_dp
-
-    !When to start evaluating P(k)
+    !When to start evaluating P(k), k<aH/eval_ps
     eval_ps = 5.0e2_dp
 
     !When to switch variables to q=\delta \phi (k<aH/useq_ps)
@@ -75,7 +73,8 @@ CONTAINS
     USE modpkparams
     USE internals
     USE powersp
-    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getdHdalpha, field_bundle
+    USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getdHdalpha, field_bundle, getEps, &
+      pot, d2Vdphi2
     USE modpk_utils, ONLY : locate, polint, derivs, qderivs, rkqs_c, array_polint
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
@@ -138,8 +137,11 @@ CONTAINS
     k=kin*Mpc2Mpl
     powerspectrum_out%k=k
 
+    !How far inside the horizon to set the modes' (Bunch-Davies) IC; k = k_start*aH
+    !k_start = 1.0e2_dp
+    call set_consistent_BD_scale(k_start)
 
-    !! start where k = 100 aH, deep in the horizon, ah = log(aH), k_start=1d2
+    !! start where k = k_start* aH, deep in the horizon, ah = log(aH)
     ah=LOG(k/k_start)
     i= locate(aharr(1:nactual_bg), ah)
 
@@ -226,10 +228,11 @@ CONTAINS
     !END MULTIFIELD
 
 
-    h1=0.1 !guessed start stepsize
+    !h1=0.1 !guessed start stepsize
+    h1=1e-5 !guessed start stepsize
 
     ![ LP: ] Some fast-roll cases need high accuracy; activate conditionally in odeint_c
-    accuracy=1.0e-6_dp !has a big impact on the speed of the code
+    accuracy=1.0e-7_dp !has a big impact on the speed of the code
 
     hmin=1e-30_dp !minimum stepsize
 
@@ -294,6 +297,92 @@ CONTAINS
         y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
 
       end subroutine set_ic
+
+      !Find the scale at which we can set the Bunch-Davies initial state
+      !self-consistently
+      !Note that there might be a correction due to massive modes m_heavy>H
+      subroutine set_consistent_BD_scale(k_start)
+        real(dp), intent(out) :: k_start
+
+        real(dp) :: ah
+        real(dp) :: horiz_fract
+        integer :: ah_index
+
+        !DEBUG
+        real(dp) :: alpha_ik, dalpha
+        real(dp) :: h_ik, dh, a_ik
+        real(dp) :: eps, V, dV(num_inflaton), d2V(num_inflaton,num_inflaton)
+        real(dp), dimension(num_inflaton) :: p_ik, dp_ik, delphi
+        real(dp) :: check1
+        real(dp), dimension(num_inflaton,num_inflaton) :: check2, check3, check4
+
+        !k = horiz_fract*aH
+        horiz_fract=1e2_dp
+
+        ah=LOG(k/horiz_fract)
+        ah_index= locate(aharr(1:nactual_bg), ah)
+
+        if (ah_index==0) then
+          !The background isn't able to set this IC
+          !Set the start scale so far inside, that it fails
+          !when it returns from this function.
+          k_start = 1e20_dp
+          return
+        end if
+
+
+        j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
+        call array_polint(aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
+        call array_polint(aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
+
+        call polint(aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
+        call polint(aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+
+        a_ik = exp(alpha_ik)*a_init
+        eps = getEps(p_ik, dp_ik)
+
+        V = pot(p_ik)
+        dV = dVdphi(p_ik)
+        d2V = d2Vdphi2(p_ik)
+
+        !Each of these should be significantly less than 1
+        check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
+        check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
+
+        do i=1, num_inflaton
+          do j=1, num_inflaton
+            check3(i,j) = abs( (dp_ik(i)*dV(j) + &
+              dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
+          end do
+        end do
+
+        do i=1, num_inflaton
+          do j=1, num_inflaton
+            check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
+          end do
+        end do
+
+        !print*, "p_ik", p_ik
+        !print*, "mass/H", sqrt(d2V/h_ik**2)
+
+        !print*, "test", 0.5*10.0e0**(-12.1)*p_ik(1)**2
+        !print*, "test", 0.5*10.0e0**(-2.1)*p_ik(2)**2
+
+        !print*, "check1", check1
+        !print*, "check2", check2
+        !print*, "check3", check3
+        !print*, "check4", check4
+
+        !print*, "check1", check1 < 1e-2_dp
+        !print*, "check2", all(check2 < 1e-2_dp)
+        !print*, "check3", all(check3 < 1e-2_dp)
+        !print*, "check4", all(check4 < 1e-2_dp)
+
+        !stop
+
+        k_start = horiz_fract
+
+      end subroutine set_consistent_BD_scale
 
   END SUBROUTINE evolve
 
