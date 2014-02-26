@@ -90,17 +90,6 @@ CONTAINS
 
     DO nstp=1,MAXSTP
 
-    !DEBUG
-    !p = y(1:num_inflaton)
-    !delp = y(num_inflaton+1 : 2*num_inflaton)
-    !print*, "-----------------------"
-    !print*, nstp, MAXSTP
-    !print*, "y", y
-    !print*, "eps=", getEps(p,delp), "N=", x, "step", nstp
-    !print*, "slowroll_start", slowroll_start
-    !print*, "infl_ended", infl_ended
-
-
        if (any(isnan(y))) then
          print*, "ERROR in odeint_r"
          print*, "ERROR: y has a NaN value."
@@ -252,7 +241,6 @@ CONTAINS
       print*, "MODPK: without inflating or only transient periods of inflation."
       return
     end if
-
 
     PRINT*, 'too many steps in odeint_r', nstp, MAXSTP
     PRINT*, "E-fold", x
@@ -568,8 +556,6 @@ CONTAINS
           END IF
        ENDIF
 
-       !DEBUG
-       !print*, "not switching to the q variable...."
        IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
           !switch to the Q variable for super-horizon evolution
           !only apply the switch on y(1:4*num_inflaton+2)
@@ -850,7 +836,6 @@ CONTAINS
 
     PRINT*,'too many steps in odeint_with_t', nstp
     PRINT*,"t=", x, "Step size", h
-    !DEBUG
     print*, "N", Nefolds
     print*, "eps", getEps_with_t(p, delp)
     print*, "t", x

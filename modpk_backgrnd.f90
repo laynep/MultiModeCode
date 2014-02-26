@@ -356,18 +356,16 @@ CONTAINS
 
     if (.not. H_stable) then
       !Decrease initial stepsize guess in case near a point where H is approx unstable.
-      print*, "UNSTABLE"
+      print*, "H is UNSTABLE"
       h1 = 1.0e-12_dp
       accuracy = 1.0e-15_dp
       hmin = 0.0e0_dp
     else
-      print*, "STABLE"
+      print*, "H is STABLE"
       h1 = 1.0e-6_dp
       accuracy=1.0e-8
       hmin=1.0e-12_dp
     end if
-
-    !print*, "H_stable try 1", H_stable
 
 !    if (.not. H_stable) then
 !      use_t = .true.
@@ -385,16 +383,6 @@ CONTAINS
 !        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
 !
 !      if (.not. H_stable) then
-!!DEBUG
-!print*, "-------------------"
-!print*, "H_stable try 2", H_stable
-!print*, "eps", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-!print*, "eps w/t", getEps_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-!print*, "hub", getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-!print*, "hub w/t", getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-!stop
-!endif
-!
 !
 !      !H_stable = .true.
 !      use_t=.false.

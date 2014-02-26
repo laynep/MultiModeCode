@@ -228,7 +228,6 @@ CONTAINS
     !END MULTIFIELD
 
 
-    !DEBUG
     !h1=0.1 !guessed start stepsize
     h1=1e-5 !guessed start stepsize
 
@@ -328,8 +327,6 @@ CONTAINS
           !Set the start scale so far inside, that it fails
           !when it returns from this function.
           k_start = 1e20_dp
-          !DEBUG
-          print*, "GETTING TO THIS POINT"
           return
         end if
 

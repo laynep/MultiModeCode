@@ -61,9 +61,6 @@ CONTAINS
        m2_V = 10.e0_dp**(vparams(1,:))
        pot = 0.5e0_dp*sum(m2_V*phi*phi)
 
-       !DEBUG
-       !print*, "m2_V from pot", m2_V
-
     case(2)
       ! N-flation (axions)
        lambda = 10.e0_dp**vparams(1,:)
@@ -751,7 +748,8 @@ CONTAINS
       focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
 
 #define funct turning_function(phi,heavy_field_index,turning_choice)
-      dturndphi = (tan(asympt_angle)**2)*(phi - offset_phi)/funct
+      dturndphi = (tan(asympt_angle)**2)* &
+        (phi - offset_phi)/(funct+focal_length*sin(asympt_angle))
 #undef funct
 
     case default
@@ -783,8 +781,8 @@ CONTAINS
 #define funct turning_function(phi,heavy_field_index,turning_choice)
 #define dfunct dturndphi(phi,heavy_field_index,turning_choice)
 
-      d2turndphi2 = ((tan(asympt_angle)**2)/funct) * &
-        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/funct))
+      d2turndphi2 = ((tan(asympt_angle)**2)/(funct+focal_length*sin(asympt_angle))) * &
+        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/(funct+focal_length*sin(asympt_angle))))
 
 #undef funct
 #undef dfunct
@@ -862,12 +860,9 @@ CONTAINS
     !MULTIFIELD
     getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
 
-    if (getEps >3.0e0_dp) then
-      print*, "ERROR: epsilon =", getEps, ">3.0"
+    if (getEps >=3.0e0_dp) then
+      print*, "ERROR: epsilon =", getEps, ">=3.0"
       print*, "ERROR: in getEps"
-
-      !DEBUG
-      print*, "FAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAILFAIL"
     end if
 
     !END MULTIFIELD
@@ -1141,10 +1136,6 @@ CONTAINS
         !print*, "addition",s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
       end do; end do; end do
 
-      !DEBUG
-      !print*, "stopping after calc pk_iso_vect"
-      !stop
-
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
 
       power_isocurv = 0e0_dp
@@ -1191,33 +1182,8 @@ CONTAINS
         call pnad_sumBA%add(real(B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))))
         call pnad_sumBB%add(real(B_vect(i)*B_vect(j)*d_power_matrix(i,j)))
 
-!        !DEBUG
-!        print*, "========================"
-!        print*, "AAprod" , A_vect(i)*A_vect(j)*power_matrix(i,j)
-!        print*, "ABprod" , A_vect(i)*B_vect(j)*cross_matrix(i,j)
-!        print*, "BAprod" , B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
-!        print*, "BBprod" , B_vect(i)*B_vect(j)*d_power_matrix(i,j)
-
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
-
-      !DEBUG
-!      print*, "---------------------"
-!      print*, "POINT0 kahan sum", pnad_sumAA%summand
-!      print*, "POINT0 kahan remainder", pnad_sumAA%remainder
-!call pnad_sumAA%add(pnad_sumAB%summand)
-!call pnad_sumAA%add(pnad_sumBA%summand)
-!call pnad_sumAA%add(pnad_sumBB%summand)
-!
-!call pnad_sumAA%add(pnad_sumAB%remainder)
-!call pnad_sumAA%add(pnad_sumAB%remainder)
-!call pnad_sumAA%add(pnad_sumBA%remainder)
-!call pnad_sumAA%add(pnad_sumBB%remainder)
-!      print*, "POINT0 total kahan sum", pnad_sumAA%summand
-!      print*, "POINT0 total kahan remainder", pnad_sumAA%remainder
-!      print*, "POINT1 power_pnad simple", power_pnad
-!      print*, "POINT3 regular terms", (AAprod + BBprod) , (ABprod + BAprod)
-!      print*, "POINT3 regular terms", AAprod , BBprod , ABprod , BAprod
 
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
@@ -1238,9 +1204,6 @@ CONTAINS
       else
         power_pnad=0e0_dp
       endif
-
-      !DEBUG
-      !stop
 
 
       !Rescale so spectrum for S=(H/Pdot)dP_nad - total entropy ptb
