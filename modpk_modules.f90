@@ -36,6 +36,8 @@ MODULE modpkparams
   LOGICAL :: slowroll_infl_end
   LOGICAL :: slowroll_start=.false.
 
+  logical :: save_traj
+
   !MULTIFIELD
   INTEGER :: num_inflaton
   real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams

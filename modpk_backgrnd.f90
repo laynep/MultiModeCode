@@ -408,6 +408,7 @@ CONTAINS
         print*, "a segmentation fault."
         stop
       end if
+
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
@@ -425,9 +426,8 @@ CONTAINS
           grad_V = sqrt(dot_product(Vp, Vp))
           dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
        END DO
-
-
        !END MULTIFIELD
+
        !
        !     Determine the parameters needed for converting k(Mpc^-1) to K
        !
@@ -439,9 +439,7 @@ CONTAINS
 
           !If didn't start in SR, but SR commenced and ended, then there are two
           !points where epsilon=1.0e0_dp.  Need to find the last one
-          if (.not. slowroll_init) then
-            i=i+1 +locate(epsarr(i+2:kount),ep)
-          end if
+          if (.not. slowroll_init) i=i+1 +locate(epsarr(i+2:kount),ep)
 
           j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
           CALL polint(epsarr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)

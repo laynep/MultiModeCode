@@ -4,13 +4,14 @@
 ![ LP: ] Parameters to control the major functionality of ModeCode
 ![ LP: ] Set potential and its derivatives in modpk_potential.f90
 &init
-  num_inflaton=20
-  potential_choice=1
+  num_inflaton=2
+  potential_choice=13
   modpkoutput = .true.
+  save_traj = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 1
-  more_potential_params = .false.
+  vparam_rows = 6
+  more_potential_params = .true.
 /
 
 ![ LP: ] More optional parameters for specifying the potential.  Only
@@ -20,7 +21,7 @@
 ![ LP: ] get almost single-field inflation
 &more_params
   effective_V_choice = 1
-  turning_choice = 1
+  turning_choice = 2
 /
 
 ----------------
@@ -30,8 +31,8 @@
     7=param_unif_prior}
 
 &ic_sampling
-  sampling_techn = 2
-  numb_samples = 100
+  sampling_techn = 1
+  numb_samples = 1
 
   energy_scale = .10
 
@@ -53,17 +54,22 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 20.0 1e-6
+  phi_init0 = 254.95 1.5838
+
+  vparams(1,:) = -14.0       -1000000.0
+
+  vparams(2,:) = -1000000.0       -8.0
+  vparams(3,:) =  0.0        1.0251
+
+  vparams(4,:) = 0.0       244.95
+  vparams(5,:) = 0.0       0.15708
+  vparams(6,:) = 0.0       5.7735e-4
 
 
-  vparams(1,:) = -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336
 /
+  vparams(1,:) = -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336 -12.2789840467449       -12.1602803162336
   vparams(1,:) = -12.2789840467449       -12.1602803162336
 
-  vparams(1,:) = -12.2789840467449       -1000000.0
-  vparams(2,:) = -12.2789840467449       -12.1602803162336
-  vparams(3,:) =  12.2789840467449        12.1602803162336
-  vparams(4,:) = -12.2789840467449       -12.1602803162336
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges
