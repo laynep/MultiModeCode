@@ -392,10 +392,6 @@ program test_mmodpk
       !Initialize potential and calc background
       call potinit
 
-!DEBUG
-print*, "stopping here..."
-stop
-
       call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
         A_iso, A_pnad, A_ent, A_bundle, &
         n_iso, n_pnad, n_ent, &
@@ -410,6 +406,7 @@ stop
         if (leave) return
 !DEBUG
 !print*, "Not evaluating second and third evolve routines"
+!stop
       call evolve(k_pivot*exp(-dlnk), pk1)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &

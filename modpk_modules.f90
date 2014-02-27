@@ -32,7 +32,7 @@ MODULE modpkparams
   real(dp), ALLOCATABLE :: phidot_sign(:)
   real(dp) :: Nefold_max=100000.e0_dp
   real(dp) :: lna(nsteps)
-  real(dp) :: hubarr(nsteps), aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
+  real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
   LOGICAL :: slowroll_infl_end
   LOGICAL :: slowroll_start=.false.
 

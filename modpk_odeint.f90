@@ -213,12 +213,15 @@ CONTAINS
                    RETURN
                 ENDIF
              ELSE ! for multifield, determine the total field distance travelled
-                IF (sqrt(dot_product(p-phi_init, p-phi_init)) .gt. (delsigma+0.1)) THEN
-                   infl_ended = .true.
-                   ystart(:) = y(:)
-                   IF (save_steps) CALL save_a_step
-                   RETURN
-                END IF
+
+               !DEBUG
+               if(check_stop_when_not_slowroll_infl_end(p,delp)) then
+                 infl_ended = .true.
+                 ystart(:) = y(:)
+                 IF (save_steps) CALL save_a_step
+                 RETURN
+               end if
+
              END IF
              !END MULTIFIELD
           ENDIF
@@ -226,6 +229,8 @@ CONTAINS
 
       if (abs(x2-x)<1e-10) then
         print*, "reached end of N-integration...."
+        print*, "y=",y
+        print*, "Efolds=",x
         stop
       end if
 
@@ -338,7 +343,6 @@ CONTAINS
     real(dp) :: nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
     integer :: ii, jj, kk
 
-
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -384,7 +388,8 @@ CONTAINS
 
        !"Trick" to get constant fractional errors except very near
        !zero-crossings. (Numerical Recipes)
-       yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
+       yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, &
+         ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
@@ -423,13 +428,13 @@ CONTAINS
        !DEBUG
        !print*, "printing real part of modes"
        !print*, "printing imaginary part of modes"
-       !if (.not. use_q) then
-       ! write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       ! write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !else                                                                                   
-       !  write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !  write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !end if
+       if (.not. use_q) then
+        write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+        write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       else                                                                                   
+         write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+         write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       end if
 
        scalefac = a_init*exp(x)
 
@@ -454,17 +459,6 @@ CONTAINS
              IF (use_q) THEN
 
                !Y's are in \bar{Q}=Q/a_switch
-               !psi = y(index_ptb_y:index_ptb_vel_y-1) &
-               !     *scalefac/a_switch
-               !dpsi = scalefac/a_switch*&
-               !  (y(index_ptb_vel_y:index_tensor_y-1) + &
-               !  y(index_ptb_y:index_ptb_vel_y-1))
-
-               ! with isocurv calculation
-               !call powerspectrum(psi, dpsi, phi, delphi, &
-               !  scalefac, power_internal)
-
-               !Y's are in \bar{Q}=Q/a_switch
                qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
                dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
 
@@ -474,8 +468,9 @@ CONTAINS
 
               !Record spectrum
               !print*, "writing spectra"
-              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab, power_internal%isocurv,&
-              !  power_internal%entropy, power_internal%pnad
+              write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
+                !power_internal%isocurv,&
+                !power_internal%entropy, power_internal%pnad
 
                power_internal%tensor=tensorpower(y(index_tensor_y) &
                   *scalefac/a_switch, scalefac)
@@ -489,13 +484,13 @@ CONTAINS
 
               !Record spectrum
               !print*, "writing spectra"
-              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab, power_internal%isocurv,&
+              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
+              !  power_internal%isocurv,&
               !  power_internal%entropy, power_internal%pnad
 
 
                power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
              END IF
-
 
              if (compute_zpower) then  !! compute only once upon horizon exit
                 power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
@@ -527,8 +522,7 @@ CONTAINS
                 IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
                 IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
              ELSE 
-                ! for multifield, determine the total field distance travelled
-                IF (SQRT(DOT_PRODUCT(phi-phi_init, phi-phi_init)) .GT. (delsigma+0.1)) infl_ended = .TRUE.
+               if (check_stop_when_not_slowroll_infl_end(phi,delphi)) infl_ended = .TRUE.
              END IF
              !END MULTIFIELD
           ENDIF
@@ -862,6 +856,32 @@ CONTAINS
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE odeint_with_t
+
+  !When not requiring inflation to end, the stopping requirements will likely
+  !vary with the potential that you're using, so here's the function that you
+  !will need to edit.
+  logical function check_stop_when_not_slowroll_infl_end(phi, dphi) &
+    result(stopping)
+    use modpkparams, only : potential_choice, phi_init, delsigma
+    real(dp), dimension(:), intent(in) :: phi, dphi
+
+    stopping = .false.
+
+    select case(potential_choice)
+    case(13)
+
+      ![ LP: ] Complete ad-hoc bullshit
+      if (phi(1) < 244.95-0.4) stopping=.true.
+
+    case default
+      ! for multifield, determine the total field distance travelled
+      if (sqrt(dot_product(phi-phi_init, phi-phi_init)) .gt. (delsigma+0.1)) then
+        stopping = .true.
+      end if
+
+    end select
+
+  end function check_stop_when_not_slowroll_infl_end
 
 END MODULE modpk_odeint
 

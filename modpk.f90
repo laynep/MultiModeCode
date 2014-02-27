@@ -132,7 +132,6 @@ CONTAINS
     allocate(power_internal%matrix(num_inflaton,num_inflaton))
     allocate(powerspectrum_out%matrix(num_inflaton,num_inflaton))
 
-
     !Evaluation scale
     k=kin*Mpc2Mpl
     powerspectrum_out%k=k
@@ -143,7 +142,7 @@ CONTAINS
 
     !! start where k = k_start* aH, deep in the horizon, ah = log(aH)
     ah=LOG(k/k_start)
-    i= locate(aharr(1:nactual_bg), ah)
+    i= locate(log_aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
        PRINT*,'MODPK: The background solution worked, but the k you requested', k,' is outside'
@@ -159,7 +158,7 @@ CONTAINS
 
        PRINT*,'MODPK: QUITTING'
        write(*,e2_fmt) "log(k/k_start):", ah
-       write(*,e2_fmt) "aharr(1):", aharr(1)
+       write(*,e2_fmt) "log_aharr(1):", log_aharr(1)
        STOP
     END IF
 
@@ -167,17 +166,16 @@ CONTAINS
     j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
 
     !MULTIFIELD
-    CALL array_polint(aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
-    CALL array_polint(aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
+    CALL array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
+    CALL array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
     !END MULTIFIELD
 
-    CALL polint(aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
-    CALL polint(aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+    CALL polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
+    CALL polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
     a_ik=EXP(alpha_ik)*a_init
 
     x1=alpha_ik
-
 
     IF(x1.le.0.) THEN
        PRINT*,'MODPK: The phi_init you specified is too small to give'
@@ -308,6 +306,8 @@ CONTAINS
         real(dp) :: horiz_fract
         integer :: ah_index
 
+        real(dp) :: tol
+
         !DEBUG
         real(dp) :: alpha_ik, dalpha
         real(dp) :: h_ik, dh, a_ik
@@ -316,11 +316,15 @@ CONTAINS
         real(dp) :: check1
         real(dp), dimension(num_inflaton,num_inflaton) :: check2, check3, check4
 
+        !DEBUG
+        ![ LP: ] Put a do-while loop here and progressively make horiz_fract
+        !larger until it satisfies the checks within the tolerance
+
         !k = horiz_fract*aH
-        horiz_fract=1e2_dp
+        horiz_fract=1e3_dp
 
         ah=LOG(k/horiz_fract)
-        ah_index= locate(aharr(1:nactual_bg), ah)
+        ah_index= locate(log_aharr(1:nactual_bg), ah)
 
         if (ah_index==0) then
           !The background isn't able to set this IC
@@ -332,11 +336,11 @@ CONTAINS
 
 
         j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
-        call array_polint(aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
-        call array_polint(aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
+        call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
+        call array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
 
-        call polint(aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
-        call polint(aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+        call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
+        call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
         a_ik = exp(alpha_ik)*a_init
         eps = getEps(p_ik, dp_ik)
@@ -345,7 +349,10 @@ CONTAINS
         dV = dVdphi(p_ik)
         d2V = d2Vdphi2(p_ik)
 
-        !Each of these should be significantly less than 1
+        !Check the corrections to the conformal-time mode equations.
+        !When k is large, the IC should be a plane wave.
+        !If the mass-matrix is diagonal and relevant, then could use Hankel
+        !function solution
         check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
         check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
 
@@ -362,23 +369,20 @@ CONTAINS
           end do
         end do
 
-        !print*, "p_ik", p_ik
-        !print*, "mass/H", sqrt(d2V/h_ik**2)
+        tol = 1e-4_dp
+        if   (check1 > tol  .or. &
+          any(check2 > tol) .or. & 
+          any(check3 > tol) .or. &
+          any(check4 > tol)) then
 
-        !print*, "test", 0.5*10.0e0**(-12.1)*p_ik(1)**2
-        !print*, "test", 0.5*10.0e0**(-2.1)*p_ik(2)**2
-
-        !print*, "check1", check1
-        !print*, "check2", check2
-        !print*, "check3", check3
-        !print*, "check4", check4
-
-        !print*, "check1", check1 < 1e-2_dp
-        !print*, "check2", all(check2 < 1e-2_dp)
-        !print*, "check3", all(check3 < 1e-2_dp)
-        !print*, "check4", all(check4 < 1e-2_dp)
-
-        !stop
+          !DEBUG
+          print*, "BD IC not consistent..."
+          if (check1 > tol)      print*, "check1 --- H: (", check1, ") >", tol
+          if (any(check2 > tol)) print*, "check2 --- masses: (", check2, ") >", tol
+          if (any(check3 > tol)) print*, "check3 --- off-diag: (", check3, ") >", tol
+          if (any(check4 > tol)) print*, "check4 --- off-diag: (", check4, ") >", tol
+          stop
+        end if
 
         k_start = horiz_fract
 
