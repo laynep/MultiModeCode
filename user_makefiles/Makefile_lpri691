@@ -1,3 +1,17 @@
+#gfortran compile options
+ifdef GFORTRAN
+
+F90C     = gfortran
+FFLAGS = -O3 -cpp -fopenmp -ffast-math -fdefault-real-8 # -fdefault-real-8
+
+ifdef DEBUG
+F90C     = gfortran
+FFLAGS = -cpp -O0 -fdefault-real-8
+endif
+
+#ifort compile options
+else
+
 ifdef DEBUG
 F90C     = ifort
 FFLAGS = -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
@@ -10,12 +24,12 @@ endif
 
 else
 
-
-#F90C     = gfortran
-#FFLAGS = -O3 -cpp -fopenmp -ffast-math # -fdefault-real-8
 F90C     = ifort
 FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
 
+
+
+endif
 endif
 
 include ./Makefile_main_modpk
