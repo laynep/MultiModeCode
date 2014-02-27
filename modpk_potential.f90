@@ -30,13 +30,14 @@ MODULE potential
 CONTAINS
 
 
-  recursive function pot(phi)
+  recursive function pot(phi) result(V_potential)
     !
     !     Returns V(phi) given phi, phi can be an array for multifield, 
     !     The code implement multifield potential in the form of V = \sum V(phi_i), 
     !     More complicated form of potentials can be customized 
     !
-    real(dp) :: pot
+    !real(dp) :: pot
+    real(dp) :: V_potential
     real(dp), intent(in) :: phi(:)
 
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
@@ -59,29 +60,29 @@ CONTAINS
     case(1) 
       ! m_i^2 phi_i^2 --- N-quadratic
        m2_V = 10.e0_dp**(vparams(1,:))
-       pot = 0.5e0_dp*sum(m2_V*phi*phi)
+       V_potential = 0.5e0_dp*sum(m2_V*phi*phi)
 
     case(2)
       ! N-flation (axions)
        lambda = 10.e0_dp**vparams(1,:)
        finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-       pot = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
+       V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
     case(3)
        lambda = 10.e0_dp**vparams(1,:)
-       pot = sum(0.25e0_dp*lambda*phi**4)
+       V_potential = sum(0.25e0_dp*lambda*phi**4)
     case(4)
        lambda = 10.e0_dp**vparams(1,:)
-       pot = sum(lambda*phi)
+       V_potential = sum(lambda*phi)
     case(5)
        lambda = 10.e0_dp**vparams(1,:)
-       pot = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
+       V_potential = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
     case(6)
        lambda = 10.e0_dp**vparams(1,:)
        mu = 10.e0_dp**vparams(2,:)
-       pot = sum(lambda**4 - mu*phi**4/4.e0_dp)
+       V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
     case(7) !product of exponentials
        lambda = vparams(2, :)
-       pot = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl)) 
+       V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl)) 
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
@@ -93,15 +94,15 @@ CONTAINS
        mass_hybrid = vparams(1,2)
        mu_hybrid =vparams(1,3)
        nu_hybrid =vparams(1,4)
-       pot = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
+       V_potential = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
          phi(2)**2/mu_hybrid**2 +&
          phi(1)**2*phi(2)**2/nu_hybrid**4)
      case(9)
        m2_V = vparams(1,:)
        c1_V = vparams(2,:)
-       pot = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
+       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
      case(10)
-      ! pot = 0.5*M2**2*cos(0.5*theta2)*(sin(0.5*theta2)*(phi(1)-c2)+&
+      ! V_potential = 0.5*M2**2*cos(0.5*theta2)*(sin(0.5*theta2)*(phi(1)-c2)+&
       !       cos(0.5*theta2)phi(2)+tan((1/pi)*theta2*atan(s2*(cos(0.5*theta2)*(phi(1)-c2)-&
       !       sin(0.5*theta2)phi(2))))(-cos(0.5*theta2)*(phi(1)-c2)+sin(0.5*theta2)phi(2)))**2
       theta2 = Pi/10.0
@@ -115,7 +116,7 @@ CONTAINS
       potsmall = (M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +&
                  (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
                  Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/2.
-      pot=potlarge+potsmall
+      V_potential=potlarge+potsmall
     case(11)
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
@@ -124,7 +125,7 @@ CONTAINS
       lambda4 = 10.0e0_dp**vparams(2,:)
       phi_light_index = minloc(m2_V,1)
 
-      pot = 0.5e0_dp*sum(m2_V*phi*phi)+ &
+      V_potential = 0.5e0_dp*sum(m2_V*phi*phi)+ &
         (1.0e0_dp/24.0e0_dp)*(phi(phi_light_index)**2)*sum(lambda4*phi*phi)
 
     case(12)
@@ -132,17 +133,17 @@ CONTAINS
       !Off-diagonal terms = \eps
       m2_V = 10.e0_dp**(vparams(1,:))
       lambda2 = 10.e0_dp**(vparams(2,1))
-      pot = 0e0_dp
+      V_potential = 0e0_dp
 
       do i=1, num_inflaton
         do j=1, num_inflaton
 
           if (i==j) then
             m2_matrix(i,j) = m2_V(i)
-            pot = pot +0.5e0_dp* m2_matrix(i,j)*phi(i)*phi(j)
+            V_potential = V_potential +0.5e0_dp* m2_matrix(i,j)*phi(i)*phi(j)
           else
             m2_matrix(i,j) = lambda2
-            pot = pot + m2_matrix(i,j)*phi(i)*phi(j)
+            V_potential = V_potential + m2_matrix(i,j)*phi(i)*phi(j)
           end if
 
         end do
@@ -166,7 +167,7 @@ CONTAINS
       !Run through potential with "effective" single-field potential_choice
       temp_choice = potential_choice
       potential_choice = effective_V_choice
-      pot = pot(phi)
+      V_potential = pot(phi)
       potential_choice = temp_choice
 
       !Choice of function to use set in parameters_multimodecode.txt
@@ -187,7 +188,8 @@ CONTAINS
       !print*, "philight", phi(1)
 
       do i=2, num_inflaton
-        pot = pot - lambda4(i)*(EXPTERM  - 1.0e0_dp)
+        V_potential = V_potential - lambda4(i)*&
+          (EXPTERM  - 1.0e0_dp)
       end do
 
     case default
@@ -798,8 +800,11 @@ CONTAINS
 #define funct turning_function(phi,heavy_field_index,turning_choice)
 #define dfunct dturndphi(phi,heavy_field_index,turning_choice)
 
-      d2turndphi2 = ((tan(asympt_angle)**2)/(funct+focal_length*sin(asympt_angle))) * &
-        ( 1.0e0_dp - (phi-offset_phi)*(dfunct/(funct+focal_length*sin(asympt_angle))))
+      d2turndphi2 = ((tan(asympt_angle)**2)/&
+        (funct+focal_length*sin(asympt_angle))) * &
+        (1.0e0_dp  - (phi-offset_phi)*&
+        (dfunct/ (funct &
+        +focal_length*sin(asympt_angle))))
 
 #undef funct
 #undef dfunct
