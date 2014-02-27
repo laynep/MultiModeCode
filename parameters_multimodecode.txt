@@ -50,7 +50,7 @@
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 55
+  N_pivot = 56
   k_pivot = 0.002
   dlnk = 0.4
 

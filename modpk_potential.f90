@@ -689,6 +689,9 @@ CONTAINS
     !Hyperbola params
     real(dp) :: offset_phi, asympt_angle, focal_length
 
+    !hyperbolic tan params
+    real(dp) :: turn_magnitude, turn_sharpness
+
     !heavy_field_index => which heavy field? for picking (light,heavy_i) direction
     !  This is the "i" in funct_i => need heavy_field_index>1
 
