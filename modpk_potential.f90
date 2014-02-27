@@ -176,14 +176,17 @@ CONTAINS
 #define EXPTERM exp( (-0.5e0_dp/alpha2(i))*(phi(i) - turning_function(PHI_I))**2)
 
       !Check to see if too far outside valley in any massive field direction
-      !do i=2,num_inflaton
-      !  if (abs(DELTAPHI**3/DELTAPHI**2)<0.5e0_dp) then
-      !    print*, "ERROR: Trajectory too far outside the valley for"
-      !    print*, "potential_choice=",potential_choice
-      !    print*, "to be applicable."
-      !    stop
-      !  end if
-      !end do
+      do i=2,num_inflaton
+        if ( DELTAPHI > 1e-1_dp .and. &
+          abs(DELTAPHI**3/ &
+          DELTAPHI**2)<0.5e0_dp) then
+
+          print*, "ERROR: Trajectory too far outside the valley for"
+          print*, "potential_choice=",potential_choice
+          print*, "to be applicable."
+          stop
+        end if
+      end do
 
       !print*, "philight", phi(1)
 

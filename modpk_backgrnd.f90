@@ -108,6 +108,7 @@ CONTAINS
           end if
           phi_init = phi_init_trial
        END DO
+
     !MULTIFIELD
     else
 
@@ -170,11 +171,13 @@ CONTAINS
             end if
           end if
 
+
           i=locate(lna(1:nactual_bg),alpha_pivot)
           j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
           CALL polint(lna(j:j+4), hubarr(j:j+4), alpha_pivot, H_pivot, dh)
           CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), alpha_pivot, phi_pivot, bb)
           CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), alpha_pivot, dphi_pivot, bb)
+
 
           if (save_iso_N) then
             if (.not. allocated(phi_iso_N)) then
@@ -221,7 +224,6 @@ CONTAINS
           ENDIF
        END IF
 
-
        a_pivot = EXP(alpha_pivot)*a_init
 
        N_tot = alpha_e - lna(1)
@@ -236,7 +238,7 @@ CONTAINS
        end if
 
        DO i=1,nactual_bg
-          aharr(i)=LOG(a_init*EXP(lna(i))*hubarr(i))
+          log_aharr(i)=LOG(a_init*EXP(lna(i))*hubarr(i))
        END DO
     ENDIF
 
@@ -362,7 +364,7 @@ CONTAINS
       hmin = 0.0e0_dp
     else
       print*, "H is STABLE"
-      h1 = 1.0e-6_dp
+      h1 = 1.0e-7_dp
       accuracy=1.0e-8
       hmin=1.0e-12_dp
     end if
@@ -468,12 +470,26 @@ CONTAINS
              CALL polint(sigma_arr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
              V_end = pot(phi_infl_end)
           else
-             ep = delsigma
-             i = locate(sigma_arr(1:kount), ep)
-             j = MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
-             CALL polint(sigma_arr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
-             CALL polint(sigma_arr(j:j+4), vv(j:j+4), ep, V_end, dv)
-             CALL array_polint(sigma_arr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
+
+            !If we have stopped inflation "by hand", then we can auto-set these
+            select case(potential_choice)
+            case(13)
+              dalpha =0e0_dp
+              dv = 0e0_dp
+              bb = 0e0_dp
+
+              alpha_e =lna(nactual_bg)
+              V_end = vv(nactual_bg)
+              phi_infl_end = phiarr(:,nactual_bg)
+
+            case default
+              ep = delsigma
+              i = locate(sigma_arr(1:kount), ep)
+              j = MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
+              CALL polint(sigma_arr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
+              CALL polint(sigma_arr(j:j+4), vv(j:j+4), ep, V_end, dv)
+              CALL array_polint(sigma_arr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
+            end select
           end if
           !END MULTIFIELD
        ENDIF
@@ -517,7 +533,6 @@ CONTAINS
     ENDIF
 
     !END MULTIFIELD
-    RETURN
 
   END SUBROUTINE trial_background
 
