@@ -729,7 +729,7 @@ CONTAINS
         ((phi - offset_phi)**2) * (tan(asympt_angle)**2) ) &
         -focal_length*sin(asympt_angle)
     case(3)
-      !hyperbolic tanjent
+      !hyperbolic tangent
 
       if (size(vparams,1) <6) then 
         print*, "Not enough vparams to set turning_choice=", turning_choice
@@ -756,6 +756,10 @@ CONTAINS
     !Hyperbola params
     real(dp) :: offset_phi, asympt_angle, focal_length
 
+    !hyperbolic tan params
+    real(dp) :: turn_magnitude, turn_sharpness
+    
+
     select case(turning_choice)
     case(1)
       dturndphi = 0e0_dp
@@ -770,6 +774,15 @@ CONTAINS
       dturndphi = (tan(asympt_angle)**2)* &
         (phi - offset_phi)/(funct+focal_length*sin(asympt_angle))
 #undef funct
+    
+    case(3)
+      !hyperbolic tan, centred at chi_i = 0 and phi= offset_phi
+    
+      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
+      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
+      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn    
+
+      dturndphi = turn_magnitude*turn_sharpness/(cosh(turn_sharpness*(phi - offset_phi))**2)
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
@@ -785,6 +798,9 @@ CONTAINS
 
     !Hyperbola params
     real(dp) :: offset_phi, asympt_angle, focal_length
+
+    !hyperbolic tan params
+    real(dp) :: turn_magnitude, turn_sharpness
 
     select case(turning_choice)
     case(1)
@@ -809,6 +825,15 @@ CONTAINS
 #undef funct
 #undef dfunct
 
+    case(3)
+      !hyperbolic tan, centred at chi_i = 0 and phi= offset_phi
+
+      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
+      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
+      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
+    
+      d2turndphi2 = -2.0e0_dp*turn_magnitude*(turn_sharpness**2)* &
+                     sinh(turn_sharpness*(phi-offset_phi))/(cosh(turn_sharpness*(phi-offset_phi))**2)
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
