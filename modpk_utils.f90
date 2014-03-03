@@ -17,6 +17,67 @@ MODULE modpk_utils
 
 CONTAINS
 
+  !Wrapper for using the bderivs with the dvode_f90_m integrator
+  subroutine bderivs_dvode(neq, t, y, ydot)
+    implicit none
+    integer, intent (in) :: neq
+    real(dp), intent (in) :: t
+    real(dp), intent (in) :: y(neq)
+    real(dp), intent (out) :: ydot(neq)
+
+    call bderivs(t,y,ydot)
+
+  end subroutine bderivs_dvode
+
+  !Wrapper for using the mode derivs with the dvode_f90_m integrator
+  subroutine mode_derivs_dvode(neq, t, y, ydot)
+    implicit none
+    integer, intent (in) :: neq
+    real(dp), intent (in) :: t
+    real(dp), intent (in) :: y(neq)
+    real(dp), intent (out) :: ydot(neq)
+
+    complex(dp), dimension(neq/2) :: y_comp, ydot_comp
+
+
+    !Take the real values and pack into complex
+
+    !y_comp = cmplx(real_comp, im_comp)
+    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq))
+
+    call derivs(t,y_comp,ydot_comp)
+
+    !Take the complex values and unpack into reals
+    ydot(1:neq/2) = real(ydot_comp)
+    ydot(neq/2+1:neq) = aimag(ydot_comp)
+
+  end subroutine mode_derivs_dvode
+
+  !Wrapper for using the qderivs with the dvode_f90_m integrator
+  subroutine qderivs_dvode(neq, t, y, ydot)
+    implicit none
+    integer, intent (in) :: neq
+    real(dp), intent (in) :: t
+    real(dp), intent (in) :: y(neq)
+    real(dp), intent (out) :: ydot(neq)
+
+    complex(dp), dimension(neq/2) :: y_comp, ydot_comp
+
+
+    !Take the real values and pack into complex
+
+    !y_comp = cmplx(real_comp, im_comp)
+    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq))
+
+    call qderivs(t,y_comp,ydot_comp)
+
+    !Take the complex values and unpack into reals
+    ydot(1:neq/2) = real(ydot_comp)
+    ydot(neq/2+1:neq) = aimag(ydot_comp)
+
+  end subroutine qderivs_dvode
+
+
   !Background derivatives y'=f(y)
   SUBROUTINE bderivs(x,y,yprime)
     USE modpkparams
@@ -113,8 +174,6 @@ CONTAINS
 
     !END MULTIFIELD
 
-    RETURN
-
   END SUBROUTINE bderivs
 
 
@@ -151,8 +210,8 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
 
-    phi = dble(y(1:num_inflaton))
-    delphi = dble(y(num_inflaton+1:2*num_inflaton))
+    phi = real(y(1:num_inflaton),kind=dp)
+    delphi = real(y(num_inflaton+1:2*num_inflaton),kind=dp)
     dotphi = sqrt(dot_product(delphi, delphi))
 
     !Aliases to potential derivatives
@@ -407,11 +466,11 @@ CONTAINS
        call rkck(y,dydx,x,h,ytemp,yerr,derivs)
 
        ! in doing error estimation and step size rescaling, we switch to real components
-       yerr_r(1 : size(yerr)) = dble(yerr)
-       yerr_r(size(yerr)+1 : 2*size(yerr)) = dble(yerr*(0,-1)) 
+       yerr_r(1 : size(yerr)) = real(yerr,kind=dp)
+       yerr_r(size(yerr)+1 : 2*size(yerr)) = real(yerr*(0,-1),kind=dp) 
 
-       yscal_r(1 : size(yscal)) = dble(yscal)
-       yscal_r(size(yscal)+1 : 2*size(yscal)) = dble(yscal*(0,-1))  
+       yscal_r(1 : size(yscal)) = real(yscal,kind=dp)
+       yscal_r(size(yscal)+1 : 2*size(yscal)) = real(yscal*(0,-1),kind=dp)  
 
        errmax=maxval(abs(yerr_r(:)/yscal_r(:)))/eps
 

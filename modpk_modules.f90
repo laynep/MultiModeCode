@@ -21,7 +21,7 @@ MODULE modpkparams
   INTEGER :: potential_choice
 
   INTEGER*4 :: nactual_bg, nactual_mode
-  INTEGER, PARAMETER :: nsteps=200000
+  INTEGER, PARAMETER :: nsteps=1e5
   real(dp), PARAMETER :: M_Pl=1.0e0_dp
   real(dp), PARAMETER :: Mpc2Mpl=2.6245e-57_dp
   real(dp) :: k_pivot, N_pivot, N_tot, H_pivot

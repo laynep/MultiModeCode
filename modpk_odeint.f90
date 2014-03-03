@@ -1,29 +1,42 @@
+!Use the DVODE integrator?
+#define DVODE 
+
 MODULE modpk_odeint
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
   use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic
-  IMPLICIT NONE
+#ifdef DVODE
+  use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
+    set_intermediate_opts
+#endif
+  implicit none
 
-  INTERFACE odeint
+  interface odeint
      module procedure odeint_r
      module procedure odeint_c
-  END INTERFACE
+  end interface
 
-  PUBLIC odeint
+  public odeint
 
   integer, public :: trajout
 
-CONTAINS
 
-  SUBROUTINE odeint_r(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
-    USE ode_path
-    USE internals
-    USE powersp
-    USE modpkparams
-    USE potential
-    USE modpk_utils, ONLY : reallocate_rv, reallocate_rm
 
-    IMPLICIT NONE
+contains
+
+  subroutine odeint_r(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
+    use ode_path
+    use internals
+    use powersp
+    use modpkparams
+    use potential
+#ifdef DVODE
+    use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode
+#else
+    use modpk_utils, only : reallocate_rv, reallocate_rm
+#endif
+
+    implicit none
     real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
     real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
     !MULTIFIELD
@@ -69,6 +82,13 @@ CONTAINS
     real(dp) :: infl_efolds, infl_efolds_start
     logical :: infl_checking
 
+#ifdef DVODE
+    integer :: neq, istats(31)
+    integer :: itask, istate
+    real(dp) :: rtol, rstats(22), nefold_out, dN_step
+    real(dp), dimension(:), allocatable :: atol
+    type (vode_opts) :: ode_integrator_opt
+#endif
 
     !Inits for checking whether in
     !extended inflation period (for IC scan)
@@ -90,6 +110,45 @@ CONTAINS
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
+#ifdef DVODE
+    !Options for first call to dvode integrator
+
+    neq = size(y)
+
+    if (allocated(atol)) deallocate(atol)
+    allocate(atol(neq))
+
+    !Relative tolerance
+    rtol = 1.e-6_dp
+
+    !Absolute tolerance
+    atol = 1.0e-8_dp
+    !atol(1) = 1.e-8_dp
+    !atol(2) = 1.e-14_dp
+    !atol(3) = 1.e-6_dp
+
+    istate = 1 !Set =1 for 1st call to integrator
+
+    !itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+    itask  = 2 !Take only one time-step and output
+
+    if (itask /=2) then
+      !Integrate until nefold_out
+      dN_step = sign(0.001e0_dp,x2-x1)
+      nefold_out = x + dN_step
+    else
+      !Take only one step
+      nefold_out = Nefold_max
+    end if
+
+
+    !Force initial step-size guess very small
+    ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
+      relerr=rtol,user_supplied_jacobian=.false., &
+      H0=1e-9_dp)
+
+#endif
+
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
@@ -103,31 +162,42 @@ CONTAINS
 
        !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
        if (nstp==1) then
-         !Initialize
          field_bundle%N=0e0_dp
          field_bundle%dlogThetadN=0e0_dp
          field_bundle%exp_scalar=1e0_dp
        end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
-       !Uncomment to write the trajectories...
-       !write(1,'(12E18.10)') x, y(:)
-       !record trajectory
-       !print*, "writing trajectory"
        !write(1,'(12E18.10)') x, y(1:num_inflaton)
-       if (save_traj) write(trajout,'(12E18.10)') x, y(:), &
+       if (save_traj .and. sampling_techn==reg_samp) write(trajout,'(12E18.10)') x, y(:), &
          getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
          getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
 
        CALL derivs(x,y,dydx)
+
+       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
+            CALL save_a_step
+
+#ifdef DVODE
+
+       !call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
+       !  itask,istate,ode_integrator_opt,j_fcn=jex)
+       call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
+         itask,istate,ode_integrator_opt)
+       call get_stats(rstats,istats)
+
+       if (istate<0) then
+         print*, "ERROR in dvode_f90 istate=", istate
+         stop
+       end if
+
+#else
 
        !If get bad deriv, then override this error when IC sampling
        if (pk_bad==bad_ic) return
 
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
-       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
 
        CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
@@ -137,6 +207,7 @@ CONTAINS
        ELSE
           nbad=nbad+1
        END IF
+#endif
 
        IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
 
@@ -214,7 +285,6 @@ CONTAINS
                 ENDIF
              ELSE ! for multifield, determine the total field distance travelled
 
-               !DEBUG
                if(check_stop_when_not_slowroll_infl_end(p,delp)) then
                  infl_ended = .true.
                  ystart(:) = y(:)
@@ -235,11 +305,21 @@ CONTAINS
       end if
 
        IF (ode_underflow) RETURN
+#ifdef DVODE
+#else
        IF (ABS(hnext) < hmin) THEN
           write(*,*) 'stepsize smaller than minimum in odeint'
           STOP
        END IF
+#endif
+
+       !Set up next N-step
+#ifdef DVODE
+       if (itask/=2) nefold_out = x + dN_step
+#else
        h=hnext
+#endif
+
     END DO
 
     !It got to the end without going through enough inflation to even be called
@@ -282,7 +362,12 @@ CONTAINS
     USE modpkparams
     USE potential, only : tensorpower, getH, getEps, zpower,&
       powerspectrum
-    USE modpk_utils, only : reallocate_rv, reallocate_rm
+#ifdef DVODE
+    use modpk_utils, only : reallocate_rv, reallocate_rm, mode_derivs_dvode, &
+      qderivs_dvode
+#else
+    use modpk_utils, only : reallocate_rv, reallocate_rm
+#endif
 
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -330,7 +415,7 @@ CONTAINS
        END SUBROUTINE rkqs_c
     END INTERFACE
 
-    real(dp), PARAMETER :: TINY=1.0d-40
+    real(dp), PARAMETER :: TINY=1.0e-40_dp
     INTEGER, PARAMETER :: MAXSTP=nsteps
     INTEGER*4 :: nstp,i
     real(dp) :: h,hdid,hnext,x,xsav
@@ -342,6 +427,16 @@ CONTAINS
 
     real(dp) :: nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
     integer :: ii, jj, kk
+
+#ifdef DVODE
+    real(dp), dimension(size(ystart)*2) :: yreal, dyrealdx
+
+    integer :: neq, istats(31)
+    integer :: itask, istate
+    real(dp) :: rtol, rstats(22), nefold_out, dN_step
+    real(dp), dimension(:), allocatable :: atol
+    type (vode_opts) :: ode_integrator_opt
+#endif
 
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
@@ -365,6 +460,43 @@ CONTAINS
     compute_zpower = .true.
     eps_adjust = eps
 
+#ifdef DVODE
+    !Options for first call to dvode integrator
+
+    neq = 2*size(y) !Need reals for dvode, so 2* bc y is complex
+
+    if (allocated(atol)) deallocate(atol)
+    allocate(atol(neq))
+
+    !Relative tolerance
+    rtol = 1.e-6_dp
+
+    !Absolute tolerance
+    atol = 1.0e-8_dp
+    !atol(1) = 1.e-8_dp
+    !atol(2) = 1.e-14_dp
+    !atol(3) = 1.e-6_dp
+
+
+    itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+    !itask = 2
+    istate = 1 !Set =1 for 1st call to integrator
+
+    if (itask /=2) then
+      !Integrate until nefold_out
+      !dN_step = sign(0.1e0_dp,x2-x1)
+      dN_step = sign(0.001e0_dp,x2-x1)
+      nefold_out = x + dN_step
+    else
+      !Take only one step
+      nefold_out = Nefold_max
+    end if
+
+    ode_integrator_opt = set_normal_opts(dense_j=.true.,abserr_vector=atol,      &
+      relerr=rtol,user_supplied_jacobian=.false.)
+
+#endif
+
    DO nstp=1,MAXSTP
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
@@ -384,15 +516,41 @@ CONTAINS
           CALL derivs(x, y, dydx)
        END IF
 
+       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
+            CALL save_a_step
+
+#ifdef DVODE
+
+       !Cmplx --> real
+       yreal(1:neq/2) = real(y)
+       yreal(neq/2+1:neq) = aimag(y)
+
+       if (use_q) then
+         call dvode_f90(qderivs_dvode,neq,yreal,x,nefold_out, &
+           itask,istate,ode_integrator_opt)
+       else
+         call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
+           itask,istate,ode_integrator_opt)
+       end if
+       call get_stats(rstats,istats)
+
+       if (istate<0) then
+         print*, "ERROR in dvode_f90 istate=", istate
+         stop
+       end if
+
+       !Set complex y from real y's
+       y = cmplx(yreal(1:neq/2),yreal(neq/2+1:neq))
+
+#else
+
        ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
 
        !"Trick" to get constant fractional errors except very near
        !zero-crossings. (Numerical Recipes)
-       yscal(:)=cmplx(ABS(dble(y(:)))+ABS(h*dble(dydx(:)))+TINY, &
-         ABS(dble(y(:)*(0,-1)))+ABS(h*dble(dydx(:)*(0,-1)))+TINY)
+       yscal(:)=cmplx(ABS(real(y(:),kind=dp))+ABS(h*real(dydx(:),kind=dp))+TINY, &
+         ABS(real(y(:)*(0,-1),kind=dp))+ABS(h*real(dydx(:)*(0,-1),kind=dp))+TINY)
 
-       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
 
        IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
 
@@ -407,6 +565,7 @@ CONTAINS
        ELSE
           nbad=nbad+1
        END IF
+#endif
 
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
@@ -421,20 +580,31 @@ CONTAINS
        END IF
 
        !MULTIFIELD
-       phi = DBLE(y(1:num_inflaton))
-       delphi = DBLE(y(num_inflaton+1 : 2*num_inflaton))
+       phi = real(y(1:num_inflaton),kind=dp)
+       delphi = real(y(num_inflaton+1 : 2*num_inflaton),kind=dp)
        dotphi = sqrt(dot_product(delphi, delphi))
+
+       !DEBUG
+       !if (mod(nstp,1000)==0) then
+       !  print*, "--------------------"
+       !  print*, "phi back=", phi
+       !  print*, "step h=", h
+       !end if
 
        !DEBUG
        !print*, "printing real part of modes"
        !print*, "printing imaginary part of modes"
-       if (.not. use_q) then
-        write(20,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-        write(21,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       else                                                                                   
-         write(22,'(10E30.22)') x - (n_tot - N_pivot),  real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-         write(23,'(10E30.22)') x - (n_tot - N_pivot), aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       end if
+       !if (.not. use_q) then
+       !  write(20,'(10E30.22)') x - (n_tot - N_pivot), &
+       !    real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !  write(21,'(10E30.22)') x - (n_tot - N_pivot),&
+       !    aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !else
+       !  write(22,'(10E30.22)') x - (n_tot - N_pivot), &
+       !    real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !  write(23,'(10E30.22)') x - (n_tot - N_pivot),&
+       !    aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+       !end if
 
        scalefac = a_init*exp(x)
 
@@ -468,7 +638,7 @@ CONTAINS
 
               !Record spectrum
               !print*, "writing spectra"
-              write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
+              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
                 !power_internal%isocurv,&
                 !power_internal%entropy, power_internal%pnad
 
@@ -570,21 +740,44 @@ CONTAINS
           y(index_tensor_y) = ytmp(index_tensor_y)
           y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
             - y(index_tensor_y)
-       END IF
+#ifdef DVODE
+          !Reset istate to let integrator know it's a new variable
+          istate=1
+#endif
+       end if
 
        IF (ode_underflow) RETURN
+
+#ifdef DVODE
+#else
        IF (ABS(hnext) < hmin) THEN
           WRITE(*,*) 'stepsize smaller than minimum in odeint'
-          STOP
-       END IF
+          stop
+       end if
+#endif
+
+       !Set up next N-step
+#ifdef DVODE
+       if (itask/=2) nefold_out = x + dN_step
+#else
        h=hnext
-    END DO
-    PRINT*,'too many steps in odeint_c', x
-    PRINT*,'x =', x, 'h =', h 
+#endif
+
+    end do
+
+    print*,'too many steps in odeint_c'
+    print*,'N =', x
+    print*, 'stepsize, h =', h 
+    print*, 'background, y =', y(1:num_inflaton)
+    print*, 'accuracy =', eps_adjust, eps
+    print*, "epsilon", getEps(phi,delphi)
     ode_underflow=.TRUE.
 
+    !DEBUG
+    print*, "STOPPING AT THIS POINT"
+    stop
 
-  CONTAINS
+  contains
 
     SUBROUTINE save_a_step
       USE modpkparams
@@ -614,8 +807,8 @@ CONTAINS
            ytmp(index_tensor_y+1)*scalefac/a_switch + ytmp(index_tensor_y)
       END IF
 
-      yp(1:size(yp,1)/2,kount) = dble(ytmp(:))
-      yp(size(yp,1)/2+1:size(yp,1),kount) = dble(ytmp(:)*(0,-1))
+      yp(1:size(yp,1)/2,kount) = real(ytmp(:),kind=dp)
+      yp(size(yp,1)/2+1:size(yp,1),kount) = real(ytmp(:)*(0,-1),kind=dp)
       xsav=x
 
     END SUBROUTINE save_a_step

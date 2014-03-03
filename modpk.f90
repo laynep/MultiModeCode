@@ -79,7 +79,6 @@ CONTAINS
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
 
-    !!INTEGER*4, PARAMETER :: NVAR = 10
     type(power_spectra), intent(out) :: powerspectrum_out
 
     integer*4 :: i,j
@@ -321,7 +320,8 @@ CONTAINS
         !larger until it satisfies the checks within the tolerance
 
         !k = horiz_fract*aH
-        horiz_fract=1e3_dp
+        horiz_fract=5e4_dp
+        !horiz_fract=1e3_dp
 
         ah=LOG(k/horiz_fract)
         ah_index= locate(log_aharr(1:nactual_bg), ah)

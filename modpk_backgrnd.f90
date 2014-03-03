@@ -280,7 +280,6 @@ CONTAINS
     array_fmt = '(a25,'//trim(ci)//'es13.5)'
     !END MULTIFIELD
 
-
     x1=0.0 !starting value
     x2=Nefold_max !ending value
 
@@ -315,7 +314,7 @@ CONTAINS
 
       h_init = getH(phi_init_trial,dphi_init0)
 
-      !Set w/equal energy, not necess close to SR
+      !Set not necess close to SR
       y(size(y)/2+1 : (size(y))) = dphi_init0
 
     end if
@@ -366,7 +365,7 @@ CONTAINS
       print*, "H is STABLE"
       h1 = 1.0e-7_dp
       accuracy=1.0e-8
-      hmin=1.0e-12_dp
+      hmin=1.0e-20_dp
     end if
 
 !    if (.not. H_stable) then
@@ -414,6 +413,7 @@ CONTAINS
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
+
        !MULTIFIELD
        DO i=1,kount
           vv(i) = pot(phiarr(:,i))
@@ -421,12 +421,15 @@ CONTAINS
           epsarr(i) = getEps(phiarr(:,i),dphiarr(:,i))
           sigma_arr(i) = sqrt(dot_product((phiarr(:,i)-phi_init),(phiarr(:,i)-phi_init)))
 
+          !DEBUG
+          !Do we even need this to compute the bundle width anymore?
+          
           !! compute d\theta/dN_e
-          dotphi = sqrt(dot_product(dphiarr(:,i), dphiarr(:,i)))
-          Vp = dVdphi(phiarr(:,i))
-          Vz = dot_product(Vp, phiarr(:,i))/dotphi
-          grad_V = sqrt(dot_product(Vp, Vp))
-          dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
+          !dotphi = sqrt(dot_product(dphiarr(:,i), dphiarr(:,i)))
+          !Vp = dVdphi(phiarr(:,i))
+          !Vz = dot_product(Vp, phiarr(:,i))/dotphi
+          !grad_V = sqrt(dot_product(Vp, Vp))
+          !dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
        END DO
        !END MULTIFIELD
 

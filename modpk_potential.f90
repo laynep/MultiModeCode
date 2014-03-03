@@ -705,7 +705,8 @@ CONTAINS
     !Parameters for turning_function are set in:
     !vparams(j+4,heavy_field_index) = j^th param for turn in heavy_field_index
     !   direction
-    
+
+    turning_function = 0e0_dp
 
     if (heavy_field_index <2) then
       print*, "Set heavy_field_index>1. heavy_field_index=", heavy_field_index
@@ -761,6 +762,8 @@ CONTAINS
 
     !hyperbolic tan params
     real(dp) :: turn_magnitude, turn_sharpness
+
+    dturndphi = 0e0_dp
     
 
     select case(turning_choice)
@@ -805,6 +808,8 @@ CONTAINS
     !hyperbolic tan params
     real(dp) :: turn_magnitude, turn_sharpness
 
+    d2turndphi2=0e0_dp
+
     select case(turning_choice)
     case(1)
       d2turndphi2 = 0e0_dp
@@ -836,7 +841,7 @@ CONTAINS
       turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
     
       d2turndphi2 = -2.0e0_dp*turn_magnitude*(turn_sharpness**2)* &
-                     sinh(turn_sharpness*(phi-offset_phi))/(cosh(turn_sharpness*(phi-offset_phi))**2)
+                     sinh(turn_sharpness*(phi-offset_phi))/(cosh(turn_sharpness*(phi-offset_phi))**3)
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice

@@ -85,7 +85,7 @@ program test_mmodpk
 
   if (sampling_techn==reg_samp) then
 
-    trajout=1
+    trajout=257
     if (save_traj) open(trajout, file="trajectory.txt")
 
     call calculate_pk_observables(k_pivot,dlnk)
@@ -466,9 +466,9 @@ program test_mmodpk
       eta = geteta(phi_pivot, dphi_pivot)
 
       As = ps0
-      ns = 1.d0+log(ps2/ps1)/dlnk/2.d0
+      ns = 1.e0_dp+log(ps2/ps1)/dlnk/2.e0_dp
       r=pt0/ps0
-      nt=log(pt2/pt1)/dlnk/2.d0
+      nt=log(pt2/pt1)/dlnk/2.e0_dp
 
       alpha_s = log(ps2*ps1/ps0**2)/dlnk**2
 
@@ -484,9 +484,9 @@ program test_mmodpk
 
       !print*, "running of running =", runofrun
 
-      n_iso=log(ps2_iso/ps1_iso)/dlnk/2.d0
-      n_pnad=log(pnad2/pnad1)/dlnk/2.d0
-      n_ent=log(pent2/pent1)/dlnk/2.d0
+      n_iso=log(ps2_iso/ps1_iso)/dlnk/2.e0_dp
+      n_pnad=log(pnad2/pnad1)/dlnk/2.e0_dp
+      n_ent=log(pent2/pent1)/dlnk/2.e0_dp
 
 
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
