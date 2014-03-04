@@ -434,7 +434,7 @@ contains
     integer :: neq, istats(31)
     integer :: itask, istate
     real(dp) :: rtol, rstats(22), nefold_out, dN_step
-    real(dp), dimension(:), allocatable :: atol
+    real(dp), dimension(:), allocatable :: atol, atol_real, atol_compl
     type (vode_opts) :: ode_integrator_opt
 #endif
 
@@ -466,17 +466,33 @@ contains
     neq = 2*size(y) !Need reals for dvode, so 2* bc y is complex
 
     if (allocated(atol)) deallocate(atol)
+    if (allocated(atol_real)) deallocate(atol_real)
+    if (allocated(atol_compl)) deallocate(atol_compl)
     allocate(atol(neq))
+    allocate(atol_real(neq/2))
+    allocate(atol_compl(neq/2))
 
     !Relative tolerance
-    rtol = 1.e-6_dp
+    rtol = 1.0e-8_dp
 
     !Absolute tolerance
-    atol = 1.0e-8_dp
-    !atol(1) = 1.e-8_dp
-    !atol(2) = 1.e-14_dp
-    !atol(3) = 1.e-6_dp
+    !atol = 1.0e-8_dp
 
+    !Real
+    atol_real(1:num_inflaton) = 1.0e-6_dp
+    atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
+    atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
+    atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+    atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-6_dp
+
+    atol_compl(1:num_inflaton) = 1.0e-9_dp
+    atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
+    atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
+    atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
+    atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-9_dp
+
+    atol(1:neq/2)=atol_real
+    atol((neq/2)+1:neq)=atol_compl
 
     itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
     !itask = 2
@@ -484,16 +500,19 @@ contains
 
     if (itask /=2) then
       !Integrate until nefold_out
-      !dN_step = sign(0.1e0_dp,x2-x1)
-      dN_step = sign(0.001e0_dp,x2-x1)
+      dN_step = sign(0.01e0_dp,x2-x1)
+      !dN_step = sign(0.001e0_dp,x2-x1)
       nefold_out = x + dN_step
     else
       !Take only one step
       nefold_out = Nefold_max
     end if
 
-    ode_integrator_opt = set_normal_opts(dense_j=.true.,abserr_vector=atol,      &
-      relerr=rtol,user_supplied_jacobian=.false.)
+    !ode_integrator_opt = set_normal_opts(dense_j=.true.,abserr_vector=atol,      &
+    !  relerr=rtol,user_supplied_jacobian=.false.)
+
+    ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
+      relerr=rtol,user_supplied_jacobian=.false.,mxstep=10000)
 
 #endif
 

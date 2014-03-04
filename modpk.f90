@@ -320,8 +320,9 @@ CONTAINS
         !larger until it satisfies the checks within the tolerance
 
         !k = horiz_fract*aH
-        horiz_fract=5e4_dp
+        horiz_fract=1e4_dp
         !horiz_fract=1e3_dp
+        !horiz_fract=1e2_dp
 
         ah=LOG(k/horiz_fract)
         ah_index= locate(log_aharr(1:nactual_bg), ah)
@@ -369,7 +370,7 @@ CONTAINS
           end do
         end do
 
-        tol = 1e-4_dp
+        tol = 1e-3_dp
         if   (check1 > tol  .or. &
           any(check2 > tol) .or. & 
           any(check3 > tol) .or. &

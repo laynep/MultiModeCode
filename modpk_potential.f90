@@ -50,10 +50,10 @@ CONTAINS
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
+    real(dp) :: lambda4(size(phi)), alpha2(num_inflaton)
 
     real(dp) :: lambda2
-    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
+    real(dp), dimension(size(phi),size(phi)) :: m2_matrix
     integer :: i,j, temp_choice
 
     select case(potential_choice)
@@ -153,8 +153,6 @@ CONTAINS
       !Quasi--single-field/turning trajectory
       !phi(1) = phi_light
 
-
-
       !vparams(1,:)  = Veff vparams
       !vparams(2,:)  = \lambda_i
       !vparams(3,:)  = \alpha_i
@@ -167,7 +165,7 @@ CONTAINS
       !Run through potential with "effective" single-field potential_choice
       temp_choice = potential_choice
       potential_choice = effective_V_choice
-      V_potential = pot(phi)
+      V_potential = pot((/phi(1)/))
       potential_choice = temp_choice
 
       !Choice of function to use set in parameters_multimodecode.txt
@@ -176,17 +174,18 @@ CONTAINS
 #define EXPTERM exp( (-0.5e0_dp/alpha2(i))*(phi(i) - turning_function(PHI_I))**2)
 
       !Check to see if too far outside valley in any massive field direction
-      do i=2,num_inflaton
-        if ( DELTAPHI > 1e-1_dp .and. &
-          abs(DELTAPHI**3/ &
-          DELTAPHI**2)<0.5e0_dp) then
+      !do i=2,num_inflaton
+      !  if ( DELTAPHI > 1e-1_dp .and. &
+      !    abs(DELTAPHI**3/ &
+      !    DELTAPHI**2)<0.5e0_dp) then
 
-          print*, "ERROR: Trajectory too far outside the valley for"
-          print*, "potential_choice=",potential_choice
-          print*, "to be applicable."
-          stop
-        end if
-      end do
+      !    print*, "ERROR: Trajectory too far outside the valley for"
+      !    print*, "potential_choice=",potential_choice
+      !    print*, "to be applicable."
+      !    print*, "Phi=",phi
+      !    stop
+      !  end if
+      !end do
 
       !print*, "philight", phi(1)
 
@@ -221,10 +220,10 @@ CONTAINS
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
+    real(dp) :: lambda4(size(phi)), alpha2(size(phi))
 
     real(dp) :: lambda2
-    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
+    real(dp), dimension(size(phi),size(phi)) :: m2_matrix
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -349,7 +348,7 @@ CONTAINS
          !deriv wrt phi_light
          temp_choice = potential_choice
          potential_choice = effective_V_choice
-         first_deriv = dVdphi(phi)
+         first_deriv = dVdphi((/phi(1)/))
          first_deriv(HEAVY) = 0e0_dp
          potential_choice = temp_choice
 
@@ -399,10 +398,10 @@ CONTAINS
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(num_inflaton), alpha2(num_inflaton)
+    real(dp) :: lambda4(size(phi)), alpha2(size(phi))
 
     real(dp) :: lambda2
-    real(dp), dimension(num_inflaton,num_inflaton) :: m2_matrix
+    real(dp), dimension(size(phi),size(phi)) :: m2_matrix
 
     if (vnderivs) then
        !MULTIFIELD
@@ -641,7 +640,7 @@ CONTAINS
          !d2V/dphi_light2
          temp_choice = potential_choice
          potential_choice = effective_V_choice
-         second_deriv = d2Vdphi2(phi)
+         second_deriv = d2Vdphi2((/phi(1)/))
          second_deriv(1,HEAVY) = 0e0_dp
          second_deriv(HEAVY,:) = 0e0_dp
          potential_choice = temp_choice
@@ -663,6 +662,7 @@ CONTAINS
              (1.0e0_dp - ((phi(i) - turning_function(PHI_I))**2)/alpha2(i)) * &
              EXPTERM
          end do
+         second_deriv(:,1)=second_deriv(1,:)
 
          !d2V/dphi_heavy dphi_heavy
          do i=2, num_inflaton; do j=2, num_inflaton

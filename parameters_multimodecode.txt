@@ -32,7 +32,7 @@
 
 &ic_sampling
   sampling_techn = 1
-  numb_samples = 100
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -54,11 +54,10 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 18.0 2.05891
+  phi_init0 = 18.0 2.059
 
-  vparams(1,:) = -14.0       -1000000.0
-
-  vparams(2,:) = -1000000.0       -8.0
+  vparams(1,:) = -14.0       -10.0
+  vparams(2,:) = -1000000.0       -10.0
   vparams(3,:) =  0.0        1.0251
 
   vparams(4,:) = 0.0       5.0
@@ -68,10 +67,17 @@ the smallest mass; others are discarded.
 
 /
   vparams(1,:) = -12.2789840467449       -12.1602803162336
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
+
+  vparams(2,:) = -1000000.0       -8.0
+  vparams(3,:) =  0.0        1.0251
+
+  vparams(4,:) = 0.0       5.0
+  vparams(5,:) = 0.0       0.15708
+  vparams(6,:) = 0.0       5.7735e-4
 
 
-  phi_init0 = 30.0 3.16761
-
+  phi_init0 = 18.0 2.05891
 
   phi_init0 = 245.95 0.15832058909732155
 
@@ -97,7 +103,7 @@ the smallest mass; others are discarded.
 ![ LP: ] If want to calculate the full power spectrum P(k)
 &full_pk
   calc_full_pk=.false.
-  steps = 100
+  steps = 20
   kmin=5.0e-4
   kmax=5.0e0
 /
