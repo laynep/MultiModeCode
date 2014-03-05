@@ -25,7 +25,7 @@ endif
 else
 
 F90C     = ifort
-FFLAGS = -r8 -fpp -O3 #-openmp  -fast # -DMPI
+FFLAGS = -r8 -fpp -O3 -openmp #  -fast # -DMPI
 
 
 

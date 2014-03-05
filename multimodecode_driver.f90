@@ -168,7 +168,8 @@ program test_mmodpk
 
       real(dp) :: kmin, kmax, incr
       logical, intent(inout) :: calc_full_pk
-      real(dp) :: p_scalar, p_tensor, p_zeta, p_iso, k_input
+      real(dp) :: p_scalar, p_tensor, p_zeta, p_iso
+      real(dp), dimension(:), allocatable :: k_input
       integer :: i, steps, u
 
       type(power_spectra) :: pk
@@ -192,17 +193,21 @@ program test_mmodpk
       pk_arr=0e0_dp
       if (present(pk_iso_arr)) pk_iso_arr=0e0_dp
 
-      k_input=kmin
+      !Make the arrays for k values to sample
+      allocate(k_input(steps))
+      !k_input=kmin
       incr=(kmax/kmin)**(1/real(steps-1))
       do i=1,steps
-        k_input = kmin*incr**(i-1)
-        call evolve(k_input, pk)
-
-        pk_arr(i,:)=(/k_input,pk%adiab/)
-        if (present(pk_iso_arr)) pk_iso_arr(i,:)=(/k_input,pk%isocurv/)
-
+        k_input(i) = kmin*incr**(i-1)
       end do
 
+      do i=1,steps
+        call evolve(k_input(i), pk)
+
+        pk_arr(i,:)=(/k_input(i),pk%adiab/)
+        if (present(pk_iso_arr)) pk_iso_arr(i,:)=(/k_input(i),pk%isocurv/)
+
+      end do
 
     end subroutine get_full_pk
 

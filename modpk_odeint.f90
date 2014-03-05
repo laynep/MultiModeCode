@@ -473,7 +473,7 @@ contains
     allocate(atol_compl(neq/2))
 
     !Relative tolerance
-    rtol = 1.0e-8_dp
+    rtol = 1.0e-10_dp
 
     !Absolute tolerance
     !atol = 1.0e-8_dp
