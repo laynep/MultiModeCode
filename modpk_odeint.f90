@@ -168,7 +168,8 @@ contains
        end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
-       if (save_traj .and. sampling_techn==reg_samp) write(trajout,'(12E18.10)'),&
+       !if (save_traj .and. sampling_techn==reg_samp) write(trajout,'(12E18.10)'),&
+       if (save_traj) write(trajout,'(12E18.10)'),&
          x, &
          y(:), &
          getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
