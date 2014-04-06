@@ -5,14 +5,16 @@
 !slowroll_samp = Sample phi0, set dphi in SR
 
 module modpk_icsampling
-  use potential, only : norm, pot, getH
+  use potential, only : norm, pot, getH, &
+    number_knots_qsfrandom, stand_dev_qsfrandom, knot_positions, turning_choice
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   use internals, only : pi
   implicit none
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7
+    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
+    qsf_random=8
 
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
@@ -47,6 +49,8 @@ module modpk_icsampling
         priors_min, priors_max, &
          numb_samples,energy_scale)
 
+      use modpk_rng, only : normal
+
       integer, intent(in) :: sampling_techn, numb_samples
       real(dp), intent(in), optional :: energy_scale
       real(dp), dimension(num_inflaton), intent(out) :: phi0, dphi0
@@ -59,7 +63,7 @@ module modpk_icsampling
 
       real(dp), dimension(:,:), allocatable :: sample
       real(dp) :: H, rho
-      integer :: i,j
+      integer :: i,j, kk
 
       logical :: with_velocity, with_eqen
       real(dp) :: beta, rand
@@ -68,6 +72,8 @@ module modpk_icsampling
       !Hard-coded parameter priors for potential_choice==11
       real(dp), dimension(size(vparams,1),size(vparams,2)) :: &
         vparams_priors_min, vparams_priors_max
+
+      real(dp), dimension(:,:), allocatable :: knot_temp
 
 
 
@@ -239,6 +245,55 @@ module modpk_icsampling
             velconst=.true.)
         end if
 
+      !-----------------------------------------
+      else if (sampling_techn==qsf_random) then
+
+        turning_choice = 4
+
+        !Set IC from parameters file
+        !Default heavy fields to 0
+        y_background = 0e0_dp
+        y_background(1) = phi0(1)
+
+        ![ LP: ] Indices for knots:
+        !knot_positions(HEAVYFIELD, KNOT#, (LIGHT_POS, HEAVY_POS))
+        if (allocated(knot_positions)) deallocate(knot_positions)
+        allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
+        knot_positions = 0e0_dp
+
+        do i=1,size(knot_positions,1)
+          do j=1, size(knot_positions,2)
+            if (j > number_knots_qsfrandom(i)) then
+              knot_positions(i,j,:) = 0e0_dp
+            else
+              !Knot light field position
+              call random_number(rand)
+              knot_positions(i,j,1) = phi0(1)*rand
+
+              !Knot heavy field position
+              knot_positions(i,j,2) = normal(0.0e0_dp,stand_dev_qsfrandom(i))
+
+            end if
+
+          end do
+        end do
+
+        !Sort the knots by light field position
+        do i=1, size(knot_positions,1)
+          if (allocated(knot_temp)) deallocate(knot_temp)
+          allocate(knot_temp(number_knots_qsfrandom(i),2))
+          knot_temp = knot_positions(i,1:number_knots_qsfrandom(i),:)
+          call heapsort(knot_temp)
+          knot_positions(i,1:number_knots_qsfrandom(i),:) = knot_temp
+
+        end do
+
+        print*, "Sorted?"
+        do j=1, size(knot_positions,2)
+          print*, "knot_positions(1,:,:):", knot_positions(1,j,:)
+          if (size(knot_positions,1)>1) print*, "knot_positions(2,:,:):", knot_positions(2,j,:)
+          print*, "----------"
+        end do
 
       !-----------------------------------------
       else
@@ -255,6 +310,100 @@ module modpk_icsampling
       H=sqrt(rho/3.0e0_dp)
 
       dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
+
+      !DEBUG
+      print*, "setting dphi0", dphi0
+      print*, "y0", y_background
+      print*, "H", H
+      print*, "rho", rho
+      print*, "phi0", phi0
+      !print*, "pot", pot((/0.0e0_dp, 0.0e0_dp/))
+      print*, "pot", pot(phi0)
+
+      contains
+
+        !**********************************************************
+        !Heapsorts a table based on the first column only.
+
+        !Adapted from Numerical Recipes pg 231.
+
+        pure subroutine heapsort(table)
+          implicit none
+
+        	real(dp), dimension(:,:), intent(inout) :: table
+        	integer :: n, l, ir, i, j, i_1, i_2
+        	real(dp), dimension(size(table,2)) :: rra	!row temporary placeholder.
+
+          if (size(table,1)==1) return
+
+        	rra=0_dp
+        	n=size(table,1)
+        	l = (n/2)+1	!note the integer division.
+        	ir = n
+        do1:	do		!indefinite do.  exited by return statement in if.
+        		if(l > 1) then
+        			l = l-1
+        			call vect_eq_tablerow_d(rra,l,table)
+        		else
+        			call vect_eq_tablerow_d(rra,ir,table)
+        			call row_equal_d(ir,1,table)
+        			ir = ir -1
+        			if(ir==1)then
+        				do i_1=1,size(table,2)
+        					table(1,i_1) = rra(i_1)
+        				end do
+        				return
+        			end if
+        		end if
+        		i = l
+        		j = l+l
+        do2:		do while(j <= ir)
+        			if(j < ir) then
+        				if(table(j,1) < table(j+1,1)) then
+        					j = j+1
+        				end if
+        			end if
+        			if(rra(1) < table(j,1)) then
+        				call row_equal_d(i,j,table)
+        				i = j
+        				j =j+j
+        			else
+        				j = ir + 1
+        			end if
+        		end do do2
+        		do i_2=1,size(table,2)
+        			table(i,i_2) = rra(i_2)
+        		end do
+        	end do do1
+
+
+        end subroutine heapsort
+
+
+        !this subroutine makes a vector (of rank equal to the number of columns in table) equal to the ith row in a table.
+        pure subroutine vect_eq_tablerow_d(vect,i,table)
+        implicit none
+
+        	real(dp), dimension(:), intent(inout) :: vect
+        	real(dp), dimension(:,:), intent(in) :: table
+        	integer, intent(in) :: i
+
+        	vect(:) = table(i,:)
+
+        end subroutine vect_eq_tablerow_d
+
+
+
+        !this subroutine changes the ith row of a table to equal the jth row.
+        pure subroutine row_equal_d(i,j,table)
+        implicit none
+
+        	real(dp), dimension(:,:), intent(inout) :: table
+        	integer, intent(in) :: i,j
+
+        	table(i,:) = table(j,:)
+
+        end subroutine row_equal_d
 
     end subroutine get_ic
 
@@ -624,7 +773,7 @@ print*, new_measure
         !Then does a uniform sampling over the remaining fields and velocities.
 
         !Useful because we can then re-weight the ICs in post-processing
-        !\Integral d(IC_constrained) --> \Integral P(IC_constraint) d(IC_constrained) 
+        !\Integral d(IC_constrained) --> \Integral P(IC_constraint) d(IC_constrained)
 
         !Uses the prior ranges in parameters_multimodecode.txt
 

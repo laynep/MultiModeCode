@@ -8,7 +8,7 @@
   potential_choice=13
   modpkoutput = .true.
   save_traj = .true.
-  slowroll_infl_end = .false.
+  slowroll_infl_end = .true.
   instreheat = .false.
   vparam_rows = 6
   more_potential_params = .true.
@@ -21,17 +21,19 @@
 ![ LP: ] get almost single-field inflation
 &more_params
   effective_V_choice = 1
-  turning_choice = 2
+  turning_choice = 1
+  number_knots_qsfrandom(:)= 2
+  stand_dev_qsfrandom(:)= 1e-1
 /
 
 ----------------
 ![ LP: ] Parameters to control how the ICs are sampled
 ![ LP: ] NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp,6=isoN,
-    7=param_unif_prior}
+    7=param_unif_prior, 8=qsf_random}
 
 &ic_sampling
-  sampling_techn = 1
+  sampling_techn = 8
   numb_samples = 1
 
   energy_scale = .1
@@ -54,8 +56,9 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 246.0 0.165561
+  phi_init0 = 26.0 0.165561
 
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
   vparams(1,:) = -14.0       -10.0
   vparams(2,:) = -1000000.0       -8.0
   vparams(3,:) =  0.0        1.02509
@@ -64,32 +67,16 @@ the smallest mass; others are discarded.
   vparams(5,:) = 0.0       0.15708
   vparams(6,:) = 0.0       5.7735e-4
 
-
 /
-  vparams(1,:) = -12.2789840467449       -12.1602803162336
-  vparams(1,:) = -12.2789840467449       -12.1602803162336
-
-  vparams(2,:) = -1000000.0       -8.0
-  vparams(3,:) =  0.0        1.0251
-
-  vparams(4,:) = 0.0       5.0
-  vparams(5,:) = 0.0       0.15708
-  vparams(6,:) = 0.0       5.7735e-4
-
-
-  phi_init0 = 18.0 2.05891
-
-  phi_init0 = 245.95 0.15832058909732155
-
-
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges
 ![ LP: ] Uniform priors on fields and dphi/dt (NOT dphi/DN)
 &priors
-  phi0_priors_min = 10.0 10.0
+  phi0_priors_min = 0 0
 
-  phi0_priors_max = 20.0 20.0
+  phi0_priors_max = 26.0 6.0
+
 
   dphi0_priors_min = -1.262e0, -1.262e0
   dphi0_priors_max =  1.262e0,  1.262e0
@@ -102,7 +89,7 @@ the smallest mass; others are discarded.
 ----------------
 ![ LP: ] If want to calculate the full power spectrum P(k)
 &full_pk
-  calc_full_pk=.true.
+  calc_full_pk=.false.
   steps = 100
   kmin=5.0e-2
   kmax=5e0

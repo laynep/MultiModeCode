@@ -64,7 +64,8 @@ program test_mmodpk
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
 
-  namelist /more_params/ effective_V_choice, turning_choice
+  namelist /more_params/ effective_V_choice, turning_choice, &
+    number_knots_qsfrandom, stand_dev_qsfrandom
 
   !------------------------------------------------
 
@@ -83,10 +84,10 @@ program test_mmodpk
 
   call output_initial_data()
 
-  if (sampling_techn==reg_samp) then
+  trajout=257
+  if (save_traj) open(trajout, file="trajectory.txt")
 
-    trajout=257
-    if (save_traj) open(trajout, file="trajectory.txt")
+  if (sampling_techn==reg_samp) then
 
     call calculate_pk_observables(k_pivot,dlnk)
 
@@ -100,7 +101,9 @@ program test_mmodpk
     sampling_techn == fromfile_samp .or. &
     !Loop over different vparams for given num_inflaton
     sampling_techn == parameter_loop_samp .or. &
-    sampling_techn == param_unif_prior) then
+    sampling_techn == param_unif_prior .or. &
+    sampling_techn == qsf_random  &
+    ) then
 
 #ifdef MPI
 
@@ -217,6 +220,8 @@ program test_mmodpk
       !Prepare extra params if necessary
       if (more_potential_params) then
         allocate(turning_choice(num_inflaton-1))
+        allocate(number_knots_qsfrandom(num_inflaton-1))
+        allocate(stand_dev_qsfrandom(num_inflaton-1))
         read(unit=u, nml=more_params)
       end if
 

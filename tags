@@ -1,203 +1,1324 @@
-BANDED_GET_BJNZ	dvode_f90_m.f90	/^      SUBROUTINE BANDED_GET_BJNZ(N,ML,MU,JCOL,JNZ,/
-BANDED_IAJA	dvode_f90_m.f90	/^      SUBROUTINE BANDED_IAJA(N,ML,MU)$/
-BGROUP	dvode_f90_m.f90	/^      SUBROUTINE BGROUP(N,BJA,BINCL,BDONE,ML,MU)$/
-CHECK_DIAG	dvode_f90_m.f90	/^      SUBROUTINE CHECK_DIAG(N,IA,JA,ICN)$/
-CHECK_STAT	dvode_f90_m.f90	/^      SUBROUTINE CHECK_STAT(IER,CALLED_FROM_WHERE)/
-DACOPY	dvode_f90_m.f90	/^      SUBROUTINE DACOPY(NROW,NCOL,A,NROWA,B,NROWB)/
-DAXPY_F90	dvode_f90_m.f90	/^      SUBROUTINE DAXPY_F90(N,DA,DX,INCX,DY,INCY)$/
-DCOPY_F90	dvode_f90_m.f90	/^      SUBROUTINE DCOPY_F90(N,DX,INCX,DY,INCY)$/
-DDOT_F90	dvode_f90_m.f90	/^      FUNCTION DDOT_F90(N,DX,INCX,DY,INCY)$/
-DEBUG_writing_etc	multimodecode_driver.f90	/^    subroutine DEBUG_writing_etc()$/
-DEGR	dvode_f90_m.f90	/^    SUBROUTINE DEGR(N,INDROW,JPNTR,INDCOL,IPNTR,ND/
-DEWSET	dvode_f90_m.f90	/^      SUBROUTINE DEWSET(N,ITOL,RTOL,ATOL,YCUR,EWT)/
-DGBFA_F90	dvode_f90_m.f90	/^      SUBROUTINE DGBFA_F90(ABD,LDA,N,ML,MU,IPVT,IN/
-DGBSL_F90	dvode_f90_m.f90	/^      SUBROUTINE DGBSL_F90(ABD,LDA,N,ML,MU,IPVT,B,/
-DGEFA_F90	dvode_f90_m.f90	/^      SUBROUTINE DGEFA_F90(A,LDA,N,IPVT,INFO)$/
-DGESL_F90	dvode_f90_m.f90	/^      SUBROUTINE DGESL_F90(A,LDA,N,IPVT,B,JOB)$/
-DGROUP	dvode_f90_m.f90	/^      SUBROUTINE DGROUP(N,IA,JA,MAXG,NGRP,IGP,JGP,/
-DGROUPDS	dvode_f90_m.f90	/^      SUBROUTINE DGROUPDS(N,MAXGRPDS,NGRPDS,IGP,JG/
-DSCAL_F90	dvode_f90_m.f90	/^      SUBROUTINE DSCAL_F90(N,DA,DX,INCX)$/
-DVCHECK	dvode_f90_m.f90	/^      SUBROUTINE DVCHECK(JOB,G,NEQ,Y,YH,NYH,G0,G1,/
-DVDSM	dvode_f90_m.f90	/^    SUBROUTINE DVDSM(M,N,NPAIRS,INDROW,INDCOL,NGRP/
-DVHIN	dvode_f90_m.f90	/^      SUBROUTINE DVHIN(N,T0,Y0,YDOT,F,TOUT,EWT,ITO/
-DVINDY	dvode_f90_m.f90	/^      SUBROUTINE DVINDY(T,K,DKY,IFLAG)$/
-DVINDY_BNDS	dvode_f90_m.f90	/^      SUBROUTINE DVINDY_BNDS(T,K,YH,LDYH,DKY,IFLAG/
-DVINDY_CORE	dvode_f90_m.f90	/^      SUBROUTINE DVINDY_CORE(T,K,YH,LDYH,DKY,IFLAG/
-DVJAC	dvode_f90_m.f90	/^      SUBROUTINE DVJAC(Y,YH,LDYH,EWT,FTEM,SAVF,WM,/
-DVJACS28	dvode_f90_m.f90	/^      SUBROUTINE DVJACS28(Y,YH,LDYH,EWT,FTEMP1,SAV/
-DVJUST	dvode_f90_m.f90	/^      SUBROUTINE DVJUST(YH,LDYH,IORD)$/
-DVNLSD	dvode_f90_m.f90	/^      SUBROUTINE DVNLSD(Y,YH,LDYH,SAVF,EWT,ACOR,IW/
-DVNLSS28	dvode_f90_m.f90	/^      SUBROUTINE DVNLSS28(Y,YH,LDYH,SAVF,EWT,ACOR,/
-DVNORM	dvode_f90_m.f90	/^      FUNCTION DVNORM(N,V,W)$/
-DVNRDN	dvode_f90_m.f90	/^      SUBROUTINE DVNRDN(Y,IYDIM,NEQN,NQ)$/
-DVNRDP	dvode_f90_m.f90	/^      SUBROUTINE DVNRDP(Y,IYDIM,NEQN,NQ)$/
-DVNRDS	dvode_f90_m.f90	/^      SUBROUTINE DVNRDS(Y,IYDIM,NEQN,L,RH)$/
-DVODE	dvode_f90_m.f90	/^      SUBROUTINE DVODE(F,NEQ,Y,T,TOUT,ITASK,ISTATE/
-DVPREPS	dvode_f90_m.f90	/^      SUBROUTINE DVPREPS(NEQ,Y,YH,LDYH,SAVF,EWT,F,/
-DVRENEW	dvode_f90_m.f90	/^      SUBROUTINE DVRENEW(NEQ,Y,SAVF,EWT,F)$/
-DVROOTS	dvode_f90_m.f90	/^      SUBROUTINE DVROOTS(NG,HMIN,JFLAG,X0,X1,G0,G1/
-DVSET	dvode_f90_m.f90	/^      SUBROUTINE DVSET$/
-DVSOL	dvode_f90_m.f90	/^      SUBROUTINE DVSOL(WM,IWM,X,IERSL)$/
-DVSOLS28	dvode_f90_m.f90	/^      SUBROUTINE DVSOLS28(X,TEM,IERSL)$/
-DVSRCO	dvode_f90_m.f90	/^      SUBROUTINE DVSRCO(RSAV,ISAV,JOB)$/
-DVSTEP	dvode_f90_m.f90	/^      SUBROUTINE DVSTEP(Y,YH,LDYH,YH1,EWT,SAVF,ACO/
-F	dvode_f90_m.f90	/^       SUBROUTINE F(NEQ,T,Y,YDOT)$/
-FDJS	dvode_f90_m.f90	/^    SUBROUTINE FDJS(M,N,COL,IND,NPNTR,NGRP,NUMGRP,/
-GDUMMY	dvode_f90_m.f90	/^      SUBROUTINE GDUMMY(NEQ,T,Y,NG,GOUT)$/
-GET_STATS	dvode_f90_m.f90	/^      SUBROUTINE GET_STATS(RSTATS,ISTATS,NUMEVENTS/
-G_FCN	dvode_f90_m.f90	/^       SUBROUTINE G_FCN(NEQ,T,Y,NG,GROOT)$/
-IDAMAX_F90	dvode_f90_m.f90	/^      FUNCTION IDAMAX_F90(N,DX,INCX)$/
-IDO	dvode_f90_m.f90	/^    SUBROUTINE IDO(M,N,INDROW,JPNTR,INDCOL,IPNTR,N/
-IUMACH	dvode_f90_m.f90	/^      FUNCTION IUMACH()$/
-IXSAV	dvode_f90_m.f90	/^      FUNCTION IXSAV(IPAR,IVALUE,ISET)$/
-JACSP	dvode_f90_m.f90	/^    SUBROUTINE JACSP(FCN,N,T,Y,F,FJAC,NRFJAC,YSCAL/
-JACSPDB	dvode_f90_m.f90	/^    SUBROUTINE JACSPDB(FCN,N,T,Y,F,FJAC,NRFJAC,YSC/
-JDUMMY	dvode_f90_m.f90	/^      SUBROUTINE JDUMMY(NEQ,T,Y,ML,MU,PD,NROWPD)$/
-MA28AD	dvode_f90_m.f90	/^      SUBROUTINE MA28AD(N,NZ,A,LICN,IRN,LIRN,ICN,U/
-MA28BD	dvode_f90_m.f90	/^      SUBROUTINE MA28BD(N,NZ,A,LICN,IVECT,JVECT,IC/
-MA28CD	dvode_f90_m.f90	/^      SUBROUTINE MA28CD(N,A,LICN,ICN,IKEEP,RHS,W,M/
-MA28DD	dvode_f90_m.f90	/^      SUBROUTINE MA28DD(N,A,LICN,IVECT,JVECT,NZ,IC/
-MA28ID	dvode_f90_m.f90	/^      SUBROUTINE MA28ID(N,NZ,AORG,IRNORG,ICNORG,LI/
-MA30AD	dvode_f90_m.f90	/^      SUBROUTINE MA30AD(NN,ICN,A,LICN,LENR,LENRL,I/
-MA30BD	dvode_f90_m.f90	/^      SUBROUTINE MA30BD(N,ICN,A,LICN,LENR,LENRL,ID/
-MA30CD	dvode_f90_m.f90	/^      SUBROUTINE MA30CD(N,ICN,A,LICN,LENR,LENRL,LE/
-MA30DD	dvode_f90_m.f90	/^      SUBROUTINE MA30DD(A,ICN,IPTR,N,IACTIV,ITOP,R/
-MC13D	dvode_f90_m.f90	/^      SUBROUTINE MC13D(N,ICN,LICN,IP,LENR,IOR,IB,N/
-MC13E	dvode_f90_m.f90	/^      SUBROUTINE MC13E(N,ICN,LICN,IP,LENR,ARP,IB,N/
-MC19AD	dvode_f90_m.f90	/^      SUBROUTINE MC19AD(N,NA,A,IRN,ICN,R,C,W)$/
-MC20AD	dvode_f90_m.f90	/^      SUBROUTINE MC20AD(NC,MAXA,A,INUM,JPTR,JNUM,J/
-MC20BD	dvode_f90_m.f90	/^      SUBROUTINE MC20BD(NC,MAXA,A,INUM,JPTR)$/
-MC21A	dvode_f90_m.f90	/^      SUBROUTINE MC21A(N,ICN,LICN,IP,LENR,IPERM,NU/
-MC21B	dvode_f90_m.f90	/^      SUBROUTINE MC21B(N,ICN,LICN,IP,LENR,IPERM,NU/
-MC22AD	dvode_f90_m.f90	/^      SUBROUTINE MC22AD(N,ICN,A,NZ,LENROW,IP,IQ,IW/
-MC23AD	dvode_f90_m.f90	/^      SUBROUTINE MC23AD(N,ICN,A,LICN,LENR,IDISP,IP/
-MC24AD	dvode_f90_m.f90	/^      SUBROUTINE MC24AD(N,ICN,A,LICN,LENR,LENRL,W)/
-MySech	modpk_potential.f90	/^  FUNCTION MySech(x)$/
-NUMSRT	dvode_f90_m.f90	/^    SUBROUTINE NUMSRT(N,NMAX,NUM,MODE,INDEX,LAST,N/
-RELEASE_ARRAYS	dvode_f90_m.f90	/^      SUBROUTINE RELEASE_ARRAYS$/
-SEQ	dvode_f90_m.f90	/^    SUBROUTINE SEQ(N,INDROW,JPNTR,INDCOL,IPNTR,LIS/
-SETR	dvode_f90_m.f90	/^    SUBROUTINE SETR(M,N,INDROW,JPNTR,INDCOL,IPNTR,/
-SET_IAJA	dvode_f90_m.f90	/^      SUBROUTINE SET_IAJA(DFN,NEQ,T,Y,FMIN,NTURB,D/
-SET_ICN	dvode_f90_m.f90	/^      SUBROUTINE SET_ICN(N,IA,ICN)$/
-SET_INTERMEDIATE_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_INTERMEDIATE_OPTS(DENSE_J, BANDED_J/
-SET_NORMAL_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_NORMAL_OPTS(DENSE_J, BANDED_J, SPAR/
-SET_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_OPTS(METHOD_FLAG, DENSE_J, BANDED_J/
-SET_OPTS_2	dvode_f90_m.f90	/^  SUBROUTINE SET_OPTS_2(HMAX,HMIN,MXSTEP)$/
-SLO	dvode_f90_m.f90	/^    SUBROUTINE SLO(N,INDROW,JPNTR,INDCOL,IPNTR,NDE/
-SRTDAT	dvode_f90_m.f90	/^    SUBROUTINE SRTDAT(N,NNZ,INDROW,INDCOL,JPNTR,IW/
-USERSETS_IAJA	dvode_f90_m.f90	/^      SUBROUTINE USERSETS_IAJA(IAUSER,NIAUSER,JAUS/
-VODE_F90	dvode_f90_m.f90	/^      SUBROUTINE VODE_F90(F,NEQ,Y,T,TOUT,ITASK,IST/
-XERRDV	dvode_f90_m.f90	/^      SUBROUTINE XERRDV(MSG,NERR,LEVEL,NI,I1,I2,NR/
-XSETF	dvode_f90_m.f90	/^      SUBROUTINE XSETF(MFLAG)$/
-XSETUN	dvode_f90_m.f90	/^      SUBROUTINE XSETUN(LUN)$/
-allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars()$/
-array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(xa, ya, x, y, dy)$/
-backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/
-backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/
-bderivs	modpk_utils.f90	/^  SUBROUTINE bderivs(x,y,yprime)$/
-bderivs_dvode	modpk_utils.f90	/^  subroutine bderivs_dvode(neq, t, y, ydot)$/
-build_isocurv_basis	modpk_potential.f90	/^    subroutine build_isocurv_basis()$/
-build_isocurv_basisALTERNATIVE	modpk_potential.f90	/^    subroutine build_isocurv_basisALTERNATIVE()$/
-build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(mass_matrix)$/
-build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(sample,n/
-bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(this,phi, efold)$/
-calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(ics, sigma) res/
-calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(k_pivot,dl/
-check_stop_when_not_slowroll_infl_end	modpk_odeint.f90	/^  logical function check_stop_when_not_slowroll_in/
-constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(y,sgn,randvel/
-d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(phi) result(second_d/
-dVdphi	modpk_potential.f90	/^  recursive function dVdphi(phi) result(first_deri/
-derivs	modpk_odeint.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_odeint.f90	/^            SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_odeint.f90	/^       SUBROUTINE derivs(x, y, dydx)$/
-derivs	modpk_odeint.f90	/^            SUBROUTINE derivs(x, y, dydx)$/
-derivs	modpk_odeint.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_odeint.f90	/^            SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_utils.f90	/^  SUBROUTINE derivs(x,y,yprime)$/
-derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-derivs	modpk_utils.f90	/^       SUBROUTINE derivs(x,y,dydx)$/
-energy_measure	modpk_icsampling.f90	/^    function energy_measure(vect,energy_scale) res/
-eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(y, energy_scale, &$/
-equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(y,energy_scal/
-evolve	modpk.f90	/^  SUBROUTINE evolve(kin, powerspectrum_out)$/
-getEps	modpk_potential.f90	/^  FUNCTION getEps(phi,dphi)$/
-getEps_with_t	modpk_potential.f90	/^  FUNCTION getEps_with_t(phi,dphi)$/
-getH	modpk_potential.f90	/^  FUNCTION getH(phi,dphi)$/
-getH_with_t	modpk_potential.f90	/^  FUNCTION getH_with_t(phi,dphidt)$/
-getPdot	modpk_potential.f90	/^    function getPdot(phi,dphi) result(Pdot)$/
-get_A_vect	modpk_potential.f90	/^    function get_A_vect(phi,dphi) result(A)$/
-get_B_vect	modpk_potential.f90	/^    function get_B_vect(phi,dphi) result(B)$/
-get_full_pk	multimodecode_driver.f90	/^    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_/
-get_ic	modpk_icsampling.f90	/^    subroutine get_ic(phi0, dphi0,sampling_techn, /
-get_new_N_pivot	modpk_icsampling.f90	/^    subroutine get_new_N_pivot(Npiv, prior_min, pr/
-getcs2	modpk_potential.f90	/^    function getcs2(phi,dphi) result(cs2)$/
-getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(phi,dphi)$/
-getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(phi,dphi)$/
-geteta	modpk_potential.f90	/^  FUNCTION geteta(phi, dphi)$/
-getrhodot	modpk_potential.f90	/^    function getrhodot(phi,dphi) result(rhodot)$/
-ic_load_observables	modpk_icsampling.f90	/^    subroutine ic_load_observables(this, phi0,dphi/
-ic_print_observables	modpk_icsampling.f90	/^    subroutine ic_print_observables(this, outunit)/
-implicit_surface_sampling	modpk_icsampling.f90	/^    subroutine implicit_surface_sampling(sample,en/
-init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(rank)$/
-init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial()$/
-init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(priors_min, priors_max/
-initialphi	modpk_potential.f90	/^  FUNCTION initialphi(phi0)$/
-kahan_clear_mem	modpk_modules.f90	/^  subroutine kahan_clear_mem(this)$/
-kahan_summation	modpk_modules.f90	/^  subroutine kahan_summation(this,val)$/
-make_blob	modpk_rng.f90	/^function make_blob(n, center, sigma)$/
-make_identity	modpk.f90	/^      subroutine make_identity(identityvector)$/
-mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(msqd, beta)$/
-min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(constraint) result(m/
-mode_derivs_dvode	modpk_utils.f90	/^  subroutine mode_derivs_dvode(neq, t, y, ydot)$/
-mpi_parallelize	multimodecode_driver.f90	/^    subroutine mpi_parallelize()$/
-n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(vpnew, energy_sca/
-n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(vpnew)$/
-n_quadratic_mass_intxn_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_intxn_looping(vpne/
-n_quadratic_mass_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_looping(vpnew, mas/
-normal_array	modpk_rng.f90	/^function normal_array(n,mean,std) result(normal)$/
-normal_scalar	modpk_rng.f90	/^function normal_scalar(mean,std) result(scalar)$/
-odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmi/
-odeint_r	modpk_odeint.f90	/^  subroutine odeint_r(ystart,x1,x2,eps,h1,hmin,der/
-odeint_with_t	modpk_odeint.f90	/^  SUBROUTINE odeint_with_t(ystart,x1,x2,eps,h1,hmi/
-open_output_files	multimodecode_driver.f90	/^    subroutine open_output_files()$/
-output_initial_data	multimodecode_driver.f90	/^    subroutine output_initial_data()$/
-output_observables	multimodecode_driver.f90	/^    subroutine output_observables(pk_arr, pk_iso_a/
-penalized_constrained_montecarlo	modpk_icsampling.f90	/^    subroutine penalized_constrained_montecarlo(sa/
-polint	modpk_utils.f90	/^  SUBROUTINE polint(xa,ya,x,y,dy)$/
-pot	modpk_potential.f90	/^  recursive function pot(phi) result(V_potential)$/
-potinit	modpk.f90	/^  SUBROUTINE potinit$/
-powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(psi, dpsi, phi, dphi, a/
-qderivs	modpk_odeint.f90	/^       SUBROUTINE qderivs(x, y, dydx)$/
-qderivs	modpk_utils.f90	/^  subroutine qderivs(x,y,yprime)$/
-rand_sign	modpk_rng.f90	/^function rand_sign() result(sign)$/
-reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(p,n,m)$/
-reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(p,n)$/
-renormalize_remove_smallest	modpk_potential.f90	/^    subroutine renormalize_remove_smallest(vect)$/
-rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(y,dydx,x,h,yout,yerr,derivs)$/
-rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(y,dydx,x,h,yout,yerr,derivs)$/
-rkqs_c	modpk_odeint.f90	/^       SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,h/
-rkqs_c	modpk_utils.f90	/^  SUBROUTINE rkqs_c(y,dydx,x,htry,eps,yscal,hdid,h/
-rkqs_r	modpk_odeint.f90	/^       SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,h/
-rkqs_r	modpk_odeint.f90	/^       SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,h/
-rkqs_r	modpk_utils.f90	/^  SUBROUTINE rkqs_r(y,dydx,x,htry,eps,yscal,hdid,h/
-sample_nsphere	modpk_icsampling.f90	/^    subroutine sample_nsphere(y, radius)$/
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/
-set_consistent_BD_scale	modpk.f90	/^      subroutine set_consistent_BD_scale(k_start)$/
-set_ic	modpk.f90	/^      subroutine set_ic(y)$/
-set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(y, const/
-shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(setA, setB, n)$/
-shuffle_dp_1	modpk_rng.f90	/^subroutine shuffle_dp_1(a)$/
-shuffle_dp_dimn	modpk_rng.f90	/^subroutine shuffle_dp_dimn(a)$/
-shuffle_int_1	modpk_rng.f90	/^subroutine shuffle_int_1(a)$/
-shuffle_int_dimn	modpk_rng.f90	/^subroutine shuffle_int_dimn(a)$/
-stability_check_on_H	modpk_potential.f90	/^  subroutine stability_check_on_H(stable,phi,dphi,/
-test_bad	multimodecode_driver.f90	/^    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,/
-total_efold	modpk.f90	/^  SUBROUTINE total_efold$/
-trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(phi) result(trace)$/
-trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(phi_init_trial, alph/
-unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(y, &$/
-zero_potential_ic	modpk_icsampling.f90	/^    subroutine zero_potential_ic(y,energy_scale)$/
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+10	dvode_f90_m.f90	/^ 10           CONTINUE$/;"	l	subroutine:BGROUP	file:
+10	dvode_f90_m.f90	/^10          END DO$/;"	l	subroutine:DGROUP	file:
+10	dvode_f90_m.f90	/^10         CONTINUE$/;"	l	subroutine:BANDED_GET_BJNZ	file:
+10	dvode_f90_m.f90	/^10         CONTINUE$/;"	l	subroutine:BANDED_IAJA	file:
+10	dvode_f90_m.f90	/^10        CONTINUE$/;"	l	subroutine:CHECK_DIAG	file:
+10	dvode_f90_m.f90	/^10        CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+10	dvode_f90_m.f90	/^10        CONTINUE$/;"	l	subroutine:DGEFA_F90	file:
+10	dvode_f90_m.f90	/^10        CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+10	dvode_f90_m.f90	/^10        END DO$/;"	l	subroutine:DVJAC	file:
+10	dvode_f90_m.f90	/^10        IF (ABS(SIGN(ONE,G0(I))-SIGN(ONE,G1(I)))<=ZERO) GOTO 20$/;"	l	subroutine:DVROOTS	file:
+10	dvode_f90_m.f90	/^10      C = REAL(IC)$/;"	l	subroutine:DVINDY_BNDS	file:
+10	dvode_f90_m.f90	/^10      C = REAL(IC)$/;"	l	subroutine:DVINDY_CORE	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DEWSET	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVCHECK	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVHIN	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVJUST	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVPREPS	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVRENEW	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVSOL	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:DVSTEP	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:JACSP	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:JACSPDB	file:
+10	dvode_f90_m.f90	/^10      CONTINUE$/;"	l	subroutine:SET_IAJA	file:
+10	dvode_f90_m.f90	/^10      DMAX = ABS(DX(1))$/;"	l	function:IDAMAX_F90	file:
+10	dvode_f90_m.f90	/^10      END DO$/;"	l	subroutine:MA28DD	file:
+10	dvode_f90_m.f90	/^10      END DO$/;"	l	subroutine:MA30DD	file:
+10	dvode_f90_m.f90	/^10      IF (LEVEL\/=2) RETURN$/;"	l	subroutine:XERRDV	file:
+10	dvode_f90_m.f90	/^10      IF (MA28<=2) NSLG = NST$/;"	l	subroutine:DVJACS28	file:
+10	dvode_f90_m.f90	/^10      IF (NQ\/=1) GOTO 20$/;"	l	subroutine:DVSET	file:
+10	dvode_f90_m.f90	/^10      IF (NZ>0) GOTO 20$/;"	l	subroutine:MA28AD	file:
+10	dvode_f90_m.f90	/^10      IFLAG = 0$/;"	l	subroutine:MA28BD	file:
+10	dvode_f90_m.f90	/^10      INIT = 0$/;"	l	subroutine:DVODE	file:
+10	dvode_f90_m.f90	/^10      IX = 1$/;"	l	function:DDOT_F90	file:
+10	dvode_f90_m.f90	/^10      IX = 1$/;"	l	subroutine:DAXPY_F90	file:
+10	dvode_f90_m.f90	/^10      IX = 1$/;"	l	subroutine:DCOPY_F90	file:
+10	dvode_f90_m.f90	/^10      M = 0$/;"	l	subroutine:DVNLSD	file:
+10	dvode_f90_m.f90	/^10      M = 0$/;"	l	subroutine:DVNLSS28	file:
+10	dvode_f90_m.f90	/^10      M = MOD(N,5)$/;"	l	subroutine:DSCAL_F90	file:
+100	dvode_f90_m.f90	/^100           CONTINUE$/;"	l	subroutine:JACSP	file:
+100	dvode_f90_m.f90	/^100           CONTINUE$/;"	l	subroutine:JACSPDB	file:
+100	dvode_f90_m.f90	/^100         END DO$/;"	l	subroutine:MA28DD	file:
+100	dvode_f90_m.f90	/^100         IW1(I,1) = IW1(I-1,1) + LENOFF(I-1)$/;"	l	subroutine:MC23AD	file:
+100	dvode_f90_m.f90	/^100       IF (ABS(SIGN(ONE,G0(I))-SIGN(ONE,GX(I)))<=ZERO) GOTO 110$/;"	l	subroutine:DVROOTS	file:
+100	dvode_f90_m.f90	/^100       ITOP = LICN$/;"	l	subroutine:MA30AD	file:
+100	dvode_f90_m.f90	/^100       PIVPOS = ILEND + 1$/;"	l	subroutine:MA30BD	file:
+100	dvode_f90_m.f90	/^100     CALL G(NEQ,T1,Y,NGC,G1)$/;"	l	subroutine:DVCHECK	file:
+100	dvode_f90_m.f90	/^100     DO I = 1, KNUM$/;"	l	subroutine:MA28AD	file:
+100	dvode_f90_m.f90	/^100     DO I = 1, N$/;"	l	subroutine:MC13E	file:
+100	dvode_f90_m.f90	/^100     END DO$/;"	l	subroutine:MC21B	file:
+100	dvode_f90_m.f90	/^100     KFLAG = KFLAG - 1$/;"	l	subroutine:DVSTEP	file:
+100	dvode_f90_m.f90	/^100     NNZ = IAN(NP1) - 1$/;"	l	subroutine:DVPREPS	file:
+100	dvode_f90_m.f90	/^100     UROUND = EPSILON(ONE)$/;"	l	subroutine:DVODE	file:
+100	dvode_f90_m.f90	/^100   CONTINUE$/;"	l	subroutine:IDO	file:
+1010	dvode_f90_m.f90	/^1010          IFIRST(NZ) = -J$/;"	l	subroutine:MA30AD	file:
+1020	dvode_f90_m.f90	/^1020          LC = -LASTR(IFIR)$/;"	l	subroutine:MA30AD	file:
+1030	dvode_f90_m.f90	/^1030          NZMIN = MIN(NZMIN,NZ)$/;"	l	subroutine:MA30AD	file:
+1040	dvode_f90_m.f90	/^1040        END DO$/;"	l	subroutine:MA30AD	file:
+1050	dvode_f90_m.f90	/^1050      END DO$/;"	l	subroutine:MA30AD	file:
+1060	dvode_f90_m.f90	/^1060      IF (ILAST\/=NN) IACTIV = IPTR(ILAST+1)$/;"	l	subroutine:MA30AD	file:
+1070	dvode_f90_m.f90	/^1070    END DO$/;"	l	subroutine:MA30AD	file:
+1080	dvode_f90_m.f90	/^1080    END DO$/;"	l	subroutine:MA30AD	file:
+1090	dvode_f90_m.f90	/^1090    ISTART = IDISP(1)$/;"	l	subroutine:MA30AD	file:
+110	dvode_f90_m.f90	/^110         DO MIDPT = J1, J2$/;"	l	subroutine:MA28DD	file:
+110	dvode_f90_m.f90	/^110         IROWB = IW1(IOLD,1)$/;"	l	subroutine:MC23AD	file:
+110	dvode_f90_m.f90	/^110       END DO$/;"	l	subroutine:MC19AD	file:
+110	dvode_f90_m.f90	/^110       IF (ISTART>IFIN) GOTO 130$/;"	l	subroutine:MA30BD	file:
+110	dvode_f90_m.f90	/^110       IFIRST = I + 1$/;"	l	subroutine:MA30CD	file:
+110	dvode_f90_m.f90	/^110     CONTINUE$/;"	l	subroutine:DVCHECK	file:
+110	dvode_f90_m.f90	/^110     END DO$/;"	l	subroutine:DVROOTS	file:
+110	dvode_f90_m.f90	/^110     IF (KFLAG==CONSECUTIVE_EFAILS) GOTO 220$/;"	l	subroutine:DVSTEP	file:
+110	dvode_f90_m.f90	/^110     JSTART = 0$/;"	l	subroutine:DVODE	file:
+1110	dvode_f90_m.f90	/^1110    DO II = 1, NN$/;"	l	subroutine:MA30AD	file:
+1160	dvode_f90_m.f90	/^1160    IDISP(2) = IACTIV$/;"	l	subroutine:MA30AD	file:
+1170	dvode_f90_m.f90	/^1170    IF (IFLAG==-5) IFLAG = -6$/;"	l	subroutine:MA30AD	file:
+1180	dvode_f90_m.f90	/^1180    PIVOT = PIVOT - ISTART + 1$/;"	l	subroutine:MA30AD	file:
+1190	dvode_f90_m.f90	/^1190    RETURN$/;"	l	subroutine:MA30AD	file:
+120	dvode_f90_m.f90	/^120         END DO$/;"	l	subroutine:MC23AD	file:
+120	dvode_f90_m.f90	/^120       DO II = IACTIV, ITOP$/;"	l	subroutine:MA30AD	file:
+120	dvode_f90_m.f90	/^120       END DO$/;"	l	subroutine:MA30BD	file:
+120	dvode_f90_m.f90	/^120       J = IPERM(I)$/;"	l	subroutine:MC21B	file:
+120	dvode_f90_m.f90	/^120     END DO$/;"	l	subroutine:MA28ID	file:
+120	dvode_f90_m.f90	/^120     END DO$/;"	l	subroutine:MA30CD	file:
+120	dvode_f90_m.f90	/^120     ETA = MAX(ETAMIN,HMIN\/ABS(H))$/;"	l	subroutine:DVSTEP	file:
+120	dvode_f90_m.f90	/^120     RH = ABS(H0)*HMXI$/;"	l	subroutine:DVODE	file:
+120	dvode_f90_m.f90	/^120     SGNCHG = .TRUE.$/;"	l	subroutine:DVROOTS	file:
+120	dvode_f90_m.f90	/^120     T0ST = X$/;"	l	subroutine:DVCHECK	file:
+130	dvode_f90_m.f90	/^130         IF (ICN(MIDPT)<0) GOTO 160$/;"	l	subroutine:MA28DD	file:
+130	dvode_f90_m.f90	/^130         LENR(INEW) = LENI$/;"	l	subroutine:MC23AD	file:
+130	dvode_f90_m.f90	/^130       IF (PIVPOS<=IFIN) A(PIVPOS) = ONE$/;"	l	subroutine:MA30BD	file:
+130	dvode_f90_m.f90	/^130     CONTINUE$/;"	l	subroutine:DVCHECK	file:
+130	dvode_f90_m.f90	/^130     END DO$/;"	l	subroutine:MC21B	file:
+130	dvode_f90_m.f90	/^130     FLOTL = REAL(L)$/;"	l	subroutine:DVSTEP	file:
+130	dvode_f90_m.f90	/^130     IF (LBIG) BIG1 = THEMAX$/;"	l	subroutine:MA28AD	file:
+130	dvode_f90_m.f90	/^130     IFLAG = -17$/;"	l	subroutine:MA28ID	file:
+130	dvode_f90_m.f90	/^130     NSLAST = NST$/;"	l	subroutine:DVODE	file:
+130	dvode_f90_m.f90	/^130     NXLAST = LAST$/;"	l	subroutine:DVROOTS	file:
+140	dvode_f90_m.f90	/^140       END DO$/;"	l	subroutine:MA30BD	file:
+140	dvode_f90_m.f90	/^140     CALL MA30AD(N,ICN,A,LICN,IKEEP(1,1),IKEEP(1,4),IDISP,IKEEP(1,2),       &$/;"	l	subroutine:MA28AD	file:
+140	dvode_f90_m.f90	/^140     CONTINUE$/;"	l	subroutine:DVODE	file:
+140	dvode_f90_m.f90	/^140     DO II = 1, N$/;"	l	subroutine:MA30CD	file:
+140	dvode_f90_m.f90	/^140     END DO$/;"	l	subroutine:MC21B	file:
+140	dvode_f90_m.f90	/^140     ERRMAX = DD$/;"	l	subroutine:MA28ID	file:
+140	dvode_f90_m.f90	/^140     ETAQP1 = ZERO$/;"	l	subroutine:DVSTEP	file:
+140	dvode_f90_m.f90	/^140     IF (.NOT.ZROOT) GOTO 150$/;"	l	subroutine:DVROOTS	file:
+150	dvode_f90_m.f90	/^150       A(MIDPT) = AA$/;"	l	subroutine:MA28DD	file:
+150	dvode_f90_m.f90	/^150       IF (PIVPOS>IFIN) GOTO 180$/;"	l	subroutine:MA30BD	file:
+150	dvode_f90_m.f90	/^150     CONTINUE$/;"	l	subroutine:DVROOTS	file:
+150	dvode_f90_m.f90	/^150     CONTINUE$/;"	l	subroutine:MA28ID	file:
+150	dvode_f90_m.f90	/^150     IF ((TN-TOUT)*H<ZERO) GOTO 200$/;"	l	subroutine:DVODE	file:
+150	dvode_f90_m.f90	/^150     IF (ETAQ>=ETAQP1) GOTO 160$/;"	l	subroutine:DVSTEP	file:
+150	dvode_f90_m.f90	/^150     MINIRN = MAX(MINIRN,NZ)$/;"	l	subroutine:MA28AD	file:
+160	dvode_f90_m.f90	/^160       A(MIDPT) = A(MIDPT) + AA$/;"	l	subroutine:MA28DD	file:
+160	dvode_f90_m.f90	/^160       END DO$/;"	l	subroutine:MA30AD	file:
+160	dvode_f90_m.f90	/^160     DO I = 1, N$/;"	l	subroutine:MC19AD	file:
+160	dvode_f90_m.f90	/^160     END DO$/;"	l	subroutine:MC23AD	file:
+160	dvode_f90_m.f90	/^160     I1 = IDISP(1) - 1$/;"	l	subroutine:MA28AD	file:
+160	dvode_f90_m.f90	/^160     IF (ABS(X1-X0)<=HMIN) XROOT = .TRUE.$/;"	l	subroutine:DVROOTS	file:
+160	dvode_f90_m.f90	/^160     IF (ETAQ<ETAQM1) GOTO 180$/;"	l	subroutine:DVSTEP	file:
+160	dvode_f90_m.f90	/^160     RETURN$/;"	l	subroutine:MA28ID	file:
+160	dvode_f90_m.f90	/^160     TP = TN - HU*(ONE+HUN*UROUND)$/;"	l	subroutine:DVODE	file:
+17	dvode_f90_m.f90	/^17                      JVECT(K) = I$/;"	l	subroutine:DVJACS28	file:
+170	dvode_f90_m.f90	/^170       IFIRST = II + 1$/;"	l	subroutine:MA30CD	file:
+170	dvode_f90_m.f90	/^170     END DO$/;"	l	subroutine:MA28DD	file:
+170	dvode_f90_m.f90	/^170     END DO$/;"	l	subroutine:MA30BD	file:
+170	dvode_f90_m.f90	/^170     ETA = ETAQ$/;"	l	subroutine:DVSTEP	file:
+170	dvode_f90_m.f90	/^170     IF (LP\/=0) WRITE (LP,90000) NUMNZ$/;"	l	subroutine:MC23AD	file:
+170	dvode_f90_m.f90	/^170     IF (LP\/=0) WRITE (LP,90009)$/;"	l	subroutine:MA28AD	file:
+170	dvode_f90_m.f90	/^170     JFLAG = 2$/;"	l	subroutine:DVROOTS	file:
+170	dvode_f90_m.f90	/^170     TCRIT = RWORK(1)$/;"	l	subroutine:DVODE	file:
+18	dvode_f90_m.f90	/^18                      JVECT(K) = J$/;"	l	subroutine:DVJACS28	file:
+180	dvode_f90_m.f90	/^180         IF (NSRCH<=NN) GOTO 190$/;"	l	subroutine:MA30AD	file:
+180	dvode_f90_m.f90	/^180       IF (ABS(SIGN(ONE,G0(I))-SIGN(ONE,G1(I)))>ZERO) JROOT(I) = 1$/;"	l	subroutine:DVROOTS	file:
+180	dvode_f90_m.f90	/^180     DO 190 K = 1, NA$/;"	l	subroutine:MC19AD	file:
+180	dvode_f90_m.f90	/^180     ETA = ETAQM1$/;"	l	subroutine:DVSTEP	file:
+180	dvode_f90_m.f90	/^180     IF (LP\/=0) WRITE (LP,90000) I$/;"	l	subroutine:MA30BD	file:
+180	dvode_f90_m.f90	/^180     IF (LP\/=0) WRITE (LP,90001) N$/;"	l	subroutine:MC23AD	file:
+180	dvode_f90_m.f90	/^180     RETURN$/;"	l	subroutine:MA28AD	file:
+180	dvode_f90_m.f90	/^180     TCRIT = RWORK(1)$/;"	l	subroutine:DVODE	file:
+180	dvode_f90_m.f90	/^180     W1 = ZERO$/;"	l	subroutine:MA28DD	file:
+19	dvode_f90_m.f90	/^19                      CONTINUE$/;"	l	subroutine:DVJACS28	file:
+190	dvode_f90_m.f90	/^190         W(I) = WI$/;"	l	subroutine:MA30CD	file:
+190	dvode_f90_m.f90	/^190       END DO$/;"	l	subroutine:MA30AD	file:
+190	dvode_f90_m.f90	/^190       ICN(I) = -ICN(I)$/;"	l	subroutine:MA28DD	file:
+190	dvode_f90_m.f90	/^190     END DO$/;"	l	subroutine:DVROOTS	file:
+190	dvode_f90_m.f90	/^190     END DO$/;"	l	subroutine:MC19AD	file:
+190	dvode_f90_m.f90	/^190     ETA = ETAQP1$/;"	l	subroutine:DVSTEP	file:
+190	dvode_f90_m.f90	/^190     HMX = ABS(TN) + ABS(H)$/;"	l	subroutine:DVODE	file:
+190	dvode_f90_m.f90	/^190     IF (LP\/=0) WRITE (LP,90002)$/;"	l	subroutine:MC23AD	file:
+190	dvode_f90_m.f90	/^190     RETURN$/;"	l	subroutine:MA30BD	file:
+20	dvode_f90_m.f90	/^   20   CONTINUE$/;"	l	subroutine:DVRENEW	file:
+20	dvode_f90_m.f90	/^ 20           END DO$/;"	l	subroutine:BGROUP	file:
+20	dvode_f90_m.f90	/^20                      JVECT(K) = I$/;"	l	subroutine:DVJACS28	file:
+20	dvode_f90_m.f90	/^20          CONTINUE$/;"	l	subroutine:DGEFA_F90	file:
+20	dvode_f90_m.f90	/^20          INUM(K-1) = ICE$/;"	l	subroutine:MC20BD	file:
+20	dvode_f90_m.f90	/^20          LOWL(IV) = MIN(LOWL(IV),LOWL(IW))$/;"	l	subroutine:MC13E	file:
+20	dvode_f90_m.f90	/^20        C = REAL(IC)$/;"	l	subroutine:DVINDY_BNDS	file:
+20	dvode_f90_m.f90	/^20        C = REAL(IC)$/;"	l	subroutine:DVINDY_CORE	file:
+20	dvode_f90_m.f90	/^20        CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+20	dvode_f90_m.f90	/^20        CONTINUE$/;"	l	subroutine:SET_IAJA	file:
+20	dvode_f90_m.f90	/^20        END DO$/;"	l	subroutine:DGROUP	file:
+20	dvode_f90_m.f90	/^20        ICN(KN) = ICN(JPOS)$/;"	l	subroutine:MA30DD	file:
+20	dvode_f90_m.f90	/^20        IERPJ = 1$/;"	l	subroutine:DVJAC	file:
+20	dvode_f90_m.f90	/^20        IOLD = IVECT(I)$/;"	l	subroutine:MA28DD	file:
+20	dvode_f90_m.f90	/^20        IW1(J) = IOLD$/;"	l	subroutine:MC22AD	file:
+20	dvode_f90_m.f90	/^20        WROWL = WROWL + ABS(A(JJ))$/;"	l	subroutine:MC24AD	file:
+20	dvode_f90_m.f90	/^20      ACOR(1:N) = ZERO$/;"	l	subroutine:DVNLSD	file:
+20	dvode_f90_m.f90	/^20      ACOR(1:N) = ZERO$/;"	l	subroutine:DVNLSS28	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DEWSET	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DVCHECK	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DVJUST	file:
+20	dvode_f90_m.f90	/^20      CONTINUE$/;"	l	subroutine:DVPREPS	file:
+20	dvode_f90_m.f90	/^20      END DO$/;"	l	subroutine:DVROOTS	file:
+20	dvode_f90_m.f90	/^20      H0 = HNEW*HALF$/;"	l	subroutine:DVHIN	file:
+20	dvode_f90_m.f90	/^20      HSUM = H$/;"	l	subroutine:DVSET	file:
+20	dvode_f90_m.f90	/^20      IDISP(1) = IW1(N,1) + LENR(N)$/;"	l	subroutine:MC23AD	file:
+20	dvode_f90_m.f90	/^20      IF (LICN>=NZ) GOTO 30$/;"	l	subroutine:MA28AD	file:
+20	dvode_f90_m.f90	/^20      IF (MAXIT==0) GOTO 160$/;"	l	subroutine:MA28ID	file:
+20	dvode_f90_m.f90	/^20      IF (NEQ<=0) GOTO 450$/;"	l	subroutine:DVODE	file:
+20	dvode_f90_m.f90	/^20      IF (NEWH==0) GOTO 70$/;"	l	subroutine:DVSTEP	file:
+20	dvode_f90_m.f90	/^20      IF (NZ>0) GOTO 30$/;"	l	subroutine:MA28BD	file:
+20	dvode_f90_m.f90	/^20      M = MOD(N,4)$/;"	l	subroutine:DAXPY_F90	file:
+20	dvode_f90_m.f90	/^20      M = MOD(N,5)$/;"	l	function:DDOT_F90	file:
+20	dvode_f90_m.f90	/^20      M = MOD(N,7)$/;"	l	subroutine:DCOPY_F90	file:
+20	dvode_f90_m.f90	/^20      MP1 = M + 1$/;"	l	subroutine:DSCAL_F90	file:
+20	dvode_f90_m.f90	/^20      PHRL1 = WM2$/;"	l	subroutine:DVSOL	file:
+20	dvode_f90_m.f90	/^20    CONTINUE$/;"	l	subroutine:JACSP	file:
+20	dvode_f90_m.f90	/^20    CONTINUE$/;"	l	subroutine:JACSPDB	file:
+200	dvode_f90_m.f90	/^200         ISW = IFIRST(NZ)$/;"	l	subroutine:MA30AD	file:
+200	dvode_f90_m.f90	/^200         J1 = J1 + LENR(I)$/;"	l	subroutine:MA30CD	file:
+200	dvode_f90_m.f90	/^200     CONTINUE$/;"	l	subroutine:DVODE	file:
+200	dvode_f90_m.f90	/^200     END DO$/;"	l	subroutine:MA28DD	file:
+200	dvode_f90_m.f90	/^200     IF (.NOT.ZROOT) GOTO 210$/;"	l	subroutine:DVROOTS	file:
+200	dvode_f90_m.f90	/^200     IF (ETA<THRESH .OR. ABS(ETAMAX-ONE)<=ZERO) GOTO 210$/;"	l	subroutine:DVSTEP	file:
+200	dvode_f90_m.f90	/^200     RETURN$/;"	l	subroutine:MC23AD	file:
+210	dvode_f90_m.f90	/^210         NEXTR(I) = ISW$/;"	l	subroutine:MA30AD	file:
+210	dvode_f90_m.f90	/^210     CALL DCOPY_F90(NG,G1,1,GX,1)$/;"	l	subroutine:DVROOTS	file:
+210	dvode_f90_m.f90	/^210     IF (LP>0) WRITE (LP,90001) IFAIL$/;"	l	subroutine:MC19AD	file:
+210	dvode_f90_m.f90	/^210     NEWQ = NQ$/;"	l	subroutine:DVSTEP	file:
+210	dvode_f90_m.f90	/^210     TOLSF = UROUND*DVNORM(N,RWORK(LYH),EWT)$/;"	l	subroutine:DVODE	file:
+220	dvode_f90_m.f90	/^220       DO II = I, ILAST$/;"	l	subroutine:MA30CD	file:
+220	dvode_f90_m.f90	/^220       END DO$/;"	l	subroutine:MA30AD	file:
+220	dvode_f90_m.f90	/^220     CONTINUE$/;"	l	subroutine:DVODE	file:
+220	dvode_f90_m.f90	/^220     KFLAG = -1$/;"	l	subroutine:DVSTEP	file:
+220	dvode_f90_m.f90	/^220     RETURN$/;"	l	subroutine:MC19AD	file:
+230	dvode_f90_m.f90	/^230     CONTINUE$/;"	l	subroutine:DVODE	file:
+230	dvode_f90_m.f90	/^230     KFLAG = -2$/;"	l	subroutine:DVSTEP	file:
+240	dvode_f90_m.f90	/^240             LL = 2$/;"	l	subroutine:MA30AD	file:
+240	dvode_f90_m.f90	/^240       J1 = IBLEND$/;"	l	subroutine:MA30CD	file:
+240	dvode_f90_m.f90	/^240     IF (NFLAG==-2) KFLAG = -3$/;"	l	subroutine:DVSTEP	file:
+240	dvode_f90_m.f90	/^240     INIT = 1$/;"	l	subroutine:DVODE	file:
+250	dvode_f90_m.f90	/^250             LL = 2$/;"	l	subroutine:MA30AD	file:
+250	dvode_f90_m.f90	/^250     CONTINUE$/;"	l	subroutine:DVODE	file:
+250	dvode_f90_m.f90	/^250     ETAMAX = ETAMX3$/;"	l	subroutine:DVSTEP	file:
+260	dvode_f90_m.f90	/^260         IF (NOBLOC) GOTO 280$/;"	l	subroutine:MA30CD	file:
+260	dvode_f90_m.f90	/^260     CONTINUE$/;"	l	subroutine:DVODE	file:
+260	dvode_f90_m.f90	/^260     JSTART = 1$/;"	l	subroutine:DVSTEP	file:
+270	dvode_f90_m.f90	/^270               END DO$/;"	l	subroutine:MA30AD	file:
+270	dvode_f90_m.f90	/^270     IF ((TN-TOUT)*H>=ZERO) GOTO 310$/;"	l	subroutine:DVODE	file:
+280	dvode_f90_m.f90	/^280       END DO$/;"	l	subroutine:MA30CD	file:
+280	dvode_f90_m.f90	/^280     IF ((TN-TOUT)*H<ZERO) GOTO 290$/;"	l	subroutine:DVODE	file:
+290	dvode_f90_m.f90	/^290             IJFIR = IFIRST(NZ)$/;"	l	subroutine:MA30AD	file:
+290	dvode_f90_m.f90	/^290     HMX = ABS(TN) + ABS(H)$/;"	l	subroutine:DVODE	file:
+30	dvode_f90_m.f90	/^ 30        END DO$/;"	l	subroutine:BGROUP	file:
+30	dvode_f90_m.f90	/^30                      JVECT(K) = J$/;"	l	subroutine:DVJACS28	file:
+30	dvode_f90_m.f90	/^30          IF (LOWL(IV)<NUMB(IV)) GOTO 60$/;"	l	subroutine:MC13E	file:
+30	dvode_f90_m.f90	/^30          INEW = IW1(IOLD,1)$/;"	l	subroutine:MA28DD	file:
+30	dvode_f90_m.f90	/^30          OUT(J) = LENR(J) - 1$/;"	l	subroutine:MC21B	file:
+30	dvode_f90_m.f90	/^30        CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+30	dvode_f90_m.f90	/^30        CONTINUE$/;"	l	subroutine:DGEFA_F90	file:
+30	dvode_f90_m.f90	/^30        IF (IP(I)<0) NEG = .TRUE.$/;"	l	subroutine:MA30CD	file:
+30	dvode_f90_m.f90	/^30        J0 = J0 + 1$/;"	l	subroutine:MC24AD	file:
+30	dvode_f90_m.f90	/^30        RXI = H\/HSUM$/;"	l	subroutine:DVSET	file:
+30	dvode_f90_m.f90	/^30        W(I1,1) = W(I1,1) + 1.$/;"	l	subroutine:MC19AD	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DEWSET	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DVCHECK	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DVJUST	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DVPREPS	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:DVSTEP	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:JACSP	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:JACSPDB	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:NUMSRT	file:
+30	dvode_f90_m.f90	/^30      CONTINUE$/;"	l	subroutine:SET_IAJA	file:
+30	dvode_f90_m.f90	/^30      DO 170 I = 1, N$/;"	l	subroutine:MA30BD	file:
+30	dvode_f90_m.f90	/^30      DO I = 1, N$/;"	l	subroutine:DVSOL	file:
+30	dvode_f90_m.f90	/^30      END DO$/;"	l	subroutine:MA30DD	file:
+30	dvode_f90_m.f90	/^30      END DO$/;"	l	subroutine:MC22AD	file:
+30	dvode_f90_m.f90	/^30      H0 = SIGN(H0,TOUT-T0)$/;"	l	subroutine:DVHIN	file:
+30	dvode_f90_m.f90	/^30      IF (LICN>=NZ) GOTO 40$/;"	l	subroutine:MA28BD	file:
+30	dvode_f90_m.f90	/^30      IF (LIRN>=NZ) GOTO 40$/;"	l	subroutine:MA28AD	file:
+30	dvode_f90_m.f90	/^30      IF (MITER\/=0) GOTO 40$/;"	l	subroutine:DVNLSD	file:
+30	dvode_f90_m.f90	/^30      IF (MITER\/=0) GOTO 40$/;"	l	subroutine:DVNLSS28	file:
+30	dvode_f90_m.f90	/^30      ILAST = 0$/;"	l	subroutine:MA30AD	file:
+30	dvode_f90_m.f90	/^30      MP1 = M + 1$/;"	l	function:DDOT_F90	file:
+30	dvode_f90_m.f90	/^30      MP1 = M + 1$/;"	l	subroutine:DAXPY_F90	file:
+30	dvode_f90_m.f90	/^30      MP1 = M + 1$/;"	l	subroutine:DCOPY_F90	file:
+30	dvode_f90_m.f90	/^30      N = NEQ$/;"	l	subroutine:DVODE	file:
+30	dvode_f90_m.f90	/^30      NGRP = NG - 1$/;"	l	subroutine:DGROUP	file:
+30	dvode_f90_m.f90	/^30      R = H**(-K)$/;"	l	subroutine:DVINDY_BNDS	file:
+30	dvode_f90_m.f90	/^30      R = H**(-K)$/;"	l	subroutine:DVINDY_CORE	file:
+30	dvode_f90_m.f90	/^30      SGNCHG = .TRUE.$/;"	l	subroutine:DVROOTS	file:
+30	dvode_f90_m.f90	/^30    CONTINUE$/;"	l	subroutine:IDO	file:
+30	dvode_f90_m.f90	/^30    CONTINUE$/;"	l	subroutine:SLO	file:
+300	dvode_f90_m.f90	/^300             IF (JCOST<=NZ*(NZ-1)) GOTO 430$/;"	l	subroutine:MA30AD	file:
+300	dvode_f90_m.f90	/^300     DO II = 1, N$/;"	l	subroutine:MA30CD	file:
+300	dvode_f90_m.f90	/^300     HMX = ABS(TN) + ABS(H)$/;"	l	subroutine:DVODE	file:
+310	dvode_f90_m.f90	/^310     CONTINUE$/;"	l	subroutine:DVODE	file:
+320	dvode_f90_m.f90	/^320               END DO$/;"	l	subroutine:MA30AD	file:
+320	dvode_f90_m.f90	/^320     ISTATE = 2$/;"	l	subroutine:DVODE	file:
+320	dvode_f90_m.f90	/^320     RETURN$/;"	l	subroutine:MA30CD	file:
+330	dvode_f90_m.f90	/^330             END DO$/;"	l	subroutine:MA30AD	file:
+330	dvode_f90_m.f90	/^330     CONTINUE$/;"	l	subroutine:DVODE	file:
+340	dvode_f90_m.f90	/^340           END DO$/;"	l	subroutine:MA30AD	file:
+340	dvode_f90_m.f90	/^340     MSG = 'At current T(=R1), MXSTEP(=I1) steps'$/;"	l	subroutine:DVODE	file:
+350	dvode_f90_m.f90	/^350     EWTI = EWT(I)$/;"	l	subroutine:DVODE	file:
+360	dvode_f90_m.f90	/^360         K = PIVOT - 1$/;"	l	subroutine:MA30AD	file:
+360	dvode_f90_m.f90	/^360     MSG = 'At T(=R1), too much accuracy was requested'$/;"	l	subroutine:DVODE	file:
+370	dvode_f90_m.f90	/^370           J1 = IPTR(I)$/;"	l	subroutine:MA30AD	file:
+370	dvode_f90_m.f90	/^370     MSG = 'At T(=R1) and step size H(=R2), the error'$/;"	l	subroutine:DVODE	file:
+380	dvode_f90_m.f90	/^380     MSG = 'At T(=R1) and step size H(=R2), the'$/;"	l	subroutine:DVODE	file:
+390	dvode_f90_m.f90	/^390           IF (K==ILAST) GOTO 410$/;"	l	subroutine:MA30AD	file:
+390	dvode_f90_m.f90	/^390     BIG = ZERO$/;"	l	subroutine:DVODE	file:
+40	dvode_f90_m.f90	/^ 40     BNGRP = NG - 1$/;"	l	subroutine:BGROUP	file:
+40	dvode_f90_m.f90	/^40                      PMAT(K) = (FTEMP1(I)-SAVF(I)) * FAC$/;"	l	subroutine:DVJACS28	file:
+40	dvode_f90_m.f90	/^40            END DO$/;"	l	subroutine:MC21B	file:
+40	dvode_f90_m.f90	/^40          CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+40	dvode_f90_m.f90	/^40        CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+40	dvode_f90_m.f90	/^40        CONTINUE$/;"	l	subroutine:DGEFA_F90	file:
+40	dvode_f90_m.f90	/^40        CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+40	dvode_f90_m.f90	/^40        CONTINUE$/;"	l	subroutine:FDJS	file:
+40	dvode_f90_m.f90	/^40        IF (KNEW>NZ_ALL) THEN$/;"	l	subroutine:DVPREPS	file:
+40	dvode_f90_m.f90	/^40        JCE = JCEP + JDISP$/;"	l	subroutine:MC20AD	file:
+40	dvode_f90_m.f90	/^40        KMAX = KLO - 2$/;"	l	subroutine:MC20BD	file:
+40	dvode_f90_m.f90	/^40        W(J) = MAX(ABS(A(JJ)),W(J))$/;"	l	subroutine:MC24AD	file:
+40	dvode_f90_m.f90	/^40      CALL DVINDY_CORE(T0ST,0,YH,NYH,Y,IFLAG)$/;"	l	subroutine:DVCHECK	file:
+40	dvode_f90_m.f90	/^40      CALL MA28DD(N,A,LICN,IVECT,JVECT,NZ,ICN,IKEEP(1,1),IKEEP(1,4), &$/;"	l	subroutine:MA28BD	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:DEWSET	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:DVODE	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:JACSP	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:JACSPDB	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:NUMSRT	file:
+40	dvode_f90_m.f90	/^40      CONTINUE$/;"	l	subroutine:SET_IAJA	file:
+40	dvode_f90_m.f90	/^40      DO 50 I = 1, NZ$/;"	l	subroutine:MA28AD	file:
+40	dvode_f90_m.f90	/^40      EL(1:LMAX) = ZERO$/;"	l	subroutine:DVJUST	file:
+40	dvode_f90_m.f90	/^40      EL(3:L) = ZERO$/;"	l	subroutine:DVSET	file:
+40	dvode_f90_m.f90	/^40      END DO$/;"	l	subroutine:MC19AD	file:
+40	dvode_f90_m.f90	/^40      IER = -1$/;"	l	subroutine:DVHIN	file:
+40	dvode_f90_m.f90	/^40      IER = 1$/;"	l	subroutine:DGROUP	file:
+40	dvode_f90_m.f90	/^40      IERSL = 1$/;"	l	subroutine:DVSOL	file:
+40	dvode_f90_m.f90	/^40      IF (.NOT.SGNCHG) GOTO 200$/;"	l	subroutine:DVROOTS	file:
+40	dvode_f90_m.f90	/^40      IF (NEWQ<=MAXORD) GOTO 50$/;"	l	subroutine:DVSTEP	file:
+40	dvode_f90_m.f90	/^40      MSG = 'Error in DVINDY, K(=I1) is illegal.'$/;"	l	subroutine:DVINDY_BNDS	file:
+40	dvode_f90_m.f90	/^40      MSG = 'Error in DVINDY, K(=I1) is illegal.'$/;"	l	subroutine:DVINDY_CORE	file:
+40	dvode_f90_m.f90	/^40      NS = N*INCX$/;"	l	function:DDOT_F90	file:
+40	dvode_f90_m.f90	/^40      NS = N*INCX$/;"	l	subroutine:DAXPY_F90	file:
+40	dvode_f90_m.f90	/^40      NS = N*INCX$/;"	l	subroutine:DCOPY_F90	file:
+40	dvode_f90_m.f90	/^40      Y(1:N) = (RL1*H)*SAVF(1:N) - (RL1*YH(1:N,2)+ACOR(1:N))$/;"	l	subroutine:DVNLSD	file:
+40	dvode_f90_m.f90	/^40      Y(1:N) = (RL1*H)*SAVF(1:N) - (RL1*YH(1:N,2)+ACOR(1:N))$/;"	l	subroutine:DVNLSS28	file:
+40	dvode_f90_m.f90	/^40    CONTINUE$/;"	l	subroutine:IDO	file:
+40	dvode_f90_m.f90	/^40    CONTINUE$/;"	l	subroutine:SLO	file:
+40	dvode_f90_m.f90	/^40    CONTINUE$/;"	l	subroutine:SRTDAT	file:
+400	dvode_f90_m.f90	/^400         END DO$/;"	l	subroutine:MA30AD	file:
+400	dvode_f90_m.f90	/^400     END DO$/;"	l	subroutine:DVODE	file:
+410	dvode_f90_m.f90	/^410         K = PIVOT - 1$/;"	l	subroutine:MA30AD	file:
+410	dvode_f90_m.f90	/^410     CONTINUE$/;"	l	subroutine:DVODE	file:
+420	dvode_f90_m.f90	/^420         END DO$/;"	l	subroutine:MA30AD	file:
+420	dvode_f90_m.f90	/^420     MSG = 'ISTATE(=I1) is illegal.'$/;"	l	subroutine:DVODE	file:
+430	dvode_f90_m.f90	/^430         ISING = PIVOT$/;"	l	subroutine:MA30AD	file:
+430	dvode_f90_m.f90	/^430     MSG = 'ITASK(=I1) is illegal.'$/;"	l	subroutine:DVODE	file:
+440	dvode_f90_m.f90	/^440         OLDPIV = IPTR(IPIV) + LENRL(IPIV)$/;"	l	subroutine:MA30AD	file:
+440	dvode_f90_m.f90	/^440     MSG = 'ISTATE(=I1) > 1 but DVODE is not initialized.'$/;"	l	subroutine:DVODE	file:
+450	dvode_f90_m.f90	/^450           NZ = LENC(J)$/;"	l	subroutine:MA30AD	file:
+450	dvode_f90_m.f90	/^450     MSG = 'NEQ (=I1) < 1.'$/;"	l	subroutine:DVODE	file:
+460	dvode_f90_m.f90	/^460         END DO$/;"	l	subroutine:MA30AD	file:
+460	dvode_f90_m.f90	/^460     MSG = 'ISTATE = 3 and NEQ increased (I1 to I2).'$/;"	l	subroutine:DVODE	file:
+465	dvode_f90_m.f90	/^465     MSG = 'This version of DVODE requires does not allow NEQ to be reduced.'$/;"	l	subroutine:DVODE	file:
+470	dvode_f90_m.f90	/^470         I1 = IPC(JPIV)$/;"	l	subroutine:MA30AD	file:
+470	dvode_f90_m.f90	/^470     MSG = 'ITOL(=I1) is illegal.'$/;"	l	subroutine:DVODE	file:
+480	dvode_f90_m.f90	/^480           NZ = LENR(I) - LENRL(I)$/;"	l	subroutine:MA30AD	file:
+480	dvode_f90_m.f90	/^480     MSG = 'IOPT(=I1) is illegal.'$/;"	l	subroutine:DVODE	file:
+490	dvode_f90_m.f90	/^490         END DO$/;"	l	subroutine:MA30AD	file:
+490	dvode_f90_m.f90	/^490     MSG = 'MF(=I1) is illegal.'$/;"	l	subroutine:DVODE	file:
+50	dvode_f90_m.f90	/^50                 JVECT(K) = I$/;"	l	subroutine:DVJACS28	file:
+50	dvode_f90_m.f90	/^50            J = PR(J)$/;"	l	subroutine:MC21B	file:
+50	dvode_f90_m.f90	/^50          END DO$/;"	l	subroutine:JACSP	file:
+50	dvode_f90_m.f90	/^50          END DO$/;"	l	subroutine:JACSPDB	file:
+50	dvode_f90_m.f90	/^50          IST = N - STP$/;"	l	subroutine:MC13E	file:
+50	dvode_f90_m.f90	/^50          J1 = IW(INEW,1)$/;"	l	subroutine:MA28DD	file:
+50	dvode_f90_m.f90	/^50        CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+50	dvode_f90_m.f90	/^50        IAN(J+1) = KNEW$/;"	l	subroutine:DVPREPS	file:
+50	dvode_f90_m.f90	/^50        IBLOCK = IBLOCK + LENR(I)$/;"	l	subroutine:MA30CD	file:
+50	dvode_f90_m.f90	/^50        ILAST = IROWS$/;"	l	subroutine:MA30AD	file:
+50	dvode_f90_m.f90	/^50        J0 = J2 + 1$/;"	l	subroutine:MC24AD	file:
+50	dvode_f90_m.f90	/^50      CALL G(NEQ,T0ST,Y,NGC,G0)$/;"	l	subroutine:DVCHECK	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:DGEFA_F90	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:DVJUST	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:DVROOTS	file:
+50	dvode_f90_m.f90	/^50      CONTINUE$/;"	l	subroutine:SEQ	file:
+50	dvode_f90_m.f90	/^50      END DO$/;"	l	subroutine:MA28AD	file:
+50	dvode_f90_m.f90	/^50      END DO$/;"	l	subroutine:MC20AD	file:
+50	dvode_f90_m.f90	/^50      I1 = IDISP(1)$/;"	l	subroutine:MA28BD	file:
+50	dvode_f90_m.f90	/^50      IF (KUTH==1) ETA = MIN(ETA,ABS(H\/HSCAL))$/;"	l	subroutine:DVSTEP	file:
+50	dvode_f90_m.f90	/^50      IF (M\/=0) CRATE = MAX(CRDOWN*CRATE,DEL\/DELP)$/;"	l	subroutine:DVNLSD	file:
+50	dvode_f90_m.f90	/^50      IF (M\/=0) CRATE = MAX(CRDOWN*CRATE,DEL\/DELP)$/;"	l	subroutine:DVNLSS28	file:
+50	dvode_f90_m.f90	/^50      ML = IWM(1)$/;"	l	subroutine:DVSOL	file:
+50	dvode_f90_m.f90	/^50      MSG = 'DVINDY_BNDS cannot be called with k = 0.'$/;"	l	subroutine:DVINDY_BNDS	file:
+50	dvode_f90_m.f90	/^50      MSG = 'Error in DVINDY, T(=R1) is illegal. T is not'$/;"	l	subroutine:DVINDY_CORE	file:
+50	dvode_f90_m.f90	/^50      NGC = NG$/;"	l	subroutine:DVODE	file:
+50	dvode_f90_m.f90	/^50      T1 = ONE - AHATN0 + ALPH0$/;"	l	subroutine:DVSET	file:
+50	dvode_f90_m.f90	/^50    CONTINUE$/;"	l	subroutine:IDO	file:
+50	dvode_f90_m.f90	/^50    CONTINUE$/;"	l	subroutine:SLO	file:
+500	dvode_f90_m.f90	/^500         MINICN = MAX(MINICN,NZROW+IBEG-1+MOREI+LENR(IPIV))$/;"	l	subroutine:MA30AD	file:
+500	dvode_f90_m.f90	/^500     MSG = 'ML(=I1) illegal: < 0 or >= NEQ (=I2)'$/;"	l	subroutine:DVODE	file:
+510	dvode_f90_m.f90	/^510         IJPOS = 0$/;"	l	subroutine:MA30AD	file:
+510	dvode_f90_m.f90	/^510     MSG = 'MU(=I1) illegal: < 0 or >= NEQ (=I2)'$/;"	l	subroutine:DVODE	file:
+520	dvode_f90_m.f90	/^520           K = IBEG - IJPOS$/;"	l	subroutine:MA30AD	file:
+520	dvode_f90_m.f90	/^520     MSG = 'MAXORD(=I1) < 0.'$/;"	l	subroutine:DVODE	file:
+530	dvode_f90_m.f90	/^530           IBEG = IBEG + 1$/;"	l	subroutine:MA30AD	file:
+530	dvode_f90_m.f90	/^530     MSG = 'MXSTEP(=I1) < 0.'$/;"	l	subroutine:DVODE	file:
+540	dvode_f90_m.f90	/^540     MSG = 'MXHNIL(=I1) < 0.'$/;"	l	subroutine:DVODE	file:
+550	dvode_f90_m.f90	/^550           END DO$/;"	l	subroutine:MA30AD	file:
+550	dvode_f90_m.f90	/^550     MSG = 'TOUT(=R1) is behind T(=R2).'$/;"	l	subroutine:DVODE	file:
+560	dvode_f90_m.f90	/^560           IRN(I2+1) = 0$/;"	l	subroutine:MA30AD	file:
+560	dvode_f90_m.f90	/^560     MSG = 'HMAX(=R1) < 0.'$/;"	l	subroutine:DVODE	file:
+570	dvode_f90_m.f90	/^570     MSG = 'HMIN(=R1) < 0.'$/;"	l	subroutine:DVODE	file:
+580	dvode_f90_m.f90	/^580           END DO$/;"	l	subroutine:MA30AD	file:
+580	dvode_f90_m.f90	/^580     CONTINUE$/;"	l	subroutine:DVODE	file:
+590	dvode_f90_m.f90	/^590           IF (LENPIV==0) GOTO 880$/;"	l	subroutine:MA30AD	file:
+590	dvode_f90_m.f90	/^590     CONTINUE$/;"	l	subroutine:DVODE	file:
+60	dvode_f90_m.f90	/^   60     CONTINUE$/;"	l	subroutine:DVJAC	file:
+60	dvode_f90_m.f90	/^60                 JVECT(K) = J$/;"	l	subroutine:DVJACS28	file:
+60	dvode_f90_m.f90	/^60          CONTINUE$/;"	l	subroutine:JACSP	file:
+60	dvode_f90_m.f90	/^60          CONTINUE$/;"	l	subroutine:JACSPDB	file:
+60	dvode_f90_m.f90	/^60          DO JAYJAY = IPIVJ, JFIN$/;"	l	subroutine:MA30BD	file:
+60	dvode_f90_m.f90	/^60          IW = IV$/;"	l	subroutine:MC13E	file:
+60	dvode_f90_m.f90	/^60          J1 = IW(INEW,2)$/;"	l	subroutine:MA28DD	file:
+60	dvode_f90_m.f90	/^60        A(IPOS) = AVAL$/;"	l	subroutine:MC22AD	file:
+60	dvode_f90_m.f90	/^60        CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+60	dvode_f90_m.f90	/^60        DO I = 1, NZ$/;"	l	subroutine:MA28ID	file:
+60	dvode_f90_m.f90	/^60        SCALE = ABS(A(IACTIV))$/;"	l	subroutine:MA30AD	file:
+60	dvode_f90_m.f90	/^60      CONTINUE$/;"	l	subroutine:DGBSL_F90	file:
+60	dvode_f90_m.f90	/^60      CONTINUE$/;"	l	subroutine:DGESL_F90	file:
+60	dvode_f90_m.f90	/^60      CONTINUE$/;"	l	subroutine:DVPREPS	file:
+60	dvode_f90_m.f90	/^60      DO II = 1, N$/;"	l	subroutine:MC23AD	file:
+60	dvode_f90_m.f90	/^60      END DO$/;"	l	subroutine:DVCHECK	file:
+60	dvode_f90_m.f90	/^60      END DO$/;"	l	subroutine:MC19AD	file:
+60	dvode_f90_m.f90	/^60      END DO$/;"	l	subroutine:MC24AD	file:
+60	dvode_f90_m.f90	/^60      IF (LAST==0) GOTO 70$/;"	l	subroutine:DVROOTS	file:
+60	dvode_f90_m.f90	/^60      IF (LP\/=0) WRITE (LP,90005)$/;"	l	subroutine:MA28BD	file:
+60	dvode_f90_m.f90	/^60      IF (MITER==0 .OR. JCUR==1) GOTO 70$/;"	l	subroutine:DVNLSD	file:
+60	dvode_f90_m.f90	/^60      IF (MITER==0 .OR. JCUR==1) GOTO 70$/;"	l	subroutine:DVNLSS28	file:
+60	dvode_f90_m.f90	/^60      MAXORD = IWORK(5)$/;"	l	subroutine:DVODE	file:
+60	dvode_f90_m.f90	/^60      MSG = 'Error in DVINDY, T(=R1) is illegal. T is not'$/;"	l	subroutine:DVINDY_BNDS	file:
+60	dvode_f90_m.f90	/^60      R = ONE$/;"	l	subroutine:DVSTEP	file:
+60	dvode_f90_m.f90	/^60      TQ(4) = CORTES*TQ(2)$/;"	l	subroutine:DVSET	file:
+600	dvode_f90_m.f90	/^600           END DO$/;"	l	subroutine:MA30AD	file:
+600	dvode_f90_m.f90	/^600     MSG = 'RTOL(I1) is R1 < 0.'$/;"	l	subroutine:DVODE	file:
+610	dvode_f90_m.f90	/^610             J = ICN(JJ)$/;"	l	subroutine:MA30AD	file:
+610	dvode_f90_m.f90	/^610     MSG = 'ATOL(I1) is R1 < 0.'$/;"	l	subroutine:DVODE	file:
+620	dvode_f90_m.f90	/^620     EWTI = EWT(I)$/;"	l	subroutine:DVODE	file:
+630	dvode_f90_m.f90	/^630             IRN(II) = IRN(I2)$/;"	l	subroutine:MA30AD	file:
+630	dvode_f90_m.f90	/^630     CONTINUE$/;"	l	subroutine:DVODE	file:
+640	dvode_f90_m.f90	/^640             NZ = LENC(J) + 1$/;"	l	subroutine:MA30AD	file:
+640	dvode_f90_m.f90	/^640     CONTINUE$/;"	l	subroutine:DVODE	file:
+650	dvode_f90_m.f90	/^650           END DO$/;"	l	subroutine:MA30AD	file:
+650	dvode_f90_m.f90	/^650     CONTINUE$/;"	l	subroutine:DVODE	file:
+660	dvode_f90_m.f90	/^660     CONTINUE$/;"	l	subroutine:DVODE	file:
+670	dvode_f90_m.f90	/^670           IFILL = LENPIV - IOP$/;"	l	subroutine:MA30AD	file:
+670	dvode_f90_m.f90	/^670     MSG = 'At the start of the problem, too much'$/;"	l	subroutine:DVODE	file:
+680	dvode_f90_m.f90	/^680     MSG = 'Trouble from DVINDY. ITASK = I1, TOUT = R1.'$/;"	l	subroutine:DVODE	file:
+690	dvode_f90_m.f90	/^690           JMORE = IFILL - JDIFF + 1$/;"	l	subroutine:MA30AD	file:
+690	dvode_f90_m.f90	/^690     MSG = 'SETH must be nonnegative.'$/;"	l	subroutine:DVODE	file:
+70	dvode_f90_m.f90	/^   70               CONTINUE$/;"	l	subroutine:DVJAC	file:
+70	dvode_f90_m.f90	/^70                 CONTINUE$/;"	l	subroutine:DVJACS28	file:
+70	dvode_f90_m.f90	/^70          ARP(IV) = I2 - II - 1$/;"	l	subroutine:MC13E	file:
+70	dvode_f90_m.f90	/^70          J2 = J1 + LENRL(INEW)$/;"	l	subroutine:MA28DD	file:
+70	dvode_f90_m.f90	/^70          MOVE = MOVE + 1$/;"	l	subroutine:MA28AD	file:
+70	dvode_f90_m.f90	/^70        CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+70	dvode_f90_m.f90	/^70        DO III = IFIRST, IB$/;"	l	subroutine:MA30CD	file:
+70	dvode_f90_m.f90	/^70        END DO$/;"	l	subroutine:MC21B	file:
+70	dvode_f90_m.f90	/^70        ICN(IPOS) = IW(JVAL,2)$/;"	l	subroutine:MC22AD	file:
+70	dvode_f90_m.f90	/^70        ISING = -ISING$/;"	l	subroutine:MA30AD	file:
+70	dvode_f90_m.f90	/^70      ALPHA = TWO*ALPHA$/;"	l	subroutine:DVROOTS	file:
+70	dvode_f90_m.f90	/^70      CONTINUE$/;"	l	subroutine:DVNLSD	file:
+70	dvode_f90_m.f90	/^70      CONTINUE$/;"	l	subroutine:DVNLSS28	file:
+70	dvode_f90_m.f90	/^70      HMAX = RWORK(6)$/;"	l	subroutine:DVODE	file:
+70	dvode_f90_m.f90	/^70      IF (ABS(TN-TLAST)<=ZERO) GOTO 130$/;"	l	subroutine:DVCHECK	file:
+70	dvode_f90_m.f90	/^70      K = 1$/;"	l	subroutine:DVPREPS	file:
+70	dvode_f90_m.f90	/^70      RETURN$/;"	l	subroutine:MA28BD	file:
+70	dvode_f90_m.f90	/^70      TN = TN + H$/;"	l	subroutine:DVSTEP	file:
+70	dvode_f90_m.f90	/^70    CONTINUE$/;"	l	subroutine:IDO	file:
+700	dvode_f90_m.f90	/^700     MSG = 'NG(=I1) < 0.'$/;"	l	subroutine:DVODE	file:
+710	dvode_f90_m.f90	/^710           JNPOS = I1 - JMORE$/;"	l	subroutine:MA30AD	file:
+710	dvode_f90_m.f90	/^710     MSG = 'NG changed (from I1 to I2) illegally, i.e.,'$/;"	l	subroutine:DVODE	file:
+720	dvode_f90_m.f90	/^720           JNPOS = IACTIV - LENR(I) - IFILL$/;"	l	subroutine:MA30AD	file:
+720	dvode_f90_m.f90	/^720     MSG = 'One or more components of g has a root'$/;"	l	subroutine:DVODE	file:
+730	dvode_f90_m.f90	/^730           IF (JNPOS>=IBEG) GOTO 750$/;"	l	subroutine:MA30AD	file:
+730	dvode_f90_m.f90	/^730     CONTINUE$/;"	l	subroutine:DVODE	file:
+740	dvode_f90_m.f90	/^740     CONTINUE$/;"	l	subroutine:DVODE	file:
+750	dvode_f90_m.f90	/^750           IACTIV = MIN(IACTIV,JNPOS)$/;"	l	subroutine:MA30AD	file:
+750	dvode_f90_m.f90	/^750     MSG = 'Run aborted:  apparent infinite loop.'$/;"	l	subroutine:DVODE	file:
+770	dvode_f90_m.f90	/^770           NZROW = NZROW + IFILL$/;"	l	subroutine:MA30AD	file:
+780	dvode_f90_m.f90	/^780             IF (LBIG) BIG = MAX(AANEW,BIG)$/;"	l	subroutine:MA30AD	file:
+790	dvode_f90_m.f90	/^790             IF (JROOM<DISPC) GOTO 800$/;"	l	subroutine:MA30AD	file:
+80	dvode_f90_m.f90	/^   80               CONTINUE$/;"	l	subroutine:DVJAC	file:
+80	dvode_f90_m.f90	/^80        A(IBEG) = A(IACTIV)$/;"	l	subroutine:MA30AD	file:
+80	dvode_f90_m.f90	/^80        DRES = 0.0$/;"	l	subroutine:MA28ID	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:DVPREPS	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:DVRENEW	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:MA28AD	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:MA30BD	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:MC13E	file:
+80	dvode_f90_m.f90	/^80        END DO$/;"	l	subroutine:MC19AD	file:
+80	dvode_f90_m.f90	/^80        IPERM(I) = J$/;"	l	subroutine:MC21B	file:
+80	dvode_f90_m.f90	/^80      CONTINUE$/;"	l	subroutine:DGBFA_F90	file:
+80	dvode_f90_m.f90	/^80      CONTINUE$/;"	l	subroutine:DVCHECK	file:
+80	dvode_f90_m.f90	/^80      CONTINUE$/;"	l	subroutine:DVJACS28	file:
+80	dvode_f90_m.f90	/^80      CONTINUE$/;"	l	subroutine:DVNLSD	file:
+80	dvode_f90_m.f90	/^80      CONTINUE$/;"	l	subroutine:DVSTEP	file:
+80	dvode_f90_m.f90	/^80      END DO$/;"	l	subroutine:MC22AD	file:
+80	dvode_f90_m.f90	/^80      LYH = 21$/;"	l	subroutine:DVODE	file:
+80	dvode_f90_m.f90	/^80      NFLAG = 0$/;"	l	subroutine:DVNLSS28	file:
+80	dvode_f90_m.f90	/^80      X2 = X1 - (X1-X0)*G1(IMAX)\/(G1(IMAX)-ALPHA*G0(IMAX))$/;"	l	subroutine:DVROOTS	file:
+80	dvode_f90_m.f90	/^80    CONTINUE$/;"	l	subroutine:SLO	file:
+800	dvode_f90_m.f90	/^800             JBEG = IPC(J)$/;"	l	subroutine:MA30AD	file:
+830	dvode_f90_m.f90	/^830             IRN(JEND) = I$/;"	l	subroutine:MA30AD	file:
+840	dvode_f90_m.f90	/^840             ICN(JJ) = -J$/;"	l	subroutine:MA30AD	file:
+850	dvode_f90_m.f90	/^850           END DO$/;"	l	subroutine:MA30AD	file:
+870	dvode_f90_m.f90	/^870           LENR(I) = LENR(I) + IFILL$/;"	l	subroutine:MA30AD	file:
+880	dvode_f90_m.f90	/^880         END DO$/;"	l	subroutine:MA30AD	file:
+890	dvode_f90_m.f90	/^890           IFIR = IFIRST(NZ)$/;"	l	subroutine:MA30AD	file:
+90	dvode_f90_m.f90	/^   90     CONTINUE$/;"	l	subroutine:DVJAC	file:
+90	dvode_f90_m.f90	/^90            J1 = MIDPT$/;"	l	subroutine:MA28DD	file:
+90	dvode_f90_m.f90	/^90          END DO$/;"	l	subroutine:MC23AD	file:
+90	dvode_f90_m.f90	/^90          W(II) = W(II)\/A(JPIV)$/;"	l	subroutine:MA30CD	file:
+90	dvode_f90_m.f90	/^90        LASTR(ISTART) = ISTART$/;"	l	subroutine:MA30AD	file:
+90	dvode_f90_m.f90	/^90      CONTINUE$/;"	l	subroutine:DVJACS28	file:
+90	dvode_f90_m.f90	/^90      CONTINUE$/;"	l	subroutine:DVPREPS	file:
+90	dvode_f90_m.f90	/^90      END DO$/;"	l	subroutine:MA28AD	file:
+90	dvode_f90_m.f90	/^90      END DO$/;"	l	subroutine:MC13E	file:
+90	dvode_f90_m.f90	/^90      IF (ABS(ETAMAX-ONE)>0) GOTO 130$/;"	l	subroutine:DVSTEP	file:
+90	dvode_f90_m.f90	/^90      IF (MITER>0) WM1 = SQRT(UROUND)$/;"	l	subroutine:DVODE	file:
+90	dvode_f90_m.f90	/^90      IMXOLD = IMAX$/;"	l	subroutine:DVROOTS	file:
+90	dvode_f90_m.f90	/^90      RETURN$/;"	l	subroutine:MC22AD	file:
+90	dvode_f90_m.f90	/^90      T1 = TN$/;"	l	subroutine:DVCHECK	file:
+90000	dvode_f90_m.f90	/^90000     FORMAT (' MC19 error. Element ',I5,' is in row ',I5,' and column ', &$/;"	l	subroutine:MC19AD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Element ',I6,' with value ',D22.14,' has indices ',I8, &$/;"	l	subroutine:MA28DD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Error return from MA28BD with IFLAG = ',I4\/I7, &$/;"	l	subroutine:MA28BD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Error return from MA28ID with IFLAG = ',I3\/' More than ', &$/;"	l	subroutine:MA28ID	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Error return from MA30AD because matrix is', &$/;"	l	subroutine:MA30AD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Error return from MA30BD; Singularity detected in',' row', &$/;"	l	subroutine:MA30BD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' Matrix is structurally singular, rank = ',I6)$/;"	l	subroutine:MC23AD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (' N is out of range = ',I10)$/;"	l	subroutine:MA28AD	file:
+90000	dvode_f90_m.f90	/^90000   FORMAT (1X,A)$/;"	l	subroutine:XERRDV	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' Error return ',I2,' from MC19')$/;"	l	subroutine:MC19AD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' Error return from MA28I with IFLAG = ', &$/;"	l	subroutine:MA28ID	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' Error return from MA30AD because matrix is', &$/;"	l	subroutine:MA30AD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' LICN is not big enough; increase by ',I6)$/;"	l	subroutine:MC23AD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' N is out of range = ',I10)$/;"	l	subroutine:MA28BD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' NZ is non positive = ',I10)$/;"	l	subroutine:MA28AD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT (' Non-zero ',I7,',',I6,' in zero off-diagonal',' block')$/;"	l	subroutine:MA28DD	file:
+90001	dvode_f90_m.f90	/^90001   FORMAT ('In the above message, I1 = ',I10)$/;"	l	subroutine:XERRDV	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT (' + Error return from MC23AD')$/;"	l	subroutine:MC23AD	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT (' Element ',I6,',',I6,' was not in LU pattern')$/;"	l	subroutine:MA28DD	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT (' LICN is too small = ',I10)$/;"	l	subroutine:MA28AD	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT (' LU decomposition destroyed to create more space')$/;"	l	subroutine:MA30AD	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT (' NZ is non positive = ',I10)$/;"	l	subroutine:MA28BD	file:
+90002	dvode_f90_m.f90	/^90002   FORMAT ('In the above message, I1 = ',I10,3X,'I2 = ',I10)$/;"	l	subroutine:XERRDV	file:
+90003	dvode_f90_m.f90	/^90003   FORMAT (' Error return from MA30AD because LICN is not big enough')$/;"	l	subroutine:MA30AD	file:
+90003	dvode_f90_m.f90	/^90003   FORMAT (' LICN is too small = ',I10)$/;"	l	subroutine:MA28BD	file:
+90003	dvode_f90_m.f90	/^90003   FORMAT (' LIRN is too small = ',I10)$/;"	l	subroutine:MA28AD	file:
+90003	dvode_f90_m.f90	/^90003   FORMAT ('In the above message, R1 = ',D21.13)$/;"	l	subroutine:XERRDV	file:
+90004	dvode_f90_m.f90	/^90004   FORMAT (' Error return from MA28AD because indices found out', &$/;"	l	subroutine:MA28AD	file:
+90004	dvode_f90_m.f90	/^90004   FORMAT (' Error return from MA30AD because LIRN is not big enough')$/;"	l	subroutine:MA30AD	file:
+90004	dvode_f90_m.f90	/^90004   FORMAT (' Error return from MA30BD')$/;"	l	subroutine:MA28BD	file:
+90004	dvode_f90_m.f90	/^90004   FORMAT ('In the above message, R1 = ',D21.13,3X,'R2 = ',D21.13)$/;"	l	subroutine:XERRDV	file:
+90005	dvode_f90_m.f90	/^90005   FORMAT (' + Error return from MA28BD')$/;"	l	subroutine:MA28BD	file:
+90005	dvode_f90_m.f90	/^90005   FORMAT (' Error return from MA30AD LIRN and LICN are too small')$/;"	l	subroutine:MA30AD	file:
+90005	dvode_f90_m.f90	/^90005   FORMAT ('LEVEL = 2 in XERRDV. Stopping.')$/;"	l	subroutine:XERRDV	file:
+90005	dvode_f90_m.f90	/^90005   FORMAT (1X,I6,'The element with value ',1P,D22.14, &$/;"	l	subroutine:MA28AD	file:
+90006	dvode_f90_m.f90	/^90006   FORMAT (' At stage ',I5,' in block ',I5,' with first row ',I5, &$/;"	l	subroutine:MA30AD	file:
+90006	dvode_f90_m.f90	/^90006   FORMAT (' Duplicate element in position ',I8,',',I8,' with value ',1P, &$/;"	l	subroutine:MA28AD	file:
+90007	dvode_f90_m.f90	/^90007   FORMAT (' Error return from MC23AD')$/;"	l	subroutine:MA28AD	file:
+90007	dvode_f90_m.f90	/^90007   FORMAT (' To continue set LIRN to at least ',I8)$/;"	l	subroutine:MA30AD	file:
+90008	dvode_f90_m.f90	/^90008   FORMAT (' Error return from MA30AD')$/;"	l	subroutine:MA28AD	file:
+90009	dvode_f90_m.f90	/^90009   FORMAT (' Error return from MA28AD')$/;"	l	subroutine:MA28AD	file:
+910	dvode_f90_m.f90	/^910           LASTR(I) = LASTR(IFIR)$/;"	l	subroutine:MA30AD	file:
+920	dvode_f90_m.f90	/^920           LASTR(I) = 0$/;"	l	subroutine:MA30AD	file:
+930	dvode_f90_m.f90	/^930         END DO$/;"	l	subroutine:MA30AD	file:
+940	dvode_f90_m.f90	/^940         IPC(JPIV) = -ISING$/;"	l	subroutine:MA30AD	file:
+960	dvode_f90_m.f90	/^960           NZMIN = MIN(NZMIN,NZ)$/;"	l	subroutine:MA30AD	file:
+970	dvode_f90_m.f90	/^970         END DO$/;"	l	subroutine:MA30AD	file:
+980	dvode_f90_m.f90	/^980         JJ = COLUPD$/;"	l	subroutine:MA30AD	file:
+990	dvode_f90_m.f90	/^990           IFIR = IFIRST(NZ)$/;"	l	subroutine:MA30AD	file:
+ABORT	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT,/;"	v	module:DVODE_F90_M
+ABORT1	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1,/;"	v	module:DVODE_F90_M
+ABORT2	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1, ABORT2,/;"	v	module:DVODE_F90_M
+ABORT3	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1, ABORT2, ABORT3,/;"	v	module:DVODE_F90_M
+ABORTA	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1, ABORT2, ABORT3, ABORTA,/;"	v	module:DVODE_F90_M
+ABORTB	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1, ABORT2, ABORT3, ABORTA, ABORTB,/;"	v	module:DVODE_F90_M
+ACNRM	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM,/;"	v	module:DVODE_F90_M
+ACOR	dvode_f90_m.f90	/^      REAL (WP), ALLOCATABLE, PRIVATE :: ACOR(/;"	v	module:DVODE_F90_M
+ADDON	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ADDON /;"	v	module:DVODE_F90_M
+ADDTOJA	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: ADDTOJA,/;"	v	module:DVODE_F90_M
+ADDTONNZ	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: ADDTOJA, ADDTONNZ,/;"	v	module:DVODE_F90_M
+ALLOW_DEFAULT_TOLS	dvode_f90_m.f90	/^      LOGICAL, PRIVATE :: ABORT, ABORT1, ABORT2, ABORT3, ABORTA, ABORTB,        &$/;"	v	module:DVODE_F90_M
+ALPHA	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA,/;"	v	module:DVODE_F90_M
+ATOL	dvode_f90_m.f90	/^        REAL (WP), DIMENSION (:), POINTER :: ATOL,/;"	k	type:VODE_OPTS
+A_bundle	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad, A_ent, A_bundle,/;"	k	type:ic_and_observables
+A_bundle	multimodecode_driver.f90	/^  real(dp) :: A_iso, A_pnad, A_ent, A_bundle$/;"	v	program:test_mmodpk
+A_cross_ad_iso	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross_ad_iso$/;"	k	type:ic_and_observables
+A_ent	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad, A_ent,/;"	k	type:ic_and_observables
+A_ent	multimodecode_driver.f90	/^  real(dp) :: A_iso, A_pnad, A_ent,/;"	v	program:test_mmodpk
+A_iso	modpk_icsampling.f90	/^    real(dp) :: A_iso,/;"	k	type:ic_and_observables
+A_iso	multimodecode_driver.f90	/^  real(dp) :: A_iso,/;"	v	program:test_mmodpk
+A_pnad	modpk_icsampling.f90	/^    real(dp) :: A_iso, A_pnad,/;"	k	type:ic_and_observables
+A_pnad	multimodecode_driver.f90	/^  real(dp) :: A_iso, A_pnad,/;"	v	program:test_mmodpk
+As	modpk_icsampling.f90	/^    real(dp) :: As,/;"	k	type:ic_and_observables
+As	multimodecode_driver.f90	/^  real(dp) :: dlnk, As,/;"	v	program:test_mmodpk
+BANDED	dvode_f90_m.f90	/^        LOGICAL :: DENSE, BANDED,/;"	k	type:VODE_OPTS
+BANDED_GET_BJNZ	dvode_f90_m.f90	/^      SUBROUTINE BANDED_GET_BJNZ(/;"	s	module:DVODE_F90_M
+BANDED_IAJA	dvode_f90_m.f90	/^      SUBROUTINE BANDED_IAJA(/;"	s	module:DVODE_F90_M
+BGROUP	dvode_f90_m.f90	/^      SUBROUTINE BGROUP(/;"	s	module:DVODE_F90_M
+BIAS1	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: BIAS1 /;"	v	module:DVODE_F90_M
+BIAS2	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: BIAS2 /;"	v	module:DVODE_F90_M
+BIAS3	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: BIAS3 /;"	v	module:DVODE_F90_M
+BIG	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG,/;"	v	module:DVODE_F90_M
+BIG1	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1,/;"	v	module:DVODE_F90_M
+BIGP	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(/;"	v	module:DVODE_F90_M
+BJGP	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(:), BJGP(/;"	v	module:DVODE_F90_M
+BNGRP	dvode_f90_m.f90	/^        MA28CD_CALLS, MC19AD_CALLS, MAX_MINIRN, MAX_MINICN, MAX_NNZ, BNGRP$/;"	v	module:DVODE_F90_M
+BOUNDS	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA, BOUNDS,/;"	v	module:DVODE_F90_M
+BUILD_IAJA	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA,/;"	v	module:DVODE_F90_M
+CCMAX	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: CCMAX /;"	v	module:DVODE_F90_M
+CCMXJ	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1, CCMXJ,/;"	v	module:DVODE_F90_M
+CGCE	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1, CCMXJ, CGCE,/;"	v	module:DVODE_F90_M
+CHANGED_ACOR	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA, BOUNDS, CHANGED_ACOR,/;"	v	module:DVODE_F90_M
+CHECK_DIAG	dvode_f90_m.f90	/^      SUBROUTINE CHECK_DIAG(/;"	s	module:DVODE_F90_M
+CHECK_STAT	dvode_f90_m.f90	/^      SUBROUTINE CHECK_STAT(/;"	s	module:DVODE_F90_M
+CONP	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1, CCMXJ, CGCE, CONP,/;"	v	module:DVODE_F90_M
+CONSECUTIVE_CFAILS	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: ADDTOJA, ADDTONNZ, CONSECUTIVE_CFAILS,/;"	v	module:DVODE_F90_M
+CONSECUTIVE_EFAILS	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: ADDTOJA, ADDTONNZ, CONSECUTIVE_CFAILS,                &$/;"	v	module:DVODE_F90_M
+CORTES	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: CORTES /;"	v	module:DVODE_F90_M
+CRATE	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1, CCMXJ, CGCE, CONP, CRATE,/;"	v	module:DVODE_F90_M
+CRDOWN	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: CRDOWN /;"	v	module:DVODE_F90_M
+CSCALEX	dvode_f90_m.f90	/^      REAL (WP), ALLOCATABLE, PRIVATE :: ACOR(:), CSCALEX(/;"	v	module:DVODE_F90_M
+DACOPY	dvode_f90_m.f90	/^      SUBROUTINE DACOPY(/;"	s	module:DVODE_F90_M
+DAXPY_F90	dvode_f90_m.f90	/^      SUBROUTINE DAXPY_F90(/;"	s	module:DVODE_F90_M
+DCOPY_F90	dvode_f90_m.f90	/^      SUBROUTINE DCOPY_F90(/;"	s	module:DVODE_F90_M
+DDOT_F90	dvode_f90_m.f90	/^      FUNCTION DDOT_F90(/;"	f	module:DVODE_F90_M
+DEBUG_writing_etc	multimodecode_driver.f90	/^    subroutine DEBUG_writing_etc(/;"	s	program:test_mmodpk
+DEGR	dvode_f90_m.f90	/^    SUBROUTINE DEGR(/;"	s	module:DVODE_F90_M
+DENSE	dvode_f90_m.f90	/^        LOGICAL :: DENSE,/;"	k	type:VODE_OPTS
+DEWSET	dvode_f90_m.f90	/^      SUBROUTINE DEWSET(/;"	s	module:DVODE_F90_M
+DGBFA_F90	dvode_f90_m.f90	/^      SUBROUTINE DGBFA_F90(/;"	s	module:DVODE_F90_M
+DGBSL_F90	dvode_f90_m.f90	/^      SUBROUTINE DGBSL_F90(/;"	s	module:DVODE_F90_M
+DGEFA_F90	dvode_f90_m.f90	/^      SUBROUTINE DGEFA_F90(/;"	s	module:DVODE_F90_M
+DGESL_F90	dvode_f90_m.f90	/^      SUBROUTINE DGESL_F90(/;"	s	module:DVODE_F90_M
+DGROUP	dvode_f90_m.f90	/^      SUBROUTINE DGROUP(/;"	s	module:DVODE_F90_M
+DGROUPDS	dvode_f90_m.f90	/^      SUBROUTINE DGROUPDS(/;"	s	module:DVODE_F90_M
+DP	modpk_modules.f90	/^  INTEGER, parameter :: DP /;"	v	module:modpkparams
+DRC	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: ACNRM, ALPHA, BIG, BIG1, CCMXJ, CGCE, CONP, CRATE,  &$/;"	v	module:DVODE_F90_M
+DRES	dvode_f90_m.f90	/^        DRC, DRES,/;"	v	module:DVODE_F90_M
+DSCAL_F90	dvode_f90_m.f90	/^      SUBROUTINE DSCAL_F90(/;"	s	module:DVODE_F90_M
+DTEMP	dvode_f90_m.f90	/^        YTEMP(:), DTEMP(/;"	v	module:DVODE_F90_M
+DVCHECK	dvode_f90_m.f90	/^      SUBROUTINE DVCHECK(/;"	s	module:DVODE_F90_M
+DVDSM	dvode_f90_m.f90	/^    SUBROUTINE DVDSM(/;"	s	module:DVODE_F90_M
+DVHIN	dvode_f90_m.f90	/^      SUBROUTINE DVHIN(/;"	s	module:DVODE_F90_M
+DVINDY	dvode_f90_m.f90	/^      SUBROUTINE DVINDY(/;"	s	module:DVODE_F90_M
+DVINDY_BNDS	dvode_f90_m.f90	/^      SUBROUTINE DVINDY_BNDS(/;"	s	module:DVODE_F90_M
+DVINDY_CORE	dvode_f90_m.f90	/^      SUBROUTINE DVINDY_CORE(/;"	s	module:DVODE_F90_M
+DVJAC	dvode_f90_m.f90	/^      SUBROUTINE DVJAC(/;"	s	module:DVODE_F90_M
+DVJACS28	dvode_f90_m.f90	/^      SUBROUTINE DVJACS28(/;"	s	module:DVODE_F90_M
+DVJUST	dvode_f90_m.f90	/^      SUBROUTINE DVJUST(/;"	s	module:DVODE_F90_M
+DVNLSD	dvode_f90_m.f90	/^      SUBROUTINE DVNLSD(/;"	s	module:DVODE_F90_M
+DVNLSS28	dvode_f90_m.f90	/^      SUBROUTINE DVNLSS28(/;"	s	module:DVODE_F90_M
+DVNORM	dvode_f90_m.f90	/^      FUNCTION DVNORM(/;"	f	module:DVODE_F90_M
+DVNRDN	dvode_f90_m.f90	/^      SUBROUTINE DVNRDN(/;"	s	module:DVODE_F90_M
+DVNRDP	dvode_f90_m.f90	/^      SUBROUTINE DVNRDP(/;"	s	module:DVODE_F90_M
+DVNRDS	dvode_f90_m.f90	/^      SUBROUTINE DVNRDS(/;"	s	module:DVODE_F90_M
+DVODE	dvode_f90_m.f90	/^      SUBROUTINE DVODE(/;"	s	module:DVODE_F90_M
+DVODE_F90_M	dvode_f90_m.f90	/^  MODULE DVODE_F90_M$/;"	m
+DVPREPS	dvode_f90_m.f90	/^      SUBROUTINE DVPREPS(/;"	s	module:DVODE_F90_M
+DVRENEW	dvode_f90_m.f90	/^      SUBROUTINE DVRENEW(/;"	s	module:DVODE_F90_M
+DVROOTS	dvode_f90_m.f90	/^      SUBROUTINE DVROOTS(/;"	s	module:DVODE_F90_M
+DVSET	dvode_f90_m.f90	/^      SUBROUTINE DVSET$/;"	s	module:DVODE_F90_M
+DVSOL	dvode_f90_m.f90	/^      SUBROUTINE DVSOL(/;"	s	module:DVODE_F90_M
+DVSOLS28	dvode_f90_m.f90	/^      SUBROUTINE DVSOLS28(/;"	s	module:DVODE_F90_M
+DVSRCO	dvode_f90_m.f90	/^      SUBROUTINE DVSRCO(/;"	s	module:DVODE_F90_M
+DVSTEP	dvode_f90_m.f90	/^      SUBROUTINE DVSTEP(/;"	s	module:DVODE_F90_M
+DXMAX	dvode_f90_m.f90	/^        DRC, DRES, DXMAX,/;"	v	module:DVODE_F90_M
+EL	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: EL(/;"	v	module:DVODE_F90_M
+ELBOW_ROOM	dvode_f90_m.f90	/^        CONSECUTIVE_EFAILS, ELBOW_ROOM,/;"	v	module:DVODE_F90_M
+EPS	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS,/;"	v	module:DVODE_F90_M
+ERRMAX	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX,/;"	v	module:DVODE_F90_M
+ETA	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA,/;"	v	module:DVODE_F90_M
+ETACF	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETACF /;"	v	module:DVODE_F90_M
+ETAMAX	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX,/;"	v	module:DVODE_F90_M
+ETAMIN	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETAMIN /;"	v	module:DVODE_F90_M
+ETAMX1	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETAMX1 /;"	v	module:DVODE_F90_M
+ETAMX2	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETAMX2 /;"	v	module:DVODE_F90_M
+ETAMX3	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETAMX3 /;"	v	module:DVODE_F90_M
+ETAMXF	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ETAMXF /;"	v	module:DVODE_F90_M
+EWT	dvode_f90_m.f90	/^      REAL (WP), ALLOCATABLE, PRIVATE :: ACOR(:), CSCALEX(:), EWT(/;"	v	module:DVODE_F90_M
+FACDS	dvode_f90_m.f90	/^  REAL (WP), ALLOCATABLE, PRIVATE :: YSCALEDS(:), WKDS(:), FACDS(/;"	v	module:DVODE_F90_M
+FDJS	dvode_f90_m.f90	/^    SUBROUTINE FDJS(/;"	s	module:DVODE_F90_M
+FIVE	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: FIVE /;"	v	module:DVODE_F90_M
+FOUR	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: FOUR /;"	v	module:DVODE_F90_M
+FPTEMP	dvode_f90_m.f90	/^      REAL (WP), ALLOCATABLE, PRIVATE :: ACOR(:), CSCALEX(:), EWT(:),           &$/;"	v	module:DVODE_F90_M
+FRACINT	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX, FRACINT,/;"	v	module:DVODE_F90_M
+FRACSUB	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX, FRACINT, FRACSUB,/;"	v	module:DVODE_F90_M
+FTEMP	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(/;"	v	module:DVODE_F90_M
+FTEMP1	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(/;"	v	module:DVODE_F90_M
+G0	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(:), G0(/;"	v	module:DVODE_F90_M
+G1	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(:), G0(:), G1(/;"	v	module:DVODE_F90_M
+GDUMMY	dvode_f90_m.f90	/^      SUBROUTINE GDUMMY(/;"	s	module:DVODE_F90_M
+GET_STATS	dvode_f90_m.f90	/^      SUBROUTINE GET_STATS(/;"	s	module:DVODE_F90_M
+GROW	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA, BOUNDS, CHANGED_ACOR, GROW,/;"	v	module:DVODE_F90_M
+GX	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(:), G0(:), G1(:), GX(/;"	v	module:DVODE_F90_M
+H	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX, FRACINT, FRACSUB, H,/;"	v	module:DVODE_F90_M
+HALF	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: HALF /;"	v	module:DVODE_F90_M
+HMIN	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX, FRACINT, FRACSUB, H, HMIN,/;"	v	module:DVODE_F90_M
+HMXI	dvode_f90_m.f90	/^        DRC, DRES, DXMAX, EPS, ERRMAX, ETA, ETAMAX, FRACINT, FRACSUB, H, HMIN,  &$/;"	v	module:DVODE_F90_M
+HNEW	dvode_f90_m.f90	/^        HMXI, HNEW,/;"	v	module:DVODE_F90_M
+HSCAL	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL,/;"	v	module:DVODE_F90_M
+HU	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU,/;"	v	module:DVODE_F90_M
+HUN	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: HUN /;"	v	module:DVODE_F90_M
+HUNDRETH	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: HUNDRETH /;"	v	module:DVODE_F90_M
+H_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot, N_tot, H_pivot$/;"	v	module:modpkparams
+IA	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(:), BJGP(:), IA(/;"	v	module:DVODE_F90_M
+IAB	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(:), BJGP(:), IA(:), IAB(/;"	v	module:DVODE_F90_M
+IADIM	dvode_f90_m.f90	/^        CONSECUTIVE_EFAILS, ELBOW_ROOM, IADIM,/;"	v	module:DVODE_F90_M
+IAJA_CALLED	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA, BOUNDS, CHANGED_ACOR, GROW, IAJA_CALLED,/;"	v	module:DVODE_F90_M
+IAN	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(:), BJGP(:), IA(:), IAB(:), IAN(/;"	v	module:DVODE_F90_M
+IANPIV	dvode_f90_m.f90	/^        CONSECUTIVE_EFAILS, ELBOW_ROOM, IADIM, IANPIV,/;"	v	module:DVODE_F90_M
+IAVPIV	dvode_f90_m.f90	/^        CONSECUTIVE_EFAILS, ELBOW_ROOM, IADIM, IANPIV, IAVPIV,/;"	v	module:DVODE_F90_M
+ICF	dvode_f90_m.f90	/^        CONSECUTIVE_EFAILS, ELBOW_ROOM, IADIM, IANPIV, IAVPIV,                  &$/;"	v	module:DVODE_F90_M
+ICN	dvode_f90_m.f90	/^      INTEGER, ALLOCATABLE, PRIVATE :: BIGP(:), BJGP(:), IA(:), IAB(:), IAN(:), &$/;"	v	module:DVODE_F90_M
+ICNCP	dvode_f90_m.f90	/^        ICF, ICNCP,/;"	v	module:DVODE_F90_M
+IDAMAX_F90	dvode_f90_m.f90	/^      FUNCTION IDAMAX_F90(/;"	f	module:DVODE_F90_M
+IDISP	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: IDISP(/;"	v	module:DVODE_F90_M
+IDO	dvode_f90_m.f90	/^    SUBROUTINE IDO(/;"	s	module:DVODE_F90_M
+IDX	dvode_f90_m.f90	/^        ICN(:), IDX(/;"	v	module:DVODE_F90_M
+IFAIL	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL,/;"	v	module:DVODE_F90_M
+IGP	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(/;"	v	module:DVODE_F90_M
+IKEEP28	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(:), IKEEP28(/;"	v	module:DVODE_F90_M
+IMAX	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX,/;"	v	module:DVODE_F90_M
+IMIN	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN,/;"	v	module:DVODE_F90_M
+INDCOLDS	dvode_f90_m.f90	/^  INTEGER, ALLOCATABLE, PRIVATE :: INDROWDS(:), INDCOLDS(/;"	v	module:DVODE_F90_M
+INDROWDS	dvode_f90_m.f90	/^  INTEGER, ALLOCATABLE, PRIVATE :: INDROWDS(/;"	v	module:DVODE_F90_M
+INEWJ	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ,/;"	v	module:DVODE_F90_M
+INFODS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS,/;"	v	module:DVODE_F90_M
+INIT	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT,/;"	v	module:DVODE_F90_M
+IOPT	dvode_f90_m.f90	/^        INTEGER :: MF, METH, MITER, MOSS, ITOL, IOPT,/;"	k	type:VODE_OPTS
+IOPTDS	dvode_f90_m.f90	/^    NGRPDS(:), IPNTRDS(:), JPNTRDS(:), IWADS(:), IWKDS(:), IOPTDS(/;"	v	module:DVODE_F90_M
+IPCUTH_MAX	dvode_f90_m.f90	/^      INTEGER, PARAMETER, PRIVATE :: IPCUTH_MAX /;"	v	module:DVODE_F90_M
+IPNTRDS	dvode_f90_m.f90	/^    NGRPDS(:), IPNTRDS(/;"	v	module:DVODE_F90_M
+IPUP	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT, IPUP,/;"	v	module:DVODE_F90_M
+IRANK	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT, IPUP, IRANK,/;"	v	module:DVODE_F90_M
+IRFND	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT, IPUP, IRANK, IRFND,/;"	v	module:DVODE_F90_M
+IRNCP	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT, IPUP, IRANK, IRFND, IRNCP,/;"	v	module:DVODE_F90_M
+ISTART	dvode_f90_m.f90	/^        ICF, ICNCP, IFAIL, IMAX, IMIN, INEWJ, INIT, IPUP, IRANK, IRFND, IRNCP,  &$/;"	v	module:DVODE_F90_M
+ISTATC	dvode_f90_m.f90	/^        ISTART, ISTATC,/;"	v	module:DVODE_F90_M
+ITASKC	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC,/;"	v	module:DVODE_F90_M
+ITOL	dvode_f90_m.f90	/^        INTEGER :: MF, METH, MITER, MOSS, ITOL,/;"	k	type:VODE_OPTS
+IUMACH	dvode_f90_m.f90	/^      FUNCTION IUMACH(/;"	f	module:DVODE_F90_M
+IUSER	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: IDISP(2), IUSER(/;"	v	module:DVODE_F90_M
+IW28	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(:), IKEEP28(:,:), IW28(/;"	v	module:DVODE_F90_M
+IWADS	dvode_f90_m.f90	/^    NGRPDS(:), IPNTRDS(:), JPNTRDS(:), IWADS(/;"	v	module:DVODE_F90_M
+IWKDS	dvode_f90_m.f90	/^    NGRPDS(:), IPNTRDS(:), JPNTRDS(:), IWADS(:), IWKDS(/;"	v	module:DVODE_F90_M
+IWORK	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(:), IKEEP28(:,:), IW28(:,:), IWORK(/;"	v	module:DVODE_F90_M
+IXSAV	dvode_f90_m.f90	/^      FUNCTION IXSAV(/;"	f	module:DVODE_F90_M
+JA	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(:), IKEEP28(:,:), IW28(:,:), IWORK(:), JA(/;"	v	module:DVODE_F90_M
+JAB	dvode_f90_m.f90	/^        ICN(:), IDX(:), IGP(:), IKEEP28(:,:), IW28(:,:), IWORK(:), JA(:),       &$/;"	v	module:DVODE_F90_M
+JACSP	dvode_f90_m.f90	/^    SUBROUTINE JACSP(/;"	s	module:DVODE_F90_M
+JACSPDB	dvode_f90_m.f90	/^    SUBROUTINE JACSPDB(/;"	s	module:DVODE_F90_M
+JADIM	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM,/;"	v	module:DVODE_F90_M
+JAN	dvode_f90_m.f90	/^        JAB(:), JAN(/;"	v	module:DVODE_F90_M
+JATEMP	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(/;"	v	module:DVODE_F90_M
+JCUR	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR,/;"	v	module:DVODE_F90_M
+JDUMMY	dvode_f90_m.f90	/^      SUBROUTINE JDUMMY(/;"	s	module:DVODE_F90_M
+JGP	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(:), JGP(/;"	v	module:DVODE_F90_M
+JMAT	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(:), G0(:), G1(:), GX(:), JMAT(/;"	v	module:DVODE_F90_M
+JMIN	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN,/;"	v	module:DVODE_F90_M
+JPNTRDS	dvode_f90_m.f90	/^    NGRPDS(:), IPNTRDS(:), JPNTRDS(/;"	v	module:DVODE_F90_M
+JROOT	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(:), JGP(:), JROOT(/;"	v	module:DVODE_F90_M
+JSTART	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN, JSTART,/;"	v	module:DVODE_F90_M
+JSV	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN, JSTART, JSV,/;"	v	module:DVODE_F90_M
+JVECT	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(:), JGP(:), JROOT(:), JVECT(/;"	v	module:DVODE_F90_M
+J_HAS_BEEN_COMPUTED	dvode_f90_m.f90	/^        ALLOW_DEFAULT_TOLS, BUILD_IAJA, BOUNDS, CHANGED_ACOR, GROW, IAJA_CALLED,&$/;"	v	module:DVODE_F90_M
+J_IS_CONSTANT	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT,/;"	v	module:DVODE_F90_M
+KFC	dvode_f90_m.f90	/^      INTEGER, PARAMETER, PRIVATE :: IPCUTH_MAX = 100, KFC /;"	v	module:DVODE_F90_M
+KFH	dvode_f90_m.f90	/^      INTEGER, PARAMETER, PRIVATE :: IPCUTH_MAX = 100, KFC = -3,         &$/;"	v	module:DVODE_F90_M
+KFLAG	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN, JSTART, JSV, KFLAG,/;"	v	module:DVODE_F90_M
+KOUNTL	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN, JSTART, JSV, KFLAG, KOUNTL,/;"	v	module:DVODE_F90_M
+KUTH	dvode_f90_m.f90	/^        ISTART, ISTATC, ITASKC, JADIM, JCUR, JMIN, JSTART, JSV, KFLAG, KOUNTL,  &$/;"	v	module:DVODE_F90_M
+KahanSum	modpk_modules.f90	/^  type, public :: KahanSum$/;"	t	module:powersp
+L	dvode_f90_m.f90	/^        KUTH, L,/;"	v	module:DVODE_F90_M
+LARGE	dvode_f90_m.f90	/^        KUTH, L, LARGE,/;"	v	module:DVODE_F90_M
+LAST	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST,/;"	v	module:DVODE_F90_M
+LB	dvode_f90_m.f90	/^        FPTEMP(:), FTEMP(:), FTEMP1(:), G0(:), G1(:), GX(:), JMAT(:),           &$/;"	v	module:DVODE_F90_M
+LBIG	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT, LBIG,/;"	v	module:DVODE_F90_M
+LBIG1	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT, LBIG, LBIG1,/;"	v	module:DVODE_F90_M
+LBLOCK	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT, LBIG, LBIG1, LBLOCK,/;"	v	module:DVODE_F90_M
+LENIGP	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP,/;"	v	module:DVODE_F90_M
+LENIV1	dvode_f90_m.f90	/^        KFH = -15, LENIV1 /;"	v	module:DVODE_F90_M
+LENIV2	dvode_f90_m.f90	/^        KFH = -15, LENIV1 = 33,                                          &$/;"	v	module:DVODE_F90_M
+LENRV1	dvode_f90_m.f90	/^        LENIV2 = 8, LENRV1 /;"	v	module:DVODE_F90_M
+LENRV2	dvode_f90_m.f90	/^        LENIV2 = 8, LENRV1 = 48, LENRV2 /;"	v	module:DVODE_F90_M
+LICN_ALL	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL,/;"	v	module:DVODE_F90_M
+LIKE_ORIGINAL_VODE	dvode_f90_m.f90	/^  LOGICAL, PRIVATE :: USE_JACSP, LIKE_ORIGINAL_VODE$/;"	v	module:DVODE_F90_M
+LIRN_ALL	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL, LIRN_ALL,/;"	v	module:DVODE_F90_M
+LIW	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL, LIRN_ALL, LIW,/;"	v	module:DVODE_F90_M
+LIWADS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS, LIWADS,/;"	v	module:DVODE_F90_M
+LIWKDS	dvode_f90_m.f90	/^    NCFJACDS, LWKDS, LIWKDS$/;"	v	module:DVODE_F90_M
+LIWM	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL, LIRN_ALL, LIW, LIWM,/;"	v	module:DVODE_F90_M
+LIWUSER	dvode_f90_m.f90	/^        LENIV2 = 8, LENRV1 = 48, LENRV2 = 1, LIWUSER /;"	v	module:DVODE_F90_M
+LMAX	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL, LIRN_ALL, LIW, LIWM, LMAX,/;"	v	module:DVODE_F90_M
+LNPIV	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: IDISP(2), IUSER(30), LNPIV(/;"	v	module:DVODE_F90_M
+LOCJS	dvode_f90_m.f90	/^        KUTH, L, LARGE, LAST, LENIGP, LICN_ALL, LIRN_ALL, LIW, LIWM, LMAX,      &$/;"	v	module:DVODE_F90_M
+LP	dvode_f90_m.f90	/^        LOCJS, LP,/;"	v	module:DVODE_F90_M
+LPIV	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: IDISP(2), IUSER(30), LNPIV(10), LPIV(/;"	v	module:DVODE_F90_M
+LRW	dvode_f90_m.f90	/^        LOCJS, LP, LRW,/;"	v	module:DVODE_F90_M
+LRWUSER	dvode_f90_m.f90	/^        LENIV2 = 8, LENRV1 = 48, LENRV2 = 1, LIWUSER = 30, LRWUSER /;"	v	module:DVODE_F90_M
+LWKDS	dvode_f90_m.f90	/^    NCFJACDS, LWKDS,/;"	v	module:DVODE_F90_M
+LWM	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM,/;"	v	module:DVODE_F90_M
+LWMDIM	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM,/;"	v	module:DVODE_F90_M
+LWMTEMP	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP,/;"	v	module:DVODE_F90_M
+LYH	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH,/;"	v	module:DVODE_F90_M
+LYHTEMP	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH, LYHTEMP,/;"	v	module:DVODE_F90_M
+MA28AD	dvode_f90_m.f90	/^      SUBROUTINE MA28AD(/;"	s	module:DVODE_F90_M
+MA28AD_CALLS	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD, WPD, WPS, MA28AD_CALLS,/;"	v	module:DVODE_F90_M
+MA28BD	dvode_f90_m.f90	/^      SUBROUTINE MA28BD(/;"	s	module:DVODE_F90_M
+MA28BD_CALLS	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD, WPD, WPS, MA28AD_CALLS, MA28BD_CALLS,/;"	v	module:DVODE_F90_M
+MA28CD	dvode_f90_m.f90	/^      SUBROUTINE MA28CD(/;"	s	module:DVODE_F90_M
+MA28CD_CALLS	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD, WPD, WPS, MA28AD_CALLS, MA28BD_CALLS,         &$/;"	v	module:DVODE_F90_M
+MA28DD	dvode_f90_m.f90	/^      SUBROUTINE MA28DD(/;"	s	module:DVODE_F90_M
+MA28ID	dvode_f90_m.f90	/^      SUBROUTINE MA28ID(/;"	s	module:DVODE_F90_M
+MA30AD	dvode_f90_m.f90	/^      SUBROUTINE MA30AD(/;"	s	module:DVODE_F90_M
+MA30BD	dvode_f90_m.f90	/^      SUBROUTINE MA30BD(/;"	s	module:DVODE_F90_M
+MA30CD	dvode_f90_m.f90	/^      SUBROUTINE MA30CD(/;"	s	module:DVODE_F90_M
+MA30DD	dvode_f90_m.f90	/^      SUBROUTINE MA30DD(/;"	s	module:DVODE_F90_M
+MA48_WAS_USED	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT, LBIG, LBIG1, LBLOCK, MA48_WAS_USED,/;"	v	module:DVODE_F90_M
+MANPIV	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH, LYHTEMP, MANPIV,/;"	v	module:DVODE_F90_M
+MAPIV	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH, LYHTEMP, MANPIV, MAPIV,/;"	v	module:DVODE_F90_M
+MAXCOR	dvode_f90_m.f90	/^        LENIV2 = 8, LENRV1 = 48, LENRV2 = 1, LIWUSER = 30, LRWUSER = 22, &$/;"	v	module:DVODE_F90_M
+MAXG	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH, LYHTEMP, MANPIV, MAPIV, MAXG,/;"	v	module:DVODE_F90_M
+MAXGRPDS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS, LIWADS, MAXGRPDS,/;"	v	module:DVODE_F90_M
+MAXIT	dvode_f90_m.f90	/^        LOCJS, LP, LRW, LWM, LWMDIM, LWMTEMP, LYH, LYHTEMP, MANPIV, MAPIV, MAXG,&$/;"	v	module:DVODE_F90_M
+MAXORD	dvode_f90_m.f90	/^        MAXIT, MAXORD,/;"	v	module:DVODE_F90_M
+MAX_ARRAY_SIZE	dvode_f90_m.f90	/^        MAXCOR = 3, MAX_ARRAY_SIZE /;"	v	module:DVODE_F90_M
+MAX_MINICN	dvode_f90_m.f90	/^        MA28CD_CALLS, MC19AD_CALLS, MAX_MINIRN, MAX_MINICN,/;"	v	module:DVODE_F90_M
+MAX_MINIRN	dvode_f90_m.f90	/^        MA28CD_CALLS, MC19AD_CALLS, MAX_MINIRN,/;"	v	module:DVODE_F90_M
+MAX_NNZ	dvode_f90_m.f90	/^        MA28CD_CALLS, MC19AD_CALLS, MAX_MINIRN, MAX_MINICN, MAX_NNZ,/;"	v	module:DVODE_F90_M
+MB28	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28,/;"	v	module:DVODE_F90_M
+MB48	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48,/;"	v	module:DVODE_F90_M
+MC13D	dvode_f90_m.f90	/^      SUBROUTINE MC13D(/;"	s	module:DVODE_F90_M
+MC13E	dvode_f90_m.f90	/^      SUBROUTINE MC13E(/;"	s	module:DVODE_F90_M
+MC19AD	dvode_f90_m.f90	/^      SUBROUTINE MC19AD(/;"	s	module:DVODE_F90_M
+MC19AD_CALLS	dvode_f90_m.f90	/^        MA28CD_CALLS, MC19AD_CALLS,/;"	v	module:DVODE_F90_M
+MC20AD	dvode_f90_m.f90	/^      SUBROUTINE MC20AD(/;"	s	module:DVODE_F90_M
+MC20BD	dvode_f90_m.f90	/^      SUBROUTINE MC20BD(/;"	s	module:DVODE_F90_M
+MC21A	dvode_f90_m.f90	/^      SUBROUTINE MC21A(/;"	s	module:DVODE_F90_M
+MC21B	dvode_f90_m.f90	/^      SUBROUTINE MC21B(/;"	s	module:DVODE_F90_M
+MC22AD	dvode_f90_m.f90	/^      SUBROUTINE MC22AD(/;"	s	module:DVODE_F90_M
+MC23AD	dvode_f90_m.f90	/^      SUBROUTINE MC23AD(/;"	s	module:DVODE_F90_M
+MC24AD	dvode_f90_m.f90	/^      SUBROUTINE MC24AD(/;"	s	module:DVODE_F90_M
+MEPS	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS,/;"	v	module:DVODE_F90_M
+METH	dvode_f90_m.f90	/^        INTEGER :: MF, METH,/;"	k	type:VODE_OPTS
+METH	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH,/;"	v	module:DVODE_F90_M
+MF	dvode_f90_m.f90	/^        INTEGER :: MF,/;"	k	type:VODE_OPTS
+MICN	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN,/;"	v	module:DVODE_F90_M
+MICNCP	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN, MICNCP,/;"	v	module:DVODE_F90_M
+MINGRPDS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS, LIWADS, MAXGRPDS, MINGRPDS,/;"	v	module:DVODE_F90_M
+MINICN	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN, MICNCP, MINICN,/;"	v	module:DVODE_F90_M
+MINIRN	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN, MICNCP, MINICN, MINIRN,/;"	v	module:DVODE_F90_M
+MIRANK	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN, MICNCP, MINICN, MINIRN, MIRANK,/;"	v	module:DVODE_F90_M
+MIRN	dvode_f90_m.f90	/^        MAXIT, MAXORD, MB28, MB48, METH, MICN, MICNCP, MINICN, MINIRN, MIRANK,  &$/;"	v	module:DVODE_F90_M
+MIRNCP	dvode_f90_m.f90	/^        MIRN, MIRNCP,/;"	v	module:DVODE_F90_M
+MITER	dvode_f90_m.f90	/^        INTEGER :: MF, METH, MITER,/;"	k	type:VODE_OPTS
+MITER	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER,/;"	v	module:DVODE_F90_M
+MLP	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP,/;"	v	module:DVODE_F90_M
+MORD	dvode_f90_m.f90	/^      INTEGER, PRIVATE :: MORD(/;"	v	module:DVODE_F90_M
+MOSS	dvode_f90_m.f90	/^        INTEGER :: MF, METH, MITER, MOSS,/;"	k	type:VODE_OPTS
+MOSS	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS,/;"	v	module:DVODE_F90_M
+MP	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP,/;"	v	module:DVODE_F90_M
+MRESID	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID,/;"	v	module:DVODE_F90_M
+MRMIN	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID, MRMIN,/;"	v	module:DVODE_F90_M
+MSBG	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG,/;"	v	module:DVODE_F90_M
+MSBJ	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG, MSBJ,/;"	v	module:DVODE_F90_M
+MSBP	dvode_f90_m.f90	/^        MAXCOR = 3, MAX_ARRAY_SIZE = 900000000, MSBP /;"	v	module:DVODE_F90_M
+MXHNIL	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG, MSBJ, MXHNIL,/;"	v	module:DVODE_F90_M
+MXHNL0	dvode_f90_m.f90	/^        MAXCOR = 3, MAX_ARRAY_SIZE = 900000000, MSBP = 20, MXHNL0 /;"	v	module:DVODE_F90_M
+MXNCF	dvode_f90_m.f90	/^        MAXCOR = 3, MAX_ARRAY_SIZE = 900000000, MSBP = 20, MXHNL0 = 10,  &$/;"	v	module:DVODE_F90_M
+MXSTEP	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG, MSBJ, MXHNIL, MXSTEP,/;"	v	module:DVODE_F90_M
+MXSTP0	dvode_f90_m.f90	/^        MXNCF = 10, MXSTP0 /;"	v	module:DVODE_F90_M
+M_Pl	modpk_modules.f90	/^  real(dp), PARAMETER :: M_Pl=/;"	v	module:modpkparams
+Mpc2Mpl	modpk_modules.f90	/^  real(dp), PARAMETER :: Mpc2Mpl=/;"	v	module:modpkparams
+MySech	modpk_potential.f90	/^  FUNCTION MySech(/;"	f
+N	dvode_f90_m.f90	/^        MIRN,/;"	v	module:DVODE_F90_M
+N	modpk_potential.f90	/^    real(dp) :: N=/;"	k	type:bundle
+NCFJACDS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS, LIWADS, MAXGRPDS, MINGRPDS, NRFJACDS,    &$/;"	v	module:DVODE_F90_M
+NCFN	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG, MSBJ, MXHNIL, MXSTEP, N, NZB, &$/;"	v	module:DVODE_F90_M
+NDROP	dvode_f90_m.f90	/^        NCFN, NDROP,/;"	v	module:DVODE_F90_M
+NDROP1	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1,/;"	v	module:DVODE_F90_M
+NDX	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX,/;"	v	module:DVODE_F90_M
+NETF	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF,/;"	v	module:DVODE_F90_M
+NEWH	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH,/;"	v	module:DVODE_F90_M
+NEWQ	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ,/;"	v	module:DVODE_F90_M
+NFE	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE,/;"	v	module:DVODE_F90_M
+NG	dvode_f90_m.f90	/^        INTEGER :: MF, METH, MITER, MOSS, ITOL, IOPT, NG$/;"	k	type:VODE_OPTS
+NGC	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE, NGC,/;"	v	module:DVODE_F90_M
+NGE	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE, NGC, NGE,/;"	v	module:DVODE_F90_M
+NGP	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE, NGC, NGE, NGP,/;"	v	module:DVODE_F90_M
+NGRPDS	dvode_f90_m.f90	/^  INTEGER, ALLOCATABLE, PRIVATE :: INDROWDS(:), INDCOLDS(:),           &$/;"	v	module:DVODE_F90_M
+NHNIL	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE, NGC, NGE, NGP, NHNIL,/;"	v	module:DVODE_F90_M
+NJE	dvode_f90_m.f90	/^        NCFN, NDROP, NDROP1, NDX, NETF, NEWH, NEWQ, NFE, NGC, NGE, NGP, NHNIL,  &$/;"	v	module:DVODE_F90_M
+NLP	dvode_f90_m.f90	/^        NJE, NLP,/;"	v	module:DVODE_F90_M
+NLU	dvode_f90_m.f90	/^        NJE, NLP, NLU,/;"	v	module:DVODE_F90_M
+NNI	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI,/;"	v	module:DVODE_F90_M
+NNZ	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ,/;"	v	module:DVODE_F90_M
+NOITER	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER,/;"	v	module:DVODE_F90_M
+NQ	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ,/;"	v	module:DVODE_F90_M
+NQNYH	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH,/;"	v	module:DVODE_F90_M
+NQU	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH, NQU,/;"	v	module:DVODE_F90_M
+NQWAIT	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH, NQU, NQWAIT,/;"	v	module:DVODE_F90_M
+NRFJACDS	dvode_f90_m.f90	/^  INTEGER, PRIVATE :: INFODS, LIWADS, MAXGRPDS, MINGRPDS, NRFJACDS,/;"	v	module:DVODE_F90_M
+NSLG	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH, NQU, NQWAIT, NSLG,/;"	v	module:DVODE_F90_M
+NSLJ	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH, NQU, NQWAIT, NSLG, NSLJ,/;"	v	module:DVODE_F90_M
+NSLP	dvode_f90_m.f90	/^        NJE, NLP, NLU, NNI, NNZ, NOITER, NQ, NQNYH, NQU, NQWAIT, NSLG, NSLJ,    &$/;"	v	module:DVODE_F90_M
+NSRCH	dvode_f90_m.f90	/^        NSLP, NSRCH,/;"	v	module:DVODE_F90_M
+NSRCH1	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1,/;"	v	module:DVODE_F90_M
+NST	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST,/;"	v	module:DVODE_F90_M
+NSUBS	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS,/;"	v	module:DVODE_F90_M
+NSUPS	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS,/;"	v	module:DVODE_F90_M
+NUM	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS, NUM,/;"	v	module:DVODE_F90_M
+NUMNZ	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS, NUM, NUMNZ,/;"	v	module:DVODE_F90_M
+NUMSRT	dvode_f90_m.f90	/^    SUBROUTINE NUMSRT(/;"	s	module:DVODE_F90_M
+NYH	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS, NUM, NUMNZ, NYH,/;"	v	module:DVODE_F90_M
+NZB	dvode_f90_m.f90	/^        MIRN, MIRNCP, MITER, MLP, MOSS, MP, MSBG, MSBJ, MXHNIL, MXSTEP, N, NZB,/;"	v	module:DVODE_F90_M
+NZ_ALL	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS, NUM, NUMNZ, NYH, NZ_ALL,/;"	v	module:DVODE_F90_M
+NZ_SWAG	dvode_f90_m.f90	/^        NSLP, NSRCH, NSRCH1, NST, NSUBS, NSUPS, NUM, NUMNZ, NYH, NZ_ALL,        &$/;"	v	module:DVODE_F90_M
+N_iso_ref	modpk_icsampling.f90	/^  real(dp) :: N_iso_ref$/;"	v	module:modpk_icsampling
+N_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot,/;"	v	module:modpkparams
+N_pivot_prior_max	multimodecode_driver.f90	/^  real(dp) :: N_pivot_prior_min, N_pivot_prior_max$/;"	v	program:test_mmodpk
+N_pivot_prior_min	multimodecode_driver.f90	/^  real(dp) :: N_pivot_prior_min,/;"	v	program:test_mmodpk
+N_tot	modpk_modules.f90	/^  real(dp) :: k_pivot, N_pivot, N_tot,/;"	v	module:modpkparams
+Nefold_max	modpk_modules.f90	/^  real(dp) :: Nefold_max=/;"	v	module:modpkparams
+OK_TO_CALL_MA28	dvode_f90_m.f90	/^        J_HAS_BEEN_COMPUTED, J_IS_CONSTANT, LBIG, LBIG1, LBLOCK, MA48_WAS_USED, &$/;"	v	module:DVODE_F90_M
+ONE	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ONE /;"	v	module:DVODE_F90_M
+ONEPSM	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ONEPSM /;"	v	module:DVODE_F90_M
+OPTS_CALLED	dvode_f90_m.f90	/^        OK_TO_CALL_MA28, SUBS, SUPS, OPTS_CALLED,/;"	v	module:DVODE_F90_M
+PI	modpk_modules.f90	/^  real(dp), PARAMETER :: PI=/;"	v	module:internals
+PMAT	dvode_f90_m.f90	/^        LB(:), PMAT(/;"	v	module:DVODE_F90_M
+PREVIOUS_MAXORD	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD,/;"	v	module:DVODE_F90_M
+PRL1	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID, MRMIN, PRL1,/;"	v	module:DVODE_F90_M
+PT1	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: PT1 /;"	v	module:DVODE_F90_M
+PT2	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: PT2 /;"	v	module:DVODE_F90_M
+RC	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID, MRMIN, PRL1, RC,/;"	v	module:DVODE_F90_M
+RDIV	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: RDIV /;"	v	module:DVODE_F90_M
+REDO_PIVOT_SEQUENCE	dvode_f90_m.f90	/^        OK_TO_CALL_MA28, SUBS, SUPS, OPTS_CALLED, REDO_PIVOT_SEQUENCE,/;"	v	module:DVODE_F90_M
+RELEASE_ARRAYS	dvode_f90_m.f90	/^      SUBROUTINE RELEASE_ARRAYS$/;"	s	module:DVODE_F90_M
+RESID	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID,/;"	v	module:DVODE_F90_M
+RL1	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID, MRMIN, PRL1,/;"	v	module:DVODE_F90_M
+RMIN	dvode_f90_m.f90	/^        HMXI, HNEW, HSCAL, HU, MEPS, MRESID, MRMIN,/;"	v	module:DVODE_F90_M
+RSCALEX	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(/;"	v	module:DVODE_F90_M
+RTOL	dvode_f90_m.f90	/^        REAL (WP), DIMENSION (:), POINTER :: ATOL, RTOL$/;"	k	type:VODE_OPTS
+RUSER	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: EL(13), RUSER(/;"	v	module:DVODE_F90_M
+RWORK	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(/;"	v	module:DVODE_F90_M
+SAVF	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(:), SAVF(/;"	v	module:DVODE_F90_M
+SCALE_MATRIX	dvode_f90_m.f90	/^        OK_TO_CALL_MA28, SUBS, SUPS, OPTS_CALLED, REDO_PIVOT_SEQUENCE,          &$/;"	v	module:DVODE_F90_M
+SEQ	dvode_f90_m.f90	/^    SUBROUTINE SEQ(/;"	s	module:DVODE_F90_M
+SETH	dvode_f90_m.f90	/^        RMIN, SETH,/;"	v	module:DVODE_F90_M
+SETR	dvode_f90_m.f90	/^    SUBROUTINE SETR(/;"	s	module:DVODE_F90_M
+SET_IAJA	dvode_f90_m.f90	/^      SUBROUTINE SET_IAJA(/;"	s	module:DVODE_F90_M
+SET_ICN	dvode_f90_m.f90	/^      SUBROUTINE SET_ICN(/;"	s	module:DVODE_F90_M
+SET_INTERMEDIATE_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_INTERMEDIATE_OPTS(/;"	f	module:DVODE_F90_M
+SET_NORMAL_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_NORMAL_OPTS(/;"	f	module:DVODE_F90_M
+SET_OPTS	dvode_f90_m.f90	/^  FUNCTION SET_OPTS(/;"	f	module:DVODE_F90_M
+SET_OPTS_2	dvode_f90_m.f90	/^  SUBROUTINE SET_OPTS_2(/;"	s	module:DVODE_F90_M
+SIX	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: SIX /;"	v	module:DVODE_F90_M
+SLO	dvode_f90_m.f90	/^    SUBROUTINE SLO(/;"	s	module:DVODE_F90_M
+SPARSE	dvode_f90_m.f90	/^        LOGICAL :: DENSE, BANDED, SPARSE$/;"	k	type:VODE_OPTS
+SPARSE	dvode_f90_m.f90	/^        SCALE_MATRIX, SPARSE,/;"	v	module:DVODE_F90_M
+SRTDAT	dvode_f90_m.f90	/^    SUBROUTINE SRTDAT(/;"	s	module:DVODE_F90_M
+SUBDS	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(:), JGP(:), JROOT(:), JVECT(:), SUBDS(/;"	v	module:DVODE_F90_M
+SUBS	dvode_f90_m.f90	/^        OK_TO_CALL_MA28, SUBS,/;"	v	module:DVODE_F90_M
+SUPDS	dvode_f90_m.f90	/^        JAB(:), JAN(:), JATEMP(:), JGP(:), JROOT(:), JVECT(:), SUBDS(:), SUPDS(/;"	v	module:DVODE_F90_M
+SUPS	dvode_f90_m.f90	/^        OK_TO_CALL_MA28, SUBS, SUPS,/;"	v	module:DVODE_F90_M
+T0ST	dvode_f90_m.f90	/^        RMIN, SETH, T0ST,/;"	v	module:DVODE_F90_M
+TAU	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: EL(13), RUSER(22), TAU(/;"	v	module:DVODE_F90_M
+TEN	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: TEN /;"	v	module:DVODE_F90_M
+TENTH	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: TENTH /;"	v	module:DVODE_F90_M
+THEMAX	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX,/;"	v	module:DVODE_F90_M
+THOU	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: THOU /;"	v	module:DVODE_F90_M
+THRESH	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: THRESH /;"	v	module:DVODE_F90_M
+TLAST	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST,/;"	v	module:DVODE_F90_M
+TN	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN,/;"	v	module:DVODE_F90_M
+TOL	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL,/;"	v	module:DVODE_F90_M
+TOL1	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1,/;"	v	module:DVODE_F90_M
+TOUTC	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1, TOUTC,/;"	v	module:DVODE_F90_M
+TQ	dvode_f90_m.f90	/^      REAL (WP), PRIVATE :: EL(13), RUSER(22), TAU(13), TQ(/;"	v	module:DVODE_F90_M
+TWO	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: TWO /;"	v	module:DVODE_F90_M
+U125	dvode_f90_m.f90	/^  REAL (WP), PRIVATE :: U125,/;"	v	module:DVODE_F90_M
+U325	dvode_f90_m.f90	/^  REAL (WP), PRIVATE :: U125, U325$/;"	v	module:DVODE_F90_M
+UB	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(:), SAVF(:), UB(/;"	v	module:DVODE_F90_M
+UMAX	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1, TOUTC, UMAX,/;"	v	module:DVODE_F90_M
+UROUND	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1, TOUTC, UMAX, UROUND,/;"	v	module:DVODE_F90_M
+USERSETS_IAJA	dvode_f90_m.f90	/^      SUBROUTINE USERSETS_IAJA(/;"	s	module:DVODE_F90_M
+USE_FAST_FACTOR	dvode_f90_m.f90	/^        SCALE_MATRIX, SPARSE, USE_FAST_FACTOR,/;"	v	module:DVODE_F90_M
+USE_JACSP	dvode_f90_m.f90	/^  LOGICAL, PRIVATE :: USE_JACSP,/;"	v	module:DVODE_F90_M
+USE_MA48_FOR_SPARSE	dvode_f90_m.f90	/^  LOGICAL, PARAMETER, PRIVATE :: USE_MA48_FOR_SPARSE=/;"	v	module:DVODE_F90_M
+U_PIVOT	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1, TOUTC, UMAX, UROUND,    &$/;"	v	module:DVODE_F90_M
+VODE_F90	dvode_f90_m.f90	/^      SUBROUTINE VODE_F90(/;"	s	module:DVODE_F90_M
+VODE_OPTS	dvode_f90_m.f90	/^      TYPE, PUBLIC :: VODE_OPTS$/;"	t	module:DVODE_F90_M
+WKDS	dvode_f90_m.f90	/^  REAL (WP), ALLOCATABLE, PRIVATE :: YSCALEDS(:), WKDS(/;"	v	module:DVODE_F90_M
+WM	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(:), SAVF(:), UB(:), WM(/;"	v	module:DVODE_F90_M
+WM1	dvode_f90_m.f90	/^        U_PIVOT, X2, WM1,/;"	v	module:DVODE_F90_M
+WM2	dvode_f90_m.f90	/^        U_PIVOT, X2, WM1, WM2$/;"	v	module:DVODE_F90_M
+WMTEMP	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(:), SAVF(:), UB(:), WM(:),            &$/;"	v	module:DVODE_F90_M
+WP	dvode_f90_m.f90	/^  INTEGER, parameter :: WP /;"	v	module:DVODE_F90_M
+WPD	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD, WPD,/;"	v	module:DVODE_F90_M
+WPS	dvode_f90_m.f90	/^        NZ_SWAG, PREVIOUS_MAXORD, WPD, WPS,/;"	v	module:DVODE_F90_M
+WSCALEX	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(/;"	v	module:DVODE_F90_M
+X2	dvode_f90_m.f90	/^        U_PIVOT, X2,/;"	v	module:DVODE_F90_M
+XERRDV	dvode_f90_m.f90	/^      SUBROUTINE XERRDV(/;"	s	module:DVODE_F90_M
+XSETF	dvode_f90_m.f90	/^      SUBROUTINE XSETF(/;"	s	module:DVODE_F90_M
+XSETUN	dvode_f90_m.f90	/^      SUBROUTINE XSETUN(/;"	s	module:DVODE_F90_M
+YHNQP2	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(/;"	v	module:DVODE_F90_M
+YHTEMP	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(/;"	v	module:DVODE_F90_M
+YMAX	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(:), YMAX(/;"	v	module:DVODE_F90_M
+YMAXWARN	dvode_f90_m.f90	/^        SCALE_MATRIX, SPARSE, USE_FAST_FACTOR, YMAXWARN /;"	v	module:DVODE_F90_M
+YNNEG	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(:), YMAX(:), YNNEG(/;"	v	module:DVODE_F90_M
+YSCALEDS	dvode_f90_m.f90	/^  REAL (WP), ALLOCATABLE, PRIVATE :: YSCALEDS(/;"	v	module:DVODE_F90_M
+YTEMP	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(:), YMAX(:), YNNEG(:),       &$/;"	v	module:DVODE_F90_M
+ZERO	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ZERO /;"	v	module:DVODE_F90_M
+a_end	modpk_modules.f90	/^  real(dp) :: a_end,/;"	v	module:modpkparams
+a_ik	modpk_modules.f90	/^  real(dp) :: k, a_ik$/;"	v	module:internals
+a_init	modpk_modules.f90	/^  real(dp) :: a_init$/;"	v	module:modpkparams
+a_pivot	modpk_modules.f90	/^  real(dp) :: a_end, a_pivot$/;"	v	module:modpkparams
+access_modpk	modpk.f90	/^MODULE access_modpk$/;"	m
+adiab	modpk_modules.f90	/^    real(dp) :: adiab$/;"	k	type:power_spectra
+allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars(/;"	s	program:test_mmodpk
+alpha_s	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt, alpha_s$/;"	k	type:ic_and_observables
+alpha_s	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns, nt, r, alpha_s$/;"	v	program:test_mmodpk
+array_fmt	multimodecode_driver.f90	/^  character(16) :: array_fmt$/;"	v	program:test_mmodpk
+array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(/;"	s	module:modpk_utils
+backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/;"	s	module:background_evolution
+backgrnd_efold	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd_efold$/;"	s	module:background_evolution
+background_evolution	modpk_backgrnd.f90	/^MODULE background_evolution$/;"	m
+bad_ic	modpk_icsampling.f90	/^  integer, parameter :: bad_ic=/;"	v	module:modpk_icsampling
+bderivs	modpk_utils.f90	/^  SUBROUTINE bderivs(/;"	s	module:modpk_utils
+bderivs_dvode	modpk_utils.f90	/^  subroutine bderivs_dvode(/;"	s	module:modpk_utils
+bisect	modpk_icsampling.f90	/^      pure real(dp) function bisect(/;"	f	subroutine:mass_spectrum_nflation
+build_isocurv_basis	modpk_potential.f90	/^    subroutine build_isocurv_basis(/;"	s	subroutine:powerspectrum
+build_isocurv_basisALTERNATIVE	modpk_potential.f90	/^    subroutine build_isocurv_basisALTERNATIVE(/;"	s	subroutine:powerspectrum
+build_mass_matrix	modpk_utils.f90	/^      subroutine build_mass_matrix(/;"	s	subroutine:derivs
+build_unconstrained_sample	modpk_icsampling.f90	/^    subroutine build_unconstrained_sample(/;"	s	module:modpk_icsampling
+bundle	modpk_potential.f90	/^  type :: bundle$/;"	t	module:potential
+bundle_exp_scalar	modpk_modules.f90	/^    real(dp) :: bundle_exp_scalar$/;"	k	type:power_spectra
+bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(/;"	s
+calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(/;"	f	module:modpk_postprocessing
+calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(/;"	s	program:test_mmodpk
+camb_interface	modpk_modules.f90	/^MODULE camb_interface$/;"	m
+check_stop_when_not_slowroll_infl_end	modpk_odeint.f90	/^  logical function check_stop_when_not_slowroll_infl_end(/;"	f	module:modpk_odeint
+ci	multimodecode_driver.f90	/^  character(len=2) :: ci$/;"	v	program:test_mmodpk
+constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(/;"	f	subroutine:implicit_surface_sampling
+convert_hacked_vector_to_matrix	modpk_utils.f90	/^  pure function convert_hacked_vector_to_matrix(/;"	f	module:modpk_utils
+convert_matrix_to_hacked_vector	modpk_utils.f90	/^  pure function convert_matrix_to_hacked_vector(/;"	f	module:modpk_utils
+cross_ad_iso	modpk_modules.f90	/^    real(dp) :: cross_ad_iso$/;"	k	type:power_spectra
+d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(/;"	f	module:potential
+d2turndphi2	modpk_potential.f90	/^  real(dp) function d2turndphi2(/;"	f	module:potential
+dVdphi	modpk_potential.f90	/^  recursive function dVdphi(/;"	f	module:potential
+delsigma	modpk_modules.f90	/^  real(dp) :: delsigma /;"	v	module:modpkparams
+derivs	modpk_utils.f90	/^  SUBROUTINE derivs(/;"	s	module:modpk_utils
+dlnk	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk,/;"	v	program:driver_modpk
+dlnk	multimodecode_driver.f90	/^  real(dp) :: dlnk,/;"	v	program:test_mmodpk
+dlogThetadN	modpk_potential.f90	/^    real(dp) :: dlogThetadN=/;"	k	type:bundle
+dot	modpk_utils.f90	/^      pure function dot(/;"	f	subroutine:derivs
+dphi_init	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0/;"	v	module:modpkparams
+dphi_init0	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0(/;"	v	module:modpkparams
+dphi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N$/;"	v	module:modpk_icsampling
+dphi_pivot	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(/;"	v	module:modpkparams
+dphiarr	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(/;"	v	module:modpkparams
+driver_modpk	driver_modpk.f90	/^PROGRAM driver_modpk$/;"	p
+dtheta_dN	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(nsteps), dtheta_dN(/;"	v	module:modpkparams
+dturndphi	modpk_potential.f90	/^  real(dp) function dturndphi(/;"	f	module:potential
+dxsav	modpk_modules.f90	/^  real(dp) :: dxsav$/;"	v	module:ode_path
+e2_fmt	multimodecode_driver.f90	/^  character(36), parameter:: e2_fmt /;"	v	program:test_mmodpk
+e_fmt	multimodecode_driver.f90	/^  character(16), parameter:: e_fmt /;"	v	program:test_mmodpk
+effective_V_choice	modpk_potential.f90	/^  integer :: effective_V_choice$/;"	v	module:potential
+energy_measure	modpk_icsampling.f90	/^    function energy_measure(/;"	f	module:modpk_icsampling
+energy_scale	multimodecode_driver.f90	/^  real(dp) :: energy_scale$/;"	v	program:test_mmodpk
+entropy	modpk_modules.f90	/^    real(dp) :: entropy$/;"	k	type:power_spectra
+epsarr	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(/;"	v	module:modpkparams
+eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(/;"	s	module:modpk_icsampling
+eqen_prior	modpk_icsampling.f90	/^  integer, parameter, private :: eqen_prior /;"	v	module:modpk_icsampling
+eqen_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=/;"	v	module:modpk_icsampling
+equal_area_prior	modpk_icsampling.f90	/^  integer, parameter, private :: equal_area_prior=/;"	v	module:modpk_icsampling
+equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(/;"	s	module:modpk_icsampling
+eval_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,/;"	v	module:powersp
+evolve	modpk.f90	/^  SUBROUTINE evolve(/;"	s	module:access_modpk
+exp_scalar	modpk_potential.f90	/^    real(dp) :: exp_scalar=/;"	k	type:bundle
+field_bundle	modpk_potential.f90	/^  type(bundle) :: field_bundle$/;"	v	module:potential
+find_bounding_knots	modpk_potential.f90	/^  subroutine find_bounding_knots(/;"	s	module:potential
+findiffdphi	modpk_modules.f90	/^  real(dp) :: findiffdphi$/;"	v	module:modpkparams
+fromfile_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &$/;"	v	module:modpk_icsampling
+full_pk	multimodecode_driver.f90	/^      namelist \/full_pk\//;"	n	subroutine:get_full_pk
+getEps	modpk_potential.f90	/^  FUNCTION getEps(/;"	f	module:potential
+getEps_with_t	modpk_potential.f90	/^  FUNCTION getEps_with_t(/;"	f	module:potential
+getH	modpk_potential.f90	/^  FUNCTION getH(/;"	f	module:potential
+getH_with_t	modpk_potential.f90	/^  FUNCTION getH_with_t(/;"	f	module:potential
+getPdot	modpk_potential.f90	/^    function getPdot(/;"	f
+get_A_vect	modpk_potential.f90	/^    function get_A_vect(/;"	f
+get_B_vect	modpk_potential.f90	/^    function get_B_vect(/;"	f
+get_full_pk	multimodecode_driver.f90	/^    subroutine get_full_pk(/;"	s	program:test_mmodpk
+get_ic	modpk_icsampling.f90	/^    subroutine get_ic(/;"	s	module:modpk_icsampling
+get_new_N_pivot	modpk_icsampling.f90	/^    subroutine get_new_N_pivot(/;"	s	module:modpk_icsampling
+getcs2	modpk_potential.f90	/^    function getcs2(/;"	f
+getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(/;"	f	module:potential
+getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(/;"	f	module:potential
+geteta	modpk_potential.f90	/^  FUNCTION geteta(/;"	f	module:potential
+getrhodot	modpk_potential.f90	/^    function getrhodot(/;"	f
+h_ik	modpk_modules.f90	/^  real(dp) :: h_ik$/;"	v	module:internals
+h_init	modpk_modules.f90	/^  real(dp) :: h_init,/;"	v	module:modpkparams
+heapsort	modpk_icsampling.f90	/^        pure subroutine heapsort(/;"	s	subroutine:get_ic
+hubarr	modpk_modules.f90	/^  real(dp) :: hubarr(/;"	v	module:modpkparams
+i	driver_modpk.f90	/^  INTEGER*4 :: i$/;"	v	program:driver_modpk
+i	multimodecode_driver.f90	/^  in/;"	v	program:test_mmodpk
+i_fmt	multimodecode_driver.f90	/^  character(16), parameter:: i_fmt /;"	v	program:test_mmodpk
+ic	modpk_icsampling.f90	/^    real(dp), dimension(:), allocatable :: ic$/;"	k	type:ic_and_observables
+ic_and_observables	modpk_icsampling.f90	/^  type :: ic_and_observables$/;"	t	module:modpk_icsampling
+ic_load_observables	modpk_icsampling.f90	/^    subroutine ic_load_observables(/;"	s	module:modpk_icsampling
+ic_output	multimodecode_driver.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output,/;"	v	program:test_mmodpk
+ic_output_iso_N	multimodecode_driver.f90	/^  type(ic_and_observables), dimension(:), allocatable :: ic_output, ic_output_iso_N$/;"	v	program:test_mmodpk
+ic_print_observables	modpk_icsampling.f90	/^    subroutine ic_print_observables(/;"	s	module:modpk_icsampling
+ic_sampling	multimodecode_driver.f90	/^  namelist \/ic_sampling\//;"	n	program:test_mmodpk
+icfile	modpk_icsampling.f90	/^  integer, private :: icfile$/;"	v	module:modpk_icsampling
+ik	modpk_modules.f90	/^  integer*4 :: ik$/;"	v	module:powersp
+implicit_surface_sampling	modpk_icsampling.f90	/^    subroutine implicit_surface_sampling(/;"	s	module:modpk_icsampling
+index_ptb_vel_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y,/;"	v	module:internals
+index_ptb_y	modpk_modules.f90	/^  integer :: index_ptb_y,/;"	v	module:internals
+index_tensor_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y,/;"	v	module:internals
+index_uzeta_y	modpk_modules.f90	/^  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y$/;"	v	module:internals
+infl_ended	modpk_modules.f90	/^  LOGICAL :: infl_ended$/;"	v	module:ode_path
+init	multimodecode_driver.f90	/^  namelist \/init\//;"	n	program:test_mmodpk
+init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(/;"	s	module:modpk_rng
+init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial(/;"	s	module:modpk_rng
+init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(/;"	s	program:test_mmodpk
+initialphi	modpk_potential.f90	/^  FUNCTION initialphi(/;"	f	module:potential
+instreheat	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs, instreheat$/;"	v	module:modpkparams
+internals	modpk_modules.f90	/^MODULE internals$/;"	m
+isoNname	multimodecode_driver.f90	/^	character(len=15) :: isoNname,/;"	v	program:test_mmodpk
+iso_N	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=5, iso_N=/;"	v	module:modpk_icsampling
+isocurv	modpk_modules.f90	/^    real(dp) :: isocurv$/;"	k	type:power_spectra
+k	modpk_modules.f90	/^    real(dp) :: k$/;"	k	type:power_spectra
+k	modpk_modules.f90	/^  real(dp) :: k,/;"	v	module:internals
+k_pivot	modpk_modules.f90	/^  real(dp) :: k_pivot,/;"	v	module:modpkparams
+k_start	modpk_modules.f90	/^  real(dp) :: eval_ps,k_start,/;"	v	module:powersp
+kahan_clear_mem	modpk_modules.f90	/^  subroutine kahan_clear_mem(/;"	s	module:powersp
+kahan_summation	modpk_modules.f90	/^  subroutine kahan_summation(/;"	s	module:powersp
+kin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin,/;"	v	program:driver_modpk
+kmax	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax,/;"	v	program:driver_modpk
+kmin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin,/;"	v	program:driver_modpk
+knot_positions	modpk_potential.f90	/^  real(dp), dimension(:,:,:), allocatable :: knot_positions$/;"	v	module:potential
+kount	modpk_modules.f90	/^  INTEGER*4 :: nok,nbad,kount$/;"	v	module:ode_path
+lna	modpk_modules.f90	/^  real(dp) :: lna(/;"	v	module:modpkparams
+locate	modpk_utils.f90	/^  pure FUNCTION locate(/;"	f	module:modpk_utils
+log_aharr	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), log_aharr(/;"	v	module:modpkparams
+make_blob	modpk_rng.f90	/^function make_blob(/;"	f	module:modpk_rng
+make_identity	modpk.f90	/^      subroutine make_identity(/;"	s	subroutine:evolve
+mass_spectrum_nflation	modpk_icsampling.f90	/^    SUBROUTINE mass_spectrum_nflation(/;"	s	module:modpk_icsampling
+matrix	modpk_modules.f90	/^    complex(dp), dimension(:,:), allocatable :: matrix$/;"	k	type:power_spectra
+max_vparams	modpk_modules.f90	/^  INTEGER*4, parameter :: max_vparams /;"	v	module:modpkparams
+min_fixed_energy	modpk_icsampling.f90	/^    function min_fixed_energy(/;"	f	module:modpk_icsampling
+mode_derivs_dvode	modpk_utils.f90	/^  subroutine mode_derivs_dvode(/;"	s	module:modpk_utils
+modpk_As	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As,/;"	v	module:modpkparams
+modpk_icsampling	modpk_icsampling.f90	/^module modpk_icsampling$/;"	m
+modpk_nrun	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun,/;"	v	module:modpkparams
+modpk_ns	modpk_modules.f90	/^  real(dp) :: modpk_ns,/;"	v	module:modpkparams
+modpk_nt	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt,/;"	v	module:modpkparams
+modpk_odeint	modpk_odeint.f90	/^MODULE modpk_odeint$/;"	m
+modpk_postprocessing	modpk_postprocessing.f90	/^module modpk_postprocessing$/;"	m
+modpk_r	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As, modpk_r$/;"	v	module:modpkparams
+modpk_rng	modpk_rng.f90	/^module modpk_rng$/;"	m
+modpk_utils	modpk_utils.f90	/^MODULE modpk_utils$/;"	m
+modpkoutput	modpk_modules.f90	/^  LOGICAL :: modpkoutput=/;"	v	module:camb_interface
+modpkparams	modpk_modules.f90	/^MODULE modpkparams$/;"	m
+more_params	multimodecode_driver.f90	/^  namelist \/more_params\//;"	n	program:test_mmodpk
+more_potential_params	multimodecode_driver.f90	/^  logical :: more_potential_params$/;"	v	program:test_mmodpk
+mpi_parallelize	multimodecode_driver.f90	/^    subroutine mpi_parallelize(/;"	s	program:test_mmodpk
+n_ent	modpk_icsampling.f90	/^    real(dp) :: n_iso, n_pnad,n_ent$/;"	k	type:ic_and_observables
+n_ent	multimodecode_driver.f90	/^  real(dp) :: n_iso, n_pnad, n_ent$/;"	v	program:test_mmodpk
+n_flation_looping	modpk_icsampling.f90	/^    subroutine n_flation_looping(/;"	s	module:modpk_icsampling
+n_flation_random_prior	modpk_icsampling.f90	/^    subroutine n_flation_random_prior(/;"	s	module:modpk_icsampling
+n_iso	modpk_icsampling.f90	/^    real(dp) :: n_iso,/;"	k	type:ic_and_observables
+n_iso	multimodecode_driver.f90	/^  real(dp) :: n_iso,/;"	v	program:test_mmodpk
+n_pnad	modpk_icsampling.f90	/^    real(dp) :: n_iso, n_pnad,/;"	k	type:ic_and_observables
+n_pnad	multimodecode_driver.f90	/^  real(dp) :: n_iso, n_pnad,/;"	v	program:test_mmodpk
+n_quadratic_mass_intxn_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_intxn_looping(/;"	s	module:modpk_icsampling
+n_quadratic_mass_looping	modpk_icsampling.f90	/^    subroutine n_quadratic_mass_looping(/;"	s	module:modpk_icsampling
+nactual_bg	modpk_modules.f90	/^  INTEGER*4 :: nactual_bg,/;"	v	module:modpkparams
+nactual_mode	modpk_modules.f90	/^  INTEGER*4 :: nactual_bg, nactual_mode$/;"	v	module:modpkparams
+nbad	modpk_modules.f90	/^  INTEGER*4 :: nok,nbad,/;"	v	module:ode_path
+nok	modpk_modules.f90	/^  INTEGER*4 :: nok,/;"	v	module:ode_path
+norm	modpk_potential.f90	/^  pure function norm(/;"	f
+normal_array	modpk_rng.f90	/^function normal_array(/;"	f	module:modpk_rng
+normal_scalar	modpk_rng.f90	/^function normal_scalar(/;"	f	module:modpk_rng
+ns	modpk_icsampling.f90	/^    real(dp) :: As, ns,/;"	k	type:ic_and_observables
+ns	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns,/;"	v	program:test_mmodpk
+nsteps	modpk_modules.f90	/^  INTEGER, PARAMETER :: nsteps=/;"	v	module:modpkparams
+nt	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt,/;"	k	type:ic_and_observables
+nt	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns, nt,/;"	v	program:test_mmodpk
+num_inflaton	modpk_modules.f90	/^  INTEGER :: num_inflaton$/;"	v	module:modpkparams
+numb_samples	multimodecode_driver.f90	/^  integer :: numb_samples$/;"	v	program:test_mmodpk
+number_knots_qsfrandom	modpk_potential.f90	/^  integer, dimension(:), allocatable :: number_knots_qsfrandom$/;"	v	module:potential
+numtasks	multimodecode_driver.f90	/^  integer :: numtasks,/;"	v	program:test_mmodpk
+ode_infl_end	modpk_modules.f90	/^  LOGICAL :: ode_infl_end$/;"	v	module:ode_path
+ode_path	modpk_modules.f90	/^MODULE ode_path$/;"	m
+ode_ps_output	modpk_modules.f90	/^  LOGICAL :: ode_ps_output$/;"	v	module:ode_path
+ode_underflow	modpk_modules.f90	/^  LOGICAL :: ode_underflow$/;"	v	module:ode_path
+odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(/;"	s	module:modpk_odeint
+odeint_r	modpk_odeint.f90	/^  subroutine odeint_r(/;"	s	module:modpk_odeint
+odeint_with_t	modpk_odeint.f90	/^  SUBROUTINE odeint_with_t(/;"	s	module:modpk_odeint
+open_output_files	multimodecode_driver.f90	/^    subroutine open_output_files(/;"	s	program:test_mmodpk
+output_badic	multimodecode_driver.f90	/^  logical :: output_badic$/;"	v	program:test_mmodpk
+output_initial_data	multimodecode_driver.f90	/^    subroutine output_initial_data(/;"	s	program:test_mmodpk
+output_observables	multimodecode_driver.f90	/^    subroutine output_observables(/;"	s	program:test_mmodpk
+outsamp	multimodecode_driver.f90	/^  integer :: outsamp,/;"	v	program:test_mmodpk
+outsamp_N_iso	multimodecode_driver.f90	/^  integer :: outsamp, outsamp_N_iso$/;"	v	program:test_mmodpk
+param_unif_prior	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=/;"	v	module:modpk_icsampling
+parameter_loop_samp	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=/;"	v	module:modpk_icsampling
+params	multimodecode_driver.f90	/^  namelist \/params\//;"	n	program:test_mmodpk
+partial	modpk_icsampling.f90	/^      pure real(dp) function partial(/;"	f	subroutine:mass_spectrum_nflation
+pdf	modpk_icsampling.f90	/^      pure function pdf(/;"	f	subroutine:mass_spectrum_nflation
+penalized_constrained_montecarlo	modpk_icsampling.f90	/^    subroutine penalized_constrained_montecarlo(/;"	s	module:modpk_icsampling
+penalty_fact	modpk_icsampling.f90	/^  real(dp) :: penalty_fact$/;"	v	module:modpk_icsampling
+phi_infl_end	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(:), phi_infl_end(/;"	v	module:modpkparams
+phi_init	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phi_init0/;"	v	module:modpkparams
+phi_init0	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phi_init0(/;"	v	module:modpkparams
+phi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_iso_N,/;"	v	module:modpk_icsampling
+phi_pivot	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(/;"	v	module:modpkparams
+phiarr	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phiarr(/;"	v	module:modpkparams
+phidot_sign	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phidot_sign(/;"	v	module:modpkparams
+pk_bad	modpk_modules.f90	/^  INTEGER :: pk_bad$/;"	v	module:camb_interface
+pk_initialized	modpk_modules.f90	/^  LOGICAL :: pk_initialized$/;"	v	module:camb_interface
+pkspline_k	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(/;"	v	module:access_modpk
+pkspline_kmax	modpk.f90	/^  real(dp), PARAMETER, PUBLIC :: pkspline_kmin = log(1.e-5_dp), pkspline_kmax /;"	v	module:access_modpk
+pkspline_kmin	modpk.f90	/^  real(dp), PARAMETER, PUBLIC :: pkspline_kmin /;"	v	module:access_modpk
+pkspline_n	modpk.f90	/^  INTEGER*4, PARAMETER, PUBLIC :: pkspline_n /;"	v	module:access_modpk
+pkspline_p	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(pkspline_n), pkspline_p(/;"	v	module:access_modpk
+pkspline_p2der	modpk.f90	/^  real(dp), PUBLIC :: pkspline_k(pkspline_n), pkspline_p(pkspline_n), &$/;"	v	module:access_modpk
+pkspline_pt	modpk.f90	/^	pkspline_p2der(pkspline_n), pkspline_pt(/;"	v	module:access_modpk
+pkspline_pt2der	modpk.f90	/^	pkspline_p2der(pkspline_n), pkspline_pt(pkspline_n), &$/;"	v	module:access_modpk
+pmax	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk, pmin, pmax$/;"	v	program:driver_modpk
+pmin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk, pmin,/;"	v	program:driver_modpk
+pnad	modpk_modules.f90	/^    real(dp) :: pnad$/;"	k	type:power_spectra
+polint	modpk_utils.f90	/^  SUBROUTINE polint(/;"	s	module:modpk_utils
+pot	modpk_potential.f90	/^  recursive function pot(/;"	f	module:potential
+potential	modpk_potential.f90	/^MODULE potential$/;"	m
+potential_choice	modpk_modules.f90	/^  INTEGER :: potential_choice$/;"	v	module:modpkparams
+potinit	modpk.f90	/^  SUBROUTINE potinit$/;"	s	module:access_modpk
+pow	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow,/;"	v	program:driver_modpk
+power_internal	modpk_modules.f90	/^  type(power_spectra) :: power_internal$/;"	v	module:powersp
+power_spectra	modpk_modules.f90	/^  type :: power_spectra$/;"	t	module:powersp
+powersp	modpk_modules.f90	/^module powersp$/;"	m
+powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(/;"	s	module:potential
+powt	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt,/;"	v	program:driver_modpk
+powz	modpk_modules.f90	/^    real(dp) :: powz$/;"	k	type:power_spectra
+priors	multimodecode_driver.f90	/^      namelist \/priors\//;"	n	subroutine:init_sampler
+priors_max	multimodecode_driver.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min, priors_max$/;"	v	program:test_mmodpk
+priors_min	multimodecode_driver.f90	/^  real(dp), dimension(:,:), allocatable :: priors_min,/;"	v	program:test_mmodpk
+projection	modpk_potential.f90	/^  pure function projection(/;"	f
+ps0	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0,/;"	v	program:driver_modpk
+ps1	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1,/;"	v	program:driver_modpk
+ps2	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2,/;"	v	program:driver_modpk
+pspivot	driver_modpk.f90	/^  DOUBLE PRECISION :: pspivot,/;"	v	program:driver_modpk
+pt0	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0,/;"	v	program:driver_modpk
+pt1	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0, pt1,/;"	v	program:driver_modpk
+pt2	driver_modpk.f90	/^  DOUBLE PRECISION :: ps0, ps1, ps2, pt0, pt1, pt2$/;"	v	program:driver_modpk
+ptpivot	driver_modpk.f90	/^  DOUBLE PRECISION :: pspivot, ptpivot$/;"	v	program:driver_modpk
+qderivs	modpk_utils.f90	/^  subroutine qderivs(/;"	s	module:modpk_utils
+qderivs_dvode	modpk_utils.f90	/^  subroutine qderivs_dvode(/;"	s	module:modpk_utils
+qsf_random	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &$/;"	v	module:modpk_icsampling
+qtrap	modpk_icsampling.f90	/^      pure SUBROUTINE qtrap(/;"	s	subroutine:mass_spectrum_nflation
+r	modpk_icsampling.f90	/^    re/;"	k	type:ic_and_observables
+r	multimodecode_driver.f90	/^  re/;"	v	program:test_mmodpk
+rand_sign	modpk_rng.f90	/^function rand_sign(/;"	f	module:modpk_rng
+rank	multimodecode_driver.f90	/^  integer :: numtasks, rank$/;"	v	program:test_mmodpk
+reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(/;"	f	module:modpk_utils
+reallocate_rv	modpk_utils.f90	/^  FUNCTION reallocate_rv(/;"	f	module:modpk_utils
+reg_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=/;"	v	module:modpk_icsampling
+remainder	modpk_modules.f90	/^    real(dp) :: remainder /;"	k	type:KahanSum
+rescale_factor	modpk_modules.f90	/^  real(dp) :: h_init, rescale_factor$/;"	v	module:modpkparams
+rkck_c	modpk_utils.f90	/^  SUBROUTINE rkck_c(/;"	s	module:modpk_utils
+rkck_r	modpk_utils.f90	/^  SUBROUTINE rkck_r(/;"	s	module:modpk_utils
+rkqs_c	modpk_utils.f90	/^  SUBROUTINE rkqs_c(/;"	s	module:modpk_utils
+rkqs_r	modpk_utils.f90	/^  SUBROUTINE rkqs_r(/;"	s	module:modpk_utils
+row_equal_d	modpk_icsampling.f90	/^        pure subroutine row_equal_d(/;"	s	subroutine:get_ic
+sample_nsphere	modpk_icsampling.f90	/^    subroutine sample_nsphere(/;"	s	module:modpk_icsampling
+sampling_techn	modpk_icsampling.f90	/^  integer :: sampling_techn$/;"	v	module:modpk_icsampling
+sampname	multimodecode_driver.f90	/^	character(len=15) :: isoNname, sampname$/;"	v	program:test_mmodpk
+save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_c
+save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_r
+save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_with_t
+save_iso_N	modpk_icsampling.f90	/^  logical :: save_iso_N=/;"	v	module:modpk_icsampling
+save_steps	modpk_modules.f90	/^  LOGICAL, SAVE :: save_steps=/;"	v	module:ode_path
+save_traj	modpk_modules.f90	/^  logical :: save_traj$/;"	v	module:modpkparams
+set_consistent_BD_scale	modpk.f90	/^      subroutine set_consistent_BD_scale(/;"	s	subroutine:evolve
+set_ic	modpk.f90	/^      subroutine set_ic(/;"	s	subroutine:evolve
+set_y_by_energy_constraint	modpk_icsampling.f90	/^    subroutine set_y_by_energy_constraint(/;"	s	module:modpk_icsampling
+shuffle_cut	modpk_rng.f90	/^subroutine shuffle_cut(/;"	s	module:modpk_rng
+shuffle_dp_1	modpk_rng.f90	/^subroutine shuffle_dp_1(/;"	s	module:modpk_rng
+shuffle_dp_dimn	modpk_rng.f90	/^subroutine shuffle_dp_dimn(/;"	s	module:modpk_rng
+shuffle_int_1	modpk_rng.f90	/^subroutine shuffle_int_1(/;"	s	module:modpk_rng
+shuffle_int_dimn	modpk_rng.f90	/^subroutine shuffle_int_dimn(/;"	s	module:modpk_rng
+sigma_arr	modpk_modules.f90	/^  real(dp) :: sigma_arr(/;"	v	module:modpkparams
+slowroll_infl_end	modpk_modules.f90	/^  LOGICAL :: slowroll_infl_end$/;"	v	module:modpkparams
+slowroll_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=/;"	v	module:modpk_icsampling
+slowroll_start	modpk_modules.f90	/^  LOGICAL :: slowroll_start=/;"	v	module:modpkparams
+stability_check_on_H	modpk_potential.f90	/^  subroutine stability_check_on_H(/;"	s
+stand_dev_qsfrandom	modpk_potential.f90	/^  real(dp), dimension(:), allocatable :: stand_dev_qsfrandom$/;"	v	module:potential
+stupid_locate	modpk_utils.f90	/^  pure integer function stupid_locate(/;"	f	module:modpk_utils
+summand	modpk_modules.f90	/^    real(dp) :: summand /;"	k	type:KahanSum
+tensor	modpk_modules.f90	/^    real(dp) :: tensor$/;"	k	type:power_spectra
+tensorpower	modpk_potential.f90	/^  pure FUNCTION tensorpower(/;"	f
+test_bad	multimodecode_driver.f90	/^    subroutine test_bad(/;"	s	program:test_mmodpk
+test_mmodpk	multimodecode_driver.f90	/^program test_mmodpk$/;"	p
+total_efold	modpk.f90	/^  SUBROUTINE total_efold$/;"	s	module:access_modpk
+trace_d2logVdphi2	modpk_potential.f90	/^  function trace_d2logVdphi2(/;"	f
+trajout	modpk_odeint.f90	/^  integer, public :: trajout$/;"	v	module:modpk_odeint
+trapzd	modpk_icsampling.f90	/^      pure SUBROUTINE trapzd(/;"	s	subroutine:mass_spectrum_nflation
+trial_background	modpk_backgrnd.f90	/^  SUBROUTINE trial_background(/;"	s	module:background_evolution
+turning_choice	modpk_potential.f90	/^  integer, dimension(:), allocatable :: turning_choice$/;"	v	module:potential
+turning_function	modpk_potential.f90	/^  real(dp) function turning_function(/;"	f	module:potential
+u	multimodecode_driver.f90	/^  integer :: u$/;"	v	program:test_mmodpk
+unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(/;"	s	module:modpk_icsampling
+unif_prior	modpk_icsampling.f90	/^  integer, parameter, private :: equal_area_prior=1, unif_prior=/;"	v	module:modpk_icsampling
+use_modpk	modpk_modules.f90	/^  LOGICAL :: use_modpk,/;"	v	module:modpkparams
+use_t	modpk_utils.f90	/^  logical :: use_t$/;"	v	module:modpk_utils
+useq_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,k_start, useq_ps$/;"	v	module:powersp
+using_cosmic_time	modpk_utils.f90	/^  logical, private :: using_cosmic_time=/;"	v	module:modpk_utils
+using_q_superh	modpk_utils.f90	/^  logical, private :: using_q_superh=/;"	v	module:modpk_utils
+varying_N_pivot	multimodecode_driver.f90	/^  logical :: varying_N_pivot$/;"	v	program:test_mmodpk
+vect_eq_tablerow_d	modpk_icsampling.f90	/^        pure subroutine vect_eq_tablerow_d(/;"	s	subroutine:get_ic
+vnderivs	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs,/;"	v	module:modpkparams
+vparam_rows	multimodecode_driver.f90	/^  integer :: i, vparam_rows$/;"	v	program:test_mmodpk
+vparams	modpk_modules.f90	/^  real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams$/;"	v	module:modpkparams
+xp	modpk_modules.f90	/^  real(dp), DIMENSION(:), POINTER :: xp$/;"	v	module:ode_path
+yp	modpk_modules.f90	/^  real(dp), DIMENSION(:,:), POINTER :: yp$/;"	v	module:ode_path
+zero_potential_ic	modpk_icsampling.f90	/^    subroutine zero_potential_ic(/;"	s	module:modpk_icsampling
+zpower	modpk_potential.f90	/^  pure FUNCTION zpower(/;"	f

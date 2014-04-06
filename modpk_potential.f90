@@ -5,7 +5,8 @@ MODULE potential
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t,&
-       effective_V_choice, turning_choice
+       effective_V_choice, turning_choice, number_knots_qsfrandom, stand_dev_qsfrandom, &
+       knot_positions
 
   public :: norm
   public :: bundle, field_bundle
@@ -20,8 +21,12 @@ MODULE potential
 
   type(bundle) :: field_bundle
 
+  !For turning trajs
   integer :: effective_V_choice
-  !For turning trajs, set choice of turning function here.
+  integer, dimension(:), allocatable :: number_knots_qsfrandom
+  real(dp), dimension(:), allocatable :: stand_dev_qsfrandom
+  real(dp), dimension(:,:,:), allocatable :: knot_positions
+
   !Need one choice for every heavy direction (assumes one light direction)
   !Ref functions turning_function and derivs
   integer, dimension(:), allocatable :: turning_choice
@@ -32,9 +37,9 @@ CONTAINS
 
   recursive function pot(phi) result(V_potential)
     !
-    !     Returns V(phi) given phi, phi can be an array for multifield, 
-    !     The code implement multifield potential in the form of V = \sum V(phi_i), 
-    !     More complicated form of potentials can be customized 
+    !     Returns V(phi) given phi, phi can be an array for multifield,
+    !     The code implement multifield potential in the form of V = \sum V(phi_i),
+    !     More complicated form of potentials can be customized
     !
     !real(dp) :: pot
     real(dp) :: V_potential
@@ -57,7 +62,7 @@ CONTAINS
     integer :: i,j, temp_choice
 
     select case(potential_choice)
-    case(1) 
+    case(1)
       ! m_i^2 phi_i^2 --- N-quadratic
        m2_V = 10.e0_dp**(vparams(1,:))
        V_potential = 0.5e0_dp*sum(m2_V*phi*phi)
@@ -82,7 +87,7 @@ CONTAINS
        V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
     case(7) !product of exponentials
        lambda = vparams(2, :)
-       V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl)) 
+       V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl))
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
@@ -262,7 +267,7 @@ CONTAINS
        case(6)
           mu = 10.e0_dp**vparams(2,:)
           first_deriv = -mu*phi**3
-       case(7) 
+       case(7)
           lambda = vparams(2,:)
           first_deriv = lambda*vparams(1,1)*M_Pl**3 * exp(dot_product(lambda, phi/M_Pl))
        case(8)
@@ -286,7 +291,7 @@ CONTAINS
       s2 = 100.0*sqrt(3.0)
       mphi1 = 1E-7
       phi1shift = 100.0
-          first_deriv = (/& 
+          first_deriv = (/&
                      mphi1**2*(-phi1shift + phi(1)) + M2**2*Cos(theta2/2.)*&
          (Sin(theta2/2.) + (s2*theta2*Cos(theta2/2.)*&
               (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
@@ -416,11 +421,11 @@ CONTAINS
          2.e0_dp*pot(phi))/(4.e0_dp*dphi*dphi)
     else
        second_deriv(:,:) = 0
-       
+
        select case(potential_choice)
-       case(1)          
+       case(1)
           m2_V = 10.e0_dp**(vparams(1,:))
-          forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)   
+          forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(2)
           lambda = 10.e0_dp**vparams(1,:)
           finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
@@ -436,7 +441,7 @@ CONTAINS
        case(6)
           mu = 10.e0_dp**vparams(2,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = -3.e0_dp*mu(i)*phi(i)**2
-       case(7) 
+       case(7)
           lambda = vparams(2, :)
           forall (i=1:size(phi), j=1:size(phi)) second_deriv(i,j) = &
                lambda(i)*lambda(j)*vparams(1,1)*M_Pl**2 *exp(dot_product(lambda, phi/M_Pl))
@@ -457,7 +462,7 @@ CONTAINS
 
           second_deriv(2,2) = (lambda_hybrid**4)*(2.0_dp/mu_hybrid**2 +&
             2.0_dp*phi(1)**2/nu_hybrid**4)
-       case(9)          
+       case(9)
           m2_V = vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
@@ -467,21 +472,21 @@ CONTAINS
       s2 = 100.0*sqrt(3.0)
       mphi1 = 1E-7
       phi1shift = 100.0
-      second_deriv(1,1) =  mphi1**2 + M2**2*Cos(theta2/2.)*(Sin(theta2/2.) +& 
+      second_deriv(1,1) =  mphi1**2 + M2**2*Cos(theta2/2.)*(Sin(theta2/2.) +&
             (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
                     Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
                (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) -& 
+             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) -&
             Cos(theta2/2.)*Tan((theta2*Atan(s2*&
                    (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2 +&
-        M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +& 
+        M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +&
            (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
             Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))*&
          ((-2*s2**3*theta2*Cos(theta2/2.)**2*&
               (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
               (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
               (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -& 
+            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -&
            (2*s2*theta2*Cos(theta2/2.)**2*&
               (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/&
             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +&
@@ -551,10 +556,10 @@ CONTAINS
               Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
             (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
 
-        second_deriv(2,2) = M2**2*Cos(theta2/2.)*(Cos(theta2/2.) -& 
+        second_deriv(2,2) = M2**2*Cos(theta2/2.)*(Cos(theta2/2.) -&
             (s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
                   Pi))**2*Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +& 
+             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +&
             Sin(theta2/2.)*Tan((theta2*Atan(s2*&
                    (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2 + &
         M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
@@ -564,7 +569,7 @@ CONTAINS
          (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*Sin(theta2/2.)**2*&
               (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
               (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -& 
+            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -&
        (2*s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
                  Pi))**2*Sin(theta2/2.)**2)/&
             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) + &
@@ -607,7 +612,7 @@ CONTAINS
              end if
 
            end do
-           
+
          end do
 
        case(12)
@@ -684,6 +689,7 @@ CONTAINS
 
   END FUNCTION d2Vdphi2
 
+
   !Function that parameterizes the turn for quasi--single-field trajectories
   !funct_i(phi_light)
   !Function parameters passed here via vparams(4+,:)
@@ -696,6 +702,13 @@ CONTAINS
 
     !hyperbolic tan params
     real(dp) :: turn_magnitude, turn_sharpness
+
+    !random traj
+    integer :: i
+    real(dp) :: phi_knot1, phi_knot2
+    real(dp) :: chi_knot1, chi_knot2
+    real(dp) :: low_endpoint, high_endpoint
+    real(dp) :: slope
 
     !heavy_field_index => which heavy field? for picking (light,heavy_i) direction
     !  This is the "i" in funct_i => need heavy_field_index>1
@@ -715,7 +728,7 @@ CONTAINS
 
     select case(turning_choice)
     case(1)
-      !No turn, effectively single-field 
+      !No turn, effectively single-field
       turning_function = 0e0_dp
     case(2)
       !North-facing hyperbola, symm around y-axis, min at phi=0
@@ -735,7 +748,7 @@ CONTAINS
     case(3)
       !hyperbolic tangent
 
-      if (size(vparams,1) <6) then 
+      if (size(vparams,1) <6) then
         print*, "Not enough vparams to set turning_choice=", turning_choice
         stop
       end if
@@ -743,9 +756,29 @@ CONTAINS
       offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
       turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
       turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
-      
+
       turning_function = turn_magnitude*tanh(turn_sharpness*(phi - offset_phi))
- 
+
+    case(4)
+      !Random turning trajectory
+
+      call find_bounding_knots(phi, heavy_field_index, &
+        phi_knot1, phi_knot2, &
+        chi_knot1, chi_knot2)
+
+      slope = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
+
+      turning_function = slope*(phi - phi_knot1) + chi_knot1
+
+      !print*, "phi", phi
+      !print*, "slope", slope
+      !print*, "phi_knot1", phi_knot1
+      !print*, "phi_knot2", phi_knot2
+      !print*, "chi_knot1", chi_knot1
+      !print*, "chi_knot2", chi_knot2
+      !print*, "turning_function", turning_function
+
+
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
@@ -763,8 +796,12 @@ CONTAINS
     !hyperbolic tan params
     real(dp) :: turn_magnitude, turn_sharpness
 
+    !Random traj
+    real(dp) :: phi_knot1, phi_knot2
+    real(dp) :: chi_knot1, chi_knot2
+
     dturndphi = 0e0_dp
-    
+
 
     select case(turning_choice)
     case(1)
@@ -780,15 +817,27 @@ CONTAINS
       dturndphi = (tan(asympt_angle)**2)* &
         (phi - offset_phi)/(funct+focal_length*sin(asympt_angle))
 #undef funct
-    
+
     case(3)
       !hyperbolic tan, centred at chi_i = 0 and phi= offset_phi
-    
+
       offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
       turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
-      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn    
+      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
 
       dturndphi = turn_magnitude*turn_sharpness/(cosh(turn_sharpness*(phi - offset_phi))**2)
+
+    case(4)
+      !Random turning trajectories
+
+      call find_bounding_knots(phi, heavy_field_index, &
+        phi_knot1, phi_knot2, &
+        chi_knot1, chi_knot2)
+
+      dturndphi = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
+
+      !DEBUG
+      !print*, "getting to dturndphi..."
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
@@ -839,9 +888,13 @@ CONTAINS
       offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
       turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
       turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
-    
+
       d2turndphi2 = -2.0e0_dp*turn_magnitude*(turn_sharpness**2)* &
                      sinh(turn_sharpness*(phi-offset_phi))/(cosh(turn_sharpness*(phi-offset_phi))**3)
+    case(4)
+      !Random turning trajectories
+      d2turndphi2 = 0e0_dp
+
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
@@ -851,10 +904,57 @@ CONTAINS
   end function d2turndphi2
 
 
+  !For qsf_random
+  !Find which knots phi is between
+  subroutine find_bounding_knots(phi, heavy_field_index, &
+      phiknot_low, phiknot_high, &
+      heavyknot_low, heavyknot_high)
+    real(dp), intent(in) :: phi
+    real(dp), intent(out) :: phiknot_low, phiknot_high
+    real(dp), intent(out) :: heavyknot_low, heavyknot_high
+    integer, intent(in) :: heavy_field_index
+    integer :: i
+
+#define HEAVY_INDX (heavy_field_index-1)
+
+    phiknot_low = knot_positions(HEAVY_INDX,&
+      number_knots_qsfrandom(HEAVY_INDX),&
+      1)
+    phiknot_high = phi_init0(1)
+
+    heavyknot_low = knot_positions(HEAVY_INDX,&
+      number_knots_qsfrandom(HEAVY_INDX),&
+      2)
+    heavyknot_high = 0e0_dp
+
+    do i=1,number_knots_qsfrandom(HEAVY_INDX)
+      if (phi < knot_positions(HEAVY_INDX,i,1)) then
+        if (i==1) then
+          phiknot_low = 0e0_dp  !ending condition
+          heavyknot_low = 0e0_dp  !ending condition
+        else
+          phiknot_low = knot_positions(HEAVY_INDX,i-1,1)
+          heavyknot_low = knot_positions(HEAVY_INDX,i-1,2)
+        end if
+        phiknot_high = knot_positions(HEAVY_INDX,i,1)
+        heavyknot_high = knot_positions(HEAVY_INDX,i,2)
+        exit
+
+      elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
+        print*, "ERROR: In turning_function, exactly at knot-point."
+        stop
+      end if
+    end do
+
+#undef HEAVY_INDX
+
+  end subroutine find_bounding_knots
+
+
   FUNCTION initialphi(phi0)
     !
     !     Sets initial value of phi (depending on potential, may use
-    !     either the user-specified value phi0 or something derived 
+    !     either the user-specified value phi0 or something derived
     !     from the potential parameters)
     !
     real(dp), INTENT(IN) :: phi0(:)
@@ -867,7 +967,7 @@ CONTAINS
 
     Ninit = 70.e0_dp
 
-    if (size(phi0) .gt. 1) then 
+    if (size(phi0) .gt. 1) then
        phii = phi0 ! MULTIFIELD
     else  !SINGLE FIELD
        select case(potential_choice)
@@ -907,7 +1007,7 @@ CONTAINS
     !
     !     Returns epsilon given phi and dphi/dalpha, alpha=ln(a)
     !     for single field, slowroll parameter epsilon_H = 2 M_pl^2 [(dH/dphi)/H]^2
-    !     for canonical multi-field, 
+    !     for canonical multi-field,
     !
     real(dp) :: getEps
     real(dp), INTENT(IN) :: phi(:), dphi(:)
@@ -995,7 +1095,7 @@ CONTAINS
     !
     real(dp) :: getdepsdalpha, H, dHdalpha, eps
     real(dp), INTENT(IN) :: phi(:), dphi(:)
-    
+
     H=getH(phi,dphi)
     dHdalpha=getdHdalpha(phi,dphi)
     eps=getEps(phi,dphi)
@@ -1329,7 +1429,7 @@ CONTAINS
       print*, "norm(s1)", norm(s_iso(1,:))
       !stop
 
-       
+
     end subroutine build_isocurv_basisALTERNATIVE
 
 

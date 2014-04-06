@@ -14,7 +14,8 @@ if iso_E:
 
     #Cosmology data
     #data=np.loadtxt('nsralpha.txt')
-    data=np.loadtxt('100field_nsralpha_isoE.txt')
+    #data=np.loadtxt('100field_nsralpha_isoE.txt')
+    data=np.loadtxt('take2_nsralpha.txt')
 
     ns=data[:,0]
     r=data[:,1]
@@ -170,7 +171,7 @@ else:
 #Remove x-axis label top fig (ax1)
 plt.setp(ax1.get_xticklabels(), visible=False)
 
-save=True
+save=False
 if iso_E:
     if doing_kde:
         name = 'nsralpha_100field_kde'

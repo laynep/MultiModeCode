@@ -1,5 +1,5 @@
 !Use the DVODE integrator?
-#define DVODE 
+#define DVODE
 
 MODULE modpk_odeint
   use modpkparams, only : dp
@@ -168,8 +168,7 @@ contains
        end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
-       !if (save_traj .and. sampling_techn==reg_samp) write(trajout,'(12E18.10)'),&
-       if (save_traj) write(trajout,'(12E18.10)'),&
+       if (save_traj) write(trajout,'(100E18.10)'),&
          x, &
          y(:), &
          getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
@@ -256,9 +255,9 @@ contains
        !END MULTIFIELD
 
 
-       IF(ode_infl_end) THEN 
+       IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
-             IF(getEps(p, delp) .GT. 1 .AND. slowroll_start) THEN 
+             IF(getEps(p, delp) .GT. 1 .AND. slowroll_start) THEN
                 infl_ended = .TRUE.
                 ystart(:) = y(:)
                 IF (save_steps) CALL save_a_step
@@ -350,7 +349,7 @@ contains
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
          xp=>reallocate_rv(xp,2*SIZE(xp))
-         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))  
+         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
       END IF
       xp(kount)=x
       yp(:,kount)=y(:)
@@ -693,12 +692,12 @@ contains
 
              ! for single field, end mode evolution when the mode is frozen out of the horizon
              ! for multifield, need to evolve the modes until the end of inflation to include superhorizon evolution
-             IF (num_inflaton .EQ. 1) infl_ended = .TRUE.  
+             IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
              !END MULTIFIELD
           END IF
        END IF
 
-       IF(ode_infl_end) THEN 
+       IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
@@ -715,7 +714,7 @@ contains
              IF (SIZE(phi) .EQ. 1) THEN
                 IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
                 IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
-             ELSE 
+             ELSE
                if (check_stop_when_not_slowroll_infl_end(phi,delphi)) infl_ended = .TRUE.
              END IF
              !END MULTIFIELD
@@ -758,7 +757,7 @@ contains
 
           y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
           y(index_ptb_vel_y:index_tensor_y-1) = &
-            ytmp(index_ptb_vel_y:index_tensor_y-1) & 
+            ytmp(index_ptb_vel_y:index_tensor_y-1) &
             - y(index_ptb_y:index_ptb_vel_y-1)
 
           y(index_tensor_y) = ytmp(index_tensor_y)
@@ -791,7 +790,7 @@ contains
 
     print*,'too many steps in odeint_c'
     print*,'N =', x
-    print*, 'stepsize, h =', h 
+    print*, 'stepsize, h =', h
     print*, 'background, y =', y(1:num_inflaton)
     print*, 'accuracy =', eps_adjust, eps
     print*, "epsilon", getEps(phi,delphi)
@@ -813,7 +812,7 @@ contains
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
          xp=>reallocate_rv(xp,2*SIZE(xp))
-         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))  
+         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
       END IF
       xp(kount) = x
 
@@ -1020,9 +1019,9 @@ contains
       end if
 
 
-       !IF(ode_infl_end) THEN 
+       !IF(ode_infl_end) THEN
        !   IF (slowroll_infl_end) THEN
-       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN 
+       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN
        !         infl_ended = .TRUE.
        !         ystart(:) = y(:)
        !         IF (save_steps) CALL save_a_step
@@ -1065,7 +1064,7 @@ contains
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
          xp=>reallocate_rv(xp,2*SIZE(xp))
-         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))  
+         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
       END IF
       xp(kount)=x
       yp(:,kount)=y(:)
