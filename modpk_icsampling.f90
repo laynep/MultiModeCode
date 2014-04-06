@@ -258,7 +258,14 @@ module modpk_icsampling
         ![ LP: ] Indices for knots:
         !knot_positions(HEAVYFIELD, KNOT#, (LIGHT_POS, HEAVY_POS))
         if (allocated(knot_positions)) deallocate(knot_positions)
-        allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
+        if (num_inflaton>1 .and. maxval(number_knots_qsfrandom)>0) then
+          allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
+        else
+          print*, "ERROR: Incorrect specifications for knot_positions:"
+          print*, "Num_inflaton=", num_inflaton
+          print*, "number_knots_qsfrandom=", number_knots_qsfrandom
+          stop
+        end if
         knot_positions = 0e0_dp
 
         do i=1,size(knot_positions,1)

@@ -836,9 +836,6 @@ CONTAINS
 
       dturndphi = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
 
-      !DEBUG
-      !print*, "getting to dturndphi..."
-
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select

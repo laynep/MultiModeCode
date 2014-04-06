@@ -22,8 +22,8 @@
 &more_params
   effective_V_choice = 1
   turning_choice = 1
-  number_knots_qsfrandom(:)= 2
-  stand_dev_qsfrandom(:)= 1e-1
+  number_knots_qsfrandom(:)= 1
+  stand_dev_qsfrandom(:)= 1e-10
 /
 
 ----------------
