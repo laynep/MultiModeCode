@@ -358,12 +358,12 @@ CONTAINS
 
     if (.not. H_stable) then
       !Decrease initial stepsize guess in case near a point where H is approx unstable.
-      print*, "H is UNSTABLE"
+      !print*, "H is UNSTABLE"
       h1 = 1.0e-12_dp
       accuracy = 1.0e-15_dp
       hmin = 0.0e0_dp
     else
-      print*, "H is STABLE"
+      !print*, "H is STABLE"
       h1 = 1.0e-7_dp
       accuracy=1.0e-8
       hmin=1.0e-20_dp

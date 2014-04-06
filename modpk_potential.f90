@@ -937,9 +937,10 @@ CONTAINS
         heavyknot_high = knot_positions(HEAVY_INDX,i,2)
         exit
 
-      elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
-        print*, "ERROR: In turning_function, exactly at knot-point."
-        stop
+      !elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
+      !  print*, "ERROR: In turning_function, exactly at knot-point."
+        !DEBUG
+      !  stop
       end if
     end do
 

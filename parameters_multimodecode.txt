@@ -21,9 +21,9 @@
 ![ LP: ] get almost single-field inflation
 &more_params
   effective_V_choice = 1
-  turning_choice = 1
-  number_knots_qsfrandom(:)= 1
-  stand_dev_qsfrandom(:)= 1e-10
+  turning_choice = 4
+  number_knots_qsfrandom(:)= 10
+  stand_dev_qsfrandom(:)= 1e-1
 /
 
 ----------------
@@ -89,13 +89,12 @@ the smallest mass; others are discarded.
 ----------------
 ![ LP: ] If want to calculate the full power spectrum P(k)
 &full_pk
-  calc_full_pk=.false.
+  calc_full_pk=.true.
   steps = 100
   kmin=5.0e-2
-  kmax=5e0
+  kmax=5.0e0
 /
 
-  kmax=5.0e0
 ---------------
 #MISC STUFF
 

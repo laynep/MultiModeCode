@@ -307,7 +307,6 @@ CONTAINS
 
         real(dp) :: tol
 
-        !DEBUG
         real(dp) :: alpha_ik, dalpha
         real(dp) :: h_ik, dh, a_ik
         real(dp) :: eps, V, dV(num_inflaton), d2V(num_inflaton,num_inflaton)
@@ -315,77 +314,88 @@ CONTAINS
         real(dp) :: check1
         real(dp), dimension(num_inflaton,num_inflaton) :: check2, check3, check4
 
-        !DEBUG
-        ![ LP: ] Put a do-while loop here and progressively make horiz_fract
-        !larger until it satisfies the checks within the tolerance
+        logical :: bd_consistent
 
-        !k = horiz_fract*aH
-        horiz_fract=1e4_dp
-        !horiz_fract=1e3_dp
-        !horiz_fract=1e2_dp
+        bd_consistent = .false.
 
-        ah=LOG(k/horiz_fract)
-        ah_index= locate(log_aharr(1:nactual_bg), ah)
+        horiz_fract=1e0_dp
 
-        if (ah_index==0) then
-          !The background isn't able to set this IC
-          !Set the start scale so far inside, that it fails
-          !when it returns from this function.
-          k_start = 1e20_dp
-          return
-        end if
+        do while (.not. bd_consistent)
+
+          horiz_fract = horiz_fract*2.0e0_dp
+
+          !k = horiz_fract*aH
+          !horiz_fract=1e4_dp
+          !horiz_fract=1e3_dp
+          !horiz_fract=1e2_dp
 
 
-        j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
-        call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
-        call array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
+          ah=LOG(k/horiz_fract)
+          ah_index= locate(log_aharr(1:nactual_bg), ah)
 
-        call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
-        call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+          if (ah_index==0) then
+            !The background isn't able to set this IC
+            !Set the start scale so far inside, that it fails
+            !when it returns from this function.
+            k_start = 1e20_dp
+            return
+          end if
 
-        a_ik = exp(alpha_ik)*a_init
-        eps = getEps(p_ik, dp_ik)
 
-        V = pot(p_ik)
-        dV = dVdphi(p_ik)
-        d2V = d2Vdphi2(p_ik)
+          j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
+          call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
+          call array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
 
-        !Check the corrections to the conformal-time mode equations.
-        !When k is large, the IC should be a plane wave.
-        !If the mass-matrix is diagonal and relevant, then could use Hankel
-        !function solution
-        check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
-        check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
+          call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
+          call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
-        do i=1, num_inflaton
-          do j=1, num_inflaton
-            check3(i,j) = abs( (dp_ik(i)*dV(j) + &
-              dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
+          a_ik = exp(alpha_ik)*a_init
+          eps = getEps(p_ik, dp_ik)
+
+          V = pot(p_ik)
+          dV = dVdphi(p_ik)
+          d2V = d2Vdphi2(p_ik)
+
+          !Check the corrections to the conformal-time mode equations.
+          !When k is large, the IC should be a plane wave.
+          !If the mass-matrix is diagonal and relevant, then could use Hankel
+          !function solution
+          check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
+          check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
+
+          do i=1, num_inflaton
+            do j=1, num_inflaton
+              check3(i,j) = abs( (dp_ik(i)*dV(j) + &
+                dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
+            end do
           end do
-        end do
 
-        do i=1, num_inflaton
-          do j=1, num_inflaton
-            check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
+          do i=1, num_inflaton
+            do j=1, num_inflaton
+              check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
+            end do
           end do
+
+          tol = 1e-3_dp
+          if   (check1 < tol  .and. &
+            any(check2 < tol) .and. &
+            any(check3 < tol) .and. &
+            any(check4 < tol)) then
+
+            bd_consistent = .true.
+
+          else
+            !DEBUG
+            !if (check1 > tol)      print*, "check1 --- H: (", check1, ") >", tol
+            !if (any(check2 > tol)) print*, "check2 --- masses: (", check2, ") >", tol
+            !if (any(check3 > tol)) print*, "check3 --- off-diag: (", check3, ") >", tol
+            !if (any(check4 > tol)) print*, "check4 --- off-diag: (", check4, ") >", tol
+            !stop
+          end if
+
+          k_start = horiz_fract
+
         end do
-
-        tol = 1e-3_dp
-        if   (check1 > tol  .or. &
-          any(check2 > tol) .or. & 
-          any(check3 > tol) .or. &
-          any(check4 > tol)) then
-
-          !DEBUG
-          print*, "BD IC not consistent..."
-          if (check1 > tol)      print*, "check1 --- H: (", check1, ") >", tol
-          if (any(check2 > tol)) print*, "check2 --- masses: (", check2, ") >", tol
-          if (any(check3 > tol)) print*, "check3 --- off-diag: (", check3, ") >", tol
-          if (any(check4 > tol)) print*, "check4 --- off-diag: (", check4, ") >", tol
-          stop
-        end if
-
-        k_start = horiz_fract
 
       end subroutine set_consistent_BD_scale
 

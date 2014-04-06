@@ -295,6 +295,7 @@ module modpk_icsampling
 
         end do
 
+        !DEBUG
         print*, "Sorted?"
         do j=1, size(knot_positions,2)
           print*, "knot_positions(1,:,:):", knot_positions(1,j,:)
@@ -318,19 +319,10 @@ module modpk_icsampling
 
       dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
 
-      !DEBUG
-      print*, "setting dphi0", dphi0
-      print*, "y0", y_background
-      print*, "H", H
-      print*, "rho", rho
-      print*, "phi0", phi0
-      !print*, "pot", pot((/0.0e0_dp, 0.0e0_dp/))
-      print*, "pot", pot(phi0)
-
       contains
 
         !**********************************************************
-        !Heapsorts a table based on the first column only.
+        !Heapsorts an array based on the first column only.
 
         !Adapted from Numerical Recipes pg 231.
 
@@ -347,7 +339,7 @@ module modpk_icsampling
         	n=size(table,1)
         	l = (n/2)+1	!note the integer division.
         	ir = n
-        do1:	do		!indefinite do.  exited by return statement in if.
+        do1:	do
         		if(l > 1) then
         			l = l-1
         			call vect_eq_tablerow_d(rra,l,table)

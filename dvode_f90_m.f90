@@ -35,7 +35,7 @@
 ! LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 ! ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ! POSSIBILITY OF SUCH DAMAGE.
-  
+
   MODULE DVODE_F90_M
 
 ! This version is the August 2013 release.
@@ -6380,6 +6380,10 @@
         END IF
         IF (ABS((TN+H)-TN)>ZERO) GOTO 230
         NHNIL = NHNIL + 1
+
+        ![ LP: ] DEBUG
+        MXHNIL=0
+
         IF (NHNIL>MXHNIL) GOTO 230
         MSG = 'Warning: internal T(=R1) and H(=R2) are such that'
         CALL XERRDV(MSG,950,1,0,0,0,0,ZERO,ZERO)
