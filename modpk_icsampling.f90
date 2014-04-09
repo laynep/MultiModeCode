@@ -6,7 +6,10 @@
 
 module modpk_icsampling
   use potential, only : norm, pot, getH, &
-    number_knots_qsfrandom, stand_dev_qsfrandom, knot_positions, turning_choice
+    turning_choice, &
+    number_knots_qsfrandom, stand_dev_qsfrandom, knot_positions, &
+    knot_range_min, knot_range_max, custom_knot_range
+
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   use internals, only : pi
@@ -268,14 +271,30 @@ module modpk_icsampling
         end if
         knot_positions = 0e0_dp
 
-        do i=1,size(knot_positions,1)
-          do j=1, size(knot_positions,2)
+        do i=1,size(knot_positions,1) !# heavy fields
+          do j=1, size(knot_positions,2) !# knots
+
             if (j > number_knots_qsfrandom(i)) then
               knot_positions(i,j,:) = 0e0_dp
             else
               !Knot light field position
               call random_number(rand)
-              knot_positions(i,j,1) = phi0(1)*rand
+              !knot_positions(i,j,1) = phi0(1)*rand
+
+              !DEBUG
+              if (custom_knot_range) then
+                if (knot_range_min(i) .ge. knot_range_max(i)) then
+                  print*, "ERROR: set knot_range_min < knot_range_max"
+                  print*, "knot_range_min =", knot_range_min
+                  print*, "knot_range_max =", knot_range_max
+                  stop
+                end if
+
+                knot_positions(i,j,1) = (knot_range_max(i)-knot_range_min(i))*rand &
+                  + knot_range_min(i)
+              else
+                knot_positions(i,j,1) = phi0(1)*rand
+              end if
 
               !Knot heavy field position
               knot_positions(i,j,2) = normal(0.0e0_dp,stand_dev_qsfrandom(i))
@@ -296,12 +315,12 @@ module modpk_icsampling
         end do
 
         !DEBUG
-        print*, "Sorted?"
-        do j=1, size(knot_positions,2)
-          print*, "knot_positions(1,:,:):", knot_positions(1,j,:)
-          if (size(knot_positions,1)>1) print*, "knot_positions(2,:,:):", knot_positions(2,j,:)
-          print*, "----------"
-        end do
+        !print*, "Sorted?"
+        !do j=1, size(knot_positions,2)
+        !  print*, "knot_positions(1,:,:):", knot_positions(1,j,:)
+        !  if (size(knot_positions,1)>1) print*, "knot_positions(2,:,:):", knot_positions(2,j,:)
+        !  print*, "----------"
+        !end do
 
       !-----------------------------------------
       else

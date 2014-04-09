@@ -65,7 +65,8 @@ program test_mmodpk
     N_pivot, k_pivot, dlnk
 
   namelist /more_params/ effective_V_choice, turning_choice, &
-    number_knots_qsfrandom, stand_dev_qsfrandom
+    number_knots_qsfrandom, stand_dev_qsfrandom, &
+    knot_range_min, knot_range_max, custom_knot_range
 
   !------------------------------------------------
 
@@ -222,7 +223,11 @@ program test_mmodpk
         allocate(turning_choice(num_inflaton-1))
         allocate(number_knots_qsfrandom(num_inflaton-1))
         allocate(stand_dev_qsfrandom(num_inflaton-1))
+        allocate(knot_range_min(num_inflaton-1))
+        allocate(knot_range_max(num_inflaton-1))
+
         read(unit=u, nml=more_params)
+
       end if
 
       !Model dependent

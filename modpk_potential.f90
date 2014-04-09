@@ -6,7 +6,7 @@ MODULE potential
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t,&
        effective_V_choice, turning_choice, number_knots_qsfrandom, stand_dev_qsfrandom, &
-       knot_positions
+       knot_positions, knot_range_min, knot_range_max, custom_knot_range
 
   public :: norm
   public :: bundle, field_bundle
@@ -26,6 +26,8 @@ MODULE potential
   integer, dimension(:), allocatable :: number_knots_qsfrandom
   real(dp), dimension(:), allocatable :: stand_dev_qsfrandom
   real(dp), dimension(:,:,:), allocatable :: knot_positions
+  real(dp), dimension(:), allocatable :: knot_range_min, knot_range_max
+  logical :: custom_knot_range
 
   !Need one choice for every heavy direction (assumes one light direction)
   !Ref functions turning_function and derivs

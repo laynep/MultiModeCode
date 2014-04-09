@@ -517,7 +517,7 @@ contains
     !  relerr=rtol,user_supplied_jacobian=.false.)
 
     ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
-      relerr=rtol,user_supplied_jacobian=.false.,mxstep=10000, &
+      relerr=rtol,user_supplied_jacobian=.false.,mxstep=50000, &
       mxhnil=1)
 
 #endif

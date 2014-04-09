@@ -19,11 +19,16 @@
 ![ LP: ] For turning trajectories, set the choice for the effective single field
 ![ LP: ] potential here.  Remember to set the rest of the vparams array so that you
 ![ LP: ] get almost single-field inflation
+![ LP: ] Order fields so that all light fields at start
 &more_params
   effective_V_choice = 1
   turning_choice = 4
-  number_knots_qsfrandom(:)= 10
-  stand_dev_qsfrandom(:)= 1e-1
+  number_knots_qsfrandom(:)= 30
+  stand_dev_qsfrandom(:)= 1e-4
+
+  custom_knot_range = .true.
+  knot_range_min = 13.0
+  knot_range_max = 20.0
 /
 
 ----------------
@@ -90,10 +95,11 @@ the smallest mass; others are discarded.
 ![ LP: ] If want to calculate the full power spectrum P(k)
 &full_pk
   calc_full_pk=.true.
-  steps = 100
-  kmin=5.0e-2
-  kmax=5.0e0
+  steps = 300
+  kmin=1.0e-2
+  kmax=0.04
 /
+  kmax=5.0e0
 
 ---------------
 #MISC STUFF
