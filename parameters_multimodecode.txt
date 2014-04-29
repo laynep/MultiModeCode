@@ -5,13 +5,13 @@
 ![ LP: ] Set potential and its derivatives in modpk_potential.f90
 &init
   num_inflaton=2
-  potential_choice=13
+  potential_choice=14
   modpkoutput = .true.
   save_traj = .true.
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 6
-  more_potential_params = .true.
+  vparam_rows = 4
+  more_potential_params = .false.
 /
 
 ![ LP: ] More optional parameters for specifying the potential.  Only
@@ -38,7 +38,7 @@
     7=param_unif_prior, 8=qsf_random}
 
 &ic_sampling
-  sampling_techn = 8
+  sampling_techn = 1
   numb_samples = 1
 
   energy_scale = .1
@@ -61,9 +61,14 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 26.0 0.165561
+  phi_init0 = 12.0 12.0
 
-  vparams(1,:) = -12.2789840467449       -12.1602803162336
+  vparams(1,:) = -11.711 -10.021
+  vparams(2,:) = 11.97 10.75
+  vparams(3,:) = 0.01 0.01
+  vparams(4,:) = 0.5 0.5
+
+/
   vparams(1,:) = -14.0       -10.0
   vparams(2,:) = -1000000.0       -8.0
   vparams(3,:) =  0.0        1.02509
@@ -71,8 +76,6 @@ the smallest mass; others are discarded.
   vparams(4,:) = 0.0       244.949
   vparams(5,:) = 0.0       0.15708
   vparams(6,:) = 0.0       5.7735e-4
-
-/
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges
@@ -95,7 +98,7 @@ the smallest mass; others are discarded.
 ![ LP: ] If want to calculate the full power spectrum P(k)
 &full_pk
   calc_full_pk=.true.
-  steps = 300
+  steps = 100
   kmin=1.0e-2
   kmax=0.04
 /

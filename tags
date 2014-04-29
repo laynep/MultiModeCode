@@ -1040,6 +1040,7 @@ constrain_first_vel	modpk_icsampling.f90	/^        function constrain_first_vel(
 convert_hacked_vector_to_matrix	modpk_utils.f90	/^  pure function convert_hacked_vector_to_matrix(/;"	f	module:modpk_utils
 convert_matrix_to_hacked_vector	modpk_utils.f90	/^  pure function convert_matrix_to_hacked_vector(/;"	f	module:modpk_utils
 cross_ad_iso	modpk_modules.f90	/^    real(dp) :: cross_ad_iso$/;"	k	type:power_spectra
+custom_knot_range	modpk_potential.f90	/^  logical :: custom_knot_range$/;"	v	module:potential
 d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(/;"	f	module:potential
 d2turndphi2	modpk_potential.f90	/^  real(dp) function d2turndphi2(/;"	f	module:potential
 dVdphi	modpk_potential.f90	/^  recursive function dVdphi(/;"	f	module:potential
@@ -1084,7 +1085,11 @@ getH	modpk_potential.f90	/^  FUNCTION getH(/;"	f	module:potential
 getH_with_t	modpk_potential.f90	/^  FUNCTION getH_with_t(/;"	f	module:potential
 getPdot	modpk_potential.f90	/^    function getPdot(/;"	f
 get_A_vect	modpk_potential.f90	/^    function get_A_vect(/;"	f
+get_A_vect_Padiab	modpk_potential.f90	/^    function get_A_vect_Padiab(/;"	f
+get_A_vect_Ptotal	modpk_potential.f90	/^    function get_A_vect_Ptotal(/;"	f
 get_B_vect	modpk_potential.f90	/^    function get_B_vect(/;"	f
+get_B_vect_Padiab	modpk_potential.f90	/^    function get_B_vect_Padiab(/;"	f
+get_B_vect_Ptotal	modpk_potential.f90	/^    function get_B_vect_Ptotal(/;"	f
 get_full_pk	multimodecode_driver.f90	/^    subroutine get_full_pk(/;"	s	program:test_mmodpk
 get_ic	modpk_icsampling.f90	/^    subroutine get_ic(/;"	s	module:modpk_icsampling
 get_new_N_pivot	modpk_icsampling.f90	/^    subroutine get_new_N_pivot(/;"	s	module:modpk_icsampling
@@ -1135,6 +1140,8 @@ kin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin,/;"	v	program:driver_modpk
 kmax	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax,/;"	v	program:driver_modpk
 kmin	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin,/;"	v	program:driver_modpk
 knot_positions	modpk_potential.f90	/^  real(dp), dimension(:,:,:), allocatable :: knot_positions$/;"	v	module:potential
+knot_range_max	modpk_potential.f90	/^  real(dp), dimension(:), allocatable :: knot_range_min, knot_range_max$/;"	v	module:potential
+knot_range_min	modpk_potential.f90	/^  real(dp), dimension(:), allocatable :: knot_range_min,/;"	v	module:potential
 kount	modpk_modules.f90	/^  INTEGER*4 :: nok,nbad,kount$/;"	v	module:ode_path
 lna	modpk_modules.f90	/^  real(dp) :: lna(/;"	v	module:modpkparams
 locate	modpk_utils.f90	/^  pure FUNCTION locate(/;"	f	module:modpk_utils

@@ -43,7 +43,6 @@ CONTAINS
     !     The code implement multifield potential in the form of V = \sum V(phi_i),
     !     More complicated form of potentials can be customized
     !
-    !real(dp) :: pot
     real(dp) :: V_potential
     real(dp), intent(in) :: phi(:)
 
@@ -62,6 +61,8 @@ CONTAINS
     real(dp) :: lambda2
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
     integer :: i,j, temp_choice
+
+    real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
 
     select case(potential_choice)
     case(1)
@@ -201,6 +202,20 @@ CONTAINS
           (EXPTERM  - 1.0e0_dp)
       end do
 
+    case(14)
+
+      !Multifield step potential
+      m2_V = 10.e0_dp**(vparams(1,:))
+      location_phi = vparams(2,:)
+      step_size = vparams(3,:)
+      step_slope = vparams(4,:)
+
+      V_potential = sum( &
+          0.5*m2_V*(phi**2) * &
+          (1.0e0_dp + step_size* &
+          tanh( (phi-location_phi)/step_slope)) )
+
+
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -231,6 +246,8 @@ CONTAINS
 
     real(dp) :: lambda2
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
+
+    real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -374,6 +391,22 @@ CONTAINS
              EXPTERM
          end do
 
+       case(14)
+
+         !Multifield step potential
+         m2_V = 10.e0_dp**(vparams(1,:))
+         location_phi = vparams(2,:)
+         step_size = vparams(3,:)
+         step_slope = vparams(4,:)
+
+         first_deriv(:) = m2_V(:)*phi(:)* &
+           (1.0e0_dp + step_size(:)* &
+           tanh( (phi(:)-location_phi(:))/step_slope(:))) + &
+           0.5e0_dp*m2_V*phi**2*step_slope* &
+           (cosh((phi-location_phi)/step_slope))**(-2)/&
+           step_slope
+
+
 
        !END MULTIFIELD
        case default
@@ -409,6 +442,8 @@ CONTAINS
 
     real(dp) :: lambda2
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
+
+    real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
 
     if (vnderivs) then
        !MULTIFIELD
@@ -681,6 +716,30 @@ CONTAINS
                  EXPTERM
              end if
          end do; end do
+
+       case(14)
+
+         !Multifield step potential
+         m2_V = 10.e0_dp**(vparams(1,:))
+         location_phi = vparams(2,:)
+         step_size = vparams(3,:)
+         step_slope = vparams(4,:)
+
+         second_deriv=0e0_dp
+
+         do i=1,num_inflaton
+
+           second_deriv(i,i) = m2_V(i)*&
+              (1.0e0_dp + step_size(i)* &
+              tanh( (phi(i)-location_phi(i))/step_slope(i))) +&
+              2.0e0_dp*m2_V(i)*phi(i)*step_slope(i)* &
+              (cosh( (phi(i)-location_phi(i))/step_slope(i)))**(-2)/&
+              step_slope(i) - &
+              m2_V(i)*phi(i)**2 * (step_size(i)/step_slope(i)**2) *&
+              tanh((phi(i)-location_phi(i))/step_slope(i)) *&
+              (cosh((phi(i)-location_phi(i))/step_slope(i)))**(-2)
+
+         end do
 
        case default
           write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
@@ -1151,6 +1210,7 @@ CONTAINS
 
     !Pre-factors for Pnad P(k)
     real(dp), dimension(num_inflaton) :: A_vect, B_vect
+    real(dp), dimension(num_inflaton) :: A_vect_adiab, B_vect_adiab
 
     ! size(dphi)=num_inflaton
     complex(kind=dp), dimension(size(dphi),size(dphi)) :: ptb_matrix,&
@@ -1172,6 +1232,8 @@ CONTAINS
     real(dp), dimension(size(phi)) :: d_omega_z, Vprime
 
     real(dp) :: power_total
+    real(dp) :: power_pressure, power_press_cross, power_press_cross2, &
+      power_press_adiab
 
     !Variable passed to powerspectrum
     !Psi_ij =a q_ij is default
@@ -1282,13 +1344,6 @@ CONTAINS
       do i=1,size(s_iso,1); do j=1, numb_infl; do ll=1,numb_infl
         pk_iso_vect(i) = pk_iso_vect(i) + &
           s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
-        !DEBUG
-        !print*, "-------------------------"
-        !print*, "s_iso",s_iso(i,j)
-        !print*, "s_iso",s_iso(i,ll)
-        !print*, "power_matrix",power_matrix(j,ll)
-        !print*, "pk_iso_vect",pk_iso_vect(i)
-        !print*, "addition",s_iso(i,j)*s_iso(i,ll)*power_matrix(j,ll)
       end do; end do; end do
 
       pk_iso_vect = pk_iso_vect*(1e0_dp/phi_dot_0_scaled**2)
@@ -1310,6 +1365,7 @@ CONTAINS
 
       !P(k) of total non-adiab pressure ptbs
       !dP_nad_i(k) = (1/a) Sum_j (A_i*Psi_ij + B_i*dPsi_ij)*\hat{a}_j
+      !<P_nad P_nad*>
       power_pnad =0e0_dp
 
       A_vect = get_A_vect(phi,dphi)
@@ -1340,9 +1396,108 @@ CONTAINS
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
 
+      !Total pressure spectrum
+      !<P P*>
+      A_vect = get_A_vect_Ptotal(phi,dphi)
+      B_vect = get_B_vect_Ptotal(phi,dphi)
+      AAprod = 0e0_dp
+      ABprod = 0e0_dp
+      BAprod = 0e0_dp
+      BBprod = 0e0_dp
+      do i=1,numb_infl; do j=1,numb_infl
+        AAprod = AAprod +A_vect(i)*A_vect(j)*power_matrix(i,j)
+        ABprod = ABprod +A_vect(i)*B_vect(j)*cross_matrix(i,j)
+        BAprod = BAprod +B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))
+        BBprod = BBprod +B_vect(i)*B_vect(j)*d_power_matrix(i,j)
+      end do; end do
+      power_pressure = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !Total-adiab pressure cross-spectrum
+      !<P_nad P_ad*>
+      A_vect = get_A_vect(phi,dphi)
+      B_vect = get_B_vect(phi,dphi)
+      A_vect_adiab = get_A_vect_Padiab(phi,dphi)
+      B_vect_adiab = get_B_vect_Padiab(phi,dphi)
+      AAprod = 0e0_dp
+      ABprod = 0e0_dp
+      BAprod = 0e0_dp
+      BBprod = 0e0_dp
+      do i=1,numb_infl; do j=1,numb_infl
+        AAprod = AAprod +A_vect(i)*A_vect_adiab(j)*power_matrix(i,j)
+        ABprod = ABprod +A_vect(i)*B_vect_adiab(j)*cross_matrix(i,j)
+        BAprod = BAprod +B_vect(i)*A_vect_adiab(j)*conjg(cross_matrix(j,i))
+        BBprod = BBprod +B_vect(i)*B_vect_adiab(j)*d_power_matrix(i,j)
+      end do; end do
+      power_press_cross = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !<P_ad P_nad*>
+      A_vect = get_A_vect(phi,dphi)
+      B_vect = get_B_vect(phi,dphi)
+      A_vect_adiab = get_A_vect_Padiab(phi,dphi)
+      B_vect_adiab = get_B_vect_Padiab(phi,dphi)
+      AAprod = 0e0_dp
+      ABprod = 0e0_dp
+      BAprod = 0e0_dp
+      BBprod = 0e0_dp
+      do i=1,numb_infl; do j=1,numb_infl
+        AAprod = AAprod +A_vect_adiab(i)*A_vect(j)*power_matrix(i,j)
+        ABprod = ABprod +A_vect_adiab(i)*B_vect(j)*cross_matrix(i,j)
+        BAprod = BAprod +B_vect_adiab(i)*A_vect(j)*conjg(cross_matrix(j,i))
+        BBprod = BBprod +B_vect_adiab(i)*B_vect(j)*d_power_matrix(i,j)
+      end do; end do
+      power_press_cross2 = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !<P_ad P_ad*>
+      A_vect_adiab = get_A_vect_Padiab(phi,dphi)
+      B_vect_adiab = get_B_vect_Padiab(phi,dphi)
+      AAprod = 0e0_dp
+      ABprod = 0e0_dp
+      BAprod = 0e0_dp
+      BBprod = 0e0_dp
+      do i=1,numb_infl; do j=1,numb_infl
+        AAprod = AAprod +A_vect_adiab(i)*A_vect_adiab(j)*power_matrix(i,j)
+        ABprod = ABprod +A_vect_adiab(i)*B_vect_adiab(j)*cross_matrix(i,j)
+        BAprod = BAprod +B_vect_adiab(i)*A_vect_adiab(j)*conjg(cross_matrix(j,i))
+        BBprod = BBprod +B_vect_adiab(i)*B_vect_adiab(j)*d_power_matrix(i,j)
+      end do; end do
+      power_press_adiab = (AAprod + BBprod) + (ABprod + BAprod)
+
+      !DEBUG
+      ![ LP: ] writing power spectrum output
+      !H=getH(phi,dphi)
+      !Pdot=getPdot(phi,dphi)
+      !write(*,'(17E24.15)'), a, &
+      !  power_pressure, &
+      !  power_pnad, &
+      !  power_press_adiab, &
+      !  power_press_cross, &
+      !  power_press_cross2, &
+      !  power_isocurv, &
+      !  ((H/Pdot)**2)*power_pnad, &
+      !  power_adiab
+
+
+      !print*, "-----------"
+      !print*, "P", power_pressure
+      !print*, "P", power_press_adiab + power_pnad + power_press_cross + power_press_cross2
+
+      !print*, "P_ad", power_pressure - power_pnad- power_press_cross - power_press_cross2
+      !print*, "P_ad", power_press_adiab
+
+      !print*, "P_nad", power_pnad
+      !print*, "P_nad", power_pressure - power_press_adiab - power_press_cross - &
+      !  power_press_cross2
+
+      !print*, "P_nad*P_ad", power_press_cross
+      !print*, "P_ad*P_nad", power_press_cross2
+      !if (power_press_cross/=power_press_cross2) then
+      !  print*, "cross spectra not equal!!!"
+      !end if
+
+
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
-      !Check that power_pnad is smaller than DP accuracy and set to zero
+      !Check if power_pnad is smaller than DP accuracy and set to zero
 
       prod_exponent = abs(real(AAprod)) + abs(real(BBprod)) +&
         abs(real(ABprod)) + abs(real(BAprod))
@@ -1648,6 +1803,64 @@ CONTAINS
       B = (1.0e0_dp-c2)*H2*dphi
 
     end function get_B_vect
+
+    function get_A_vect_Ptotal(phi,dphi) result(A)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: A
+      real(dp) :: H, H2, eps
+      real(dp), dimension(size(phi)) :: Vprime
+
+      H=getH(phi,dphi)
+      H2=H**2
+      eps = geteps(phi,dphi)
+      Vprime =dVdphi(phi)
+
+      A = -H2*dphi - eps*H2*dphi - Vprime
+
+    end function get_A_vect_Ptotal
+
+    function get_B_vect_Ptotal(phi,dphi) result(B)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: B
+      real(dp) :: H
+
+      H=getH(phi,dphi)
+
+      B = (H**2)*dphi
+
+    end function get_B_vect_Ptotal
+
+    function get_A_vect_Padiab(phi,dphi) result(A)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: A
+      real(dp) :: H, H2, eps, cs2
+      real(dp), dimension(size(phi)) :: Vprime
+
+      H=getH(phi,dphi)
+      H2=H**2
+      eps = geteps(phi,dphi)
+      Vprime =dVdphi(phi)
+      cs2 = getcs2(phi,dphi)
+
+      A = cs2*(-H2*dphi - eps*H2*dphi + Vprime)
+
+    end function get_A_vect_Padiab
+
+    function get_B_vect_Padiab(phi,dphi) result(B)
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), dimension(size(phi)) :: B
+      real(dp) :: H, cs2
+
+      H=getH(phi,dphi)
+      cs2 = getcs2(phi,dphi)
+
+      B = (H**2)*dphi*cs2
+
+    end function get_B_vect_Padiab
 
 
     function getPdot(phi,dphi) result(Pdot)

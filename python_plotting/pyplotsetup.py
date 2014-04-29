@@ -5,9 +5,12 @@ Set pyplot parameters for nice plots
 import matplotlib as mpl
 from scipy import sqrt
 
-fig_width_pt = 235.0  # Get this from LaTeX using \showthe\columnwidth
+#fig_width_pt = 235.0  # Get this from LaTeX using \showthe\columnwidth
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth
 #fig_width_pt = 300.0  # Get this from LaTeX using \showthe\columnwidth
+
+#JCAP
+fig_width_pt = 440.0  # Get this from LaTeX using \showthe\columnwidth
 
 inches_per_pt = 1.0/72.27               # Convert pt to inch
 golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
