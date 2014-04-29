@@ -770,7 +770,7 @@ CONTAINS
     real(dp) :: chi_knot1, chi_knot2
     real(dp) :: low_endpoint, high_endpoint
     real(dp) :: slope
-
+    real(dp) :: range
     !heavy_field_index => which heavy field? for picking (light,heavy_i) direction
     !  This is the "i" in funct_i => need heavy_field_index>1
 
@@ -839,7 +839,36 @@ CONTAINS
       !print*, "chi_knot2", chi_knot2
       !print*, "turning_function", turning_function
 
+    case(5)
+      !Two-knot trajectory
+       if (size(vparams,1) <6) then
+        print*, "Not enough vparams to set turning_choice=", turning_choice
+        stop
+       end if
 
+       offset_phi = vparams(4,2)
+       slope = tan(vparams(5,2))
+       range = vparams(6,2)*cos(vparams(5,2))
+
+       phi_knot2 = offset_phi + range/2.0e0_dp
+       chi_knot2 = vparams(6,2)*sin(vparams(5,2))/2.0e0_dp
+       phi_knot1 = offset_phi - range/2.0e0_dp
+       chi_knot1 = -vparams(6,2)*sin(vparams(5,2))/2.0e0_dp
+       
+       if (phi > phi_knot2) then
+          turning_function = chi_knot2
+        else if (phi > phi_knot1) then
+           turning_function = slope*(phi-offset_phi)
+        else 
+           turning_function = chi_knot1
+       end if 
+        !print*, "phi", phi
+      !print*, "slope", slope
+      !print*, "phi_knot1", phi_knot1
+      !print*, "phi_knot2", phi_knot2
+      !print*, "chi_knot1", chi_knot1
+      !print*, "chi_knot2", chi_knot2
+      !print*, "turning_function", turning_function
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
@@ -896,6 +925,17 @@ CONTAINS
         chi_knot1, chi_knot2)
 
       dturndphi = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
+   
+   case(5)
+      !Two-knot trajectory
+      
+       if (phi>phi_knot2) then
+          dturndphi = 0e0_dp
+        else if (phi>phi_knot1) then
+           dturndphi = tan(vparams(5,2))
+        else 
+           dturndphi = 0e0_dp
+       end if 
 
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
@@ -953,7 +993,9 @@ CONTAINS
       !Random turning trajectories
       d2turndphi2 = 0e0_dp
 
-
+    case(5)
+       !two-knot trajectory
+      d2turndphi2 = 0e0_dp
     case default
        write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select

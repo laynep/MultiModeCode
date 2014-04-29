@@ -22,7 +22,7 @@
 ![ LP: ] Order fields so that all light fields at start
 &more_params
   effective_V_choice = 1
-  turning_choice = 4
+  turning_choice = 5
   number_knots_qsfrandom(:)= 30
   stand_dev_qsfrandom(:)= 1e-4
 
@@ -69,6 +69,7 @@ the smallest mass; others are discarded.
   vparams(4,:) = 0.5 0.5
 
 /
+=======
   vparams(1,:) = -14.0       -10.0
   vparams(2,:) = -1000000.0       -8.0
   vparams(3,:) =  0.0        1.02509
@@ -76,6 +77,19 @@ the smallest mass; others are discarded.
   vparams(4,:) = 0.0       244.949
   vparams(5,:) = 0.0       0.15708
   vparams(6,:) = 0.0       5.7735e-4
+
+  phi_init0 = 26.0 0.21648165
+
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
+  vparams(2,:) = -1000000.0       -8.0
+  vparams(3,:) =  0.0        1.02509
+
+  vparams(4,:) = 0.0       15
+  vparams(5,:) = 0.0       1.047
+  vparams(6,:) = 0.0       0.5
+
+  vparams(1,:) = -12.2789840467449       -12.1602803162336
+
 
 ----------------
 ![ LP: ] Priors on the IC and N_pivot ranges
