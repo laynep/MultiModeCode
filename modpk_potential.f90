@@ -210,11 +210,21 @@ CONTAINS
       step_size = vparams(3,:)
       step_slope = vparams(4,:)
 
-      V_potential = sum( &
-          0.5*m2_V*(phi**2) * &
-          (1.0e0_dp + step_size* &
-          tanh( (phi-location_phi)/step_slope)) )
+      !Check for /0 error
+      if (any(abs(step_slope) < 1e-15)) then
+        print*, "ERROR: Set the slope in tanh(phi/step_slope) greater than 1e-15"
+        print*, "step_slope=", step_slope
+        stop
+      end if
 
+      V_potential=0e0_dp
+
+      do i=1,num_inflaton
+        V_potential = V_potential + &
+            0.5*m2_V(i)*(phi(i)**2) * &
+            (1.0e0_dp + step_size(i)* &
+            tanh( (phi(i)-location_phi(i))/step_slope(i)))
+      end do
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
@@ -399,13 +409,17 @@ CONTAINS
          step_size = vparams(3,:)
          step_slope = vparams(4,:)
 
-         first_deriv(:) = m2_V(:)*phi(:)* &
-           (1.0e0_dp + step_size(:)* &
-           tanh( (phi(:)-location_phi(:))/step_slope(:))) + &
-           0.5e0_dp*m2_V*phi**2*step_slope* &
-           (cosh((phi-location_phi)/step_slope))**(-2)/&
-           step_slope
 
+         do i=1,num_inflaton
+
+          first_deriv(i) = m2_V(i)*phi(i)* &
+            (1.0e0_dp + step_size(i)* &
+            tanh( (phi(i)-location_phi(i))/step_slope(i))) + &
+            0.5e0_dp*m2_V(i)*phi(i)**2*step_size(i)* &
+            (MySech((phi(i)-location_phi(i))/step_slope(i)))**(2)/&
+            step_slope(i)
+
+         end do
 
 
        !END MULTIFIELD
@@ -732,12 +746,12 @@ CONTAINS
            second_deriv(i,i) = m2_V(i)*&
               (1.0e0_dp + step_size(i)* &
               tanh( (phi(i)-location_phi(i))/step_slope(i))) +&
-              2.0e0_dp*m2_V(i)*phi(i)*step_slope(i)* &
-              (cosh( (phi(i)-location_phi(i))/step_slope(i)))**(-2)/&
+              2.0e0_dp*m2_V(i)*phi(i)*step_size(i)* &
+              (MySech( (phi(i)-location_phi(i))/step_slope(i)))**(2)/&
               step_slope(i) - &
               m2_V(i)*phi(i)**2 * (step_size(i)/step_slope(i)**2) *&
               tanh((phi(i)-location_phi(i))/step_slope(i)) *&
-              (cosh((phi(i)-location_phi(i))/step_slope(i)))**(-2)
+              (MySech((phi(i)-location_phi(i))/step_slope(i)))**(2)
 
          end do
 
@@ -1299,7 +1313,6 @@ CONTAINS
     phi_dot_0_scaled = sqrt(dot_product(dphi,dphi))
     omega_z = dphi/phi_dot_0_scaled
 
-    !DEBUG
     !If there's a major hierarchy in scales for the vector components, then
     !there can be a spurious component of the isocurvature direction
     !oriented along the adiabatic one.  When you're approaching the
@@ -2038,10 +2051,10 @@ CONTAINS
   FUNCTION MySech(x)
     real(dp)  :: x,MySech
 
-    IF(ABS(x).GT.40.0) THEN
-       MySech=0.0
+    IF(ABS(x).GT.40.0e0_dp) THEN
+       MySech=0.0e0_dp
     ELSE
-       MySech=1.0/COSH(x)
+       MySech=1.0e0_dp/COSH(x)
     END IF
   END FUNCTION MySech
 
