@@ -89,5 +89,7 @@ clean:
 	-rm powspec
 	-rm *.dat
 	-rm trajectory.txt
+	-rm pk_adiab.txt
+	-rm pk_isocurv.txt
 
 

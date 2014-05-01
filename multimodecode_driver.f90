@@ -1,4 +1,4 @@
-program test_mmodpk
+program multimodecode
   use modpkparams
   use potential
   use background_evolution
@@ -38,7 +38,7 @@ program test_mmodpk
 
   !Sampling parameters for ICs
   integer :: numb_samples
-  integer :: outsamp, outsamp_N_iso
+  integer :: outsamp, outsamp_N_iso, out_adiab, out_isoc
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
   logical :: output_badic
@@ -85,8 +85,8 @@ program test_mmodpk
 
   call output_initial_data()
 
-  trajout=257
-  if (save_traj) open(trajout, file="trajectory.txt")
+  !trajout=257
+  if (save_traj) open(newunit=trajout, file="trajectory.txt")
 
   if (sampling_techn==reg_samp) then
 
@@ -130,9 +130,9 @@ program test_mmodpk
 
     do i=1,numb_samples
 
-        if (modpkoutput) write(*,*) "---------------------------------------------"
-        if (modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
-        if (modpkoutput) write(*,*) "---------------------------------------------"
+      if (modpkoutput) write(*,*) "---------------------------------------------"
+      if (modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
+      if (modpkoutput) write(*,*) "---------------------------------------------"
 
       call calculate_pk_observables(k_pivot,dlnk)
 
@@ -281,6 +281,9 @@ program test_mmodpk
       alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps)
 
       !DEBUG
+      print*, "----------------"
+      print*, "---FIX OUTPUT---"
+      print*, "----------------"
       do i=1,size(vparams,1)
         print*, "vparams", vparams(i,:)
       end do
@@ -293,7 +296,7 @@ program test_mmodpk
       ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
       write(*, e2_fmt) "N_tot =", N_tot,'(', N_tot_pred , ')'
 
-      ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure) 
+      ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
       write(*, e2_fmt) "Ps =", As(1), '(', Ps_pred , ')'
       !write(*, *), As(1), Az(1)
       !write(*, *), As(2), Az(2)
@@ -301,7 +304,7 @@ program test_mmodpk
       write(*, e2_fmt), "Isocurvature P =", A_iso(1)
       write(*, e2_fmt), "Pnad P =", A_pnad(1)
       write(*, e2_fmt), "Entropy P =", A_ent(1)
-      write(*, e2_fmt), "(TEST) Cross Ad-Iso P =", A_cross
+      write(*, e2_fmt), "Cross Ad-Iso P =", A_cross
       write(*, e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
       write(*, e2_fmt) "r = Pt/Ps =", r, '(', r_pred, ')'
 
@@ -317,22 +320,18 @@ program test_mmodpk
 
 
       if (calc_full_pk) then
-        do i=1,size(pk_arr,1)
-          write(101,*) pk_arr(i,:)
-          if(present(pk_iso_arr)) write(102,*) pk_iso_arr(i,:)
-        end do
-        write(*,*) "Adiab P(k) written to file #101"
-        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to file #102"
-      end if
 
-!DEBUG
-!if (ns(1)<0.92 .or. ns(1)>0.97) then
-!if (A_iso(1)>1e-12) then
-!if (abs(ns(1)-0.963)<1e-5 .and. abs(alpha_s)>5e-3) then
-!  print*, 'Outlier'
-!  print*, ns(1), alpha_s
-!  stop
-!end if
+        !Open output files
+        open(newunit=out_adiab,file="pk_adiab.txt")
+        open(newunit=out_isoc, file="pk_isocurv.txt")
+
+        do i=1,size(pk_arr,1)
+          write(out_adiab,*) pk_arr(i,:)
+          if(present(pk_iso_arr)) write(out_isoc,*) pk_iso_arr(i,:)
+        end do
+        write(*,*) "Adiab P(k) written to pk_adiab.txt"
+        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to pk_isocurv.txt"
+      end if
 
     end subroutine output_observables
 
@@ -547,31 +546,29 @@ program test_mmodpk
       n_iso, n_pnad, n_ent, &
       leave)
 
-      integer :: pk_bad
-      logical :: leave
-      real(dp) ::As,ns,r,nt, alpha_s
-      real(dp) :: A_iso, A_pnad, A_ent, A_bundle
-      real(dp) :: n_iso, n_pnad, n_ent
+      integer,  intent(in)     :: pk_bad
+      logical,  intent(inout)  :: leave
+      real(dp), intent(inout)  :: As,ns,r,nt, alpha_s
+      real(dp), intent(inout)  :: A_iso, A_pnad, A_ent, A_bundle
+      real(dp), intent(inout)  :: n_iso, n_pnad, n_ent
 
       !If pk_bad==bad_ic, then restart IC
       !If pk_bad==4, then ode_underflow
+
       if (pk_bad==bad_ic .or. pk_bad==4) then
-
-        !Set all observs to 0
-        As =0e0_dp
-        ns=0e0_dp
-        r=0e0_dp
-        nt=0e0_dp
-        alpha_s=0e0_dp
-        A_iso=0e0_dp
-        A_pnad=0e0_dp
-        A_ent=0e0_dp
-        A_bundle=0e0_dp
-        n_iso=0e0_dp
-        n_pnad=0e0_dp
-        n_ent=0e0_dp
+        As = 0e0_dp
+        ns = 0e0_dp
+        r = 0e0_dp
+        nt = 0e0_dp
+        alpha_s = 0e0_dp
+        A_iso = 0e0_dp
+        A_pnad = 0e0_dp
+        A_ent = 0e0_dp
+        A_bundle = 0e0_dp
+        n_iso = 0e0_dp
+        n_pnad = 0e0_dp
+        n_ent = 0e0_dp
         leave = .true.
-
       end if
 
 
@@ -656,4 +653,4 @@ program test_mmodpk
 #endif
 
 
-end program test_mmodpk
+end program multimodecode

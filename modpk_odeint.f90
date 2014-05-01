@@ -513,9 +513,6 @@ contains
       nefold_out = Nefold_max
     end if
 
-    !ode_integrator_opt = set_normal_opts(dense_j=.true.,abserr_vector=atol,      &
-    !  relerr=rtol,user_supplied_jacobian=.false.)
-
     ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
       relerr=rtol,user_supplied_jacobian=.false.,mxstep=50000, &
       mxhnil=1)
@@ -523,6 +520,8 @@ contains
 #endif
 
    DO nstp=1,MAXSTP
+   !DEBUG
+   print*, "here: nstp=", nstp
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
          print*, "ERROR in odeint_c"
@@ -693,7 +692,8 @@ contains
              end if
 
              ! for single field, end mode evolution when the mode is frozen out of the horizon
-             ! for multifield, need to evolve the modes until the end of inflation to include superhorizon evolution
+             ! for multifield, need to evolve the modes until the end of inflation to
+             ! include superhorizon evolution
              IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
              !END MULTIFIELD
           END IF
