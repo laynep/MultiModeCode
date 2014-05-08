@@ -11,18 +11,8 @@ program multimodecode
   use modpk_rng, only : init_random_seed
   use modpk_output, only : out_opt
 
-#ifdef MPI
-  use mpi
-#endif
-
   implicit none
 
-  !Writing fmts
-  character(16), parameter:: e_fmt = '(a25, es12.4)'
-  character(36), parameter:: e2_fmt = '(a25, es17.9, a3, es11.4, a1)'
-  character(16), parameter:: i_fmt = '(a25,I3)'
-  character(16) :: array_fmt
-  character(len=2) :: ci
 
   !Run-specific input params
   integer :: i, vparam_rows
@@ -38,7 +28,7 @@ program multimodecode
 
   !Sampling parameters for ICs
   integer :: numb_samples
-  integer :: outsamp, outsamp_N_iso, out_adiab, out_isoc
+  integer :: out_adiab, out_isoc
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
 
@@ -50,7 +40,6 @@ program multimodecode
   type(ic_and_observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
 
   integer :: u
-	character(len=15) :: isoNname, sampname
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -87,9 +76,9 @@ program multimodecode
 
   call output_initial_data()
 
-  call out_opt%open_files()
-
   if (sampling_techn==reg_samp) then
+
+    call out_opt%open_files()
 
     call calculate_pk_observables(k_pivot,dlnk)
 
@@ -107,24 +96,11 @@ program multimodecode
     sampling_techn == qsf_random  &
     ) then
 
-#ifdef MPI
+    call out_opt%open_files(ICs=.true.)
 
-    call mpi_parallelize()
-	  !Set random seed for each process.
-	  call init_random_seed(rank)
-
-    call open_output_files()
-
-#else
-
-    !Open output files
-    open(newunit=outsamp,file="ic_eqen.dat")
-    open(newunit=outsamp_N_iso,file="ic_isoN.dat")
 
 	  !Set random seed
 	  call init_random_seed()
-
-#endif
 
     !Initialize the sampler
     call init_sampler(priors_min, priors_max)
@@ -144,27 +120,7 @@ program multimodecode
     stop
   end if
 
-#ifdef MPI
-	!Halts processors here.
-	call mpi_barrier(mpi_comm_world,i)
-#endif
-
   contains
-
-    subroutine open_output_files()
-
-      !Open output files for each rank
-      outsamp=300+rank
-      outsamp_N_iso=300+rank+numtasks
-
-		  write(sampname,'(a,i4.4,a)')'ic_eqen',outsamp,'.dat'
-		  write(isoNname,'(a,i4.4,a)')'ic_isoN',outsamp_N_iso,'.dat'
-
-		  open(unit=outsamp,status='new',file=sampname)
-      if (save_iso_N) open(unit=outsamp_N_iso,status='new',file=isoNname)
-
-    end subroutine open_output_files
-
 
     subroutine get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
 
@@ -254,7 +210,6 @@ program multimodecode
 
     end subroutine allocate_vars
 
-    !Behold the beauty that is Fortran IO.
     subroutine output_observables(pk_arr, pk_iso_arr,&
         As,At,Az,A_iso,A_pnad,A_ent,A_cross,ns,r,nt, alpha_s,&
         eps,eta,calc_full_pk)
@@ -290,35 +245,31 @@ program multimodecode
         print*, "vparams", vparams(i,:)
       end do
 
-      write(*, i_fmt) "Number of Inflaton =", num_inflaton
-      write(*, i_fmt) "Potential Choice =", potential_choice
-      !write(*, e_fmt) "log10(m^2) =", vparams(1,1)
-      write(*, e_fmt) "N_pivot =", N_pivot
-      write(*, e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
+      write(*, out_opt%i_fmt) "Number of Inflaton =", num_inflaton
+      write(*, out_opt%i_fmt) "Potential Choice =", potential_choice
+      write(*, out_opt%e_fmt) "N_pivot =", N_pivot
+      write(*, out_opt%e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
       ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
-      write(*, e2_fmt) "N_tot =", N_tot,'(', N_tot_pred , ')'
+      write(*, out_opt%e2_fmt) "N_tot =", N_tot,'(', N_tot_pred , ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, e2_fmt) "Ps =", As(1), '(', Ps_pred , ')'
-      !write(*, *), As(1), Az(1)
-      !write(*, *), As(2), Az(2)
-      !write(*, *), As(3), Az(3)
-      write(*, e2_fmt), "Isocurvature P =", A_iso(1)
-      write(*, e2_fmt), "Pnad P =", A_pnad(1)
-      write(*, e2_fmt), "Entropy P =", A_ent(1)
-      write(*, e2_fmt), "Cross Ad-Iso P =", A_cross
-      write(*, e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
-      write(*, e2_fmt) "r = Pt/Ps =", r, '(', r_pred, ')'
+      write(*, out_opt%e2_fmt) "Ps =", As(1), '(', Ps_pred , ')'
+      write(*, out_opt%e2_fmt), "Isocurvature P =", A_iso(1)
+      write(*, out_opt%e2_fmt), "Pnad P =", A_pnad(1)
+      write(*, out_opt%e2_fmt), "Entropy P =", A_ent(1)
+      write(*, out_opt%e2_fmt), "Cross Ad-Iso P =", A_cross
+      write(*, out_opt%e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
+      write(*, out_opt%e2_fmt) "r = Pt/Ps =", r, '(', r_pred, ')'
 
       ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, e2_fmt) "n_s =", ns(1), '(', ns_pred ,')'
+      write(*, out_opt%e2_fmt) "n_s =", ns(1), '(', ns_pred ,')'
       if (size(ns)>1) then
-        write(*, e2_fmt) "n_iso =", ns(2)
-        write(*, e2_fmt) "n_pnad =", ns(3)
-        write(*, e2_fmt) "n_ent =", ns(4)
+        write(*, out_opt%e2_fmt) "n_iso =", ns(2)
+        write(*, out_opt%e2_fmt) "n_pnad =", ns(3)
+        write(*, out_opt%e2_fmt) "n_ent =", ns(4)
       end if
-      write(*, e2_fmt) "n_t =", nt, '(', nt_pred , ')'
-      write(*, e2_fmt) "alpha_s =", alpha_s, '(', alphas_pred , ')'
+      write(*, out_opt%e2_fmt) "n_t =", nt, '(', nt_pred , ')'
+      write(*, out_opt%e2_fmt) "alpha_s =", alpha_s, '(', alphas_pred , ')'
 
 
       if (calc_full_pk) then
@@ -340,9 +291,8 @@ program multimodecode
     subroutine output_initial_data()
       integer :: i
 
-      write(ci, '(I2)'), num_inflaton
-      ci = adjustl(ci)
-      array_fmt = '(a25,'//trim(ci)//'es10.3)'
+      call out_opt%formatting(num_inflaton)
+
       if (size(vparams,1)>1) then
         do i=1, size(vparams,1)
           if (out_opt%modpkoutput) &
@@ -354,23 +304,6 @@ program multimodecode
       end if
     end subroutine output_initial_data
 
-
-    subroutine DEBUG_writing_etc()
-      PRINT*, "Writing background solution to phiarr.dat"
-      open(1, file='phiarr.dat')
-      i = 1
-      do while ( lna(i+1) > 1e-8 )
-      !PRINT*, lna(i), phiarr(:,i)
-      write(1, *), lna(i), phiarr(:,i)
-      i = i + 1
-      end do
-      close(1)
-      PRINT*, "Done writing"
-      PRINT*, "Writing powerspectrum solution to pow.dat"
-      open (unit = 20, file = "pow.dat", status = 'replace')
-      PRINT*, "Writing field correlation solution to powmatrix.dat"
-      open (unit = 3, file = "powmatrix.dat", status = 'replace')
-    end subroutine DEBUG_writing_etc
 
     !Calculate observables, optionally grab a new IC each time called
     subroutine calculate_pk_observables(k_pivot,dlnk)
@@ -526,7 +459,7 @@ program multimodecode
         alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
         A_cross)
         if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-          call ic_output(i)%printout(outsamp)
+          call ic_output(i)%printout(out_opt%outsamp)
         endif
 
         if (save_iso_N) then
@@ -535,7 +468,7 @@ program multimodecode
             A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
             A_cross)
           if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-            call ic_output_iso_N(i)%printout(outsamp_N_iso)
+            call ic_output_iso_N(i)%printout(out_opt%outsamp_N_iso)
           end if
         end if
       end if
@@ -631,29 +564,6 @@ program multimodecode
       priors_min(2,:) = dphi0_priors_min
 
     end subroutine init_sampler
-
-!NOT WORKING YET
-#ifdef MPI
-    subroutine mpi_parallelize()
-
-      integer :: ierr, rc
-
-	    call mpi_init(ierr)
-	    	if(ierr .ne. 0) then
-	    		print*,"Error parallelizing."
-	    		call mpi_abort(mpi_comm_world, rc, ierr)
-	    		stop
-	    	end if
-
-	    !Obtains info on processors.
-	    call mpi_comm_rank(mpi_comm_world, rank, ierr)
-	    call mpi_comm_size(mpi_comm_world, numtasks, ierr)
-	    print*,'Number of tasks=',numtasks,' My rank=',rank
-	    call mpi_barrier(mpi_comm_world,ierr)
-
-
-    end subroutine mpi_parallelize
-#endif
 
 
 end program multimodecode

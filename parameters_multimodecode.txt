@@ -140,5 +140,6 @@ Options for output from the code
   out_opt%fields_horiz = .true.
   out_opt%fields_end_infl = .true.
   out_opt%spectra = .true.
+  out_opt%modes = .false.
 
 /

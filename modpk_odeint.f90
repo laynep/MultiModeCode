@@ -610,20 +610,23 @@ contains
        delphi = real(y(num_inflaton+1 : 2*num_inflaton),kind=dp)
        dotphi = sqrt(dot_product(delphi, delphi))
 
-       !DEBUG
-       !print*, "printing real part of modes"
-       !print*, "printing imaginary part of modes"
-       !if (.not. use_q) then
-       !  write(20,'(10E30.22)') x - (n_tot - N_pivot), &
-       !    real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !  write(21,'(10E30.22)') x - (n_tot - N_pivot),&
-       !    aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !else
-       !  write(22,'(10E30.22)') x - (n_tot - N_pivot), &
-       !    real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !  write(23,'(10E30.22)') x - (n_tot - N_pivot),&
-       !    aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-       !end if
+       if (out_opt%modes) then
+         if (.not. use_q) then
+           write(out_opt%modeout(1),'(100E30.22)') &
+             x - (n_tot - N_pivot), &
+             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+           write(out_opt%modeout(2),'(100E30.22)') &
+             x - (n_tot - N_pivot),&
+             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+         else
+           write(out_opt%modeout(3),'(100E30.22)') &
+             x - (n_tot - N_pivot), &
+             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+           write(out_opt%modeout(4),'(100E30.22)') &
+             x - (n_tot - N_pivot),&
+             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+         end if
+       end if
 
        scalefac = a_init*exp(x)
 
