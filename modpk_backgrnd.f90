@@ -8,6 +8,7 @@ MODULE background_evolution
     getH_with_t, stability_check_on_H, getEps_with_t
   USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint, &
     use_t, stupid_locate
+  use modpk_output, only : out_opt
 
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -50,8 +51,8 @@ CONTAINS
       stop
     end if
 
-    if (modpkoutput) write(*, array_fmt) 'phi_init0 =', phi_init
-    if (modpkoutput) &
+    if (out_opt%modpkoutput) write(*, array_fmt) 'phi_init0 =', phi_init
+    if (out_opt%modpkoutput) &
       write(*, array_fmt) 'dphi_init0 =', dphi_init0
 
     !Initialize e-folds and background traj
@@ -102,7 +103,7 @@ CONTAINS
              PRINT*,'MODPK: phi_init rescaling did not work after 50 tries.'
              EXIT
           END IF
-          if (modpkoutput) then
+          if (out_opt%modpkoutput) then
              PRINT*,'MODPK: phi_init was inconsistent. Rescaling:'
              WRITE(*,fmt) ' phi_init =', phi_init_trial
           end if
@@ -130,14 +131,14 @@ CONTAINS
 
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
-          if (modpkoutput) write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
-          if (modpkoutput) write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
+          if (out_opt%modpkoutput) write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
+          if (out_opt%modpkoutput) write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
           pk_bad = 6
           return
 
        else if ((alpha_e - lna(1)) .gt. Nefold_max) then
 
-          if (modpkoutput) write(*, *) 'MODPK: Too many efolds obtained. Please rescale your initial value'
+          if (out_opt%modpkoutput) write(*, *) 'MODPK: Too many efolds obtained. Please rescale your initial value'
           pk_bad = 6
           !return
        end if
@@ -228,7 +229,7 @@ CONTAINS
 
        N_tot = alpha_e - lna(1)
 
-       if (modpkoutput) then
+       if (out_opt%modpkoutput) then
           WRITE(*, fmt) ' H_pivot =', H_pivot
           WRITE(*, fmt) ' a_end = ', a_end
           WRITE(*, array_fmt) ' phi_pivot =', phi_pivot
@@ -296,7 +297,8 @@ CONTAINS
       sampling_techn==qsf_random .or. &
       (sampling_techn==param_unif_prior .and. num_inflaton==1)) then
 
-      if( sampling_techn == reg_samp) print*, "SETTING VEL SR"
+      if( sampling_techn == reg_samp .and. &
+        out_opt%modpkoutput) print*, "Setting velocity in slow-roll"
 
 
       !dphi/dalpha(x1) slowroll approx
@@ -339,7 +341,7 @@ CONTAINS
     !Check to see if starts outside slowroll, then slow-rolls later
     slowroll_init = slowroll_start
 
-    if (modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
+    if (out_opt%modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
     !END MULTIFIELD
 
     !guessed start stepsize
@@ -498,7 +500,7 @@ CONTAINS
           !END MULTIFIELD
        ENDIF
 
-       if (modpkoutput) WRITE(*,array_fmt) ' phi_end =', phi_infl_end
+       if (out_opt%modpkoutput) WRITE(*,array_fmt) ' phi_end =', phi_infl_end
 
        IF (instreheat) THEN
           !Set a plausible pivot (ignoring logarithmic V_k and V_end terms) for
@@ -569,7 +571,7 @@ CONTAINS
     ELSE
        slowroll_start=.TRUE.
     ENDIF
-    if (modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
+    if (out_opt%modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
 
     !guessed start stepsize
     if (potential_choice.eq.6) then

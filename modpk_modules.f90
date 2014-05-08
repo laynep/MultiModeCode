@@ -1,14 +1,14 @@
 MODULE camb_interface
+  IMPLICIT NONE
   INTEGER :: pk_bad
   LOGICAL :: pk_initialized
-  LOGICAL :: modpkoutput=.false.
 END MODULE camb_interface
 
 MODULE modpkparams
   IMPLICIT NONE
 
   !Double precision.
-  INTEGER, parameter :: DP = selected_real_kind(15, 307)
+  integer, parameter :: dp = selected_real_kind(15, 307)
 
   !Quad precision; remember to compile with -r16
   !INTEGER, parameter :: DP = selected_real_kind(33, 4931)
@@ -36,8 +36,6 @@ MODULE modpkparams
   LOGICAL :: slowroll_infl_end
   LOGICAL :: slowroll_start=.false.
 
-  logical :: save_traj
-
   !MULTIFIELD
   INTEGER :: num_inflaton
   real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams
@@ -56,8 +54,57 @@ MODULE modpkparams
 
 END MODULE modpkparams
 
+module modpk_output
+  implicit none
+
+  type :: print_options
+    logical :: modpkoutput
+    logical :: save_traj
+    logical :: output_badic
+    logical :: fields_horiz
+    logical :: fields_end_infl
+    logical :: spectra
+
+    !File unit numbers for output
+    integer :: trajout
+    integer :: spectraout
+    integer :: fields_h_out
+    integer :: fields_end_out
+
+    contains
+      procedure :: open_files => output_file_open
+
+  end type
+
+  type(print_options) :: out_opt
+
+  contains
+
+    subroutine output_file_open(this)
+      class(print_options) :: this
+
+      !Open output files
+      if (this%save_traj) &
+        open(newunit=this%trajout, &
+        file="out_trajectory.txt")
+      if (this%spectra) &
+        open(newunit=this%spectraout, &
+        file="out_powerspectra.txt")
+      if (this%fields_horiz) &
+        open(newunit=this%fields_h_out, &
+        file="out_fields_horizon_cross.txt")
+      if (this%fields_end_infl) &
+        open(newunit=this%fields_end_out, &
+        file="out_fields_infl_end.txt")
+
+    end subroutine output_file_open
+
+end module modpk_output
+
 MODULE ode_path
   use modpkparams, only : dp
+  implicit none
+
   INTEGER*4 :: nok,nbad,kount
   LOGICAL, SAVE :: save_steps=.false.
   LOGICAL :: ode_underflow

@@ -9,6 +9,7 @@ MODULE modpk_odeint
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
 #endif
+  use modpk_output, only : out_opt
   implicit none
 
   interface odeint
@@ -17,9 +18,6 @@ MODULE modpk_odeint
   end interface
 
   public odeint
-
-  integer, public :: trajout
-
 
 
 contains
@@ -169,7 +167,7 @@ contains
        end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
-       if (save_traj) write(trajout,'(100E18.10)'),&
+       if (out_opt%save_traj) write(out_opt%trajout,'(100E18.10)'),&
          x, &
          y(:), &
          getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
@@ -443,6 +441,9 @@ contains
     type (vode_opts) :: ode_integrator_opt
 #endif
 
+    !For outputting field values at horiz cross
+    real(dp) :: aH_old, aH_new
+
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -464,6 +465,9 @@ contains
     use_q = .false.
     compute_zpower = .true.
     eps_adjust = eps
+
+    aH_old = 0e0_dp
+    aH_new = 0e0_dp
 
 #ifdef DVODE
     !Options for first call to dvode integrator
@@ -520,8 +524,6 @@ contains
 #endif
 
    DO nstp=1,MAXSTP
-   !DEBUG
-   print*, "here: nstp=", nstp
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
          print*, "ERROR in odeint_c"
@@ -609,13 +611,6 @@ contains
        dotphi = sqrt(dot_product(delphi, delphi))
 
        !DEBUG
-       !if (mod(nstp,1000)==0) then
-       !  print*, "--------------------"
-       !  print*, "phi back=", phi
-       !  print*, "step h=", h
-       !end if
-
-       !DEBUG
        !print*, "printing real part of modes"
        !print*, "printing imaginary part of modes"
        !if (.not. use_q) then
@@ -647,56 +642,74 @@ contains
 
        IF(ode_ps_output) THEN
 
-          IF(k .LT. a_init*EXP(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+         !For outputting field values at horiz crossing
+         if (out_opt%fields_horiz) then
+           aH_new = a_init*exp(x)*getH(phi, delphi)
+           if ((aH_new .ge. k) .and. (aH_old .le. k) ) then
+             write(out_opt%fields_h_out,'(500E28.20)') k, phi
+           end if
+           aH_old = aH_new
+         end if
 
-             !MULTIFIELD
-             IF (use_q) THEN
+         IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
 
-               !Y's are in \bar{Q}=Q/a_switch
-               qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
-               dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
+           !MULTIFIELD
+           IF (use_q) THEN
 
-               ! with isocurv calculation
-               call powerspectrum(qij, dqij, phi, delphi, &
-                 scalefac, power_internal, using_q=.true.)
+             !Y's are in \bar{Q}=Q/a_switch
+             qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
+             dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
 
-              !Record spectrum
-              !print*, "writing spectra"
-              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
-                !power_internal%isocurv,&
-                !power_internal%entropy, power_internal%pnad
+             ! with isocurv calculation
+             call powerspectrum(qij, dqij, phi, delphi, &
+               scalefac, power_internal, using_q=.true.)
 
-               power_internal%tensor=tensorpower(y(index_tensor_y) &
-                  *scalefac/a_switch, scalefac)
-             ELSE
+            !Record spectrum
+            !print*, "writing spectra"
+            if (out_opt%spectra) then
+              write(out_opt%spectraout,'(100E27.20)') &
+                x - (n_tot - N_pivot), &
+                power_internal%adiab, &
+                power_internal%isocurv,&
+                power_internal%entropy, &
+                power_internal%pnad
+            end if
 
-               psi = y(index_ptb_y:index_ptb_vel_y-1)
-               dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+             power_internal%tensor=tensorpower(y(index_tensor_y) &
+                *scalefac/a_switch, scalefac)
+           ELSE
 
-               call powerspectrum(psi, dpsi, phi, delphi, &
-                 scalefac, power_internal)
+             psi = y(index_ptb_y:index_ptb_vel_y-1)
+             dpsi = y(index_ptb_vel_y:index_tensor_y-1)
 
-              !Record spectrum
-              !print*, "writing spectra"
-              !write(2,'(5E27.20)') x - (n_tot - N_pivot), power_internal%adiab!, &
-              !  power_internal%isocurv,&
-              !  power_internal%entropy, power_internal%pnad
+             call powerspectrum(psi, dpsi, phi, delphi, &
+               scalefac, power_internal)
 
+            !Record spectrum
+            !print*, "writing spectra"
+            if (out_opt%spectra) then
+              write(out_opt%spectraout,'(100E27.20)') &
+                x - (n_tot - N_pivot), &
+                power_internal%adiab, &
+                power_internal%isocurv,&
+                power_internal%entropy, &
+                power_internal%pnad
+            end if
 
-               power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
-             END IF
+             power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
+           END IF
 
-             if (compute_zpower) then  !! compute only once upon horizon exit
-                power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
-                compute_zpower = .false.
-             end if
+           if (compute_zpower) then  !! compute only once upon horizon exit
+              power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
+              compute_zpower = .false.
+           end if
 
-             ! for single field, end mode evolution when the mode is frozen out of the horizon
-             ! for multifield, need to evolve the modes until the end of inflation to
-             ! include superhorizon evolution
-             IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
-             !END MULTIFIELD
-          END IF
+           ! for single field, end mode evolution when the mode is frozen out of the horizon
+           ! for multifield, need to evolve the modes until the end of inflation to
+           ! include superhorizon evolution
+           IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
+           !END MULTIFIELD
+         END IF
        END IF
 
        IF(ode_infl_end) THEN
@@ -723,29 +736,35 @@ contains
           ENDIF
 
           IF (infl_ended) THEN
-             IF (use_q) THEN
-                ytmp(:) = y(:)
-                ! bckgrd
-                ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
+            IF (use_q) THEN
+               ytmp(:) = y(:)
+               ! bckgrd
+               ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
 
-                ! ptbs
-                ystart(index_ptb_y:index_ptb_vel_y-1) = &
-                  ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
-                ystart(index_ptb_vel_y:index_tensor_y-1) = &
-                  ytmp(index_ptb_vel_y:index_tensor_y-1)&
-                  *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
+               ! ptbs
+               ystart(index_ptb_y:index_ptb_vel_y-1) = &
+                 ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
+               ystart(index_ptb_vel_y:index_tensor_y-1) = &
+                 ytmp(index_ptb_vel_y:index_tensor_y-1)&
+                 *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
 
-                ! tensors
-                ystart(index_tensor_y) =&
-                  ytmp(index_tensor_y)*scalefac/a_switch
-                ystart(index_tensor_y+1) =&
-                  ytmp(index_tensor_y+1)*scalefac/a_switch&
-                  + ystart(index_tensor_y)
-             ELSE
-                ystart(:) = y(:)
-             END IF
-             IF (save_steps) CALL save_a_step
-             RETURN
+               ! tensors
+               ystart(index_tensor_y) =&
+                 ytmp(index_tensor_y)*scalefac/a_switch
+               ystart(index_tensor_y+1) =&
+                 ytmp(index_tensor_y+1)*scalefac/a_switch&
+                 + ystart(index_tensor_y)
+            ELSE
+               ystart(:) = y(:)
+            END IF
+            IF (save_steps) CALL save_a_step
+
+            !For outputting field values
+            if (out_opt%fields_end_infl) then
+              write(out_opt%fields_end_out,'(500E28.20)') k, phi
+            end if
+
+            RETURN
           END IF
        ENDIF
 
@@ -798,8 +817,6 @@ contains
     print*, "epsilon", getEps(phi,delphi)
     ode_underflow=.TRUE.
 
-    !DEBUG
-    print*, "STOPPING AT THIS POINT"
     stop
 
   contains

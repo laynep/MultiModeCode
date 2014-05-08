@@ -1236,7 +1236,7 @@ CONTAINS
 
   ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
   !adiabatic P(k), and isocurv P(k); includes cross correlations
-  subroutine powerspectrum(psi, dpsi, phi, dphi, a, power_spectrum, using_q)
+  subroutine powerspectrum(psi, dpsi, phi, dphi, scalefactor, power_spectrum, using_q)
     use internals
     use powersp
 
@@ -1248,7 +1248,7 @@ CONTAINS
 
     ! Hacked matrix to vect
     complex(dp), dimension(:), intent(in) :: psi, dpsi
-    real(dp), intent(in) :: a
+    real(dp), intent(in) :: scalefactor
 
     complex(dp), dimension(size(dphi),size(dphi)) :: power_matrix
     complex(dp), dimension(size(dphi),size(dphi)) :: d_power_matrix
@@ -1350,7 +1350,7 @@ CONTAINS
       !Don't divide out by scalefact
       prefactor= (k**3/2.0e0_dp/(pi**2))/(2e0_dp*k)
     else
-      prefactor= (k**3/2.0e0_dp/(pi**2)/a**2)/(2e0_dp*k)
+      prefactor= (k**3/2.0e0_dp/(pi**2)/scalefactor**2)/(2e0_dp*k)
     end if
 
     do i=1,numb_infl; do j=1, numb_infl; do ll=1,numb_infl
@@ -1451,6 +1451,8 @@ CONTAINS
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
 
+#ifdef COMPUTE_PRESS
+
       !Total pressure spectrum
       !<P P*>
       A_vect = get_A_vect_Ptotal(phi,dphi)
@@ -1516,6 +1518,8 @@ CONTAINS
         BBprod = BBprod +B_vect_adiab(i)*B_vect_adiab(j)*d_power_matrix(i,j)
       end do; end do
       power_press_adiab = (AAprod + BBprod) + (ABprod + BAprod)
+
+#endif
 
       !DEBUG
       ![ LP: ] writing power spectrum output

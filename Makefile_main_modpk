@@ -88,8 +88,11 @@ clean:
 	-rm fort.*
 	-rm powspec
 	-rm *.dat
-	-rm trajectory.txt
-	-rm pk_adiab.txt
-	-rm pk_isocurv.txt
+	-rm out_fields_infl_end.txt
+	-rm out_fields_horizon_cross.txt
+	-rm out_powerspectra.txt
+	-rm out_trajectory.txt
+	-rm out_pk_adiab.txt
+	-rm out_pk_isocurv.txt
 
 

@@ -9,7 +9,7 @@ program multimodecode
   use internals
   use modpk_icsampling
   use modpk_rng, only : init_random_seed
-  use modpk_odeint, only : trajout
+  use modpk_output, only : out_opt
 
 #ifdef MPI
   use mpi
@@ -41,7 +41,6 @@ program multimodecode
   integer :: outsamp, outsamp_N_iso, out_adiab, out_isoc
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: priors_min, priors_max
-  logical :: output_badic
 
   !Other sampling params
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
@@ -55,11 +54,11 @@ program multimodecode
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
-    modpkoutput, slowroll_infl_end, instreheat, vparam_rows, &
-    more_potential_params, save_traj
+    slowroll_infl_end, instreheat, vparam_rows, &
+    more_potential_params
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
-    save_iso_N, N_iso_ref,output_badic, varying_N_pivot
+    save_iso_N, N_iso_ref, varying_N_pivot
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -67,6 +66,8 @@ program multimodecode
   namelist /more_params/ effective_V_choice, turning_choice, &
     number_knots_qsfrandom, stand_dev_qsfrandom, &
     knot_range_min, knot_range_max, custom_knot_range
+
+  namelist /print_out/ out_opt
 
   !------------------------------------------------
 
@@ -81,12 +82,12 @@ program multimodecode
   !Read other params from file
 	read(unit=u, nml=ic_sampling)
 	read(unit=u, nml=params)
+	read(unit=u, nml=print_out)
 	close(unit=u)
 
   call output_initial_data()
 
-  !trajout=257
-  if (save_traj) open(newunit=trajout, file="trajectory.txt")
+  call out_opt%open_files()
 
   if (sampling_techn==reg_samp) then
 
@@ -130,9 +131,9 @@ program multimodecode
 
     do i=1,numb_samples
 
-      if (modpkoutput) write(*,*) "---------------------------------------------"
-      if (modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
-      if (modpkoutput) write(*,*) "---------------------------------------------"
+      if (out_opt%modpkoutput) write(*,*) "---------------------------------------------"
+      if (out_opt%modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
+      if (out_opt%modpkoutput) write(*,*) "---------------------------------------------"
 
       call calculate_pk_observables(k_pivot,dlnk)
 
@@ -253,6 +254,7 @@ program multimodecode
 
     end subroutine allocate_vars
 
+    !Behold the beauty that is Fortran IO.
     subroutine output_observables(pk_arr, pk_iso_arr,&
         As,At,Az,A_iso,A_pnad,A_ent,A_cross,ns,r,nt, alpha_s,&
         eps,eta,calc_full_pk)
@@ -278,7 +280,7 @@ program multimodecode
       r_pred = 16*eps
       ns_pred = 1-2*eps-1/(N_pivot)
       nt_pred = -2*eps
-      alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps)
+      alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps) !This prediction isn't as good.
 
       !DEBUG
       print*, "----------------"
@@ -322,15 +324,15 @@ program multimodecode
       if (calc_full_pk) then
 
         !Open output files
-        open(newunit=out_adiab,file="pk_adiab.txt")
-        open(newunit=out_isoc, file="pk_isocurv.txt")
+        open(newunit=out_adiab,file="out_pk_adiab.txt")
+        open(newunit=out_isoc, file="out_pk_isocurv.txt")
 
         do i=1,size(pk_arr,1)
           write(out_adiab,*) pk_arr(i,:)
           if(present(pk_iso_arr)) write(out_isoc,*) pk_iso_arr(i,:)
         end do
-        write(*,*) "Adiab P(k) written to pk_adiab.txt"
-        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to pk_isocurv.txt"
+        write(*,*) "Adiab P(k) written to out_pk_adiab.txt"
+        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to out_pk_isocurv.txt"
       end if
 
     end subroutine output_observables
@@ -341,13 +343,14 @@ program multimodecode
       write(ci, '(I2)'), num_inflaton
       ci = adjustl(ci)
       array_fmt = '(a25,'//trim(ci)//'es10.3)'
-      !write(*, *) 'Testing two field with V(phi) = 1/2 m_I^2 phi_I^2+1/2 m_J^2 phi_J^2'
       if (size(vparams,1)>1) then
         do i=1, size(vparams,1)
-          write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
+          if (out_opt%modpkoutput) &
+            write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
         end do
       else
-        write(*, *), "vparams(1,:) =", vparams(1,:)
+        if (out_opt%modpkoutput) &
+          write(*, *), "vparams(1,:) =", vparams(1,:)
       end if
     end subroutine output_initial_data
 
@@ -506,7 +509,7 @@ program multimodecode
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
       call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
 
-      if (modpkoutput) then
+      if (out_opt%modpkoutput) then
         call output_observables(pk_arr,pk_iso_arr, &
           (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
           (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
@@ -522,7 +525,7 @@ program multimodecode
         call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
         alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
         A_cross)
-        if (output_badic .or. pk_bad/=bad_ic) then
+        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
           call ic_output(i)%printout(outsamp)
         endif
 
@@ -531,7 +534,7 @@ program multimodecode
             As,ns,r,nt, alpha_s,&
             A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
             A_cross)
-          if (output_badic .or. pk_bad/=bad_ic) then
+          if (out_opt%output_badic .or. pk_bad/=bad_ic) then
             call ic_output_iso_N(i)%printout(outsamp_N_iso)
           end if
         end if

@@ -1,6 +1,7 @@
 MODULE access_modpk
   use modpkparams, only : dp
   USE camb_interface
+  use modpk_output, only : out_opt
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: potinit, evolve, total_efold
@@ -44,7 +45,7 @@ CONTAINS
     !When scanning ICs, let some backgrnd errors be overridden
     if (sampling_techn/=reg_samp) then
       if (pk_bad == bad_ic) then
-        if (modpkoutput) then
+        if (out_opt%modpkoutput) then
           print*, "--------------- BAD IC; RESTARTING -------------------"
         end if
         return
