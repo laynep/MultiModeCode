@@ -52,6 +52,9 @@ MODULE modpkparams
 
   real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As, modpk_r
 
+  logical :: use_deltaN_SR
+  logical :: evaluate_modes
+
 END MODULE modpkparams
 
 !Behold the beauty that is Fortran IO.
@@ -141,6 +144,7 @@ module modpk_output
       this%array_fmt = '(a25,'//trim(this%ci)//'es10.3)'
 
     end subroutine make_formatting
+
 
 end module modpk_output
 

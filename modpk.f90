@@ -26,12 +26,6 @@ CONTAINS
     IMPLICIT NONE
     real(dp) :: k,klo,khi
 
-    !When to start evaluating P(k), k<aH/eval_ps
-    eval_ps = 5.0e2_dp
-
-    !When to switch variables to q=\delta \phi (k<aH/useq_ps)
-    !from \psi_ij=a q_ij (k>aH/useq_ps)
-    useq_ps = 1.0e2_dp
 
     !
     !     Solve the background equations
@@ -52,8 +46,6 @@ CONTAINS
       end if
     end if
 
-    RETURN
-
   END SUBROUTINE potinit
 
   SUBROUTINE total_efold
@@ -61,7 +53,7 @@ CONTAINS
     USE background_evolution, ONLY : backgrnd_efold
     USE potential, ONLY : initialphi
     IMPLICIT NONE
- 
+
     pk_bad = 0
     phi_init = initialphi(phi_init0)
     CALL backgrnd_efold
@@ -83,7 +75,7 @@ CONTAINS
     type(power_spectra), intent(out) :: powerspectrum_out
 
     integer*4 :: i,j
-    real(dp) :: accuracy,h1,hmin,x1,x2 
+    real(dp) :: accuracy,h1,hmin,x1,x2
     complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
     real(dp), INTENT(IN) :: kin
     real(dp) :: pow_isocurvature
@@ -112,9 +104,9 @@ CONTAINS
     !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
 
     ! --- u_zeta is the adiabatic mode ignoring coupings to other modes, used to compare with the full zeta perturbation
-    !! --- full_zeta - u_zeta gives the super-horizon evolution 
-    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
-    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    !! --- full_zeta - u_zeta gives the super-horizon evolution
+    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2
+    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2
 
     ! Set aliases for indices for above
     index_ptb_y = 2*num_inflaton+1
@@ -135,9 +127,10 @@ CONTAINS
     !Evaluation scale
     k=kin*Mpc2Mpl
     powerspectrum_out%k=k
+    eval_ps = 5.0e2_dp !When to start evaluating P(k), k<aH/eval_ps
+    useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
 
     !How far inside the horizon to set the modes' (Bunch-Davies) IC; k = k_start*aH
-    !k_start = 1.0e2_dp
     call set_consistent_BD_scale(k_start)
 
     !! start where k = k_start* aH, deep in the horizon, ah = log(aH)

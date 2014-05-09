@@ -2100,3 +2100,284 @@ CONTAINS
 #undef EXPTERM
 
 END MODULE potential
+
+
+!Module that lets us compare the mode evolution to the slow-roll expectation for
+!sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
+module modpk_deltaN_SR
+  use modpkparams
+  use internals, only : pi
+  use potential
+
+  contains
+
+    !Evalutes adiabatic power spectrum under SR approximation at field positions
+    !phi_end, given that the mode of interest crossed the horizon at phi_pivot
+    !Assumes a massless, uncorrelated mode subhorizon
+    function powerspectrum_adiab_SR(phi_pivot,phi_end) result(PR)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) ::PR
+      real(dp), dimension(size(phi_pivot)) :: dN
+      real(dp) :: H_piv, V_piv, P_dphi
+
+      V_piv = pot(phi_pivot)
+      H_piv = sqrt(V_piv/3.0e0_dp)
+      dN = dNdphi_SR(phi_pivot,phi_end)
+
+      P_dphi = (H_piv/2.0e0_dp/pi)**2
+
+      PR = sum(dN*dN)*P_dphi
+
+    end function powerspectrum_adiab_SR
+
+    function r_SR(phi_pivot,phi_end) result(r)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) :: r
+      real(dp), dimension(size(phi_pivot)) :: dN
+
+      dN = dNdphi_SR(phi_pivot,phi_end)
+
+      r = 8.0e0_dp/sum(dN*dN)
+
+    end function r_SR
+
+    function nt_SR(phi_pivot) result(nt)
+      real(dp), dimension(:), intent(in) :: phi_pivot
+      real(dp) :: nt, eps(size(phi_pivot))
+
+      eps = eps_SR(phi_pivot)
+
+      !nt = -2.0e0_dp*sum(eps)
+      nt = -2.0e0_dp*sum(eps)/(1.0e0_dp - sum(eps))
+
+    end function nt_SR
+
+    function fNL_SR(phi_pivot,phi_end) result(fnl)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) :: fnl
+      real(dp), dimension(size(phi_pivot)) :: dN
+      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2N
+      integer :: ii, jj
+
+      dN = dNdphi_SR(phi_pivot,phi_end)
+      d2N = d2Ndphi2_SR(phi_pivot,phi_end)
+
+      fnl = (-5.0e0_dp/6.0e0_dp)/(sum(dN*dN))**2
+      do ii=1,size(dN); do jj=1,size(dN)
+        fnl = fnl + dN(ii)*dN(jj)*d2N(ii,jj)
+      end do; end do
+
+    end function fNL_SR
+
+    function ns_SR(phi_pivot,phi_end) result(ns)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) :: ns, eps_piv, V
+      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
+      real(dp), dimension(size(phi_pivot)) :: dV, dN
+      integer :: ii, jj
+
+      dV = dVdphi(phi_pivot)
+      d2V = d2Vdphi2(phi_pivot)
+      eps_piv = sum(eps_SR(phi_pivot))
+      dN = dNdphi_SR(phi_pivot,phi_end)
+      V = pot(phi_pivot)
+
+      ns = 1.0e0_dp &
+        - 2.0e0_dp*eps_piv &
+        - (2.0e0_dp/sum(dN*dN))
+
+      do ii=1,size(phi_pivot); do jj=1,size(phi_pivot)
+        ns = ns +&
+          2.0e0_dp*d2V(ii,jj)*dN(ii)*dN(jj)/V/sum(dN*dN)
+      end do; end do
+
+    end function ns_SR
+
+    !Running of ns
+    function alpha_s_SR(phi_pivot,phi_end) result(alpha)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) :: alpha, eps_piv, V
+      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
+      real(dp), dimension(size(phi_pivot)) :: dV, dN
+      integer :: ii, jj
+
+      dV = dVdphi(phi_pivot)
+      d2V = d2Vdphi2(phi_pivot)
+      eps_piv = sum(eps_SR(phi_pivot))
+      dN = dNdphi_SR(phi_pivot,phi_end)
+      V = pot(phi_pivot)
+
+
+    end function alpha_s_SR
+
+    !Deriv of N wrt phi on horiz cross surface
+    !Battefeld-Easther eq 29
+    function dNdphi_SR(phi_pivot,phi_end)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp), dimension(size(phi_pivot)) :: dNdphi_SR
+      real(dp), dimension(size(phi_pivot)) :: eps, V_i, Z_i
+      real(dp) :: V
+
+      eps = eps_SR(phi_pivot)
+      V_i = V_i_sum_sep(phi_pivot)
+      Z_i = Z_i_BE(phi_end)
+      V = pot(phi_pivot)
+
+      dNdphi_SR = ((1.0e0_dp/sqrt(2.0e0_dp*eps))/V)*(V_i - Z_i)
+
+    end function dNdphi_SR
+
+    !2nd Deriv of N wrt phi on horiz cross surface
+    !Battefeld-Easther eq 32
+    function d2Ndphi2_SR(phi_pivot,phi_end)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2Ndphi2_SR
+      real(dp), dimension(size(phi_end),size(phi_end)) :: delta
+
+      real(dp), dimension(size(phi_end)) :: eta_piv, eps_piv, V_i_piv, Z_i
+      real(dp) :: V_piv
+      real(dp), dimension(size(phi_end),size(phi_end)) :: dZ_ij
+
+      integer :: ll, kk
+
+      eta_piv = eta_SR(phi_pivot)
+      eps_piv = eps_SR(phi_pivot)
+      V_i_piv = V_i_sum_sep(phi_pivot)
+      Z_i = Z_i_BE(phi_end)
+      V_piv = pot(phi_pivot)
+      dZ_ij = dZdphi_ij_BE(phi_pivot,phi_end)
+
+      !Identity matrix
+      delta=0e0_dp
+      do ll=1, size(phi_end)
+        delta(ll,ll) = 1.0e0_dp
+      end do
+
+      do ll=1, size(phi_end); do kk=1,size(phi_end)
+        d2Ndphi2_SR(ll,kk) = delta(kk,ll)*&
+          (1.0e0_dp - &
+            (eta_piv(ll)/2.0e0_dp/eps_piv(ll))*&
+            (V_i_piv(ll)-Z_i(ll))/V_piv&
+           ) +&
+           (1.0e0_dp/sqrt(2.0e0_dp*eps_piv(ll))/V_piv)*dZ_ij(ll,kk)
+      end do; end do
+
+    end function d2Ndphi2_SR
+
+    function eps_SR(phi)
+      real(dp), dimension(:), intent(in) :: phi
+      real(dp), dimension(size(phi)) :: eps_SR
+      real(dp), dimension(size(phi)) :: dV
+      real(dp) :: V
+
+      dV = dVdphi(phi)
+      V = pot(phi)
+      eps_SR = 0.5e0_dp*( dV**2/V**2)
+
+    end function eps_SR
+
+    function eta_SR(phi)
+      real(dp), dimension(:), intent(in) :: phi
+      real(dp), dimension(size(phi)) :: eta_SR
+      real(dp), dimension(size(phi),size(phi)) :: d2V
+      real(dp) :: V
+      integer :: i
+
+      d2V = d2Vdphi2(phi)
+      V = pot(phi)
+
+      do i=1, size(eta_SR)
+        eta_SR(i) = d2V(i,i)**2/V
+      end do
+
+    end function eta_SR
+
+    !The function Z_i from Battefeld-Easther that encodes all details from the
+    !end of inflation surface.  Eq. 31
+    function Z_i_BE(phi_end)
+      real(dp), dimension(:), intent(in) :: phi_end
+      real(dp), dimension(size(phi_end)) :: Z_i_BE
+
+      real(dp), dimension(size(phi_end)) :: eps_end
+      real(dp) :: eps, V
+
+      eps_end = eps_SR(phi_end)
+      eps = sum(eps_end)
+      V = pot(phi_end)
+
+      Z_i_BE = V*eps_end/eps - V_i_sum_sep(phi_end)
+
+    end function Z_i_BE
+
+    !Deriv of Z_i wrt fields at horiz cross
+    !Battefeld-Easther Eq. 33
+    function dZdphi_ij_BE(phi_pivot,phi_end)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp), dimension(size(phi_end),size(phi_end)) :: dZdphi_ij_BE
+
+      real(dp), dimension(size(phi_end)) :: eps_end, eps_piv, eta_end
+      real(dp) :: eps_t_end, V_end, V_piv
+      real(dp), dimension(size(phi_end),size(phi_end)) :: delta
+
+      integer :: jj, ll, kk
+
+      eps_end = eps_SR(phi_end)
+      eps_piv = eps_SR(phi_pivot)
+      eps_t_end = sum(eps_end)
+      V_end = pot(phi_end)
+      V_piv = pot(phi_pivot)
+      eta_end = eta_SR(phi_end)
+
+      !Identity matrix
+      delta=0e0_dp
+      do ll=1, size(phi_end)
+        delta(ll,ll) = 1.0e0_dp
+      end do
+
+      !Summation over jj
+      dZdphi_ij_BE = 0e0_dp
+      do ll=1, size(phi_end); do kk=1,size(phi_end)
+        do jj=1,size(phi_end)
+          dZdphi_ij_BE(ll,kk) = dZdphi_ij_BE(ll,kk) + &
+            (-V_end**2/V_piv)*sqrt(2.0e0_dp/eps_piv(kk))*&
+            (&
+              eps_end(jj)*&
+              ((eps_end(ll)/eps_t_end) - delta(ll,jj))*&
+              ((eps_end(kk)/eps_t_end) - delta(kk,jj))*&
+              (1.0e0_dp - (eta_end(jj)/eps_t_end))&
+            )
+        end do
+      end do; end do
+
+
+    end function dZdphi_ij_BE
+
+    !For a sum-separable potential V=\sum_i V_i.  This returns only the V_i part
+    function V_i_sum_sep(phi)
+      real(dp), dimension(:), intent(in) :: phi
+      real(dp), dimension(size(phi)) :: V_i_sum_sep
+
+      real(dp), dimension(:,:), allocatable :: vparams_temp
+      integer :: vrows, jj
+      real(dp) :: V
+
+      !Make temp copy of vparams
+      !NB: vparams(vrows,num_inflaton)
+
+      vrows = size(vparams,1)
+      vparams_temp = vparams
+
+      do jj=1,size(phi)
+        deallocate(vparams)
+        allocate(vparams(vrows,1))
+        vparams(:,1) = vparams_temp(:,jj)
+        V_i_sum_sep(jj) = pot((/phi(jj)/))
+      end do
+
+      deallocate(vparams)
+      vparams = vparams_temp
+      deallocate(vparams_temp)
+
+    end function V_i_sum_sep
+
+end module modpk_deltaN_SR

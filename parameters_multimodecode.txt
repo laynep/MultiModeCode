@@ -8,6 +8,9 @@ Set potential and its derivatives in modpk_potential.f90
   num_inflaton = 2
   potential_choice = 1
 
+  use_deltaN_SR = .true.
+  evaluate_modes = .false.
+
   slowroll_infl_end = .true.
   instreheat = .false.
   vparam_rows = 4

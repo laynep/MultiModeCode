@@ -10,6 +10,7 @@ program multimodecode
   use modpk_icsampling
   use modpk_rng, only : init_random_seed
   use modpk_output, only : out_opt
+  use modpk_deltaN_SR
 
   implicit none
 
@@ -44,7 +45,7 @@ program multimodecode
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     slowroll_infl_end, instreheat, vparam_rows, &
-    more_potential_params
+    more_potential_params, use_deltaN_SR, evaluate_modes
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref, varying_N_pivot
@@ -348,6 +349,27 @@ program multimodecode
         leave)
       if (leave) return
 
+      if (use_deltaN_SR) then
+        !DEBUG
+        print*, "TESTING HERE"
+        print*, "use_deltaN_SR"
+        print*, "eps_SR"
+       print*, eps_SR((/10.0_dp,20.0_dp/))
+        print*, "eta_SR"
+       print*, eta_SR((/10.0_dp,20.0_dp/))
+        print*, "V_i_sum_sep"
+       print*, V_i_sum_sep((/10.0_dp,20.0_dp/))
+        print*, "Z_i_BE"
+       print*, Z_i_BE((/10.0_dp,20.0_dp/))
+        print*, "dNdphi_SR"
+       print*, dNdphi_SR((/10.0_dp,20.0_dp/),(/1.0_dp,2.0_dp/))
+        stop
+      end if
+
+
+      if (.not. evaluate_modes) return
+
+      !Evaluate the mode functions
       call evolve(k_pivot, pk0)
         call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
           A_iso, A_pnad, A_ent, A_bundle, &
