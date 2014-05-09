@@ -983,6 +983,7 @@ USE_MA48_FOR_SPARSE	dvode_f90_m.f90	/^  LOGICAL, PARAMETER, PRIVATE :: USE_MA48_
 U_PIVOT	dvode_f90_m.f90	/^        RMIN, SETH, T0ST, THEMAX, TLAST, TN, TOL, TOL1, TOUTC, UMAX, UROUND,    &$/;"	v	module:DVODE_F90_M
 VODE_F90	dvode_f90_m.f90	/^      SUBROUTINE VODE_F90(/;"	s	module:DVODE_F90_M
 VODE_OPTS	dvode_f90_m.f90	/^      TYPE, PUBLIC :: VODE_OPTS$/;"	t	module:DVODE_F90_M
+V_i_sum_sep	modpk_potential.f90	/^    function V_i_sum_sep(/;"	f	module:modpk_deltaN_SR
 WKDS	dvode_f90_m.f90	/^  REAL (WP), ALLOCATABLE, PRIVATE :: YSCALEDS(:), WKDS(/;"	v	module:DVODE_F90_M
 WM	dvode_f90_m.f90	/^        LB(:), PMAT(:), RSCALEX(:), RWORK(:), SAVF(:), UB(:), WM(/;"	v	module:DVODE_F90_M
 WM1	dvode_f90_m.f90	/^        U_PIVOT, X2, WM1,/;"	v	module:DVODE_F90_M
@@ -1004,6 +1005,7 @@ YNNEG	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(:), Y
 YSCALEDS	dvode_f90_m.f90	/^  REAL (WP), ALLOCATABLE, PRIVATE :: YSCALEDS(/;"	v	module:DVODE_F90_M
 YTEMP	dvode_f90_m.f90	/^        WMTEMP(:), WSCALEX(:,:), YHNQP2(:), YHTEMP(:), YMAX(:), YNNEG(:),       &$/;"	v	module:DVODE_F90_M
 ZERO	dvode_f90_m.f90	/^      REAL (WP), PARAMETER, PRIVATE :: ZERO /;"	v	module:DVODE_F90_M
+Z_i_BE	modpk_potential.f90	/^    function Z_i_BE(/;"	f	module:modpk_deltaN_SR
 a_end	modpk_modules.f90	/^  real(dp) :: a_end,/;"	v	module:modpkparams
 a_ik	modpk_modules.f90	/^  real(dp) :: k, a_ik$/;"	v	module:internals
 a_init	modpk_modules.f90	/^  real(dp) :: a_init$/;"	v	module:modpkparams
@@ -1013,6 +1015,7 @@ adiab	modpk_modules.f90	/^    real(dp) :: adiab$/;"	k	type:power_spectra
 allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars(/;"	s	program:multimodecode
 alpha_s	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt, alpha_s$/;"	k	type:ic_and_observables
 alpha_s	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns, nt, r, alpha_s$/;"	v	program:multimodecode
+alpha_s_SR	modpk_potential.f90	/^    function alpha_s_SR(/;"	f	module:modpk_deltaN_SR
 array_fmt	modpk_modules.f90	/^    character(16) :: array_fmt$/;"	k	type:print_options
 array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(/;"	s	module:modpk_utils
 backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/;"	s	module:background_evolution
@@ -1030,6 +1033,7 @@ bundle	modpk_potential.f90	/^  type :: bundle$/;"	t	module:potential
 bundle_exp_scalar	modpk_modules.f90	/^    real(dp) :: bundle_exp_scalar$/;"	k	type:power_spectra
 bundle_exp_scalar	modpk_potential.f90	/^  subroutine bundle_exp_scalar(/;"	s
 calc_clumping_penalty	modpk_postprocessing.f90	/^    function calc_clumping_penalty(/;"	f	module:modpk_postprocessing
+calculate_SR_observables	multimodecode_driver.f90	/^    subroutine calculate_SR_observables(/;"	s	program:multimodecode
 calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(/;"	s	program:multimodecode
 camb_interface	modpk_modules.f90	/^MODULE camb_interface$/;"	m
 check_stop_when_not_slowroll_infl_end	modpk_odeint.f90	/^  logical function check_stop_when_not_slowroll_infl_end(/;"	f	module:modpk_odeint
@@ -1039,9 +1043,12 @@ convert_hacked_vector_to_matrix	modpk_utils.f90	/^  pure function convert_hacked
 convert_matrix_to_hacked_vector	modpk_utils.f90	/^  pure function convert_matrix_to_hacked_vector(/;"	f	module:modpk_utils
 cross_ad_iso	modpk_modules.f90	/^    real(dp) :: cross_ad_iso$/;"	k	type:power_spectra
 custom_knot_range	modpk_potential.f90	/^  logical :: custom_knot_range$/;"	v	module:potential
+d2Ndphi2_SR	modpk_potential.f90	/^    function d2Ndphi2_SR(/;"	f	module:modpk_deltaN_SR
 d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(/;"	f	module:potential
 d2turndphi2	modpk_potential.f90	/^  real(dp) function d2turndphi2(/;"	f	module:potential
+dNdphi_SR	modpk_potential.f90	/^    function dNdphi_SR(/;"	f	module:modpk_deltaN_SR
 dVdphi	modpk_potential.f90	/^  recursive function dVdphi(/;"	f	module:potential
+dZdphi_ij_BE	modpk_potential.f90	/^    function dZdphi_ij_BE(/;"	f	module:modpk_deltaN_SR
 delsigma	modpk_modules.f90	/^  real(dp) :: delsigma /;"	v	module:modpkparams
 derivs	modpk_utils.f90	/^  SUBROUTINE derivs(/;"	s	module:modpk_utils
 dlnk	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt, kmin, kmax, dlnk,/;"	v	program:driver_modpk
@@ -1064,16 +1071,19 @@ effective_V_choice	modpk_potential.f90	/^  integer :: effective_V_choice$/;"	v	m
 energy_measure	modpk_icsampling.f90	/^    function energy_measure(/;"	f	module:modpk_icsampling
 energy_scale	multimodecode_driver.f90	/^  real(dp) :: energy_scale$/;"	v	program:multimodecode
 entropy	modpk_modules.f90	/^    real(dp) :: entropy$/;"	k	type:power_spectra
+eps_SR	modpk_potential.f90	/^    function eps_SR(/;"	f	module:modpk_deltaN_SR
 epsarr	modpk_modules.f90	/^  real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(/;"	v	module:modpkparams
 eqen_ic	modpk_icsampling.f90	/^    subroutine eqen_ic(/;"	s	module:modpk_icsampling
 eqen_prior	modpk_icsampling.f90	/^  integer, parameter, private :: eqen_prior /;"	v	module:modpk_icsampling
 eqen_samp	modpk_icsampling.f90	/^  integer, parameter :: reg_samp=1, eqen_samp=/;"	v	module:modpk_icsampling
 equal_area_prior	modpk_icsampling.f90	/^  integer, parameter, private :: equal_area_prior=/;"	v	module:modpk_icsampling
 equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_ic(/;"	s	module:modpk_icsampling
+eta_SR	modpk_potential.f90	/^    function eta_SR(/;"	f	module:modpk_deltaN_SR
 eval_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,/;"	v	module:powersp
 evaluate_modes	modpk_modules.f90	/^  logical :: evaluate_modes$/;"	v	module:modpkparams
 evolve	modpk.f90	/^  SUBROUTINE evolve(/;"	s	module:access_modpk
 exp_scalar	modpk_potential.f90	/^    real(dp) :: exp_scalar=/;"	k	type:bundle
+fNL_SR	modpk_potential.f90	/^    function fNL_SR(/;"	f	module:modpk_deltaN_SR
 field_bundle	modpk_potential.f90	/^  type(bundle) :: field_bundle$/;"	v	module:potential
 fields_end_infl	modpk_modules.f90	/^    logical :: fields_end_infl$/;"	k	type:print_options
 fields_end_out	modpk_modules.f90	/^    integer :: fields_end_out$/;"	k	type:print_options
@@ -1160,6 +1170,7 @@ mode_derivs_dvode	modpk_utils.f90	/^  subroutine mode_derivs_dvode(/;"	s	module:
 modeout	modpk_modules.f90	/^    integer, dimension(4) :: modeout$/;"	k	type:print_options
 modes	modpk_modules.f90	/^    logical :: modes$/;"	k	type:print_options
 modpk_As	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As,/;"	v	module:modpkparams
+modpk_deltaN_SR	modpk_potential.f90	/^module modpk_deltaN_SR$/;"	m
 modpk_icsampling	modpk_icsampling.f90	/^module modpk_icsampling$/;"	m
 modpk_nrun	modpk_modules.f90	/^  real(dp) :: modpk_ns, modpk_nt, modpk_nrun,/;"	v	module:modpkparams
 modpk_ns	modpk_modules.f90	/^  real(dp) :: modpk_ns,/;"	v	module:modpkparams
@@ -1194,9 +1205,11 @@ normal_array	modpk_rng.f90	/^function normal_array(/;"	f	module:modpk_rng
 normal_scalar	modpk_rng.f90	/^function normal_scalar(/;"	f	module:modpk_rng
 ns	modpk_icsampling.f90	/^    real(dp) :: As, ns,/;"	k	type:ic_and_observables
 ns	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns,/;"	v	program:multimodecode
+ns_SR	modpk_potential.f90	/^    function ns_SR(/;"	f	module:modpk_deltaN_SR
 nsteps	modpk_modules.f90	/^  INTEGER, PARAMETER :: nsteps=/;"	v	module:modpkparams
 nt	modpk_icsampling.f90	/^    real(dp) :: As, ns, r, nt,/;"	k	type:ic_and_observables
 nt	multimodecode_driver.f90	/^  real(dp) :: dlnk, As, ns, nt,/;"	v	program:multimodecode
+nt_SR	modpk_potential.f90	/^    function nt_SR(/;"	f	module:modpk_deltaN_SR
 num_inflaton	modpk_modules.f90	/^  INTEGER :: num_inflaton$/;"	v	module:modpkparams
 numb_samples	multimodecode_driver.f90	/^  integer :: numb_samples$/;"	v	program:multimodecode
 number_knots_qsfrandom	modpk_potential.f90	/^  integer, dimension(:), allocatable :: number_knots_qsfrandom$/;"	v	module:potential
@@ -1254,6 +1267,7 @@ power_internal	modpk_modules.f90	/^  type(power_spectra) :: power_internal$/;"	v
 power_spectra	modpk_modules.f90	/^  type :: power_spectra$/;"	t	module:powersp
 powersp	modpk_modules.f90	/^module powersp$/;"	m
 powerspectrum	modpk_potential.f90	/^  subroutine powerspectrum(/;"	s	module:potential
+powerspectrum_adiab_SR	modpk_potential.f90	/^    function powerspectrum_adiab_SR(/;"	f	module:modpk_deltaN_SR
 powt	driver_modpk.f90	/^  DOUBLE PRECISION :: kin, pow, powt,/;"	v	program:driver_modpk
 powz	modpk_modules.f90	/^    real(dp) :: powz$/;"	k	type:power_spectra
 print_options	modpk_modules.f90	/^  type :: print_options$/;"	t	module:modpk_output
@@ -1276,6 +1290,7 @@ qsf_random	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=5, is
 qtrap	modpk_icsampling.f90	/^      pure SUBROUTINE qtrap(/;"	s	subroutine:mass_spectrum_nflation
 r	modpk_icsampling.f90	/^    re/;"	k	type:ic_and_observables
 r	multimodecode_driver.f90	/^  re/;"	v	program:multimodecode
+r_SR	modpk_potential.f90	/^    function r_SR(/;"	f	module:modpk_deltaN_SR
 rand_sign	modpk_rng.f90	/^function rand_sign(/;"	f	module:modpk_rng
 rank	multimodecode_driver.f90	/^  integer :: numtasks, rank$/;"	v	program:multimodecode
 reallocate_rm	modpk_utils.f90	/^  FUNCTION reallocate_rm(/;"	f	module:modpk_utils

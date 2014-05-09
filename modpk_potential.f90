@@ -2109,12 +2109,15 @@ module modpk_deltaN_SR
   use internals, only : pi
   use potential
 
+  !The horizon crossing approximation
+  logical :: HC_approx=.false.
+
   contains
 
     !Evalutes adiabatic power spectrum under SR approximation at field positions
     !phi_end, given that the mode of interest crossed the horizon at phi_pivot
     !Assumes a massless, uncorrelated mode subhorizon
-    function powerspectrum_adiab_SR(phi_pivot,phi_end) result(PR)
+    function PR_SR(phi_pivot,phi_end) result(PR)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
       real(dp) ::PR
       real(dp), dimension(size(phi_pivot)) :: dN
@@ -2128,7 +2131,7 @@ module modpk_deltaN_SR
 
       PR = sum(dN*dN)*P_dphi
 
-    end function powerspectrum_adiab_SR
+    end function PR_SR
 
     function r_SR(phi_pivot,phi_end) result(r)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
@@ -2162,10 +2165,11 @@ module modpk_deltaN_SR
       dN = dNdphi_SR(phi_pivot,phi_end)
       d2N = d2Ndphi2_SR(phi_pivot,phi_end)
 
-      fnl = (-5.0e0_dp/6.0e0_dp)/(sum(dN*dN))**2
+      fnl=0e0_dp
       do ii=1,size(dN); do jj=1,size(dN)
         fnl = fnl + dN(ii)*dN(jj)*d2N(ii,jj)
       end do; end do
+      fnl = fnl*(-5.0e0_dp/6.0e0_dp)/(sum(dN*dN))**2
 
     end function fNL_SR
 
@@ -2207,6 +2211,9 @@ module modpk_deltaN_SR
       dN = dNdphi_SR(phi_pivot,phi_end)
       V = pot(phi_pivot)
 
+      !DEBUG
+      print*, "alpha_s_SR isn't working yet."
+
 
     end function alpha_s_SR
 
@@ -2223,7 +2230,7 @@ module modpk_deltaN_SR
       Z_i = Z_i_BE(phi_end)
       V = pot(phi_pivot)
 
-      dNdphi_SR = ((1.0e0_dp/sqrt(2.0e0_dp*eps))/V)*(V_i - Z_i)
+      dNdphi_SR = ((1.0e0_dp/sqrt(2.0e0_dp*eps))/V)*(V_i + Z_i)
 
     end function dNdphi_SR
 
@@ -2255,11 +2262,11 @@ module modpk_deltaN_SR
 
       do ll=1, size(phi_end); do kk=1,size(phi_end)
         d2Ndphi2_SR(ll,kk) = delta(kk,ll)*&
-          (1.0e0_dp - &
-            (eta_piv(ll)/2.0e0_dp/eps_piv(ll))*&
-            (V_i_piv(ll)-Z_i(ll))/V_piv&
-           ) +&
-           (1.0e0_dp/sqrt(2.0e0_dp*eps_piv(ll))/V_piv)*dZ_ij(ll,kk)
+            (1.0e0_dp - &
+              (eta_piv(ll)/2.0e0_dp/eps_piv(ll))*&
+              (V_i_piv(ll)+Z_i(ll))/V_piv&
+             ) +&
+             (1.0e0_dp/sqrt(2.0e0_dp*eps_piv(ll))/V_piv)*dZ_ij(ll,kk)
       end do; end do
 
     end function d2Ndphi2_SR
@@ -2301,6 +2308,11 @@ module modpk_deltaN_SR
       real(dp), dimension(size(phi_end)) :: eps_end
       real(dp) :: eps, V
 
+      if (HC_approx) then
+        Z_i_BE=0e0_dp
+        return
+      end if
+
       eps_end = eps_SR(phi_end)
       eps = sum(eps_end)
       V = pot(phi_end)
@@ -2320,6 +2332,11 @@ module modpk_deltaN_SR
       real(dp), dimension(size(phi_end),size(phi_end)) :: delta
 
       integer :: jj, ll, kk
+
+      if (HC_approx) then
+        dZdphi_ij_BE=0e0_dp
+        return
+      end if
 
       eps_end = eps_SR(phi_end)
       eps_piv = eps_SR(phi_pivot)

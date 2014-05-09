@@ -350,20 +350,7 @@ program multimodecode
       if (leave) return
 
       if (use_deltaN_SR) then
-        !DEBUG
-        print*, "TESTING HERE"
-        print*, "use_deltaN_SR"
-        print*, "eps_SR"
-       print*, eps_SR((/10.0_dp,20.0_dp/))
-        print*, "eta_SR"
-       print*, eta_SR((/10.0_dp,20.0_dp/))
-        print*, "V_i_sum_sep"
-       print*, V_i_sum_sep((/10.0_dp,20.0_dp/))
-        print*, "Z_i_BE"
-       print*, Z_i_BE((/10.0_dp,20.0_dp/))
-        print*, "dNdphi_SR"
-       print*, dNdphi_SR((/10.0_dp,20.0_dp/),(/1.0_dp,2.0_dp/))
-        stop
+        call calculate_SR_observables()
       end if
 
 
@@ -497,6 +484,38 @@ program multimodecode
 
 
     end subroutine calculate_pk_observables
+
+    !Calculate observables for the power spectrum, as well as fNL, using the
+    !delta-N formalism in slow-roll
+    subroutine calculate_SR_observables()
+      integer :: j, i
+      real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
+      real(dp), dimension(num_inflaton) :: phi_pivot, phi_end, del_phi
+
+      !Find field values at end of inflation
+      !Note that eps=1 perhaps twice, so take the last one.
+      CALL array_polint(epsarr(nactual_bg-4:nactual_bg), phiarr(:,nactual_bg-4:nactual_bg),&
+        1.0e0_dp,  phi_end, del_phi)
+      CALL polint(epsarr(nactual_bg-4:nactual_bg), lna(nactual_bg-4:nactual_bg),&
+        1.0e0_dp,  N_end, del_N)
+
+      !Find field values at horizon crossing
+      Npiv_renorm = N_end - N_pivot
+
+      i= locate(lna(1:nactual_bg), Npiv_renorm)
+      j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
+      CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), Npiv_renorm, phi_pivot, del_phi)
+
+      print*, "testing SR approx"
+      print*, "P_R", PR_SR(phi_pivot,phi_end)
+      print*, "ns", ns_SR(phi_pivot,phi_end)
+      print*, "nt", nt_SR(phi_pivot)
+      print*, "r", r_SR(phi_pivot,phi_end)
+      print*, "fnl", fnl_SR(phi_pivot,phi_end), (-5.0/6.0)/N_pivot
+
+
+
+    end subroutine calculate_SR_observables
 
 
     subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,&

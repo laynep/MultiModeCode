@@ -148,7 +148,6 @@ CONTAINS
          return
        end if
 
-
        PRINT*,'MODPK: QUITTING'
        write(*,e2_fmt) "log(k/k_start):", ah
        write(*,e2_fmt) "log_aharr(1):", log_aharr(1)
@@ -177,12 +176,6 @@ CONTAINS
        print*, "alpha=",x1
 
        print*, "dalpha", dalpha
-
-       !Override the stop.
-       !if (sampling_techn/=reg_samp) then
-       !  pk_bad=bad_ic
-       !  return
-       !end if
 
        PRINT*,'MODPK: QUITTING'
        STOP

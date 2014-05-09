@@ -695,7 +695,7 @@ CONTAINS
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
   END SUBROUTINE polint
 
-  !MULTIFIELD 
+  !MULTIFIELD
   SUBROUTINE array_polint(xa, ya, x, y, dy)
     IMPLICIT NONE
 
