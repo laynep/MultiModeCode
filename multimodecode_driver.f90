@@ -511,9 +511,8 @@ program multimodecode
       print*, "ns", ns_SR(phi_pivot,phi_end)
       print*, "nt", nt_SR(phi_pivot)
       print*, "r", r_SR(phi_pivot,phi_end)
-      print*, "fnl", fnl_SR(phi_pivot,phi_end), (-5.0/6.0)/N_pivot
-
-
+      print*, "fnl", fnl_SR(phi_pivot,phi_end)
+      print*, "alpha", alpha_s_SR(phi_pivot,phi_end)
 
     end subroutine calculate_SR_observables
 

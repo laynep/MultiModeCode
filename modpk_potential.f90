@@ -6,7 +6,7 @@ MODULE potential
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t,&
        effective_V_choice, turning_choice, number_knots_qsfrandom, stand_dev_qsfrandom, &
-       knot_positions, knot_range_min, knot_range_max, custom_knot_range
+       knot_positions, knot_range_min, knot_range_max, custom_knot_range, d3Vdphi3
 
   public :: norm
   public :: bundle, field_bundle
@@ -471,7 +471,7 @@ CONTAINS
        second_deriv = (pot(phi+2.e0_dp*dphi)+pot(phi-2.e0_dp*dphi)- &
          2.e0_dp*pot(phi))/(4.e0_dp*dphi*dphi)
     else
-       second_deriv(:,:) = 0
+       second_deriv(:,:) = 0e0_dp
 
        select case(potential_choice)
        case(1)
@@ -763,6 +763,31 @@ CONTAINS
     end if
 
   END FUNCTION d2Vdphi2
+
+  !Needs "result" because array-valued and recursive.
+  !Only really used to get the 3rd order SR parameters for the SR approximation
+  !of the scalar running, alpha_s
+  function d3Vdphi3(phi) result(third_deriv)
+    real(dp), INTENT(IN) :: phi(:)
+    real(dp) :: third_deriv(size(phi),size(phi),size(phi))
+    real(dp) :: m2_V(size(phi))
+    integer :: ii
+
+    third_deriv = 0e0_dp
+
+    select case(potential_choice)
+    case(1)
+      m2_V = 10.e0_dp**(vparams(1,:))
+      do ii=1,size(phi)
+        third_deriv(ii,ii,ii)=m2_V(ii)
+      end do
+    case default
+      print*, "ERROR: d3Vdphi3 not defined for potential_choice =", &
+        potential_choice
+      stop
+    end select
+
+  end function d3Vdphi3
 
 
   !Function that parameterizes the turn for quasi--single-field trajectories
@@ -2198,21 +2223,64 @@ module modpk_deltaN_SR
     end function ns_SR
 
     !Running of ns
-    function alpha_s_SR(phi_pivot,phi_end) result(alpha)
+    !Formula as in Lyth-Riotto Eq 116 hep-ph/9807278
+    function alpha_s_SR(phi_pivot,phi_end) result(alpha_s)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: alpha, eps_piv, V
+      real(dp) :: alpha_s, eps_piv, V
       real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
+      real(dp), dimension(size(phi_pivot),size(phi_pivot),size(phi_pivot)) :: d3V
       real(dp), dimension(size(phi_pivot)) :: dV, dN
-      integer :: ii, jj
+      real(dp) :: alpha1, alpha2, alpha3, alpha4, alpha5
 
+      integer :: aa, bb, cc, dd
+
+      V = pot(phi_pivot)
       dV = dVdphi(phi_pivot)
       d2V = d2Vdphi2(phi_pivot)
+      d3V = d3Vdphi3(phi_pivot)
       eps_piv = sum(eps_SR(phi_pivot))
       dN = dNdphi_SR(phi_pivot,phi_end)
-      V = pot(phi_pivot)
+
+      alpha1=0e0_dp
+      alpha2=0e0_dp
+      alpha3=0e0_dp
+      alpha4=0e0_dp
+      alpha5=0e0_dp
+
+      !First term
+      do aa=1,size(dV); do bb=1,size(dV)
+        alpha1 = alpha1 +&
+          (-2.0e0_dp/V**3)*dV(aa)*dV(bb)*d2V(aa,bb)
+      end do; end do
+
+      !Second term
+      alpha2 = (2.0e0_dp/V**4)*(sum(dV**2))**2
+
+      !Third term
+      do aa=1,size(dV); do bb=1,size(dV)
+        alpha3 = alpha3 + dN(aa)*dN(bb)*d2V(aa,bb)
+      end do; end do
+      alpha3=(V-alpha3)**2
+      alpha3=alpha3*(4.0e0_dp/V/(sum(dN**2))**2)
+
+      !Fourth term
+      do aa=1,size(dV); do bb=1,size(dV); do cc=1,size(dV)
+        alpha4=alpha4 + &
+          dN(aa)*dN(bb)*dV(cc)*d3V(aa,bb,cc)
+      end do; end do; end do
+      alpha4=alpha4*(2.0e0_dp/V/sum(dN**2))
+
+      !Fifth term
+      do bb=1,size(dV); do cc=1,size(dV); do aa=1,size(dV)
+        alpha5=alpha5 + &
+          (dV(cc) - dN(aa)*d2V(aa,cc))*dN(bb)*d2V(bb,cc)
+      end do; end do; end do
+      alpha5 = alpha5*(4.0e0_dp/V/sum(dN**2))
+
+      alpha_s = alpha1 + alpha2 + alpha3 + alpha4 + alpha5
 
       !DEBUG
-      print*, "alpha_s_SR isn't working yet."
+      print*, "WARNING: alpha_s not tested properly yet"
 
 
     end function alpha_s_SR
