@@ -8,7 +8,6 @@ program multimodecode
   use access_modpk
   use internals
   use modpk_icsampling
-  use modpk_rng, only : init_random_seed
   use modpk_output, only : out_opt
   use modpk_deltaN_SR
   use modpk_observables, only : observables
@@ -23,10 +22,7 @@ program multimodecode
   integer :: numtasks, rank
 
   !Cosmology
-  real(dp) :: dlnk, As, ns, nt, r, alpha_s
-  real(dp) :: A_iso, A_pnad, A_ent, A_bundle
-  real(dp) :: n_iso, n_pnad, n_ent
-
+  real(dp) :: dlnk
 
   !Sampling parameters for ICs
   integer :: numb_samples
@@ -39,9 +35,6 @@ program multimodecode
   logical :: varying_N_pivot
   logical :: more_potential_params
   logical :: get_runningofrunning
-
-  type(observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
-  type(observables), dimension(:), allocatable :: ic_output_SR, ic_output_iso_N_SR
 
   integer :: u
 
@@ -63,7 +56,6 @@ program multimodecode
   namelist /print_out/ out_opt, get_runningofrunning
 
   !------------------------------------------------
-
 
   !Read initializing params from file
 	open(newunit=u, file="parameters_multimodecode.txt", &
@@ -102,18 +94,17 @@ program multimodecode
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
 
-
-	  !Set random seed
-	  call init_random_seed()
-
     !Initialize the sampler
     call init_sampler(priors_min, priors_max)
 
     do i=1,numb_samples
 
-      if (out_opt%modpkoutput) write(*,*) "---------------------------------------------"
-      if (out_opt%modpkoutput) write(*,*) "Sample numb", i, "of", numb_samples
-      if (out_opt%modpkoutput) write(*,*) "---------------------------------------------"
+      if (out_opt%modpkoutput) write(*,*) &
+        "---------------------------------------------"
+      if (out_opt%modpkoutput) write(*,*) &
+        "Sample numb", i, "of", numb_samples
+      if (out_opt%modpkoutput) write(*,*) &
+        "---------------------------------------------"
 
       call calculate_pk_observables(k_pivot,dlnk)
 
@@ -160,7 +151,6 @@ program multimodecode
 
       !Make the arrays for k values to sample
       allocate(k_input(steps))
-      !k_input=kmin
       incr=(kmax/kmin)**(1/real(steps-1))
       do i=1,steps
         k_input(i) = kmin*incr**(i-1)
@@ -211,7 +201,6 @@ program multimodecode
       allocate(dphi_init0(num_inflaton))
       allocate(dphi_init(num_inflaton))
 
-
     end subroutine allocate_vars
 
     subroutine output_observables(pk_arr, pk_iso_arr,&
@@ -241,37 +230,59 @@ program multimodecode
         end do
       end if
 
-      write(*, out_opt%i_fmt) "Number of Inflaton =", num_inflaton
-      write(*, out_opt%i_fmt) "Potential Choice =", potential_choice
-      write(*, out_opt%e_fmt) "N_pivot =", N_pivot
-      !write(*, out_opt%e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
+      write(*, out_opt%i_fmt) &
+        "Number of Inflaton =", num_inflaton
+      write(*, out_opt%i_fmt) &
+        "Potential Choice =", potential_choice
+      write(*, out_opt%e_fmt) &
+        "N_pivot =", N_pivot
+      !write(*, out_opt%e2_fmt) &
+      !"phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
       if (potential_choice==1) then
-        write(*, out_opt%e2_fmt) "N_tot =", N_tot,'(', &
+        write(*, out_opt%e2_fmt)&
+          "N_tot =", N_tot,'(', &
           0.25e0_dp*sum(phi_init0**2) , ')'
       else
-        write(*, out_opt%e2_fmt) "N_tot =", N_tot
+        write(*, out_opt%e2_fmt)&
+          "N_tot =", N_tot
       end if
-      write(*, out_opt%e2_fmt) "Ps =", observ_modes%As, '(', SR_pred%As , ')'
-      write(*, out_opt%e2_fmt), "Isocurvature P =", observ_modes%A_iso
-      write(*, out_opt%e2_fmt), "Pnad P =", observ_modes%A_pnad
-      write(*, out_opt%e2_fmt), "Entropy P =", observ_modes%A_ent
-      write(*, out_opt%e2_fmt), "Cross Ad-Iso P =", observ_modes%A_cross_ad_iso
-      write(*, out_opt%e2_fmt), "Bundle Width =", field_bundle%exp_scalar
-      write(*, out_opt%e2_fmt) "r = Pt/Ps =", observ_modes%r, '(', SR_pred%r, ')'
+      write(*, out_opt%e2_fmt)&
+        "Ps =", observ_modes%As, '(', SR_pred%As , ')'
+      write(*, out_opt%e2_fmt),&
+        "Isocurvature P =", observ_modes%A_iso
+      write(*, out_opt%e2_fmt),&
+        "Pnad P =", observ_modes%A_pnad
+      write(*, out_opt%e2_fmt),&
+        "Entropy P =", observ_modes%A_ent
+      write(*, out_opt%e2_fmt),&
+        "Cross Ad-Iso P =", observ_modes%A_cross_ad_iso
+      write(*, out_opt%e2_fmt),&
+        "Bundle Width =", field_bundle%exp_scalar
+      write(*, out_opt%e2_fmt)&
+        "r = Pt/Ps =", observ_modes%r, '(', SR_pred%r, ')'
 
-      write(*, out_opt%e2_fmt) "n_s =", observ_modes%ns, '(', SR_pred%ns,')'
+      write(*, out_opt%e2_fmt)&
+        "n_s =", observ_modes%ns, '(', SR_pred%ns,')'
       if (num_inflaton>1) then
-        write(*, out_opt%e2_fmt) "n_iso =",  observ_modes%n_iso
-        write(*, out_opt%e2_fmt) "n_pnad =", observ_modes%n_pnad
-        write(*, out_opt%e2_fmt) "n_ent =",  observ_modes%n_ent
+        write(*, out_opt%e2_fmt)&
+          "n_iso =",  observ_modes%n_iso
+        write(*, out_opt%e2_fmt)&
+          "n_pnad =", observ_modes%n_pnad
+        write(*, out_opt%e2_fmt)&
+          "n_ent =",  observ_modes%n_ent
       end if
-      write(*, out_opt%e2_fmt) "n_t =", observ_modes%nt, '(', SR_pred%nt , ')'
-      write(*, out_opt%e2_fmt) "alpha_s =", observ_modes%alpha_s, '(', SR_pred%alpha_s , ')'
+      write(*, out_opt%e2_fmt)&
+        "n_t =", observ_modes%nt, '(', SR_pred%nt , ')'
+      write(*, out_opt%e2_fmt)&
+        "alpha_s =", observ_modes%alpha_s, '(', SR_pred%alpha_s , ')'
       if (get_runningofrunning) then
-        write(*, out_opt%e2_fmt) "d2n_s/dlnk^2 =", observ_modes%runofrun
+        write(*, out_opt%e2_fmt)&
+          "d^2n_s/dlnk^2 =", observ_modes%runofrun
       end if
-      write(*, out_opt%e2_fmt) "Slow-roll f_NL =", observ_modes%f_NL
-      write(*, out_opt%e2_fmt) "Slow-roll tau_NL =", observ_modes%tau_NL, &
+      write(*, out_opt%e2_fmt)&
+        "Slow-roll f_NL =", observ_modes%f_NL
+      write(*, out_opt%e2_fmt)&
+        "Slow-roll tau_NL =", observ_modes%tau_NL, &
         '(>', ((6.0/5.0)*observ_modes%f_NL)**2, ')'
 
       if (calc_full_pk) then
@@ -285,7 +296,8 @@ program multimodecode
           if(present(pk_iso_arr)) write(out_isoc,*) pk_iso_arr(i,:)
         end do
         write(*,*) "Adiab P(k) written to out_pk_adiab.txt"
-        if (present(pk_iso_arr)) write(*,*) "Iso-P(k) written to out_pk_isocurv.txt"
+        if (present(pk_iso_arr))&
+          write(*,*) "Iso-P(k) written to out_pk_isocurv.txt"
       end if
 
     end subroutine output_observables
@@ -297,7 +309,8 @@ program multimodecode
 
       do i=1, size(vparams,1)
         if (out_opt%modpkoutput .and. .not. out_opt%output_reduced) &
-          write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
+          write(*, '(A8,I1,A5,100E12.3)'),&
+          "vparams(",i,",:) =", vparams(i,:)
       end do
 
     end subroutine output_initial_data
@@ -323,7 +336,8 @@ program multimodecode
 
         if (varying_N_pivot) then
           save_iso_N = .false.
-          call get_new_N_pivot(N_pivot, N_pivot_prior_min, N_pivot_prior_max)
+          call get_new_N_pivot(N_pivot,&
+            N_pivot_prior_min, N_pivot_prior_max)
         end if
 
       end if
@@ -341,91 +355,101 @@ program multimodecode
       call potinit
 
       !For outputting field values at horiz crossing
-      if (out_opt%fields_horiz) write(out_opt%fields_h_out,'(1000E28.20)') k, phi_pivot
+      if (out_opt%fields_horiz) &
+        write(out_opt%fields_h_out,'(1000E28.20)') k, phi_pivot
 
       call test_bad(pk_bad, observs, leave)
       if (leave) return
 
       if (use_deltaN_SR) then
+
         call calculate_SR_observables(observs_SR)
+
+        !Only calculating these in SR
         observs%f_NL = observs_SR%f_NL
         observs%tau_NL = observs_SR%tau_NL
+
       end if
 
-      if (.not. evaluate_modes) return
+      !if (.not. evaluate_modes) return
 
       !Evaluate the mode functions
-      call evolve(k_pivot, pk0)
-        call test_bad(pk_bad, observs, leave)
-        if (leave) return
+      if (evaluate_modes) then
+
+        call evolve(k_pivot, pk0)
+          call test_bad(pk_bad, observs, leave)
+          if (leave) return
 !DEBUG
 !print*, "Not evaluating second and third evolve routines"
 !stop
-      call evolve(k_pivot*exp(-dlnk), pk1)
-        call test_bad(pk_bad, observs, leave)
-        if (leave) return
-      call evolve(k_pivot*exp(dlnk), pk2)
-        call test_bad(pk_bad, observs, leave)
-        if (leave) return
-
-      if (get_runningofrunning) then
-        !Alpha_s from 5-pt stencil
-        !or running of running
-        call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
+        call evolve(k_pivot*exp(-dlnk), pk1)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
-        call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
+        call evolve(k_pivot*exp(dlnk), pk2)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
-      end if
 
-      !Construct the observables
-      if (get_runningofrunning) then
-        call observs%set_finite_diff(dlnk, &
-          pk0,pk1,pk2,pk3,pk4, &
-          field_bundle%exp_scalar)
-      else
-        call observs%set_finite_diff(dlnk, &
-          pk0,pk1,pk2,&
-          bundle_width=field_bundle%exp_scalar)
-      end if
-
-
-      !Get full spectrum for adiab and isocurv at equal intvs in lnk
-      call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
-
-
-      if (out_opt%modpkoutput) &
-        call output_observables(pk_arr,pk_iso_arr, &
-          calc_full_pk, observs, observs_SR)
-
-      !Load & print output array
-      !Save in ic_output in case want to post-process.
-      !Only get the SR arrays if use_deltaN_SR
-      if (sampling_techn/=reg_samp) then
-        ic_output(i) = observs
-        if (use_deltaN_SR) ic_output_SR(i) = observs_SR
-        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-          call ic_output(i)%printout(out_opt%outsamp)
-          if (use_deltaN_SR) &
-            call ic_output_SR(i)%printout(out_opt%outsamp_SR)
+        if (get_runningofrunning) then
+          !Alpha_s from 5-pt stencil
+          !or running of running
+          call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
+            call test_bad(pk_bad, observs, leave)
+            if (leave) return
+          call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
+            call test_bad(pk_bad, observs, leave)
+            if (leave) return
         end if
 
-        if (save_iso_N) then
-          observs%ic(1:num_inflaton) = phi_iso_N
-          observs%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
-          if (use_deltaN_SR) &
-            observs_SR%ic(1:num_inflaton) = phi_iso_N
-          if (use_deltaN_SR) &
-            observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
-          ic_output_iso_N(i) = observs
-          if (use_deltaN_SR) ic_output_iso_N_SR(i) = observs_SR
+        !Construct the observables
+        if (get_runningofrunning) then
+          call observs%set_finite_diff(dlnk, &
+            pk0,pk1,pk2,pk3,pk4, &
+            field_bundle%exp_scalar)
+        else
+          call observs%set_finite_diff(dlnk, &
+            pk0,pk1,pk2,&
+            bundle_width=field_bundle%exp_scalar)
+        end if
 
-          if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-            call ic_output_iso_N(i)%printout(out_opt%outsamp_N_iso)
-            if (use_deltaN_SR) &
-              call ic_output_iso_N_SR(i)%printout(out_opt%outsamp_N_iso_SR)
-          end if
+
+        !Get full spectrum for adiab and isocurv at equal intvs in lnk
+        call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
+
+      end if
+
+      if (out_opt%modpkoutput) then
+        if (evaluate_modes) then
+          call output_observables(pk_arr,pk_iso_arr, &
+            calc_full_pk, observs, observs_SR)
+        else
+          call output_observables(pk_arr,pk_iso_arr, &
+            calc_full_pk, observs_SR)
+        end if
+      end if
+
+      !Print output array
+      !Only get the SR arrays if use_deltaN_SR
+      !Only print observs if evaluated modes
+      if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+        if (evaluate_modes) &
+          call observs%printout(out_opt%outsamp)
+        if (use_deltaN_SR) &
+          call observs_SR%printout(out_opt%outsamp_SR)
+      end if
+
+      if (save_iso_N) then
+        observs%ic(1:num_inflaton) = phi_iso_N
+        observs%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+        if (use_deltaN_SR) &
+          observs_SR%ic(1:num_inflaton) = phi_iso_N
+        if (use_deltaN_SR) &
+          observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+
+        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+          if (evaluate_modes) &
+            call observs%printout(out_opt%outsamp_N_iso)
+          if (use_deltaN_SR) &
+            call observs_SR%printout(out_opt%outsamp_N_iso_SR)
         end if
       end if
 
@@ -441,9 +465,11 @@ program multimodecode
 
       !Find field values at end of inflation
       !Note that eps=1 perhaps twice, so take the last one.
-      call array_polint(epsarr(nactual_bg-4:nactual_bg), phiarr(:,nactual_bg-4:nactual_bg),&
+      call array_polint(epsarr(nactual_bg-4:nactual_bg),&
+        phiarr(:,nactual_bg-4:nactual_bg),&
         1.0e0_dp,  phi_end, del_phi)
-      call polint(epsarr(nactual_bg-4:nactual_bg), lna(nactual_bg-4:nactual_bg),&
+      call polint(epsarr(nactual_bg-4:nactual_bg),&
+        lna(nactual_bg-4:nactual_bg),&
         1.0e0_dp,  N_end, del_N)
 
       !Find field values at horizon crossing
@@ -451,23 +477,8 @@ program multimodecode
 
       i= locate(lna(1:nactual_bg), Npiv_renorm)
       j=min(max(i-(4-1)/2,1),nactual_bg+1-4)
-      call array_polint(lna(j:j+4), phiarr(:,j:j+4), Npiv_renorm, phi_pivot, del_phi)
-
-      print*, "testing SR approx"
-      print*, "P_R="
-      print*, PR_SR(phi_pivot,phi_end)
-      print*, "ns="
-      print*, ns_SR(phi_pivot,phi_end)
-      print*, "nt="
-      print*, nt_SR(phi_pivot)
-      print*, "r="
-      print*, r_SR(phi_pivot,phi_end)
-      print*, "fnl="
-      print*, fnl_SR(phi_pivot,phi_end)
-      print*, "taunl="
-      print*, taunl_SR(phi_pivot,phi_end)
-      print*, "alpha="
-      print*, alpha_s_SR(phi_pivot,phi_end)
+      call array_polint(lna(j:j+4), phiarr(:,j:j+4),&
+        Npiv_renorm, phi_pivot, del_phi)
 
       call observs_SR%set_zero()
       observs_SR%As = PR_SR(phi_pivot,phi_end)
@@ -487,9 +498,7 @@ program multimodecode
       logical,  intent(inout)  :: leave
       type(observables) :: observ
 
-      !If pk_bad==bad_ic, then restart IC
-      !If pk_bad==4, then ode_underflow
-
+      !NB: If pk_bad==4, then ode_underflow
       if (pk_bad==bad_ic .or. pk_bad==4) then
         call observ%set_zero()
 
@@ -497,11 +506,10 @@ program multimodecode
         leave = .true.
       end if
 
-
     end subroutine test_bad
 
     subroutine init_sampler(priors_min, priors_max)
-
+      use modpk_rng, only : init_random_seed
 
       real(dp), dimension(:,:), intent(out) :: priors_min, &
         priors_max
@@ -514,6 +522,9 @@ program multimodecode
       namelist /priors/ phi0_priors_min, phi0_priors_max, &
         dphi0_priors_min, dphi0_priors_max, &
         N_pivot_prior_min, N_pivot_prior_max
+
+	    !Set random seed
+	    call init_random_seed()
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."
@@ -540,29 +551,11 @@ program multimodecode
       read(unit=u, nml=priors)
       close(u)
 
-      !Make ouput array(s)
-      allocate(ic_output(numb_samples))
-      if (use_deltaN_SR) allocate(ic_output_SR(numb_samples))
-      if (save_iso_N) then
-        allocate(ic_output_iso_N(numb_samples))
-        if (use_deltaN_SR) allocate(ic_output_iso_N_SR(numb_samples))
-      end if
-
-      do i=1,size(ic_output)
-        allocate(ic_output(i)%ic(2*num_inflaton))
-        if (use_deltaN_SR) allocate(ic_output_SR(i)%ic(2*num_inflaton))
-        if (save_iso_N) then
-          allocate(ic_output_iso_N(i)%ic(2*num_inflaton))
-          if (use_deltaN_SR) allocate(ic_output_iso_N_SR(i)%ic(2*num_inflaton))
-        end if
-      end do
-
       priors_max(1,:) = phi0_priors_max
       priors_max(2,:) = dphi0_priors_max
       priors_min(1,:) = phi0_priors_min
       priors_min(2,:) = dphi0_priors_min
 
     end subroutine init_sampler
-
 
 end program multimodecode

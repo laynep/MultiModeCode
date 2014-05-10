@@ -86,7 +86,7 @@ module modpk_output
 
     !Writing fmts
     character(16) :: e_fmt = '(a25, es12.4)'
-    character(36) :: e2_fmt = '(a25, es17.9, a3, es11.4, a1)'
+    character(36) :: e2_fmt = '(a25, es17.9, a3, es16.9, a1)'
     character(16) :: i_fmt = '(a25,I3)'
     character(16) :: array_fmt
     character(len=2) :: ci
@@ -399,6 +399,8 @@ module modpk_observables
       else
 
         this%alpha_s = log(pkhigh1%adiab*pklow1%adiab/pk0%adiab**2)/dlnk**2
+
+        this%runofrun = 0e0_dp
 
       end if
 

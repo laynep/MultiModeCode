@@ -44,7 +44,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 
 &ic_sampling
   sampling_techn = 2
-  numb_samples = 10
+  numb_samples = 2
 
   energy_scale = .1
 
@@ -106,7 +106,7 @@ Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
 
 &priors
-  phi0_priors_min = 0 0
+  phi0_priors_min = 1.0 1.0
 
   phi0_priors_max = 30.0 30.0
 

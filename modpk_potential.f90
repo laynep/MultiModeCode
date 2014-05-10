@@ -2300,9 +2300,6 @@ module modpk_deltaN_SR
 
       alpha_s = alpha1 + alpha2 + alpha3 + alpha4 + alpha5
 
-      !DEBUG
-      print*, "WARNING: alpha_s not tested properly yet"
-
 
     end function alpha_s_SR
 
