@@ -7,14 +7,14 @@ Set potential and its derivatives in modpk_potential.f90
 &init
   num_inflaton = 2
   potential_choice = 1
+  vparam_rows = 4
+  more_potential_params = .false.
 
   use_deltaN_SR = .true.
   evaluate_modes = .true.
 
   slowroll_infl_end = .true.
   instreheat = .false.
-  vparam_rows = 4
-  more_potential_params = .false.
 /
 
 ----------------
@@ -43,7 +43,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     7=param_unif_prior, 8=qsf_random}
 
 &ic_sampling
-  sampling_techn = 2
+  sampling_techn = 3
   numb_samples = 2
 
   energy_scale = .1

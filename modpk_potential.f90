@@ -110,21 +110,9 @@ CONTAINS
        c1_V = vparams(2,:)
        V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
      case(10)
-      ! V_potential = 0.5*M2**2*cos(0.5*theta2)*(sin(0.5*theta2)*(phi(1)-c2)+&
-      !       cos(0.5*theta2)phi(2)+tan((1/pi)*theta2*atan(s2*(cos(0.5*theta2)*(phi(1)-c2)-&
-      !       sin(0.5*theta2)phi(2))))(-cos(0.5*theta2)*(phi(1)-c2)+sin(0.5*theta2)phi(2)))**2
-      theta2 = Pi/10.0
-      c2 = 0.0
-      M2 = 2.0E-4
-      s2 = 100.0*sqrt(3.0)
-      mphi1 = 1E-7
-      phi1shift = 100.0
-
-      potlarge = (mphi1**2*(-phi1shift + phi(1))**2)/2.
-      potsmall = (M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +&
-                 (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-                 Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/2.
-      V_potential=potlarge+potsmall
+       print*, "ERROR: Potential_choice=", &
+         Potential_choice, "is broken."
+       stop
     case(11)
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
@@ -313,33 +301,10 @@ CONTAINS
        case(9)!Saddle type things
           m2_V = (vparams(1,:))
           first_deriv = m2_V*phi
-       case(10)!Modified Langlois model
-      theta2 = Pi/10.0
-      c2 = 0.0
-      M2 = 2.0E-4
-      s2 = 100.0*sqrt(3.0)
-      mphi1 = 1E-7
-      phi1shift = 100.0
-          first_deriv = (/&
-                     mphi1**2*(-phi1shift + phi(1)) + M2**2*Cos(theta2/2.)*&
-         (Sin(theta2/2.) + (s2*theta2*Cos(theta2/2.)*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) - &
-           Cos(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-              Pi))*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
-           (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))&
-                     ,&
-                    M2**2*Cos(theta2/2.)*(Cos(theta2/2.) - &
-                   (s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**&
-                    2*Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-           (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) + &
-          Sin(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-             Pi))*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
-          (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-           Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))&
-                   /)
+       case(10)
+         print*, "ERROR: Potential_choice=", &
+           Potential_choice, "is broken."
+         stop
 
        case(11)
          m2_V = 10.e0_dp**(vparams(1,:))
@@ -517,118 +482,9 @@ CONTAINS
           m2_V = vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
-      theta2 = Pi/10.0
-      c2 = 0.0
-      M2 = 2.0E-4
-      s2 = 100.0*sqrt(3.0)
-      mphi1 = 1E-7
-      phi1shift = 100.0
-      second_deriv(1,1) =  mphi1**2 + M2**2*Cos(theta2/2.)*(Sin(theta2/2.) +&
-            (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                    Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-               (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) -&
-            Cos(theta2/2.)*Tan((theta2*Atan(s2*&
-                   (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2 +&
-        M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) +&
-           (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))*&
-         ((-2*s2**3*theta2*Cos(theta2/2.)**2*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -&
-           (2*s2*theta2*Cos(theta2/2.)**2*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2)/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +&
-           (2*s2**2*theta2**2*Cos(theta2/2.)**2*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-              Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
-           (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
-
-       second_deriv(1,2) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
-           (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) - &
-           Cos(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-              Pi))*(Cos(theta2/2.) - (s2*theta2*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) + &
-           Sin(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-              Pi)) + M2**2*Cos(theta2/2.)*&
-         (Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
-           (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))*&
-         ((2*s2**3*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) + &
-           (2*s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) - &
-           (2*s2**2*theta2**2*Cos(theta2/2.)*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-              Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
-            (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
-
-        second_deriv(2,1) = M2**2*Cos(theta2/2.)*(Sin(theta2/2.) + &
-           (s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) - &
-           Cos(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-              Pi))*(Cos(theta2/2.) - (s2*theta2*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) + &
-           Sin(theta2/2.)*Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-              Pi)) + M2**2*Cos(theta2/2.)*&
-         (Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
-           (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))*&
-         ((2*s2**3*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) + &
-           (2*s2*theta2*Cos(theta2/2.)*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) - &
-           (2*s2**2*theta2**2*Cos(theta2/2.)*&
-              (1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-              Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
-            (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
-
-        second_deriv(2,2) = M2**2*Cos(theta2/2.)*(Cos(theta2/2.) -&
-            (s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-                  Pi))**2*Sin(theta2/2.)*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-             (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) +&
-            Sin(theta2/2.)*Tan((theta2*Atan(s2*&
-                   (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2 + &
-        M2**2*Cos(theta2/2.)*(Cos(theta2/2.)*phi(2) + (-c2 + phi(1))*Sin(theta2/2.) + &
-           (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-            Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))*&
-         ((-2*s2**3*theta2*(1.0/Cos((theta2*Atan(s2*&
-         (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*Sin(theta2/2.)**2*&
-              (Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))*&
-              (-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.)))/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2) -&
-       (2*s2*theta2*(1.0/Cos((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/&
-                 Pi))**2*Sin(theta2/2.)**2)/&
-            (Pi*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)) + &
-           (2*s2**2*theta2**2*(1.0/Cos((theta2*&
-                   Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))**2*&
-              Sin(theta2/2.)**2*(-(Cos(theta2/2.)*(-c2 + phi(1))) + phi(2)*Sin(theta2/2.))*&
-              Tan((theta2*Atan(s2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))))/Pi))/&
-            (Pi**2*(1 + s2**2*(Cos(theta2/2.)*(-c2 + phi(1)) - phi(2)*Sin(theta2/2.))**2)**2))
+         print*, "ERROR: Potential_choice=", &
+           Potential_choice, "is broken."
+         stop
 
        case(11)
          M2_V = 10.e0_dp**(vparams(1,:))
@@ -764,7 +620,11 @@ CONTAINS
 
   END FUNCTION d2Vdphi2
 
-  !Needs "result" because array-valued and recursive.
+#undef HEAVY
+#undef PHI_I
+#undef DELTAPHI
+#undef EXPTERM
+
   !Only really used to get the 3rd order SR parameters for the SR approximation
   !of the scalar running, alpha_s
   function d3Vdphi3(phi) result(third_deriv)
@@ -1546,39 +1406,6 @@ CONTAINS
 
 #endif
 
-      !DEBUG
-      ![ LP: ] writing power spectrum output
-      !H=getH(phi,dphi)
-      !Pdot=getPdot(phi,dphi)
-      !write(*,'(17E24.15)'), a, &
-      !  power_pressure, &
-      !  power_pnad, &
-      !  power_press_adiab, &
-      !  power_press_cross, &
-      !  power_press_cross2, &
-      !  power_isocurv, &
-      !  ((H/Pdot)**2)*power_pnad, &
-      !  power_adiab
-
-
-      !print*, "-----------"
-      !print*, "P", power_pressure
-      !print*, "P", power_press_adiab + power_pnad + power_press_cross + power_press_cross2
-
-      !print*, "P_ad", power_pressure - power_pnad- power_press_cross - power_press_cross2
-      !print*, "P_ad", power_press_adiab
-
-      !print*, "P_nad", power_pnad
-      !print*, "P_nad", power_pressure - power_press_adiab - power_press_cross - &
-      !  power_press_cross2
-
-      !print*, "P_nad*P_ad", power_press_cross
-      !print*, "P_ad*P_nad", power_press_cross2
-      !if (power_press_cross/=power_press_cross2) then
-      !  print*, "cross spectra not equal!!!"
-      !end if
-
-
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
       !Check if power_pnad is smaller than DP accuracy and set to zero
@@ -1622,7 +1449,6 @@ CONTAINS
 
     contains
 
-    !subroutine build_isocurv_basisALTERNATIVE(omega)
     subroutine build_isocurv_basisALTERNATIVE()
 
       !real(dp), dimension(num_inflaton), intent(in) :: omega_z
@@ -1656,18 +1482,6 @@ CONTAINS
         end do
       end do
       s_iso(1,:) = s_iso(1,:)/sqrt(s_1_norm)
-
-      !DEBUG
-      print*, "from build_isocurv_basisALTERNATIVE"
-      print*, "s_iso", s_iso(1,:)
-      print*, "omega_z", omega_z
-      print*, "s1.omega_z",dot_product(s_iso(1,:),omega_z)
-      print*, "first comp", s_iso(1,1)*omega_z(1)
-      print*, "second comp", s_iso(1,2)*omega_z(2)
-      print*, "norm(omega)", norm(omega_z)
-      print*, "norm(s1)", norm(s_iso(1,:))
-      !stop
-
 
     end subroutine build_isocurv_basisALTERNATIVE
 
@@ -1736,7 +1550,6 @@ CONTAINS
           stop
         end if
 
-        !DEBUG
         !If there's a major hierarchy in scales for the vector components, then
         !there can be a spurious component of the isocurvature direction
         !oriented along the adiabatic one.  When you're approaching the
@@ -1755,54 +1568,6 @@ CONTAINS
         end if
 
       end do
-
-
-      !Get the rate of change of isocurv directions
-      !DEBUG
-      !if (size(s_iso)<2) return
-
-      !d_s_iso = 0e0_dp
-      !field_basis = phi_hat(2:size(phi_hat),:)
-
-
-      !!Build the normalization vector and its deriv
-      !!Use to build the ds_iso/dalpha vectors
-      !normalization = 1e0_dp
-      !dnormalization = 0e0_dp
-      !d_s_iso = 0e0_dp
-      !do i=1,size(s_iso,1)
-      !  if (i==1) then
-      !    normalization(i) = normalization(i) - (sum(field_basis(i,:)*omega_z))**2
-
-      !    dnormalization(i) = -2e0_dp* &
-      !      sum(field_basis(i,:)*omega_z)*sum(field_basis(i,:)*d_omega_z)
-
-      !    d_s_iso(i,:) = (-1e0_dp/normalization)*&
-      !      (sum(field_basis(i,:)*d_omega_z)*omega_z +&
-      !      sum(field_basis(i,:)*omega_z)*d_omega_z + &
-      !      s_iso(i,:)*dnormalization(i))
-      !  else
-      !    do j=1, i-1
-
-      !      normalization(i) = normalization(i) - &
-      !        (sum(field_basis(i,:)*s_iso(j,:)))**2
-
-      !      dnormalization(i) = dnormalization(i) - 2e0_dp* &
-      !        sum(field_basis(i,:)*s_iso(j,:))*sum(field_basis(i,:)*d_s_iso(j,:))
-      !    end do
-
-      !    do j=1, i-1
-      !      d_s_iso(i,:) = d_s_iso(i,:) + &
-      !        sum(field_basis(i,:)*d_s_iso(j,:))*s_iso(j,:) + &
-      !        sum(field_basis(i,:)*s_iso(j,:))*d_s_iso(j,:)
-      !    end do
-
-      !    d_s_iso(i,:) = (-1e0_dp/normalization)*(d_s_iso(i,:) + s_iso(i,:)*dnormalization(i))
-
-      !  end if
-
-      !end do
-
 
     end subroutine build_isocurv_basis
 
@@ -1833,11 +1598,6 @@ CONTAINS
         end if
       end do
       vect_temp(smallest_index) = 0e0_dp
-
-      !DEBUG
-      !print*, "vect", vect
-      !print*, "vect_temp", vect_temp
-      !print*, "diff norms", abs(norm(vect)-norm(vect_temp))
 
       !1e-14 for double-precision round-off error
       if (abs(norm(vect)-norm(vect_temp))/abs(norm(vect)) < 1e-14) then
@@ -2077,8 +1837,9 @@ CONTAINS
   end subroutine bundle_exp_scalar
 
 
-  FUNCTION MySech(x)
-    real(dp)  :: x,MySech
+  pure FUNCTION MySech(x)
+    real(dp), intent(in)  :: x
+    real(dp) :: MySech
 
     IF(ABS(x).GT.40.0e0_dp) THEN
        MySech=0.0e0_dp
@@ -2110,19 +1871,7 @@ CONTAINS
 
     stable = (3.0e0_dp -eps >1.0e-6)
 
-    !DEBUG
-    !print*, "stable???", stable, "eps=", eps, "V", V, "using_t", using_t
-
-    !DEBUG
-    !print*, "SETTING UNSTABLE SO USE_T"
-    !stable=.false.
-
   end subroutine stability_check_on_H
-
-#undef HEAVY
-#undef PHI_I
-#undef DELTAPHI
-#undef EXPTERM
 
 END MODULE potential
 
@@ -2130,9 +1879,10 @@ END MODULE potential
 !Module that lets us compare the mode evolution to the slow-roll expectation for
 !sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
 module modpk_deltaN_SR
-  use modpkparams
+  use modpkparams, only : dp, vparams
   use internals, only : pi
-  use potential
+  use potential, only : pot, dVdphi, d2Vdphi2, d3Vdphi3
+  implicit none
 
   !The horizon crossing approximation
   logical :: HC_approx=.false.
@@ -2271,8 +2021,9 @@ module modpk_deltaN_SR
       !First term
       do aa=1,size(dV); do bb=1,size(dV)
         alpha1 = alpha1 +&
-          (-2.0e0_dp/V**3)*dV(aa)*dV(bb)*d2V(aa,bb)
+          dV(aa)*dV(bb)*d2V(aa,bb)
       end do; end do
+      alpha1=alpha1*(-2.0e0_dp/V**3)
 
       !Second term
       alpha2 = (2.0e0_dp/V**4)*(sum(dV**2))**2
@@ -2299,7 +2050,6 @@ module modpk_deltaN_SR
       alpha5 = alpha5*(4.0e0_dp/V/sum(dN**2))
 
       alpha_s = alpha1 + alpha2 + alpha3 + alpha4 + alpha5
-
 
     end function alpha_s_SR
 

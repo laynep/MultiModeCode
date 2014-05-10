@@ -264,6 +264,9 @@ module modpk_observables
       procedure :: set_finite_diff => calculate_observs_finitediff
   end type observables
 
+  private :: ic_print_observables, set_observs_to_zero, &
+    calculate_observs_finitediff,kahan_summation,kahan_clear_mem
+
   contains
 
     !Procedures for Kahan summation objects
