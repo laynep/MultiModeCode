@@ -41,6 +41,7 @@ program multimodecode
   logical :: get_runningofrunning
 
   type(observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
+  type(observables), dimension(:), allocatable :: ic_output_SR, ic_output_iso_N_SR
 
   integer :: u
 
@@ -81,7 +82,7 @@ program multimodecode
 
   if (sampling_techn==reg_samp) then
 
-    call out_opt%open_files()
+    call out_opt%open_files(SR=use_deltaN_SR)
 
     call calculate_pk_observables(k_pivot,dlnk)
 
@@ -99,7 +100,7 @@ program multimodecode
     sampling_techn == qsf_random  &
     ) then
 
-    call out_opt%open_files(ICs=.true.)
+    call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
 
 
 	  !Set random seed
@@ -329,6 +330,10 @@ program multimodecode
       allocate(observs%ic(2*num_inflaton))
       observs%ic(1:num_inflaton)=phi_init0
       observs%ic(num_inflaton+1:2*num_inflaton)=dphi_init0
+      if (use_deltaN_SR) then
+        allocate(observs_SR%ic(2*num_inflaton))
+        observs_SR%ic = observs%ic
+      end if
 
       !Initialize potential and calc background
       call potinit
@@ -372,43 +377,14 @@ program multimodecode
       end if
 
       !Construct the observables
-
-      !Amplitudes
-      observs%As = pk0%adiab
-      observs%A_iso=pk0%isocurv
-      observs%A_pnad=pk0%pnad
-      observs%A_ent=pk0%entropy
-      observs%A_cross_ad_iso = pk0%cross_ad_iso
-
-      !Bundle width
-      observs%A_bundle=field_bundle%exp_scalar
-
-      !Finite difference evaluation of spectral indices
-      observs%ns = 1.e0_dp+log(pk2%adiab/pk1%adiab)/dlnk/2.e0_dp
-      observs%nt = log(pk2%tensor/pk1%tensor)/dlnk/2.e0_dp
-      observs%n_iso=log(pk2%isocurv/pk1%isocurv)/dlnk/2.e0_dp
-      observs%n_pnad=log(pk2%pnad/pk1%pnad)/dlnk/2.e0_dp
-      observs%n_ent=log(pk2%entropy/pk1%entropy)/dlnk/2.e0_dp
-
-      !Tensor-to-scalar
-      observs%r = pk0%tensor/pk0%adiab
-
       if (get_runningofrunning) then
-
-        !alpha_s from 5-pt stencil
-        observs%alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
-          (-log(pk4%adiab) + 16.0e0_dp*log(pk2%adiab) - &
-          30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pk1%adiab) - &
-          log(pk3%adiab))
-
-        observs%runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
-          (log(pk4%adiab) -2.0e0_dp* log(pk2%adiab) &
-          + 2.0e0_dp*log(pk1%adiab) -log(pk3%adiab))
-
+        call observs%set_finite_diff(dlnk, &
+          pk0,pk1,pk2,pk3,pk4, &
+          field_bundle%exp_scalar)
       else
-
-        observs%alpha_s = log(pk2%adiab*pk1%adiab/pk0%adiab**2)/dlnk**2
-
+        call observs%set_finite_diff(dlnk, &
+          pk0,pk1,pk2,&
+          bundle_width=field_bundle%exp_scalar)
       end if
 
 
@@ -422,18 +398,31 @@ program multimodecode
 
       !Load & print output array
       !Save in ic_output in case want to post-process.
+      !Only get the SR arrays if use_deltaN_SR
       if (sampling_techn/=reg_samp) then
         ic_output(i) = observs
-        if (out_opt%output_badic .or. pk_bad/=bad_ic) &
+        if (use_deltaN_SR) ic_output_SR(i) = observs_SR
+        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
           call ic_output(i)%printout(out_opt%outsamp)
+          if (use_deltaN_SR) &
+            call ic_output_SR(i)%printout(out_opt%outsamp_SR)
+        end if
 
         if (save_iso_N) then
           observs%ic(1:num_inflaton) = phi_iso_N
           observs%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+          if (use_deltaN_SR) &
+            observs_SR%ic(1:num_inflaton) = phi_iso_N
+          if (use_deltaN_SR) &
+            observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
           ic_output_iso_N(i) = observs
+          if (use_deltaN_SR) ic_output_iso_N_SR(i) = observs_SR
 
-          if (out_opt%output_badic .or. pk_bad/=bad_ic) &
+          if (out_opt%output_badic .or. pk_bad/=bad_ic) then
             call ic_output_iso_N(i)%printout(out_opt%outsamp_N_iso)
+            if (use_deltaN_SR) &
+              call ic_output_iso_N_SR(i)%printout(out_opt%outsamp_N_iso_SR)
+          end if
         end if
       end if
 
@@ -442,7 +431,7 @@ program multimodecode
     !Calculate observables for the power spectrum, as well as fNL, using the
     !delta-N formalism in slow-roll
     subroutine calculate_SR_observables(observs_SR)
-      type(observables), intent(out) :: observs_SR
+      type(observables), intent(inout) :: observs_SR
       integer :: j, i
       real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
       real(dp), dimension(num_inflaton) :: phi_pivot, phi_end, del_phi
@@ -547,10 +536,19 @@ program multimodecode
 
       !Make ouput array(s)
       allocate(ic_output(numb_samples))
-      if (save_iso_N) allocate(ic_output_iso_N(numb_samples))
+      if (use_deltaN_SR) allocate(ic_output_SR(numb_samples))
+      if (save_iso_N) then
+        allocate(ic_output_iso_N(numb_samples))
+        if (use_deltaN_SR) allocate(ic_output_iso_N_SR(numb_samples))
+      end if
+
       do i=1,size(ic_output)
         allocate(ic_output(i)%ic(2*num_inflaton))
-        if (save_iso_N) allocate(ic_output_iso_N(i)%ic(2*num_inflaton))
+        if (use_deltaN_SR) allocate(ic_output_SR(i)%ic(2*num_inflaton))
+        if (save_iso_N) then
+          allocate(ic_output_iso_N(i)%ic(2*num_inflaton))
+          if (use_deltaN_SR) allocate(ic_output_iso_N_SR(i)%ic(2*num_inflaton))
+        end if
       end do
 
       priors_max(1,:) = phi0_priors_max

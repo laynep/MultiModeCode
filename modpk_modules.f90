@@ -79,7 +79,9 @@ module modpk_output
     integer :: fields_h_out
     integer :: fields_end_out
     integer :: outsamp
+    integer :: outsamp_SR
     integer :: outsamp_N_iso
+    integer :: outsamp_N_iso_SR
     integer, dimension(4) :: modeout
 
     !Writing fmts
@@ -100,9 +102,9 @@ module modpk_output
   contains
 
     !Open output files
-    subroutine output_file_open(this,ICs)
+    subroutine output_file_open(this,ICs,SR)
       class(print_options) :: this
-      logical, intent(in), optional :: ICs
+      logical, intent(in), optional :: ICs, SR
 
       if (this%save_traj) &
         open(newunit=this%trajout, &
@@ -132,6 +134,13 @@ module modpk_output
           file="out_ic_eqen.txt")
         open(newunit=this%outsamp_N_iso,&
           file="out_ic_isoN.txt")
+      end if
+
+      if (present(SR) .and. SR) then
+        open(newunit=this%outsamp_SR,&
+          file="out_ic_eqen_SR.txt")
+        open(newunit=this%outsamp_N_iso_SR,&
+          file="out_ic_isoN_SR.txt")
       end if
 
     end subroutine output_file_open
@@ -252,6 +261,7 @@ module modpk_observables
     contains
       procedure :: printout => ic_print_observables
       procedure :: set_zero => set_observs_to_zero
+      procedure :: set_finite_diff => calculate_observs_finitediff
   end type observables
 
   contains
@@ -295,10 +305,22 @@ module modpk_observables
         stop
       end if
 
-      write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
-        this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
-        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent, &
-        this%A_cross_ad_iso
+      write(outunit, '(120000E18.10)') &
+        this%ic(:), &
+        this%As, &
+        this%ns,&
+        this%r, &
+        this%nt, &
+        this%alpha_s, &
+        this%A_iso, &
+        this%A_pnad,&
+        this%A_ent, &
+        this%A_bundle, &
+        this%n_iso, &
+        this%n_pnad, &
+        this%n_ent, &
+        this%A_cross_ad_iso, &
+        this%f_NL
 
     end subroutine ic_print_observables
 
@@ -323,5 +345,62 @@ module modpk_observables
         this%tau_NL = 0e0_dp
 
     end subroutine set_observs_to_zero
+
+    subroutine calculate_observs_finitediff(this, dlnk, &
+        pk0, pklow1, pkhigh1, &
+        pklow2, pkhigh2, &
+        bundle_width)
+      class(observables) :: this
+      type(power_spectra), intent(in) :: pk0, pklow1, pkhigh1
+      type(power_spectra), intent(in), optional :: pklow2, pkhigh2
+      real(dp), intent(in) :: dlnk
+      real(dp), intent(in), optional :: bundle_width
+      logical :: runofrun
+
+      if (present(pklow2)) then
+        runofrun = .true.
+      else
+        runofrun = .false.
+      endif
+
+      !Amplitudes
+      this%As = pk0%adiab
+      this%A_iso=pk0%isocurv
+      this%A_pnad=pk0%pnad
+      this%A_ent=pk0%entropy
+      this%A_cross_ad_iso = pk0%cross_ad_iso
+
+      !Bundle width
+      this%A_bundle=bundle_width
+
+      !Finite difference evaluation of spectral indices
+      this%ns = 1.e0_dp+log(pkhigh1%adiab/pklow1%adiab)/dlnk/2.e0_dp
+      this%nt = log(pkhigh1%tensor/pklow1%tensor)/dlnk/2.e0_dp
+      this%n_iso=log(pkhigh1%isocurv/pklow1%isocurv)/dlnk/2.e0_dp
+      this%n_pnad=log(pkhigh1%pnad/pklow1%pnad)/dlnk/2.e0_dp
+      this%n_ent=log(pkhigh1%entropy/pklow1%entropy)/dlnk/2.e0_dp
+
+      !Tensor-to-scalar
+      this%r = pk0%tensor/pk0%adiab
+
+      if (runofrun) then
+
+        !alpha_s from 5-pt stencil
+        this%alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
+          (-log(pkhigh2%adiab) + 16.0e0_dp*log(pkhigh1%adiab) - &
+          30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pklow1%adiab) - &
+          log(pklow2%adiab))
+
+        this%runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
+          (log(pkhigh2%adiab) -2.0e0_dp* log(pkhigh1%adiab) &
+          + 2.0e0_dp*log(pklow1%adiab) -log(pklow2%adiab))
+
+      else
+
+        this%alpha_s = log(pkhigh1%adiab*pklow1%adiab/pk0%adiab**2)/dlnk**2
+
+      end if
+
+    end subroutine calculate_observs_finitediff
 
 end module modpk_observables
