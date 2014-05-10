@@ -83,10 +83,12 @@ powspec : $(MODPKOBJ) $(PKDRIVER)
 utils.o:
 	$(F90C) $(F90FLAGS) -c utils.F90	
 
-clean:
+clean: cleanoutput
 	-rm -f *.o *.a *.d core *.mod
-	-rm fort.*
 	-rm powspec
+
+cleanoutput:
+	-rm fort.*
 	-rm *.dat
 	-rm out_fields_infl_end.txt
 	-rm out_fields_horizon_cross.txt

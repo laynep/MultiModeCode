@@ -36,7 +36,7 @@ program multimodecode
   logical :: more_potential_params
   logical :: get_runningofrunning
 
-  integer :: u
+  integer :: pfile
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -58,17 +58,17 @@ program multimodecode
   !------------------------------------------------
 
   !Read initializing params from file
-	open(newunit=u, file="parameters_multimodecode.txt", &
+	open(newunit=pfile, file="parameters_multimodecode.txt", &
     status="old", delim = "apostrophe")
-  read(unit=u, nml=init)
+  read(unit=pfile, nml=init)
 
   call allocate_vars()
 
   !Read other params from file
-	read(unit=u, nml=ic_sampling)
-	read(unit=u, nml=params)
-	read(unit=u, nml=print_out)
-	close(unit=u)
+	read(unit=pfile, nml=ic_sampling)
+	read(unit=pfile, nml=params)
+	read(unit=pfile, nml=print_out)
+	close(unit=pfile)
 
   call output_initial_data()
 
@@ -177,7 +177,7 @@ program multimodecode
         allocate(knot_range_min(num_inflaton-1))
         allocate(knot_range_max(num_inflaton-1))
 
-        read(unit=u, nml=more_params)
+        read(unit=pfile, nml=more_params)
 
       end if
 
@@ -370,8 +370,6 @@ program multimodecode
         observs%tau_NL = observs_SR%tau_NL
 
       end if
-
-      !if (.not. evaluate_modes) return
 
       !Evaluate the mode functions
       if (evaluate_modes) then

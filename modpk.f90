@@ -37,13 +37,11 @@ CONTAINS
     CALL backgrnd
 
     !When scanning ICs, let some backgrnd errors be overridden
-    if (sampling_techn/=reg_samp) then
-      if (pk_bad == bad_ic) then
-        if (out_opt%modpkoutput) then
-          print*, "--------------- BAD IC; RESTARTING -------------------"
-        end if
-        return
+    if (sampling_techn/=reg_samp .and. pk_bad == bad_ic) then
+      if (out_opt%modpkoutput) then
+        print*, "--------------- BAD IC; RESTARTING -------------------"
       end if
+      return
     end if
 
   END SUBROUTINE potinit

@@ -17,8 +17,7 @@ MODULE modpk_odeint
      module procedure odeint_c
   end interface
 
-  public odeint
-
+  public :: odeint
 
 contains
 
@@ -38,7 +37,7 @@ contains
     real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
     real(dp), INTENT(IN) :: x1,x2,eps,h1,hmin
     !MULTIFIELD
-    real(dp), DIMENSION(num_inflaton) :: p, delp
+    real(dp), DIMENSION(num_inflaton) :: phi, dphi
     !END MULTIFIELD
 
     INTERFACE
@@ -79,6 +78,7 @@ contains
 
     real(dp) :: infl_efolds, infl_efolds_start
     logical :: infl_checking
+    logical :: leave
 
 #ifdef DVODE
     integer :: neq, istats(31)
@@ -111,40 +111,7 @@ contains
 #ifdef DVODE
     !Options for first call to dvode integrator
 
-    neq = size(y)
-
-    if (allocated(atol)) deallocate(atol)
-    allocate(atol(neq))
-
-    !Relative tolerance
-    rtol = 1.e-6_dp
-
-    !Absolute tolerance
-    atol = 1.0e-8_dp
-    !atol(1) = 1.e-8_dp
-    !atol(2) = 1.e-14_dp
-    !atol(3) = 1.e-6_dp
-
-    istate = 1 !Set =1 for 1st call to integrator
-
-    !itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
-    itask  = 2 !Take only one time-step and output
-
-    if (itask /=2) then
-      !Integrate until nefold_out
-      dN_step = sign(0.001e0_dp,x2-x1)
-      nefold_out = x + dN_step
-    else
-      !Take only one step
-      nefold_out = Nefold_max
-    end if
-
-
-    !Force initial step-size guess very small
-    ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
-      relerr=rtol,user_supplied_jacobian=.false., &
-      mxstep=50000,&
-      H0=1e-9_dp)
+    call initialize_dvode()
 
 #endif
 
@@ -167,6 +134,7 @@ contains
        end if
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
+       !Record the background trajectory
        if (out_opt%save_traj) write(out_opt%trajout,'(100E18.10)'),&
          x, &
          y(:), &
@@ -177,12 +145,11 @@ contains
          d2Vdphi2(y(1:num_inflaton))
 
        CALL derivs(x,y,dydx)
+       !If get bad deriv, then override this error when IC sampling
+       if (pk_bad==bad_ic) return
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
-
-          !DEBUG
-          if (pk_bad/=0) print*, "pk_bad from here:", pk_bad
 
 #ifdef DVODE
 
@@ -197,9 +164,6 @@ contains
 
 #else
 
-       !If get bad deriv, then override this error when IC sampling
-       if (pk_bad==bad_ic) return
-
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
@@ -213,93 +177,18 @@ contains
        END IF
 #endif
 
-       IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
-
-          PRINT*,'MODPK: This could be a model for which inflation does not end.'
-          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
-          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING'
-          WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
-          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP
-          RETURN
-       END IF
+       call check_for_eternal_inflation()
 
        !MULTIFIELD
-       p = y(1:num_inflaton)
-       delp = y(num_inflaton+1 : 2*num_inflaton)
+       phi = y(1:num_inflaton)
+       dphi = y(num_inflaton+1 : 2*num_inflaton)
 
-       IF(getEps(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
-         if (sampling_techn==reg_samp) then
-           slowroll_start=.true.
-         else
-           !If scan ICs, say inflating iff eps<1 for "extended" period,
-           !3 efolds - protects against transient inflation epochs, i.e.,
-           !at traj turn-around or chance starting with dphi=0
+       call check_inflation_started_properly()
 
-           if (.not. infl_checking) then
-             infl_checking = .true.
-             infl_efolds_start = x
-           else
-
-             infl_efolds = x - infl_efolds_start
-             if (infl_efolds > 3.0) then
-               slowroll_start=.true.
-             end if
-
-           end if
-         end if
-       else if (infl_checking) then
-         infl_checking=.false.
-       endif
        !END MULTIFIELD
 
-
-       IF(ode_infl_end) THEN
-          IF (slowroll_infl_end) THEN
-             IF(getEps(p, delp) .GT. 1 .AND. slowroll_start) THEN
-                infl_ended = .TRUE.
-                ystart(:) = y(:)
-                IF (save_steps) CALL save_a_step
-                RETURN
-             ENDIF
-          ELSE
-             IF(getEps(p, delp) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-                PRINT*,'MODPK: reached. Please take another look at your inputs.'
-                PRINT*,'MODPK: QUITTING'
-                PRINT*,'EPSILON =', getEps(p, delp)
-                STOP
-             ENDIF
-
-             !MULTIFIELD
-             IF (size(p) .eq. 1) THEN
-                IF (phidot_sign(1).GT.0..AND.(p(1).GT.(phi_infl_end(1)+0.1))) THEN
-                   infl_ended=.TRUE.
-                   ystart(:)=y(:)
-                   IF (save_steps) CALL save_a_step
-                   RETURN
-                ENDIF
-                IF (phidot_sign(1).LT.0..AND.(p(1).LT.(phi_infl_end(1)-0.1))) THEN
-                   infl_ended=.TRUE.
-                   ystart(:)=y(:)
-                   IF (save_steps) CALL save_a_step
-                   RETURN
-                ENDIF
-             ELSE ! for multifield, determine the total field distance travelled
-
-               if(check_stop_when_not_slowroll_infl_end(p,delp)) then
-                 infl_ended = .true.
-                 ystart(:) = y(:)
-                 IF (save_steps) CALL save_a_step
-                 RETURN
-               end if
-
-             END IF
-             !END MULTIFIELD
-          ENDIF
-       ENDIF
+       call check_inflation_ended_properly(leave)
+       if (leave) return
 
       if (abs(x2-x)<1e-10) then
         print*, "reached end of N-integration...."
@@ -309,8 +198,7 @@ contains
       end if
 
        IF (ode_underflow) RETURN
-#ifdef DVODE
-#else
+#ifndef DVODE
        IF (ABS(hnext) < hmin) THEN
           write(*,*) 'stepsize smaller than minimum in odeint'
           STOP
@@ -345,6 +233,7 @@ contains
 
   CONTAINS
 
+    !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
     SUBROUTINE save_a_step
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
@@ -355,7 +244,152 @@ contains
       yp(:,kount)=y(:)
       xsav=x
     END SUBROUTINE save_a_step
-    !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
+
+#ifdef DVODE
+    subroutine initialize_dvode()
+
+      neq = size(y)
+
+      if (allocated(atol)) deallocate(atol)
+      allocate(atol(neq))
+
+      !Relative tolerance
+      rtol = 1.e-6_dp
+
+      !Absolute tolerance
+      atol = 1.0e-8_dp
+      !atol(1) = 1.e-8_dp
+      !atol(2) = 1.e-14_dp
+      !atol(3) = 1.e-6_dp
+
+      istate = 1 !Set =1 for 1st call to integrator
+
+      !itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      itask  = 2 !Take only one time-step and output
+
+      if (itask /=2) then
+        !Integrate until nefold_out
+        dN_step = sign(0.001e0_dp,x2-x1)
+        nefold_out = x + dN_step
+      else
+        !Take only one step
+        nefold_out = Nefold_max
+      end if
+
+      !Force initial step-size guess very small
+      ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
+        relerr=rtol,user_supplied_jacobian=.false., &
+        mxstep=50000,&
+        H0=1e-9_dp)
+
+    end subroutine initialize_dvode
+#endif
+
+    subroutine check_for_eternal_inflation
+
+       IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
+
+          PRINT*,'MODPK: This could be a model for which inflation does not end.'
+          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
+          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
+          PRINT*,'MODPK: QUITTING'
+          WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
+          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
+          STOP
+       END IF
+
+     end subroutine check_for_eternal_inflation
+
+     subroutine check_inflation_started_properly()
+
+       IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
+         if (sampling_techn==reg_samp) then
+           slowroll_start=.true.
+         else
+           !If scan ICs, say inflating iff eps<1 for "extended" period,
+           !3 efolds - protects against transient inflation epochs, i.e.,
+           !at traj turn-around or chance starting with dphi=0
+
+           if (.not. infl_checking) then
+             infl_checking = .true.
+             infl_efolds_start = x
+           else
+
+             infl_efolds = x - infl_efolds_start
+             if (infl_efolds > 3.0) then
+               slowroll_start=.true.
+             end if
+
+           end if
+         end if
+       else if (infl_checking) then
+         infl_checking=.false.
+       endif
+
+     end subroutine check_inflation_started_properly
+
+     subroutine check_inflation_ended_properly(leave)
+       logical, intent(inout) :: leave
+
+       leave = .false.
+
+       IF(ode_infl_end) THEN
+          IF (slowroll_infl_end) THEN
+             IF(getEps(phi, dphi) .GT. 1 .AND. slowroll_start) THEN
+                infl_ended = .TRUE.
+                ystart(:) = y(:)
+                IF (save_steps) CALL save_a_step
+
+                leave = .true.
+                RETURN
+             ENDIF
+          ELSE
+             IF(getEps(phi, dphi) .GT. 1 .AND. slowroll_start) THEN
+                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
+                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
+                PRINT*,'MODPK: reached. Please take another look at your inputs.'
+                PRINT*,'MODPK: QUITTING'
+                PRINT*,'EPSILON =', getEps(phi, dphi)
+                STOP
+             ENDIF
+
+             !MULTIFIELD
+             IF (size(phi) .eq. 1) THEN
+                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) THEN
+                   infl_ended=.TRUE.
+                   ystart(:)=y(:)
+                   IF (save_steps) CALL save_a_step
+
+                   leave=.true.
+                   RETURN
+                ENDIF
+                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) THEN
+                   infl_ended=.TRUE.
+                   ystart(:)=y(:)
+                   IF (save_steps) CALL save_a_step
+
+                   leave=.true.
+                   RETURN
+                ENDIF
+             ELSE
+               ! for multifield, determine the total field distance travelled
+
+               if(check_stop_when_not_slowroll_infl_end(phi,dphi)) then
+                 infl_ended = .true.
+                 ystart(:) = y(:)
+                 IF (save_steps) CALL save_a_step
+
+                 leave=.true.
+                 RETURN
+               end if
+
+             END IF
+             !END MULTIFIELD
+          ENDIF
+       ENDIF
+
+     end subroutine check_inflation_ended_properly
+
   END SUBROUTINE odeint_r
 
   ! Only called for ptb mode eqns
@@ -653,16 +687,6 @@ contains
              call powerspectrum(qij, dqij, phi, delphi, &
                scalefac, power_internal, using_q=.true.)
 
-            !Record spectrum
-            !print*, "writing spectra"
-            if (out_opt%spectra) then
-              write(out_opt%spectraout,'(100E27.20)') &
-                x - (n_tot - N_pivot), &
-                power_internal%adiab, &
-                power_internal%isocurv,&
-                power_internal%entropy, &
-                power_internal%pnad
-            end if
 
              power_internal%tensor=tensorpower(y(index_tensor_y) &
                 *scalefac/a_switch, scalefac)
@@ -674,19 +698,19 @@ contains
              call powerspectrum(psi, dpsi, phi, delphi, &
                scalefac, power_internal)
 
-            !Record spectrum
-            !print*, "writing spectra"
-            if (out_opt%spectra) then
-              write(out_opt%spectraout,'(100E27.20)') &
-                x - (n_tot - N_pivot), &
-                power_internal%adiab, &
-                power_internal%isocurv,&
-                power_internal%entropy, &
-                power_internal%pnad
-            end if
-
              power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
            END IF
+
+           !Record spectrum
+           if (out_opt%spectra) then
+             write(out_opt%spectraout,'(100E27.20)') &
+               x - (n_tot - N_pivot), &
+               power_internal%adiab, &
+               power_internal%isocurv,&
+               power_internal%entropy, &
+               power_internal%pnad, &
+               power_internal%tensor
+           end if
 
            if (compute_zpower) then  !! compute only once upon horizon exit
               power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
@@ -1068,6 +1092,7 @@ contains
 
   CONTAINS
 
+    !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
     SUBROUTINE save_a_step
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
@@ -1078,7 +1103,9 @@ contains
       yp(:,kount)=y(:)
       xsav=x
     END SUBROUTINE save_a_step
-    !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
+
+
+
   END SUBROUTINE odeint_with_t
 
   !When not requiring inflation to end, the stopping requirements will likely
@@ -1108,4 +1135,3 @@ contains
   end function check_stop_when_not_slowroll_infl_end
 
 END MODULE modpk_odeint
-
