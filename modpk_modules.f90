@@ -320,7 +320,8 @@ module modpk_observables
         this%n_pnad, &
         this%n_ent, &
         this%A_cross_ad_iso, &
-        this%f_NL
+        this%f_NL, &
+        this%tau_NL
 
     end subroutine ic_print_observables
 

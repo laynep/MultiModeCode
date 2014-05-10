@@ -95,5 +95,9 @@ clean:
 	-rm out_pk_adiab.txt
 	-rm out_pk_isocurv.txt
 	-rm out_modes*.txt
+	-rm out_ic_eqen.txt
+	-rm out_ic_eqen_SR.txt
+	-rm out_ic_isoN.txt
+	-rm out_ic_isoN_SR.txt
 
 

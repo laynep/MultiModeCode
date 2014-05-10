@@ -2180,6 +2180,7 @@ module modpk_deltaN_SR
 
     end function nt_SR
 
+    !Assumes independent, GRFs at horizon exit
     function fNL_SR(phi_pivot,phi_end) result(fnl)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
       real(dp) :: fnl
@@ -2197,6 +2198,26 @@ module modpk_deltaN_SR
       fnl = fnl*(-5.0e0_dp/6.0e0_dp)/(sum(dN*dN))**2
 
     end function fNL_SR
+
+    !Assumes independent, GRFs at horizon exit
+    !From Eq 41 in astro-ph/0611075
+    function tauNL_SR(phi_pivot,phi_end) result(taunl)
+      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
+      real(dp) :: taunl
+      real(dp), dimension(size(phi_pivot)) :: dN
+      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2N
+      integer :: aa, bb, cc
+
+      dN = dNdphi_SR(phi_pivot,phi_end)
+      d2N = d2Ndphi2_SR(phi_pivot,phi_end)
+
+      taunl=0e0_dp
+      do aa=1,size(dN); do bb=1,size(dN); do cc=1,size(dN)
+        taunl = taunl + d2N(aa,bb)*d2N(aa,cc)*dN(bb)*dN(cc)
+      end do; end do; end do
+      taunl = taunl*(1.0e0_dp)/(sum(dN*dN))**3
+
+    end function tauNL_SR
 
     function ns_SR(phi_pivot,phi_end) result(ns)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end

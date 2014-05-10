@@ -271,6 +271,8 @@ program multimodecode
         write(*, out_opt%e2_fmt) "d2n_s/dlnk^2 =", observ_modes%runofrun
       end if
       write(*, out_opt%e2_fmt) "Slow-roll f_NL =", observ_modes%f_NL
+      write(*, out_opt%e2_fmt) "Slow-roll tau_NL =", observ_modes%tau_NL, &
+        '(>', ((6.0/5.0)*observ_modes%f_NL)**2, ')'
 
       if (calc_full_pk) then
 
@@ -347,6 +349,7 @@ program multimodecode
       if (use_deltaN_SR) then
         call calculate_SR_observables(observs_SR)
         observs%f_NL = observs_SR%f_NL
+        observs%tau_NL = observs_SR%tau_NL
       end if
 
       if (.not. evaluate_modes) return
@@ -461,6 +464,8 @@ program multimodecode
       print*, r_SR(phi_pivot,phi_end)
       print*, "fnl="
       print*, fnl_SR(phi_pivot,phi_end)
+      print*, "taunl="
+      print*, taunl_SR(phi_pivot,phi_end)
       print*, "alpha="
       print*, alpha_s_SR(phi_pivot,phi_end)
 
@@ -470,6 +475,7 @@ program multimodecode
       observs_SR%nt = nt_SR(phi_pivot)
       observs_SR%r  = r_SR(phi_pivot,phi_end)
       observs_SR%f_NL  = fnl_SR(phi_pivot,phi_end)
+      observs_SR%tau_NL  = taunl_SR(phi_pivot,phi_end)
       observs_SR%alpha_s  = alpha_s_SR(phi_pivot,phi_end)
 
     end subroutine calculate_SR_observables
