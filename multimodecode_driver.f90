@@ -35,13 +35,17 @@ program multimodecode
   logical :: varying_N_pivot
   logical :: more_potential_params
   logical :: get_runningofrunning
+  logical :: use_horiz_cross_approx
 
   integer :: pfile
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     slowroll_infl_end, instreheat, vparam_rows, &
-    more_potential_params, use_deltaN_SR, evaluate_modes
+    more_potential_params
+
+  namelist /analytical/ use_deltaN_SR, evaluate_modes, &
+    use_horiz_cross_approx
 
   namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref, varying_N_pivot
@@ -61,6 +65,7 @@ program multimodecode
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
     status="old", delim = "apostrophe")
   read(unit=pfile, nml=init)
+  read(unit=pfile, nml=analytical)
 
   call allocate_vars()
 
@@ -285,7 +290,7 @@ program multimodecode
         "Slow-roll tau_NL =", observ_modes%tau_NL, &
         '(>', ((6.0/5.0)*observ_modes%f_NL)**2, ')'
 
-      if (calc_full_pk) then
+      if (calc_full_pk .and. evaluate_modes) then
 
         !Open output files
         open(newunit=out_adiab,file="out_pk_adiab.txt")
@@ -477,6 +482,12 @@ program multimodecode
       j=min(max(i-(4-1)/2,1),nactual_bg+1-4)
       call array_polint(lna(j:j+4), phiarr(:,j:j+4),&
         Npiv_renorm, phi_pivot, del_phi)
+
+      if (use_horiz_cross_approx) then
+        HC_approx=.true.
+      else
+        HC_approx=.false.
+      end if
 
       call observs_SR%set_zero()
       observs_SR%As = PR_SR(phi_pivot,phi_end)
