@@ -11,6 +11,7 @@ program multimodecode
   use modpk_rng, only : init_random_seed
   use modpk_output, only : out_opt
   use modpk_deltaN_SR
+  use modpk_observables, only : observables
 
   implicit none
 
@@ -37,8 +38,9 @@ program multimodecode
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
   logical :: varying_N_pivot
   logical :: more_potential_params
+  logical :: get_runningofrunning
 
-  type(ic_and_observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
+  type(observables), dimension(:), allocatable :: ic_output, ic_output_iso_N
 
   integer :: u
 
@@ -57,7 +59,7 @@ program multimodecode
     number_knots_qsfrandom, stand_dev_qsfrandom, &
     knot_range_min, knot_range_max, custom_knot_range
 
-  namelist /print_out/ out_opt
+  namelist /print_out/ out_opt, get_runningofrunning
 
   !------------------------------------------------
 
@@ -212,66 +214,62 @@ program multimodecode
     end subroutine allocate_vars
 
     subroutine output_observables(pk_arr, pk_iso_arr,&
-        As,At,Az,A_iso,A_pnad,A_ent,A_cross,ns,r,nt, alpha_s,&
-        eps,eta,calc_full_pk)
+        calc_full_pk, &
+        observ_modes, observ_SR)
 
+      type(observables), intent(in) :: observ_modes
+      type(observables), intent(in), optional :: observ_SR
       real(dp), dimension(:,:), intent(in) :: pk_arr
       real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
-      real(dp), intent(in) :: r,nt, eps,eta, alpha_s
-      real(dp), dimension(:), intent(in) :: As, At, Az, A_iso, &
-        A_pnad,A_ent, ns
-      real(dp), intent(in) :: A_cross
+
+      type(observables) :: SR_pred
 
       logical :: calc_full_pk
 
       integer :: i
 
-      real(dp) :: phi_piv_pred, N_tot_pred, Ps_pred, r_pred, ns_pred, nt_pred,&
-      alphas_pred
+      if (present(observ_SR)) then
+        SR_pred = observ_SR
+      else
+        call SR_pred%set_zero()
+      end if
 
-      !Predictions for N-quad
-      phi_piv_pred = sqrt(4*N_pivot + phi_infl_end(1)**2)
-      N_tot_pred = 0.25*dot_product(phi_init, phi_init)
-      Ps_pred = N_pivot*H_pivot**2/(4*PI**2)
-      r_pred = 16*eps
-      ns_pred = 1-2*eps-1/(N_pivot)
-      nt_pred = -2*eps
-      alphas_pred = 8.0*eps*(2.0*eta - 3.0*eps) !This prediction isn't as good.
-
-      !DEBUG
-      print*, "----------------"
-      print*, "---FIX OUTPUT---"
-      print*, "----------------"
-      do i=1,size(vparams,1)
-        print*, "vparams", vparams(i,:)
-      end do
+      if (.not. out_opt%output_reduced) then
+        do i=1,size(vparams,1)
+          print*, "vparams", vparams(i,:)
+        end do
+      end if
 
       write(*, out_opt%i_fmt) "Number of Inflaton =", num_inflaton
       write(*, out_opt%i_fmt) "Potential Choice =", potential_choice
       write(*, out_opt%e_fmt) "N_pivot =", N_pivot
-      write(*, out_opt%e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
-      ! [JF] The commented out option below just includes the ind of inflation field coordinates which are negliable in the SR.
-      write(*, out_opt%e2_fmt) "N_tot =", N_tot,'(', N_tot_pred , ')'
-
-      ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, out_opt%e2_fmt) "Ps =", As(1), '(', Ps_pred , ')'
-      write(*, out_opt%e2_fmt), "Isocurvature P =", A_iso(1)
-      write(*, out_opt%e2_fmt), "Pnad P =", A_pnad(1)
-      write(*, out_opt%e2_fmt), "Entropy P =", A_ent(1)
-      write(*, out_opt%e2_fmt), "Cross Ad-Iso P =", A_cross
-      write(*, out_opt%e2_fmt), "Bundle Expand Scalar =", field_bundle%exp_scalar
-      write(*, out_opt%e2_fmt) "r = Pt/Ps =", r, '(', r_pred, ')'
-
-      ! [JF] This SR expression should hold for an arbitrary number of fields but I should check more carefully (holds for 2 for sure)
-      write(*, out_opt%e2_fmt) "n_s =", ns(1), '(', ns_pred ,')'
-      if (size(ns)>1) then
-        write(*, out_opt%e2_fmt) "n_iso =", ns(2)
-        write(*, out_opt%e2_fmt) "n_pnad =", ns(3)
-        write(*, out_opt%e2_fmt) "n_ent =", ns(4)
+      !write(*, out_opt%e2_fmt) "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
+      if (potential_choice==1) then
+        write(*, out_opt%e2_fmt) "N_tot =", N_tot,'(', &
+          0.25e0_dp*sum(phi_init0**2) , ')'
+      else
+        write(*, out_opt%e2_fmt) "N_tot =", N_tot
       end if
-      write(*, out_opt%e2_fmt) "n_t =", nt, '(', nt_pred , ')'
-      write(*, out_opt%e2_fmt) "alpha_s =", alpha_s, '(', alphas_pred , ')'
+      write(*, out_opt%e2_fmt) "Ps =", observ_modes%As, '(', SR_pred%As , ')'
+      write(*, out_opt%e2_fmt), "Isocurvature P =", observ_modes%A_iso
+      write(*, out_opt%e2_fmt), "Pnad P =", observ_modes%A_pnad
+      write(*, out_opt%e2_fmt), "Entropy P =", observ_modes%A_ent
+      write(*, out_opt%e2_fmt), "Cross Ad-Iso P =", observ_modes%A_cross_ad_iso
+      write(*, out_opt%e2_fmt), "Bundle Width =", field_bundle%exp_scalar
+      write(*, out_opt%e2_fmt) "r = Pt/Ps =", observ_modes%r, '(', SR_pred%r, ')'
 
+      write(*, out_opt%e2_fmt) "n_s =", observ_modes%ns, '(', SR_pred%ns,')'
+      if (num_inflaton>1) then
+        write(*, out_opt%e2_fmt) "n_iso =",  observ_modes%n_iso
+        write(*, out_opt%e2_fmt) "n_pnad =", observ_modes%n_pnad
+        write(*, out_opt%e2_fmt) "n_ent =",  observ_modes%n_ent
+      end if
+      write(*, out_opt%e2_fmt) "n_t =", observ_modes%nt, '(', SR_pred%nt , ')'
+      write(*, out_opt%e2_fmt) "alpha_s =", observ_modes%alpha_s, '(', SR_pred%alpha_s , ')'
+      if (get_runningofrunning) then
+        write(*, out_opt%e2_fmt) "d2n_s/dlnk^2 =", observ_modes%runofrun
+      end if
+      write(*, out_opt%e2_fmt) "Slow-roll f_NL =", observ_modes%f_NL
 
       if (calc_full_pk) then
 
@@ -294,15 +292,11 @@ program multimodecode
 
       call out_opt%formatting(num_inflaton)
 
-      if (size(vparams,1)>1) then
-        do i=1, size(vparams,1)
-          if (out_opt%modpkoutput) &
-            write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
-        end do
-      else
-        if (out_opt%modpkoutput) &
-          write(*, *), "vparams(1,:) =", vparams(1,:)
-      end if
+      do i=1, size(vparams,1)
+        if (out_opt%modpkoutput .and. .not. out_opt%output_reduced) &
+          write(*, '(A8,I1,A5,100E12.3)'), "vparams(",i,",:) =", vparams(i,:)
+      end do
+
     end subroutine output_initial_data
 
 
@@ -310,20 +304,11 @@ program multimodecode
     subroutine calculate_pk_observables(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
-      real(dp) :: As,ns,r,nt, alpha_s
-      real(dp) :: runofrun
-      real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross
-      real(dp) :: n_iso, n_pnad, n_ent
-      real(dp) :: epsilon, eta
-      real(dp) :: ps0, pt0, ps1, pt1, ps2, pt2, x1, x2
-      real(dp) :: ps0_iso,ps1_iso,ps2_iso
-      real(dp) :: pz0, pz1, pz2
-      real(dp) :: pnad0, pnad1, pnad2
-      real(dp) :: pent0, pent1, pent2
       real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
       logical :: calc_full_pk, leave
 
       type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
+      type(observables) :: observs, observs_SR
 
       pk_bad=0
       leave = .false.
@@ -340,210 +325,180 @@ program multimodecode
 
       end if
 
+      !Load ics
+      allocate(observs%ic(2*num_inflaton))
+      observs%ic(1:num_inflaton)=phi_init0
+      observs%ic(num_inflaton+1:2*num_inflaton)=dphi_init0
+
       !Initialize potential and calc background
       call potinit
 
-      call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-        A_iso, A_pnad, A_ent, A_bundle, &
-        n_iso, n_pnad, n_ent, &
-        leave)
+      !For outputting field values at horiz crossing
+      if (out_opt%fields_horiz) write(out_opt%fields_h_out,'(1000E28.20)') k, phi_pivot
+
+      call test_bad(pk_bad, observs, leave)
       if (leave) return
 
       if (use_deltaN_SR) then
-        call calculate_SR_observables()
+        call calculate_SR_observables(observs_SR)
+        observs%f_NL = observs_SR%f_NL
       end if
-
 
       if (.not. evaluate_modes) return
 
       !Evaluate the mode functions
       call evolve(k_pivot, pk0)
-        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-          A_iso, A_pnad, A_ent, A_bundle, &
-          n_iso, n_pnad, n_ent, &
-          leave)
+        call test_bad(pk_bad, observs, leave)
         if (leave) return
 !DEBUG
 !print*, "Not evaluating second and third evolve routines"
 !stop
       call evolve(k_pivot*exp(-dlnk), pk1)
-        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-          A_iso, A_pnad, A_ent, A_bundle, &
-          n_iso, n_pnad, n_ent, &
-          leave)
+        call test_bad(pk_bad, observs, leave)
         if (leave) return
       call evolve(k_pivot*exp(dlnk), pk2)
-        call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-          A_iso, A_pnad, A_ent, A_bundle, &
-          n_iso, n_pnad, n_ent, &
-          leave)
+        call test_bad(pk_bad, observs, leave)
         if (leave) return
 
-      !!Uncomment here and below for alpha_s from 5-pt stencil
-      !!or running of running
-      !call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
-      !  call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-      !    A_iso, A_pnad, A_ent, A_bundle, &
-      !    n_iso, n_pnad, n_ent, &
-      !    leave)
-      !  if (leave) return
-      !call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
-      !  call test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-      !    A_iso, A_pnad, A_ent, A_bundle, &
-      !    n_iso, n_pnad, n_ent, &
-      !    leave)
-      !  if (leave) return
+      if (get_runningofrunning) then
+        !Alpha_s from 5-pt stencil
+        !or running of running
+        call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
+          call test_bad(pk_bad, observs, leave)
+          if (leave) return
+        call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
+          call test_bad(pk_bad, observs, leave)
+          if (leave) return
+      end if
 
-      ps0= pk0%adiab
-      ps1= pk1%adiab
-      ps2= pk2%adiab
-      pt0= pk0%tensor
-      pt1= pk1%tensor
-      pt2= pk2%tensor
-      ps0_iso=  pk0%isocurv
-      ps1_iso=  pk1%isocurv
-      ps2_iso=  pk2%isocurv
-      pz0= pk0%powz
-      pz1= pk1%powz
-      pz2= pk2%powz
-      pnad0=pk0%pnad
-      pnad1=pk1%pnad
-      pnad2=pk2%pnad
-      pent0=pk0%entropy
-      pent1=pk1%entropy
-      pent2=pk2%entropy
+      !Construct the observables
 
-      A_iso=ps0_iso
-      A_pnad=pnad0
-      A_ent=pent0
-      A_cross = pk0%cross_ad_iso
+      !Amplitudes
+      observs%As = pk0%adiab
+      observs%A_iso=pk0%isocurv
+      observs%A_pnad=pk0%pnad
+      observs%A_ent=pk0%entropy
+      observs%A_cross_ad_iso = pk0%cross_ad_iso
 
-      A_bundle=field_bundle%exp_scalar
+      !Bundle width
+      observs%A_bundle=field_bundle%exp_scalar
 
+      !Finite difference evaluation of spectral indices
+      observs%ns = 1.e0_dp+log(pk2%adiab/pk1%adiab)/dlnk/2.e0_dp
+      observs%nt = log(pk2%tensor/pk1%tensor)/dlnk/2.e0_dp
+      observs%n_iso=log(pk2%isocurv/pk1%isocurv)/dlnk/2.e0_dp
+      observs%n_pnad=log(pk2%pnad/pk1%pnad)/dlnk/2.e0_dp
+      observs%n_ent=log(pk2%entropy/pk1%entropy)/dlnk/2.e0_dp
 
-      epsilon = getEps(phi_pivot, dphi_pivot)
-      eta = geteta(phi_pivot, dphi_pivot)
+      !Tensor-to-scalar
+      observs%r = pk0%tensor/pk0%adiab
 
-      As = ps0
-      ns = 1.e0_dp+log(ps2/ps1)/dlnk/2.e0_dp
-      r=pt0/ps0
-      nt=log(pt2/pt1)/dlnk/2.e0_dp
+      if (get_runningofrunning) then
 
-      alpha_s = log(ps2*ps1/ps0**2)/dlnk**2
+        !alpha_s from 5-pt stencil
+        observs%alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
+          (-log(pk4%adiab) + 16.0e0_dp*log(pk2%adiab) - &
+          30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pk1%adiab) - &
+          log(pk3%adiab))
 
+        observs%runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
+          (log(pk4%adiab) -2.0e0_dp* log(pk2%adiab) &
+          + 2.0e0_dp*log(pk1%adiab) -log(pk3%adiab))
 
-      !alpha_s from 5-pt stencil
-      !alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
-      !  (-log(pk4%adiab) + 16.0e0_dp*log(pk2%adiab) - &
-      !  30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pk1%adiab) - &
-      !  log(pk3%adiab))
+      else
 
-      !runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
-      !  (log(pk4%adiab) -2* log(pk2%adiab) + 2*log(pk1%adiab) -log(pk3%adiab))
+        observs%alpha_s = log(pk2%adiab*pk1%adiab/pk0%adiab**2)/dlnk**2
 
-      !print*, "running of running =", runofrun
-
-      n_iso=log(ps2_iso/ps1_iso)/dlnk/2.e0_dp
-      n_pnad=log(pnad2/pnad1)/dlnk/2.e0_dp
-      n_ent=log(pent2/pent1)/dlnk/2.e0_dp
+      end if
 
 
       !Get full spectrum for adiab and isocurv at equal intvs in lnk
       call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
 
-      if (out_opt%modpkoutput) then
-        call output_observables(pk_arr,pk_iso_arr, &
-          (/ps0,ps1,ps2/),(/pt0,pt1,pt2/), &
-          (/pz0,pz1,pz2/),(/ps0_iso,ps1_iso,ps2_iso/), &
-          (/pnad0,pnad1,pnad2/),(/pent0,pent1,pent2/),A_cross,&
-          (/ns,n_iso,n_pnad,n_ent/),r,nt,alpha_s, &
-          epsilon,eta,calc_full_pk)
-      end if
 
+      if (out_opt%modpkoutput) &
+        call output_observables(pk_arr,pk_iso_arr, &
+          calc_full_pk, observs, observs_SR)
+
+      !Load & print output array
+      !Save in ic_output in case want to post-process.
       if (sampling_techn/=reg_samp) then
-        !Load & print output array
-        !Save in ic_output in case want to post-process.
-        !Comment-out if don't want to keep and just do write(1,*)
-        call ic_output(i)%load_observables(phi_init0, dphi_init0,As,ns,r,nt,&
-        alpha_s, A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
-        A_cross)
-        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+        ic_output(i) = observs
+        if (out_opt%output_badic .or. pk_bad/=bad_ic) &
           call ic_output(i)%printout(out_opt%outsamp)
-        endif
 
         if (save_iso_N) then
-          call ic_output_iso_N(i)%load_observables(phi_iso_N, dphi_iso_N, &
-            As,ns,r,nt, alpha_s,&
-            A_iso, A_pnad, A_ent, A_bundle, n_iso, n_pnad, n_ent,&
-            A_cross)
-          if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+          observs%ic(1:num_inflaton) = phi_iso_N
+          observs%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+          ic_output_iso_N(i) = observs
+
+          if (out_opt%output_badic .or. pk_bad/=bad_ic) &
             call ic_output_iso_N(i)%printout(out_opt%outsamp_N_iso)
-          end if
         end if
       end if
-
 
     end subroutine calculate_pk_observables
 
     !Calculate observables for the power spectrum, as well as fNL, using the
     !delta-N formalism in slow-roll
-    subroutine calculate_SR_observables()
+    subroutine calculate_SR_observables(observs_SR)
+      type(observables), intent(out) :: observs_SR
       integer :: j, i
       real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
       real(dp), dimension(num_inflaton) :: phi_pivot, phi_end, del_phi
 
       !Find field values at end of inflation
       !Note that eps=1 perhaps twice, so take the last one.
-      CALL array_polint(epsarr(nactual_bg-4:nactual_bg), phiarr(:,nactual_bg-4:nactual_bg),&
+      call array_polint(epsarr(nactual_bg-4:nactual_bg), phiarr(:,nactual_bg-4:nactual_bg),&
         1.0e0_dp,  phi_end, del_phi)
-      CALL polint(epsarr(nactual_bg-4:nactual_bg), lna(nactual_bg-4:nactual_bg),&
+      call polint(epsarr(nactual_bg-4:nactual_bg), lna(nactual_bg-4:nactual_bg),&
         1.0e0_dp,  N_end, del_N)
 
       !Find field values at horizon crossing
       Npiv_renorm = N_end - N_pivot
 
       i= locate(lna(1:nactual_bg), Npiv_renorm)
-      j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
-      CALL array_polint(lna(j:j+4), phiarr(:,j:j+4), Npiv_renorm, phi_pivot, del_phi)
+      j=min(max(i-(4-1)/2,1),nactual_bg+1-4)
+      call array_polint(lna(j:j+4), phiarr(:,j:j+4), Npiv_renorm, phi_pivot, del_phi)
 
       print*, "testing SR approx"
-      print*, "P_R", PR_SR(phi_pivot,phi_end)
-      print*, "ns", ns_SR(phi_pivot,phi_end)
-      print*, "nt", nt_SR(phi_pivot)
-      print*, "r", r_SR(phi_pivot,phi_end)
-      print*, "fnl", fnl_SR(phi_pivot,phi_end)
-      print*, "alpha", alpha_s_SR(phi_pivot,phi_end)
+      print*, "P_R="
+      print*, PR_SR(phi_pivot,phi_end)
+      print*, "ns="
+      print*, ns_SR(phi_pivot,phi_end)
+      print*, "nt="
+      print*, nt_SR(phi_pivot)
+      print*, "r="
+      print*, r_SR(phi_pivot,phi_end)
+      print*, "fnl="
+      print*, fnl_SR(phi_pivot,phi_end)
+      print*, "alpha="
+      print*, alpha_s_SR(phi_pivot,phi_end)
+
+      call observs_SR%set_zero()
+      observs_SR%As = PR_SR(phi_pivot,phi_end)
+      observs_SR%ns = ns_SR(phi_pivot,phi_end)
+      observs_SR%nt = nt_SR(phi_pivot)
+      observs_SR%r  = r_SR(phi_pivot,phi_end)
+      observs_SR%f_NL  = fnl_SR(phi_pivot,phi_end)
+      observs_SR%alpha_s  = alpha_s_SR(phi_pivot,phi_end)
 
     end subroutine calculate_SR_observables
 
 
-    subroutine test_bad(pk_bad,As,ns,r,nt,alpha_s,&
-      A_iso, A_pnad, A_ent, A_bundle, &
-      n_iso, n_pnad, n_ent, &
-      leave)
+    subroutine test_bad(pk_bad,observ,leave)
 
       integer,  intent(in)     :: pk_bad
       logical,  intent(inout)  :: leave
-      real(dp), intent(inout)  :: As,ns,r,nt, alpha_s
-      real(dp), intent(inout)  :: A_iso, A_pnad, A_ent, A_bundle
-      real(dp), intent(inout)  :: n_iso, n_pnad, n_ent
+      type(observables) :: observ
 
       !If pk_bad==bad_ic, then restart IC
       !If pk_bad==4, then ode_underflow
 
       if (pk_bad==bad_ic .or. pk_bad==4) then
-        As = 0e0_dp
-        ns = 0e0_dp
-        r = 0e0_dp
-        nt = 0e0_dp
-        alpha_s = 0e0_dp
-        A_iso = 0e0_dp
-        A_pnad = 0e0_dp
-        A_ent = 0e0_dp
-        A_bundle = 0e0_dp
-        n_iso = 0e0_dp
-        n_pnad = 0e0_dp
-        n_ent = 0e0_dp
+        call observ%set_zero()
+
+        !Flag for voiding calculation
         leave = .true.
       end if
 

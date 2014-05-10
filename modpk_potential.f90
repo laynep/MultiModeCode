@@ -1263,7 +1263,7 @@ CONTAINS
   !adiabatic P(k), and isocurv P(k); includes cross correlations
   subroutine powerspectrum(psi, dpsi, phi, dphi, scalefactor, power_spectrum, using_q)
     use internals
-    use powersp
+    use modpk_observables
 
     type(power_spectra), intent(inout) :: power_spectrum
     real(dp), dimension(:), intent(in) :: dphi, phi
@@ -2446,10 +2446,13 @@ module modpk_deltaN_SR
       integer :: vrows, jj
       real(dp) :: V
 
-      !Make temp copy of vparams
+      !The idea: make temp copy of vparams; change vparams as if it had only the
+      !one field; get V; restore vparams
       !NB: vparams(vrows,num_inflaton)
 
       vrows = size(vparams,1)
+
+      allocate(vparams_temp(size(vparams,1),size(vparams,2)))
       vparams_temp = vparams
 
       do jj=1,size(phi)
@@ -2460,6 +2463,7 @@ module modpk_deltaN_SR
       end do
 
       deallocate(vparams)
+      allocate(vparams(size(vparams_temp,1),size(vparams_temp,2)))
       vparams = vparams_temp
       deallocate(vparams_temp)
 

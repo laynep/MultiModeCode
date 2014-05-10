@@ -14,7 +14,7 @@ else
 
 ifdef DEBUG
 F90C     = ifort
-FFLAGS = -fpp -O0 -g -traceback -debug #-openmp  -fast # -DMPI
+FFLAGS = -fpp  -g -traceback -debug #-O0 -openmp  -fast # -DMPI
 
 ifdef QUAD
 FFLAGS+= -r16

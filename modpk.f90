@@ -19,7 +19,7 @@ CONTAINS
 
   SUBROUTINE potinit
     USE modpkparams
-    USE powersp
+    USE modpk_observables
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
@@ -65,7 +65,7 @@ CONTAINS
     USE ode_path
     USE modpkparams
     USE internals
-    USE powersp
+    USE modpk_observables
     USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getdHdalpha, field_bundle, getEps, &
       pot, d2Vdphi2
     USE modpk_utils, ONLY : locate, polint, derivs, qderivs, rkqs_c, array_polint

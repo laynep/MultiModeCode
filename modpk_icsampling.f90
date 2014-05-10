@@ -30,17 +30,6 @@ module modpk_icsampling
   integer, parameter, private :: equal_area_prior=1, unif_prior=2
   integer, parameter, private :: eqen_prior = equal_area_prior
 
-  !Type to save the ICs and observs. Add new observables here
-  type :: ic_and_observables
-    real(dp), dimension(:), allocatable :: ic
-    real(dp) :: As, ns, r, nt, alpha_s
-    real(dp) :: n_iso, n_pnad,n_ent
-    real(dp) :: A_iso, A_pnad, A_ent, A_bundle, A_cross_ad_iso
-    contains
-      procedure :: printout => ic_print_observables
-      procedure :: load_observables => ic_load_observables
-  end type ic_and_observables
-
   integer, private :: icfile
 
 
@@ -1100,69 +1089,6 @@ print*, new_measure
         end function constrain_first_vel
 
     end subroutine implicit_surface_sampling
-
-
-    !Print the cosmo observables to file
-    subroutine ic_print_observables(this, outunit)
-
-      class(ic_and_observables) :: this
-      integer, intent(in) :: outunit
-
-      if (num_inflaton*2 +12 > 120000) then
-        print*, "Don't be silly."
-        print*, "Too many fields to print out properly."
-        print*, "Fix formatting."
-        stop
-      end if
-
-      write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
-        this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
-        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent, &
-        this%A_cross_ad_iso
-
-    end subroutine ic_print_observables
-
-    !Load the cosmo observables into the ic_and_observables type
-    subroutine ic_load_observables(this, phi0,dphi0, As, ns, r, nt,&
-      alpha_s, A_iso, A_pnad, A_ent, A_bundle,  &
-      n_iso, n_pnad, n_ent, A_cross)
-
-      class(ic_and_observables) :: this
-      real(dp), intent(in) :: As, ns, r, nt, alpha_s
-      real(dp), intent(in) :: A_iso, A_pnad, A_ent, A_bundle
-      real(dp), intent(in) :: A_cross
-      real(dp), intent(in) :: n_iso, n_pnad, n_ent
-      real(dp), dimension(:), intent(in) :: phi0, dphi0
-
-      integer :: ind
-
-      if (.not. allocated(this%ic)) then
-        allocate(this%ic(size(phi0)+size(dphi0)))
-      else if (size(phi0) + size(dphi0) /= size(this%ic)) then
-        deallocate(this%ic)
-        allocate(this%ic(size(phi0) + size(dphi0)))
-      end if
-
-      !num_inflaton
-      ind = size(phi0)
-
-      this%ic(1:ind) = phi0
-      this%ic(ind+1:ind+size(dphi0)) = dphi0
-      this%As = As
-      this%ns = ns
-      this%r = r
-      this%nt = nt
-      this%alpha_s = alpha_s
-      this%A_iso= A_iso
-      this%A_pnad=A_pnad
-      this%A_ent=A_ent
-      this%A_bundle=A_bundle
-      this%n_iso= n_iso
-      this%n_pnad=n_pnad
-      this%n_ent=n_ent
-      this%A_cross_ad_iso=A_cross
-
-    end subroutine ic_load_observables
 
     subroutine sample_nsphere(y, radius)
       use modpk_rng, only : normal_array

@@ -65,6 +65,7 @@ module modpk_output
 
     !Things to print
     logical :: modpkoutput
+    logical :: output_reduced
     logical :: save_traj
     logical :: output_badic
     logical :: fields_horiz
@@ -178,9 +179,11 @@ MODULE internals
 END MODULE internals
 
 
-module powersp
-  use modpkparams, only : dp
+!Module that holds objects for observables, power spectra, etc
+module modpk_observables
+  use modpkparams, only : dp, num_inflaton
   implicit none
+
   integer*4 :: ik
   real(dp) :: eval_ps,k_start, useq_ps
 
@@ -221,33 +224,104 @@ module powersp
       procedure :: clear => kahan_clear_mem
   end type
 
+  !Type to save the ICs and observs. Add new observables here
+  type :: observables
+    real(dp), dimension(:), allocatable :: ic
+    !Spectra amplitudes
+    real(dp) :: As
+    real(dp) :: A_iso
+    real(dp) :: A_pnad
+    real(dp) :: A_ent
+    real(dp) :: A_cross_ad_iso
+    !Bundle width from arXiv:1203.2635
+    real(dp) :: A_bundle
+    !Spectral indices
+    real(dp) :: ns
+    real(dp) :: nt
+    real(dp) :: n_iso
+    real(dp) :: n_pnad
+    real(dp) :: n_ent
+    !Tensor-to-scalar
+    real(dp) :: r
+    !Running, etc
+    real(dp) :: alpha_s
+    real(dp) :: runofrun
+    !Non-Gaussianity
+    real(dp) :: f_NL
+    real(dp) :: tau_NL
+    contains
+      procedure :: printout => ic_print_observables
+      procedure :: set_zero => set_observs_to_zero
+  end type observables
 
   contains
 
-  !Procedures for Kahan summation objects
+    !Procedures for Kahan summation objects
 
-  !Algorithm for Kahan summation
-  subroutine kahan_summation(this,val)
+    !Algorithm for Kahan summation
+    subroutine kahan_summation(this,val)
 
-    class(KahanSum) :: this
-    real(dp), intent(in) :: val
-    real(dp) :: ytemp, ttemp
+      class(KahanSum) :: this
+      real(dp), intent(in) :: val
+      real(dp) :: ytemp, ttemp
 
-    ytemp = val - this%remainder
-    ttemp = this%summand + ytemp
-    this%remainder = (ttemp - this%summand) - ytemp
-    this%summand = ttemp
+      ytemp = val - this%remainder
+      ttemp = this%summand + ytemp
+      this%remainder = (ttemp - this%summand) - ytemp
+      this%summand = ttemp
 
-  end subroutine kahan_summation
+    end subroutine kahan_summation
 
-  subroutine kahan_clear_mem(this)
+    subroutine kahan_clear_mem(this)
 
-    class(KahanSum) :: this
+      class(KahanSum) :: this
 
-    this%remainder=0e0_dp
-    this%summand=0e0_dp
+      this%remainder=0e0_dp
+      this%summand=0e0_dp
 
-  end subroutine kahan_clear_mem
+    end subroutine kahan_clear_mem
 
 
-end module powersp
+    !Print the cosmo observables to file
+    subroutine ic_print_observables(this, outunit)
+
+      class(observables) :: this
+      integer, intent(in) :: outunit
+
+      if (num_inflaton*2 +12 > 120000) then
+        print*, "Don't be silly."
+        print*, "Too many fields to print out properly."
+        print*, "Fix formatting."
+        stop
+      end if
+
+      write(outunit, '(120000E18.10)') this%ic(:), this%As, this%ns,&
+        this%r, this%nt, this%alpha_s, this%A_iso, this%A_pnad,&
+        this%A_ent, this%A_bundle, this%n_iso, this%n_pnad, this%n_ent, &
+        this%A_cross_ad_iso
+
+    end subroutine ic_print_observables
+
+    subroutine set_observs_to_zero(this)
+      class(observables) :: this
+
+        this%As = 0e0_dp
+        this%A_iso = 0e0_dp
+        this%A_pnad = 0e0_dp
+        this%A_ent = 0e0_dp
+        this%A_cross_ad_iso = 0e0_dp
+        this%A_bundle = 0e0_dp
+        this%ns = 0e0_dp
+        this%nt = 0e0_dp
+        this%n_iso = 0e0_dp
+        this%n_pnad = 0e0_dp
+        this%n_ent = 0e0_dp
+        this%r = 0e0_dp
+        this%alpha_s = 0e0_dp
+        this%runofrun = 0e0_dp
+        this%f_NL = 0e0_dp
+        this%tau_NL = 0e0_dp
+
+    end subroutine set_observs_to_zero
+
+end module modpk_observables

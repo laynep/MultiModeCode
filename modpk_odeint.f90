@@ -25,7 +25,7 @@ contains
   subroutine odeint_r(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
     use ode_path
     use internals
-    use powersp
+    use modpk_observables
     use modpkparams
     use potential
 #ifdef DVODE
@@ -181,10 +181,11 @@ contains
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
 
+          !DEBUG
+          if (pk_bad/=0) print*, "pk_bad from here:", pk_bad
+
 #ifdef DVODE
 
-       !call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
-       !  itask,istate,ode_integrator_opt,j_fcn=jex)
        call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
          itask,istate,ode_integrator_opt)
        call get_stats(rstats,istats)
@@ -361,7 +362,7 @@ contains
   SUBROUTINE odeint_c(ystart, x1, x2, eps, h1, hmin, derivs, qderivs, rkqs_c)
     USE ode_path
     USE internals
-    USE powersp
+    USE modpk_observables
     USE modpkparams
     USE potential, only : tensorpower, getH, getEps, zpower,&
       powerspectrum
@@ -441,9 +442,6 @@ contains
     type (vode_opts) :: ode_integrator_opt
 #endif
 
-    !For outputting field values at horiz cross
-    real(dp) :: aH_old, aH_new
-
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -465,9 +463,6 @@ contains
     use_q = .false.
     compute_zpower = .true.
     eps_adjust = eps
-
-    aH_old = 0e0_dp
-    aH_new = 0e0_dp
 
 #ifdef DVODE
     !Options for first call to dvode integrator
@@ -644,15 +639,6 @@ contains
        IF(getEps(phi,delphi) .LT. 1 .AND. .NOT.(slowroll_start)) slowroll_start=.true.
 
        IF(ode_ps_output) THEN
-
-         !For outputting field values at horiz crossing
-         if (out_opt%fields_horiz) then
-           aH_new = a_init*exp(x)*getH(phi, delphi)
-           if ((aH_new .ge. k) .and. (aH_old .le. k) ) then
-             write(out_opt%fields_h_out,'(500E28.20)') k, phi
-           end if
-           aH_old = aH_new
-         end if
 
          IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
 
@@ -867,7 +853,7 @@ contains
   SUBROUTINE odeint_with_t(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
     USE ode_path
     USE internals
-    USE powersp
+    USE modpk_observables
     USE modpkparams
     USE potential
     USE modpk_utils, ONLY : reallocate_rv, reallocate_rm, use_t

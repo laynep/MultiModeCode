@@ -3,7 +3,7 @@ MODULE background_evolution
   USE modpkparams
   USE modpk_odeint
   USE ode_path
-  USE powersp
+  USE modpk_observables
   USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
     getH_with_t, stability_check_on_H, getEps_with_t
   USE modpk_utils, ONLY : locate, polint, bderivs, rkqs_r, array_polint, &
@@ -51,9 +51,11 @@ CONTAINS
       stop
     end if
 
-    if (out_opt%modpkoutput) write(*, array_fmt) 'phi_init0 =', phi_init
-    if (out_opt%modpkoutput) &
+    if (out_opt%modpkoutput .and. &
+      .not. out_opt%output_reduced) then
+      write(*, array_fmt) 'phi_init0 =', phi_init
       write(*, array_fmt) 'dphi_init0 =', dphi_init0
+    end if
 
     !Initialize e-folds and background traj
     alpha_e=0e0_dp
@@ -232,7 +234,7 @@ CONTAINS
        if (out_opt%modpkoutput) then
           WRITE(*, fmt) ' H_pivot =', H_pivot
           WRITE(*, fmt) ' a_end = ', a_end
-          WRITE(*, array_fmt) ' phi_pivot =', phi_pivot
+          if (.not. out_opt%output_reduced) WRITE(*, array_fmt) ' phi_pivot =', phi_pivot
           WRITE(*, fmt) ' a_pivot =', a_pivot
           WRITE(*, fmt) ' N_pivot =', N_pivot
           WRITE(*, fmt) ' N_tot =', N_tot
@@ -500,7 +502,8 @@ CONTAINS
           !END MULTIFIELD
        ENDIF
 
-       if (out_opt%modpkoutput) WRITE(*,array_fmt) ' phi_end =', phi_infl_end
+       if (out_opt%modpkoutput .and. .not. out_opt%output_reduced) &
+         WRITE(*,array_fmt) ' phi_end =', phi_infl_end
 
        IF (instreheat) THEN
           !Set a plausible pivot (ignoring logarithmic V_k and V_end terms) for
