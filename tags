@@ -1012,6 +1012,7 @@ adiab	modpk_modules.f90	/^    real(dp) :: adiab$/;"	k	type:power_spectra
 allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars(/;"	s	program:multimodecode
 alpha_s	modpk_modules.f90	/^    real(dp) :: alpha_s$/;"	k	type:observables
 alpha_s_SR	modpk_potential.f90	/^    function alpha_s_SR(/;"	f	module:modpk_deltaN_SR
+analytical	multimodecode_driver.f90	/^  namelist \/analytical\//;"	n	program:multimodecode
 array_fmt	modpk_modules.f90	/^    character(16) :: array_fmt$/;"	k	type:print_options
 array_polint	modpk_utils.f90	/^  SUBROUTINE array_polint(/;"	s	module:modpk_utils
 backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/;"	s	module:background_evolution
@@ -1034,7 +1035,9 @@ calculate_observs_finitediff	modpk_modules.f90	/^    subroutine calculate_observ
 calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(/;"	s	program:multimodecode
 camb_interface	modpk_modules.f90	/^MODULE camb_interface$/;"	m
 check_for_eternal_inflation	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation$/;"	s	subroutine:odeint_r
+check_for_eternal_inflation_MODES	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation_MODES(/;"	s	subroutine:odeint_c
 check_inflation_ended_properly	modpk_odeint.f90	/^     subroutine check_inflation_ended_properly(/;"	s	subroutine:odeint_r
+check_inflation_ended_properly_MODES	modpk_odeint.f90	/^    subroutine check_inflation_ended_properly_MODES(/;"	s	subroutine:odeint_c
 check_inflation_started_properly	modpk_odeint.f90	/^     subroutine check_inflation_started_properly(/;"	s	subroutine:odeint_r
 check_stop_when_not_slowroll_infl_end	modpk_odeint.f90	/^  logical function check_stop_when_not_slowroll_infl_end(/;"	f	module:modpk_odeint
 ci	modpk_modules.f90	/^    character(len=2) :: ci$/;"	k	type:print_options
@@ -1082,6 +1085,7 @@ equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_i
 eta_SR	modpk_potential.f90	/^    function eta_SR(/;"	f	module:modpk_deltaN_SR
 eval_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,/;"	v	module:modpk_observables
 evaluate_modes	modpk_modules.f90	/^  logical :: evaluate_modes$/;"	v	module:modpkparams
+evaluate_powerspectra	modpk_odeint.f90	/^    subroutine evaluate_powerspectra(/;"	s	subroutine:odeint_c
 evolve	modpk.f90	/^  SUBROUTINE evolve(/;"	s	module:access_modpk
 exp_scalar	modpk_potential.f90	/^    real(dp) :: exp_scalar=/;"	k	type:bundle
 fNL_SR	modpk_potential.f90	/^    function fNL_SR(/;"	f	module:modpk_deltaN_SR
@@ -1138,6 +1142,7 @@ init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(/
 init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial(/;"	s	module:modpk_rng
 init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(/;"	s	program:multimodecode
 initialize_dvode	modpk_odeint.f90	/^    subroutine initialize_dvode(/;"	s	subroutine:odeint_r
+initialize_dvode_MODES	modpk_odeint.f90	/^    subroutine initialize_dvode_MODES(/;"	s	subroutine:odeint_c
 initialphi	modpk_potential.f90	/^  FUNCTION initialphi(/;"	f	module:potential
 instreheat	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs, instreheat$/;"	v	module:modpkparams
 internals	modpk_modules.f90	/^MODULE internals$/;"	m
@@ -1330,6 +1335,7 @@ stability_check_on_H	modpk_potential.f90	/^  subroutine stability_check_on_H(/;"
 stand_dev_qsfrandom	modpk_potential.f90	/^  real(dp), dimension(:), allocatable :: stand_dev_qsfrandom$/;"	v	module:potential
 stupid_locate	modpk_utils.f90	/^  pure integer function stupid_locate(/;"	f	module:modpk_utils
 summand	modpk_modules.f90	/^    real(dp) :: summand /;"	k	type:KahanSum
+switch_to_qvar	modpk_odeint.f90	/^    subroutine switch_to_qvar(/;"	s	subroutine:odeint_c
 tauNL_SR	modpk_potential.f90	/^    function tauNL_SR(/;"	f	module:modpk_deltaN_SR
 tau_NL	modpk_modules.f90	/^    real(dp) :: tau_NL$/;"	k	type:observables
 tensor	modpk_modules.f90	/^    real(dp) :: tensor$/;"	k	type:power_spectra
@@ -1345,6 +1351,7 @@ turning_function	modpk_potential.f90	/^  real(dp) function turning_function(/;"	
 unconstrained_ic	modpk_icsampling.f90	/^    subroutine unconstrained_ic(/;"	s	module:modpk_icsampling
 unif_prior	modpk_icsampling.f90	/^  integer, parameter, private :: equal_area_prior=1, unif_prior=/;"	v	module:modpk_icsampling
 use_deltaN_SR	modpk_modules.f90	/^  logical :: use_deltaN_SR$/;"	v	module:modpkparams
+use_horiz_cross_approx	multimodecode_driver.f90	/^  logical :: use_horiz_cross_approx$/;"	v	program:multimodecode
 use_modpk	modpk_modules.f90	/^  LOGICAL :: use_modpk,/;"	v	module:modpkparams
 use_t	modpk_utils.f90	/^  logical :: use_t$/;"	v	module:modpk_utils
 useq_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,k_start, useq_ps$/;"	v	module:modpk_observables

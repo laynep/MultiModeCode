@@ -242,7 +242,7 @@ program multimodecode
       write(*, out_opt%e_fmt) &
         "N_pivot =", N_pivot
       !write(*, out_opt%e2_fmt) &
-      !"phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
+      !  "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
       if (potential_choice==1) then
         write(*, out_opt%e2_fmt)&
           "N_tot =", N_tot,'(', &
@@ -501,6 +501,7 @@ program multimodecode
     end subroutine calculate_SR_observables
 
 
+    !Check if an IC had some properties where we declare it to be unphysical
     subroutine test_bad(pk_bad,observ,leave)
 
       integer,  intent(in)     :: pk_bad
