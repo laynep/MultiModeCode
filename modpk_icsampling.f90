@@ -5,11 +5,8 @@
 !slowroll_samp = Sample phi0, set dphi in SR
 
 module modpk_icsampling
-  use potential, only : norm, pot, getH, &
-    turning_choice, &
-    number_knots_qsfrandom, stand_dev_qsfrandom, knot_positions, &
-    knot_range_min, knot_range_max, custom_knot_range
-
+  use potential, only : norm, pot, getH
+  use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   use internals, only : pi

@@ -1,5 +1,5 @@
 !Use the DVODE integrator?
-!#define DVODE
+#define DVODE
 
 MODULE modpk_odeint
   use modpkparams, only : dp
@@ -400,6 +400,7 @@ contains
     USE modpkparams
     USE potential, only : tensorpower, getH, getEps, zpower,&
       powerspectrum
+    use modpk_qsf, only : turning_choice
 #ifdef DVODE
     use modpk_utils, only : reallocate_rv, reallocate_rm, mode_derivs_dvode, &
       qderivs_dvode
@@ -475,6 +476,21 @@ contains
     real(dp), dimension(:), allocatable :: atol, atol_real, atol_compl
     type (vode_opts) :: ode_integrator_opt
 #endif
+
+    !DEBUG
+    !for two-knot QSF trajectory
+    real(dp) :: a_turn1, N_turn1, H_turn1, phi_test
+    real(dp) :: a_turn2, N_turn2, H_turn2
+    phi_test = real(ystart(1))
+    !DEBUG
+    print*, "test:", phi_test
+    a_turn1 = 0e0_dp
+    N_turn1=0e0_dp
+    H_turn1=0e0_dp
+    a_turn2=0e0_dp
+    N_turn2=0e0_dp
+    H_turn2 = 0e0_dp
+
 
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
@@ -674,7 +690,13 @@ contains
 
        IF(ode_ps_output) THEN
 
-         IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) THEN ! if k<aH/eval_ps, then k<<aH
+         !DEBUG
+         if (potential_choice == 13 .and. &
+           all(turning_choice == 5)) then
+           call find_turning_scales()
+         end if
+
+         IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) THEN
 
            !MULTIFIELD
            IF (use_q) THEN
@@ -868,6 +890,62 @@ contains
 
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
+
+    !DEBUG
+    !Capture the first and second turn positions in N
+    !for two-knot QSF trajectory
+    subroutine find_turning_scales()
+      real(dp) :: phi_knot
+
+      phi_knot = vparams(4,2) + vparams(6,2)/ &
+        tan(vparams(5,2))
+      if ( phi(1) <= phi_knot .and. &
+        phi_test > phi_knot) then
+
+        a_turn1 = a_init*exp(x)
+        N_turn1 = x
+        H_turn1 = getH(phi,delphi)
+
+        !DEBUG
+        print*, "a_* H_* at turn1 =", a_turn1*H_turn1
+        print*, "a_* m_H at turn1 =", a_turn1*sqrt(10.0e0_dp**vparams(2,2))
+        print*, "k_* at turn1 =", a_turn1*H_turn1/Mpc2Mpl
+        print*, "k_m at turn1 =", a_turn1*sqrt(10.0e0_dp**vparams(2,2))/Mpc2Mpl
+        print*, "N at turn1 =", N_turn1
+        print*, "H at turn1 =", H_turn1
+        print*, "m_H/H at turn1 =",sqrt(10.0e0_dp**vparams(2,2))/ H_turn1
+        print*, "m_L/H at turn1 =",sqrt(10.0e0_dp**vparams(1,2))/ H_turn1
+        print*, "phi at turn1 =", phi(1)
+        print*, "----------------"
+
+      end if
+
+      phi_knot = vparams(4,2) - vparams(6,2)/ &
+        tan(vparams(5,2))
+      if ( phi(1) <= phi_knot .and. &
+        phi_test > phi_knot) then
+
+        a_turn2 = a_init*exp(x)
+        N_turn2 = x
+        H_turn2 = getH(phi,delphi)
+
+        !DEBUG
+        print*, "a_* H_* at turn2 =", a_turn2*H_turn2
+        print*, "a_* m_H at turn2 =", a_turn2*sqrt(10.0e0_dp**vparams(2,2))
+        print*, "k_* at turn2 =", a_turn2*H_turn2/Mpc2Mpl
+        print*, "k_m at turn2 =", a_turn2*sqrt(10.0e0_dp**vparams(2,2))/Mpc2Mpl
+        print*, "N at turn2 =", N_turn2
+        print*, "H at turn2 =", H_turn2
+        print*, "m_H/H at turn2 =",sqrt(10.0e0_dp**vparams(2,2))/ H_turn2
+        print*, "m_L/H at turn2 =",sqrt(10.0e0_dp**vparams(1,2))/ H_turn2
+        print*, "phi at turn2 =", phi(1)
+        print*, "----------------"
+
+      end if
+
+      phi_test = phi(1)
+
+    end subroutine find_turning_scales
 
   END SUBROUTINE odeint_c
 

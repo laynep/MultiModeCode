@@ -66,7 +66,8 @@ CONTAINS
     USE modpk_observables
     USE potential, ONLY: pot,powerspectrum, dVdphi, getH, getdHdalpha, field_bundle, getEps, &
       pot, d2Vdphi2
-    USE modpk_utils, ONLY : locate, polint, derivs, qderivs, rkqs_c, array_polint
+    USE modpk_utils, ONLY : derivs, qderivs, rkqs_c
+    use modpk_numerics, only : locate, polint, array_polint
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
     IMPLICIT NONE
 
@@ -125,7 +126,13 @@ CONTAINS
     !Evaluation scale
     k=kin*Mpc2Mpl
     powerspectrum_out%k=k
-    eval_ps = 5.0e2_dp !When to start evaluating P(k), k<aH/eval_ps
+
+    !When to start evaluating P(k), k<aH/eval_ps
+    if (num_inflaton==1) then
+      eval_ps = 5.0e2_dp
+    else
+      eval_ps = 1.0e0_dp
+    end if
     useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
 
     !How far inside the horizon to set the modes' (Bunch-Davies) IC; k = k_start*aH

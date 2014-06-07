@@ -12,6 +12,9 @@ program multimodecode
   use modpk_deltaN_SR
   use modpk_observables, only : observables
 
+  !DEBUG
+  use modpk_numerics
+
   implicit none
 
 
@@ -60,6 +63,26 @@ program multimodecode
   namelist /print_out/ out_opt, get_runningofrunning
 
   !------------------------------------------------
+
+  !DEBUG
+!  print*, "testing integration"
+!  allocate(turning_choice(1))
+!  turning_choice = 1
+!  num_inflaton = 2
+!  potential_choice = 15
+!  allocate(vparams(3,2))
+!  vparams(1,1) = -12.0e0_dp
+!  vparams(1,2) = -8.0e0_dp
+!  vparams(2,1) = 0e0_dp
+!  vparams(3,1) = 20e0_dp
+!
+!
+!#define XVECT (/4.0, 19.2/)
+!  print*, "V", pot(XVECT)
+!  print*, "dV", dVdphi(XVECT)
+!  print*, "d2V", d2Vdphi2(XVECT)
+!
+!  stop
 
   !Read initializing params from file
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
@@ -170,7 +193,6 @@ program multimodecode
       end do
 
     end subroutine get_full_pk
-
 
     subroutine allocate_vars()
 
@@ -461,6 +483,7 @@ program multimodecode
     !Calculate observables for the power spectrum, as well as fNL, using the
     !delta-N formalism in slow-roll
     subroutine calculate_SR_observables(observs_SR)
+      use modpk_numerics, only : locate, array_polint, polint
       type(observables), intent(inout) :: observs_SR
       integer :: j, i
       real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
@@ -534,6 +557,12 @@ program multimodecode
 
 	    !Set random seed
 	    call init_random_seed()
+!!DEBUG
+!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+!print*, "NOT USING RANDOM SEED"
+!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+!call random_seed(PUT=(/711641855,   711641892/))
+
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."

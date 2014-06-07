@@ -1,12 +1,12 @@
 MODULE potential
   USE modpkparams
   use internals, only : pi
+  use modpk_qsf
+  use modpk_numerics
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t,&
-       effective_V_choice, turning_choice, number_knots_qsfrandom, stand_dev_qsfrandom, &
-       knot_positions, knot_range_min, knot_range_max, custom_knot_range, d3Vdphi3
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t, d3Vdphi3
 
   public :: norm
   public :: bundle, field_bundle
@@ -20,18 +20,6 @@ MODULE potential
   end type bundle
 
   type(bundle) :: field_bundle
-
-  !For turning trajs
-  integer :: effective_V_choice
-  integer, dimension(:), allocatable :: number_knots_qsfrandom
-  real(dp), dimension(:), allocatable :: stand_dev_qsfrandom
-  real(dp), dimension(:,:,:), allocatable :: knot_positions
-  real(dp), dimension(:), allocatable :: knot_range_min, knot_range_max
-  logical :: custom_knot_range
-
-  !Need one choice for every heavy direction (assumes one light direction)
-  !Ref functions turning_function and derivs
-  integer, dimension(:), allocatable :: turning_choice
 
 
 CONTAINS
@@ -63,6 +51,9 @@ CONTAINS
     integer :: i,j, temp_choice
 
     real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
+
+    real(dp) :: m_light2, M_heavy2, param0, param_closest, dist,&
+      phi_light, phi_light0
 
     select case(potential_choice)
     case(1)
@@ -169,22 +160,6 @@ CONTAINS
 #define DELTAPHI (phi(i) - turning_function(PHI_I))
 #define EXPTERM exp( (-0.5e0_dp/alpha2(i))*(phi(i) - turning_function(PHI_I))**2)
 
-      !Check to see if too far outside valley in any massive field direction
-      !do i=2,num_inflaton
-      !  if ( DELTAPHI > 1e-1_dp .and. &
-      !    abs(DELTAPHI**3/ &
-      !    DELTAPHI**2)<0.5e0_dp) then
-
-      !    print*, "ERROR: Trajectory too far outside the valley for"
-      !    print*, "potential_choice=",potential_choice
-      !    print*, "to be applicable."
-      !    print*, "Phi=",phi
-      !    stop
-      !  end if
-      !end do
-
-      !print*, "philight", phi(1)
-
       do i=2, num_inflaton
         V_potential = V_potential - lambda4(i)*&
           (EXPTERM  - 1.0e0_dp)
@@ -213,6 +188,67 @@ CONTAINS
             (1.0e0_dp + step_size(i)* &
             tanh( (phi(i)-location_phi(i))/step_slope(i)))
       end do
+
+    case(15)
+      !"Numerical" QSF trajectory
+      !(1/2)m_L^2 phi_L^2 + (1/2)M_heavy^2 D^2
+      !for D^2 = MIN( sum_i (phi_i - funct_i(param))^2; wrt param)
+      !Where param_min is found numerically
+      m_light2 = 10.0e0_dp**vparams(1,1)
+      M_heavy2 = 10.0e0_dp**vparams(1,2)
+      param0 = vparams(2,1)
+      phi_light0 = vparams(3,1)
+
+!DEBUG
+!print*, "GETTING HERE"
+
+      !Initialize if first time
+      if (.not. qsf_runref%traj_init) then
+        !Integrate through traj and set-up interpolation if first time
+        call qsf_runref%initialize_traj(phi_light0,param0)
+
+        !Find the initial param that coincides with setting
+        !IC in minimum of valley (dist=0) with phi_light=phi_light0
+        call qsf_runref%get_init_param()
+      end if
+
+!DEBUG
+!print*, "phi_light0", phi_light0
+!print*, "init param", qsf_runref%param
+
+
+      !Find the parameter that gives the minimum distance
+      !between phi and the parametrized curve
+      if (allocated(qsf_runref%phi) .and. &
+        size(qsf_runref%phi)/=num_inflaton) then
+          deallocate(qsf_runref%phi)
+          allocate(qsf_runref%phi(num_inflaton))
+      end if
+      qsf_runref%phi = phi
+
+
+      !Closest approach to parameterized curve
+      param_closest = zero_finder(distance_deriv, &
+        distance_2deriv, qsf_runref%param)
+      dist = distance(param_closest)
+
+      !Reset param guess for next time through
+      qsf_runref%param = param_closest
+
+      !Get the integrated distance this closest point is up the curve
+      phi_light = qsf_runref%phi_light(param_closest)
+
+      V_potential = 0.5e0_dp*m_light2*phi_light**2 &
+        + 0.5e0_dp*M_heavy2*dist**2
+
+      !DEBUG
+      !print*, "param_closest", param_closest
+      !print*, "phi", phi
+      !print*, "funct(param)", turning_function_parametric(param_closest)
+      !print*, "dist", dist
+      !print*, "V", V_potential
+
+
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
@@ -246,6 +282,9 @@ CONTAINS
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
 
     real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
+
+    real(dp), dimension(size(phi)) :: stepsize
+    real(dp), dimension(:), allocatable :: numderiv
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -386,6 +425,12 @@ CONTAINS
 
          end do
 
+       case(15)
+         !Numerical QSF
+         stepsize = 1.0e-6_dp
+         call num_first_deriv(pot, phi, stepsize, numderiv)
+         first_deriv = numderiv
+
 
        !END MULTIFIELD
        case default
@@ -423,6 +468,8 @@ CONTAINS
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
 
     real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
+    real(dp), dimension(size(phi)) :: stepsize
+    real(dp), dimension(:,:), allocatable :: numderiv
 
     if (vnderivs) then
        !MULTIFIELD
@@ -611,6 +658,12 @@ CONTAINS
 
          end do
 
+       case(15)
+         !Numerical QSF
+         stepsize = 1.0e-6_dp
+         call num_second_deriv(pot, phi, stepsize, numderiv)
+         second_deriv = numderiv
+
        case default
           write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
@@ -650,305 +703,6 @@ CONTAINS
   end function d3Vdphi3
 
 
-  !Function that parameterizes the turn for quasi--single-field trajectories
-  !funct_i(phi_light)
-  !Function parameters passed here via vparams(4+,:)
-  real(dp) function turning_function(phi, heavy_field_index, turning_choice)
-    real(dp), intent(in) :: phi
-    integer, intent(in) :: turning_choice, heavy_field_index
-
-    !Hyperbola params
-    real(dp) :: offset_phi, asympt_angle, focal_length
-
-    !hyperbolic tan params
-    real(dp) :: turn_magnitude, turn_sharpness
-
-    !random traj
-    integer :: i
-    real(dp) :: phi_knot1, phi_knot2
-    real(dp) :: chi_knot1, chi_knot2
-    real(dp) :: low_endpoint, high_endpoint
-    real(dp) :: slope
-    real(dp) :: range
-    !heavy_field_index => which heavy field? for picking (light,heavy_i) direction
-    !  This is the "i" in funct_i => need heavy_field_index>1
-
-    !turning_choice => pick a function for turn in (light,heavy_i) direction
-
-    !Parameters for turning_function are set in:
-    !vparams(j+4,heavy_field_index) = j^th param for turn in heavy_field_index
-    !   direction
-
-    turning_function = 0e0_dp
-
-    if (heavy_field_index <2) then
-      print*, "Set heavy_field_index>1. heavy_field_index=", heavy_field_index
-      stop
-    end if
-
-    select case(turning_choice)
-    case(1)
-      !No turn, effectively single-field
-      turning_function = 0e0_dp
-    case(2)
-      !North-facing hyperbola, symm around y-axis, min at phi=0
-
-      if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
-      end if
-
-      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
-      asympt_angle = vparams(5,heavy_field_index) !turn angle
-      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
-
-      turning_function = sqrt( (focal_length**2)*(sin(asympt_angle)**2) + &
-        ((phi - offset_phi)**2) * (tan(asympt_angle)**2) ) &
-        -focal_length*sin(asympt_angle)
-    case(3)
-      !hyperbolic tangent
-
-      if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
-      end if
-
-      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
-      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
-      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
-
-      turning_function = turn_magnitude*tanh(turn_sharpness*(phi - offset_phi))
-
-    case(4)
-      !Random turning trajectory
-
-      call find_bounding_knots(phi, heavy_field_index, &
-        phi_knot1, phi_knot2, &
-        chi_knot1, chi_knot2)
-
-      slope = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
-
-      turning_function = slope*(phi - phi_knot1) + chi_knot1
-
-      !print*, "phi", phi
-      !print*, "slope", slope
-      !print*, "phi_knot1", phi_knot1
-      !print*, "phi_knot2", phi_knot2
-      !print*, "chi_knot1", chi_knot1
-      !print*, "chi_knot2", chi_knot2
-      !print*, "turning_function", turning_function
-
-    case(5)
-      !Two-knot trajectory
-       if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
-       end if
-
-       offset_phi = vparams(4,2)
-       slope = tan(vparams(5,2))
-       range = vparams(6,2)*cos(vparams(5,2))
-
-       phi_knot2 = offset_phi + range/2.0e0_dp
-       chi_knot2 = vparams(6,2)*sin(vparams(5,2))/2.0e0_dp
-       phi_knot1 = offset_phi - range/2.0e0_dp
-       chi_knot1 = -vparams(6,2)*sin(vparams(5,2))/2.0e0_dp
-       
-       if (phi > phi_knot2) then
-          turning_function = chi_knot2
-        else if (phi > phi_knot1) then
-           turning_function = slope*(phi-offset_phi)
-        else 
-           turning_function = chi_knot1
-       end if 
-        !print*, "phi", phi
-      !print*, "slope", slope
-      !print*, "phi_knot1", phi_knot1
-      !print*, "phi_knot2", phi_knot2
-      !print*, "chi_knot1", chi_knot1
-      !print*, "chi_knot2", chi_knot2
-      !print*, "turning_function", turning_function
-    case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
-    end select
-
-  end function turning_function
-
-  !Function that parameterizes the turn for quasi--single-field trajectories
-  real(dp) function dturndphi(phi, heavy_field_index, turning_choice)
-    real(dp), intent(in) :: phi
-    integer, intent(in) :: turning_choice, heavy_field_index
-
-    !Hyperbola params
-    real(dp) :: offset_phi, asympt_angle, focal_length
-
-    !hyperbolic tan params
-    real(dp) :: turn_magnitude, turn_sharpness
-
-    !Random traj
-    real(dp) :: phi_knot1, phi_knot2
-    real(dp) :: chi_knot1, chi_knot2
-
-    dturndphi = 0e0_dp
-
-
-    select case(turning_choice)
-    case(1)
-      dturndphi = 0e0_dp
-    case(2)
-      !North-facing hyperbola, symm around y-axis, min at phi=0
-
-      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
-      asympt_angle = vparams(5,heavy_field_index) !turn angle
-      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
-
-#define funct turning_function(phi,heavy_field_index,turning_choice)
-      dturndphi = (tan(asympt_angle)**2)* &
-        (phi - offset_phi)/(funct+focal_length*sin(asympt_angle))
-#undef funct
-
-    case(3)
-      !hyperbolic tan, centred at chi_i = 0 and phi= offset_phi
-
-      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
-      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
-      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
-
-      dturndphi = turn_magnitude*turn_sharpness/(cosh(turn_sharpness*(phi - offset_phi))**2)
-
-    case(4)
-      !Random turning trajectories
-
-      call find_bounding_knots(phi, heavy_field_index, &
-        phi_knot1, phi_knot2, &
-        chi_knot1, chi_knot2)
-
-      dturndphi = (chi_knot2 - chi_knot1)/(phi_knot2 - phi_knot1)
-   
-   case(5)
-      !Two-knot trajectory
-      
-       if (phi>phi_knot2) then
-          dturndphi = 0e0_dp
-        else if (phi>phi_knot1) then
-           dturndphi = tan(vparams(5,2))
-        else 
-           dturndphi = 0e0_dp
-       end if 
-
-    case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
-    end select
-
-
-  end function dturndphi
-
-  !Function that parameterizes the turn for quasi--single-field trajectories
-  real(dp) function d2turndphi2(phi, heavy_field_index, turning_choice)
-    real(dp), intent(in) :: phi
-    integer, intent(in) :: turning_choice, heavy_field_index
-
-    !Hyperbola params
-    real(dp) :: offset_phi, asympt_angle, focal_length
-
-    !hyperbolic tan params
-    real(dp) :: turn_magnitude, turn_sharpness
-
-    d2turndphi2=0e0_dp
-
-    select case(turning_choice)
-    case(1)
-      d2turndphi2 = 0e0_dp
-
-    case(2)
-      !North-facing hyperbola, symm around y-axis, min at phi=0
-
-      offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
-      asympt_angle = vparams(5,heavy_field_index) !turn angle
-      focal_length = vparams(6,heavy_field_index) !dist focal length (sharpness)
-
-#define funct turning_function(phi,heavy_field_index,turning_choice)
-#define dfunct dturndphi(phi,heavy_field_index,turning_choice)
-
-      d2turndphi2 = ((tan(asympt_angle)**2)/&
-        (funct+focal_length*sin(asympt_angle))) * &
-        (1.0e0_dp  - (phi-offset_phi)*&
-        (dfunct/ (funct &
-        +focal_length*sin(asympt_angle))))
-
-#undef funct
-#undef dfunct
-
-    case(3)
-      !hyperbolic tan, centred at chi_i = 0 and phi= offset_phi
-
-      offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
-      turn_magnitude = vparams(5,heavy_field_index) !the asymptotic displacement in the heavy direction
-      turn_sharpness = vparams(6,heavy_field_index) !the sharpness of the turn
-
-      d2turndphi2 = -2.0e0_dp*turn_magnitude*(turn_sharpness**2)* &
-                     sinh(turn_sharpness*(phi-offset_phi))/(cosh(turn_sharpness*(phi-offset_phi))**3)
-    case(4)
-      !Random turning trajectories
-      d2turndphi2 = 0e0_dp
-
-    case(5)
-       !two-knot trajectory
-      d2turndphi2 = 0e0_dp
-    case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
-    end select
-
-
-  end function d2turndphi2
-
-
-  !For qsf_random
-  !Find which knots phi is between
-  subroutine find_bounding_knots(phi, heavy_field_index, &
-      phiknot_low, phiknot_high, &
-      heavyknot_low, heavyknot_high)
-    real(dp), intent(in) :: phi
-    real(dp), intent(out) :: phiknot_low, phiknot_high
-    real(dp), intent(out) :: heavyknot_low, heavyknot_high
-    integer, intent(in) :: heavy_field_index
-    integer :: i
-
-#define HEAVY_INDX (heavy_field_index-1)
-
-    phiknot_low = knot_positions(HEAVY_INDX,&
-      number_knots_qsfrandom(HEAVY_INDX),&
-      1)
-    phiknot_high = phi_init0(1)
-
-    heavyknot_low = knot_positions(HEAVY_INDX,&
-      number_knots_qsfrandom(HEAVY_INDX),&
-      2)
-    heavyknot_high = 0e0_dp
-
-    do i=1,number_knots_qsfrandom(HEAVY_INDX)
-      if (phi < knot_positions(HEAVY_INDX,i,1)) then
-        if (i==1) then
-          phiknot_low = 0e0_dp  !ending condition
-          heavyknot_low = 0e0_dp  !ending condition
-        else
-          phiknot_low = knot_positions(HEAVY_INDX,i-1,1)
-          heavyknot_low = knot_positions(HEAVY_INDX,i-1,2)
-        end if
-        phiknot_high = knot_positions(HEAVY_INDX,i,1)
-        heavyknot_high = knot_positions(HEAVY_INDX,i,2)
-        exit
-
-      !elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
-      !  print*, "ERROR: In turning_function, exactly at knot-point."
-        !DEBUG
-      !  stop
-      end if
-    end do
-
-#undef HEAVY_INDX
-
-  end subroutine find_bounding_knots
 
 
   FUNCTION initialphi(phi0)
