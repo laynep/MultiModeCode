@@ -219,9 +219,12 @@ CONTAINS
 
       !Find the parameter that gives the minimum distance
       !between phi and the parametrized curve
-      if (allocated(qsf_runref%phi) .and. &
-        size(qsf_runref%phi)/=num_inflaton) then
+      if (allocated(qsf_runref%phi)) then
+        if ( size(qsf_runref%phi)/=num_inflaton) then
           deallocate(qsf_runref%phi)
+          allocate(qsf_runref%phi(num_inflaton))
+        end if
+      else
           allocate(qsf_runref%phi(num_inflaton))
       end if
       qsf_runref%phi = phi

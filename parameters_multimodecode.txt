@@ -6,7 +6,7 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 2
-  potential_choice = 13
+  potential_choice = 15
   vparam_rows = 6
   more_potential_params = .true.
 
@@ -34,7 +34,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 &more_params
   effective_V_choice = 1
-  turning_choice = 5
+  turning_choice = 1
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
 

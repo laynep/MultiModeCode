@@ -14,6 +14,7 @@ program multimodecode
 
   !DEBUG
   use modpk_numerics
+  use modpk_rng
 
   implicit none
 
@@ -41,6 +42,11 @@ program multimodecode
   logical :: use_horiz_cross_approx
 
   integer :: pfile
+
+  !DEBUG
+  real(dp), dimension(20000,1) :: dataset
+  real(dp), dimension(:,:), allocatable :: hist
+  integer :: j
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -83,6 +89,34 @@ program multimodecode
 !  print*, "d2V", d2Vdphi2(XVECT)
 !
 !  stop
+
+!DEBUG
+!print*, "testing histogram"
+!call init_random_seed_serial()
+!do i=1,size(dataset,1)
+!do j=1,size(dataset,2)
+!  call random_number(dataset(i,j))
+!end do; end do
+!dataset=dataset*10
+!hist = histogram_Nd(dataset,method=1,norm=0)
+!print*, hist(size(hist,1),:)
+!print*, sum(hist(:,size(hist,2)))
+!hist = histogram_Nd(dataset,method=1,norm=1)
+!print*, hist(size(hist,1),:)
+!print*, sum(hist(:,size(hist,2))*0.37)
+!hist = histogram_Nd(dataset,method=1,norm=2)
+!print*, hist(size(hist,1),:)
+!print*, sum(hist(:,size(hist,2)))
+!stop
+
+!hist = histogram_Nd(dataset,method=2)
+!print*, hist(size(hist,1),:)
+!hist = histogram_Nd(dataset,method=3)
+!print*, hist(size(hist,1),:)
+!hist = histogram_Nd(dataset,method=4)
+!print*, hist(size(hist,1),:)
+!
+!stop
 
   !Read initializing params from file
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
