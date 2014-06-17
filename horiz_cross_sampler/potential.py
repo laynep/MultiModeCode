@@ -8,8 +8,7 @@ import numpy as np
 import sys
 
 def check_choice(choice):
-    print "Choice=", choice, "not implemented"
-    sys.exit()
+    TypeError("Model choice ", choice, "not implemented")
 
 def potential(phi, choice="Nquad", **params):
 
@@ -17,7 +16,6 @@ def potential(phi, choice="Nquad", **params):
         return 0.5*np.sum(params["m2"]*phi**2)
     else:
         check_choice(choice)
-
 
 def dVdphi(phi,choice="Nquad",**params):
 
@@ -29,7 +27,8 @@ def dVdphi(phi,choice="Nquad",**params):
 def d2Vdphi2(phi,choice="Nquad",**params):
 
     if choice == "Nquad":
-        return params["m2"]*np.identity(phi.size)
+        #return params["m2"]*np.identity(phi.size)
+        return np.diag(params["m2"])
     else:
         check_choice(choice)
 
@@ -48,9 +47,3 @@ def V_i(phi, choice="Nquad",**params):
         return 0.5*params["m2"]*phi**2
     else:
         check_choice(choice)
-
-
-def H_horiz_cross(scale, choice="Nquad",**params):
-    """Hubble parameter as scale leaves horizon."""
-    print "test H_horiz_cross"
-    return

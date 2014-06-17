@@ -6,22 +6,14 @@ Module that defines all the classes, etc for inflationary calculations.
 
 import numpy as np
 import potential as pot
-import hc_sample as sample
 
 import sys
 
 
 class inflation_model:
     """
-Class for inflationary models, contains a potential with derivatives, methods to set parameters (priors), and methods to calculate observables.
+Class for inflationary models, contains a potential with derivatives,  and methods to calculate observables.
     """
-
-    model = None
-    nfields = None
-
-    params = {
-            "Nquad":{ "m2":None }
-            }
 
     def __init__(self, model, nfields):
         self.model = model
@@ -29,7 +21,9 @@ Class for inflationary models, contains a potential with derivatives, methods to
 
     def load_params(self, **params):
         """Load the model parameters."""
+        self.params = {}
         self.params[self.model] = params
+
 
     #Wrappers to potential.py
     def V(self,phi):
@@ -69,19 +63,18 @@ Class for inflationary models, contains a potential with derivatives, methods to
 
 
 
-
 class deltaN_model(inflation_model):
     """
     The \delta N formulation for observables from Vernizzi-Wands (astro-ph/0603799) and Battefeld-Easther (astro-ph/0610296).  Requires sum-separable potential and assumes massless, Gaussian random fields at horizon crossing.  If using the horizon crossing approximation (HCA), then ignores the final surface.
     """
 
-    HCA = False
     phi_zero = None
 
     def __init__(self, HC_approx, **infl_args):
         inflation_model.__init__(self,**infl_args) #init the parent class
         self.HCA = HC_approx
-        self.phi_zero = np.zeros(self.nfields)
+        #self.phi_zero = np.zeros(self.nfields)
+        #self.phi_zero = np.ones(self.nfields)*1e-2
 
 
     def Z_i(self, phi_end=phi_zero):
@@ -109,15 +102,18 @@ class deltaN_model(inflation_model):
 
             delta = np.identity(phi_hc.size)
 
+
             mat1 = np.ones((phi_hc.size,phi_hc.size))*(eps_end/eps_t_end) - delta
             mat1=mat1.T
+
             mat2 = eps_end*(1.0-eta_end/eps_t_end)
 
             nfields = xrange(self.nfields)
 
+            #Terrible...
             dZ_jkl = np.array([[[
-                np.sqrt(2.0/eps_end[k])*
-                mat1[l,j]*mat1[k,j]*mat2[j]
+                np.sqrt(2.0/eps_end[k])* \
+                mat1[l,j]*mat1[k,j]*mat2[j] \
                 for k in nfields]
                 for l in nfields]
                 for j in nfields])
@@ -146,14 +142,11 @@ class deltaN_model(inflation_model):
 
         delta = np.identity(self.nfields)
 
-        nfields = xrange(self.nfields)
-        d2N = np.array(
-                [[delta[k,l]*
-                    (1.0 -(eta_hc[l]/2.0/eps_hc[l])*
-                        (V_i_hc[l]+Z_i[l])/V_hc) +
-                (1.0/np.sqrt(2.0*eps_hc[l])/V_hc)*dZ_ij[l,k]
-                for k in nfields]
-                for l in nfields])
+        coeff = 0.5/V_hc
+        coeff2 = 1.0/np.sqrt(2.0)/V_hc
+        d2N = np.array( delta - coeff*np.diag(eta_hc*V_i_hc/eps_hc) \
+                - coeff*np.diag(eta_hc*Z_i/eps_hc) \
+                + coeff2*np.dot( np.diag(1.0/np.sqrt(eps_hc)),dZ_ij))
 
         return d2N
 
@@ -175,11 +168,12 @@ class deltaN_model(inflation_model):
         dN = self.dNdphi(phi_hc,phi_end)
         return 8.0/np.sum(dN*dN)
 
-    def n_t(self, phi_hc):
+    def n_t(self, phi_hc, phi_end=phi_zero):
         """Tensor spectral tilt."""
 
-        eps_i = self.eps_i(phi_hc)
-        return -2.0*np.sum(eps_i)/(1.0 - np.sum(eps_i))
+        eps = np.sum(self.eps_i(phi_hc))
+        return -2.0*eps/(1.0 - eps)
+        #return -2.0*eps
 
     def f_NL(self, phi_hc, phi_end=phi_zero):
         """Local non-Gaussianity parameter f_NL for the bispectrum with phi ~ f_NL[ phi^2 - <phi^2>]."""
@@ -211,8 +205,8 @@ class deltaN_model(inflation_model):
         dN = self.dNdphi(phi_hc,phi_end)
         V = self.V(phi_hc)
 
-        ns = np.einsum('ij,i,j', d2V, dV, dV)
-        ns *= (1.0/V/np.sum(dN*dN))
+        ns = np.einsum('ij,i,j', d2V, dN, dN)
+        ns *= (2.0/V/np.sum(dN*dN))
 
         ns += 1.0 - 2.0*eps - (2.0/sum(dN*dN))
 
@@ -227,36 +221,116 @@ class deltaN_model(inflation_model):
         d3V = self.d3V(phi_hc)
         dN = self.dNdphi(phi_hc,phi_end)
 
-        term = []
-        term.append(np.einsum('a,b,ab', dV, dV, d2V)*(-2.0/V**3))
+        dN2 = np.sum(dN*dN)
 
-        term.append(np.einsum('a,a', dV, dV)**2*(2.0/V**4))
+        alpha_s = (-2.0/V**3)*np.einsum('a,b,ab', dV, dV, d2V) \
+        + (2.0/V**4)*np.einsum('a,a', dV, dV)**2 \
+        + (4.0/V/dN2**2)*(V - np.einsum('a,b,ab',dN,dN,d2V))**2 \
+        + (2.0/V/dN2)*np.einsum('a,b,c,abc',dN,dN,dV,d3V) \
+        + (4.0/V/dN2)* (np.einsum('c,b,bc',dV,dN,d2V) - \
+                np.einsum('a,ac,b,bc',dN,d2V,dN,d2V))
 
-        term.append((4.0/V/np.sum(dN*dN)**2)*(V - np.einsum('a,b,ab',dN,dN,d2V))**2)
-
-        term.append((2.0/V/np.sum(dN*dN))*np.einsum('a,b,c,abc',dN,dN,dV,d3V))
-
-        term.append((4.0/V/np.sum(dN*dN))* (np.einsum('c,b,bc',dV,dN,d2V) -
-                np.einsum('a,ac,b,bc',dN,d2V,dN,d2V)))
-
-        return sum(term)
+        return alpha_s
 
 
-    def calc_observs(self,phi_hc,phi_end=phi_zero):
+    def calc_observs(self, phi_hc,phi_end=phi_zero, obs_to_calc=None):
+        """Calculate the slow-roll observables for a given value of the fields at horizon crossing and the end of inflation (ignored if using horizon crossing approximation)."""
+
+        obs_dict={"PR":self.PR,
+                "r":self.r,
+                "n_s":self.n_s,
+                "alpha_s":self.alpha_s,
+                "n_t":self.n_t,
+                "f_NL":self.f_NL,
+                "tau_NL":self.tau_NL}
+
+        if obs_to_calc == None:
+            obs_to_calc = obs_dict.keys()
+
         self.observ={}
 
-        self.observ["PR"]=self.PR(phi_hc, phi_end)
-        self.observ["r"]=self.r(phi_hc,phi_end)
-        self.observ["n_s"]=self.n_s(phi_hc,phi_end)
-        self.observ["alpha_s"]=self.alpha_s(phi_hc,phi_end)
-        self.observ["n_t"]=self.n_t(phi_hc)
-        self.observ["f_NL"]=self.f_NL(phi_hc,phi_end)
-        self.observ["tau_NL"]=self.tau_NL(phi_hc,phi_end)
+        for key in obs_to_calc:
+            self.observ[key]=obs_dict[key](phi_hc,phi_end)
 
 
-class universe(inflation_model):
+class universe(deltaN_model):
     """
-Realization of a universe given an inflationary model.
-Extends inflation_model to include a set of parameters and resulting observables.
+Realization of a universe given an inflationary model.  Extends inflation_model to include methods to set parameters (priors) and resulting observables.
+
+Samples the horizon crossing surface for N-quadratic inflation and uses the horizon crossing approximation (HCA) to calculate observables in the \delta N formalism.  Only works for N-quadratic at the moment.
+
+Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for the observables using a histogram estimator and can calculate the derivatives with respect to the "prior parameters" of the expected value of the log-likelihood.
     """
+
+
+    def __init__(self, sampler, N_pivot=55.0, HC_approx=True, **infl_args):
+        deltaN_model.__init__(self,HC_approx,**infl_args)
+
+        self.N_pivot = N_pivot
+
+        self.load_sampler(sampler)
+
+    #Sampling routines
+    def load_sampler(self, sampler):
+        """Load the sampling routines."""
+
+        if self.model != "Nquad":
+            raise TypeError("Model not implemented in sampler.")
+
+        #Choices for sampling techniques
+        sampling_techn = {
+                "constant":self.constant,
+                "MP_and_uniformsphere":self.MP_and_uniformsphere
+                }
+
+        self.sampler = sampling_techn[sampler]
+
+    def get_new_params(self, **samp_params):
+        """Get a new set of parameters and horizon crossing field values."""
+
+        if self.model != "Nquad":
+            raise TypeError("Trying to set horizon crossing field value \
+                    in model that isn't N-quadratic.  Not implemented.")
+
+        params, self.phi_hc = self.sampler(**samp_params)
+
+        self.load_params(m2=params)
+
+
+    def constant(self):
+        """Returns the initial conditions and masses set to a constant value."""
+
+        phi = np.sqrt(4.0*self.N_pivot/self.nfields)
+        phi = np.array([phi for i in xrange(self.nfields)])
+
+        phi_end = 1e-2*phi
+
+        m2 = 10.0**np.array([-10.0+2*i for i in xrange(self.nfields)])
+
+        return m2, phi
+
+    def MP_and_uniformsphere(self,  nmoduli, radius, m_avg=1.5e-5):
+        """ Samples the Marcenko-Pasteur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
+
+Does a uniform sampling of a sphere with given radius for initial conditions."""
+
+        #Masses:
+        #GR Matrix
+        #sigma^2 = <m^2> ~ (1.5e-5 Mpl)^2
+        sigma = m_avg
+
+        mat=np.random.normal(0.0, sigma,
+                (nmoduli, self.nfields))
+        mat=np.dot(mat.T,mat)
+        m2, eigvect = np.linalg.eigh(mat)
+
+        #ICs on sphere
+        mat = np.random.normal(0.0, 1.0, self.nfields)
+        ICs = (radius/np.sqrt(np.sum(mat*mat)))*mat
+
+        return m2, ICs
+
+
+
+
 
