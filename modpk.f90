@@ -220,7 +220,7 @@ CONTAINS
     !h1=0.1 !guessed start stepsize
     h1=1e-5 !guessed start stepsize
 
-    ![ LP: ] Some fast-roll cases need high accuracy; activate conditionally in odeint_c
+    !Some fast-roll cases need high accuracy; activate conditionally in odeint_c
     accuracy=1.0e-7_dp !has a big impact on the speed of the code
 
     hmin=1e-30_dp !minimum stepsize

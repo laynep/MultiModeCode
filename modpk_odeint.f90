@@ -655,23 +655,7 @@ contains
        delphi = real(y(num_inflaton+1 : 2*num_inflaton),kind=dp)
        dotphi = sqrt(dot_product(delphi, delphi))
 
-       if (out_opt%modes) then
-         if (.not. use_q) then
-           write(out_opt%modeout(1),'(100E30.22)') &
-             x - (n_tot - N_pivot), &
-             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-           write(out_opt%modeout(2),'(100E30.22)') &
-             x - (n_tot - N_pivot),&
-             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-         else
-           write(out_opt%modeout(3),'(100E30.22)') &
-             x - (n_tot - N_pivot), &
-             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-           write(out_opt%modeout(4),'(100E30.22)') &
-             x - (n_tot - N_pivot),&
-             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-         end if
-       end if
+       if (out_opt%modes) call print_modes()
 
        scalefac = a_init*exp(x)
 
@@ -709,9 +693,9 @@ contains
              call powerspectrum(qij, dqij, phi, delphi, &
                scalefac, power_internal, using_q=.true.)
 
-
              power_internal%tensor=tensorpower(y(index_tensor_y) &
                 *scalefac/a_switch, scalefac)
+
            ELSE
 
              psi = y(index_ptb_y:index_ptb_vel_y-1)
@@ -855,6 +839,26 @@ contains
     stop
 
   contains
+
+    subroutine print_modes()
+
+         if (.not. use_q) then
+           write(out_opt%modeout(1),'(100E30.22)') &
+             x - (n_tot - N_pivot), &
+             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+           write(out_opt%modeout(2),'(100E30.22)') &
+             x - (n_tot - N_pivot),&
+             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+         else
+           write(out_opt%modeout(3),'(100E30.22)') &
+             x - (n_tot - N_pivot), &
+             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+           write(out_opt%modeout(4),'(100E30.22)') &
+             x - (n_tot - N_pivot),&
+             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+         end if
+
+    end subroutine print_modes
 
     SUBROUTINE save_a_step
       USE modpkparams

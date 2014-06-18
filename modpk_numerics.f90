@@ -413,7 +413,7 @@ module modpk_numerics
     integer :: ii
 
     xrange = xend - x0
-    dx = xrange/real(nsteps,dp)
+    dx = xrange/dble(nsteps)
 
     area = 0e0_dp
     x_a = x0
@@ -445,10 +445,7 @@ module modpk_numerics
     real(dp), dimension(size(dataset,2)) :: bin, bin_max
     integer(dp) :: ndata
     integer :: ii, jj, kk
-    integer :: base
 
-    real(dp), dimension(:), allocatable :: vect
-    integer :: chunk, nchunks, nvects
 
     integer, dimension(:), allocatable :: bincount
 
@@ -473,40 +470,15 @@ module modpk_numerics
 
     !NB: Some binsize techn give estimates of binsize, not bin #
     !Minor rescale of binsize to make sure fits dataset perfectly
-    binsize = (data_max-data_min)/real(numb_bins,dp)
+    binsize = (data_max-data_min)/dble(numb_bins)
 
 
     !Make the histogram array
     allocate(hist(product(numb_bins),1+ndimns))
     hist =0e0_dp
 
-
     !Load bin positions
-    do ii=ndimns,1,-1
-      chunk=1
-      if (ii<ndimns) then
-        do jj=ii, ndimns-1
-          chunk =  chunk*numb_bins(jj+1)
-        end do
-      end if
-
-      if (allocated(vect)) deallocate(vect)
-      allocate(vect(numb_bins(ii)))
-      do jj=0, numb_bins(ii)-1
-        vect(jj+1) = real(jj, dp)
-      end do
-      nvects = product(numb_bins)/numb_bins(ii)/chunk
-
-      base = 0
-      do kk=1, nvects
-        do jj=1,numb_bins(ii)
-          hist((jj-1)*chunk+1+base:jj*chunk+base ,ii) = &
-            vect(jj)*binsize(ii) + data_min(ii)
-        end do
-        base = base + numb_bins(ii)*chunk
-      end do
-
-    end do
+    call make_grid(numb_bins, data_max, data_min, hist)
 
     !Count the number of datapoints in each bin
     allocate(bincount(product(numb_bins)))
@@ -537,8 +509,6 @@ module modpk_numerics
     else
       hist(:,ndimns+1) = bincount(:)
     end if
-
-
 
 
   end function histogram_Nd
@@ -608,6 +578,57 @@ module modpk_numerics
 
 
   end function determine_binsize
+
+  !Makes a grid of points between data_max and data_min where there are
+  !(numb_bins) of bins of size binsize
+  pure subroutine make_grid(numb_bins,  &
+      data_max, data_min, grid)
+    implicit none
+
+    integer(dp), dimension(:), intent(in) :: numb_bins
+    real(dp), dimension(size(numb_bins)) :: binsize
+    real(dp), dimension(:,:), intent(out) :: grid
+    integer :: ii, jj, kk
+    integer :: ndimns
+
+    integer :: chunk, nchunks, nvects
+
+    real(dp), dimension(:), allocatable :: vect
+    integer :: base
+    real(dp), dimension(size(numb_bins)), intent(in) :: data_max, data_min
+
+    ndimns = size(numb_bins)
+
+    binsize = (data_max-data_min)/dble(numb_bins)
+
+
+    do ii=ndimns,1,-1
+      chunk=1
+      if (ii<ndimns) then
+        do jj=ii, ndimns-1
+          chunk =  chunk*numb_bins(jj+1)
+        end do
+      end if
+
+      if (allocated(vect)) deallocate(vect)
+      allocate(vect(numb_bins(ii)))
+      do jj=0, numb_bins(ii)-1
+        vect(jj+1) = dble(jj)
+      end do
+      nvects = product(numb_bins)/numb_bins(ii)/chunk
+
+      base = 0
+      do kk=1, nvects
+        do jj=1,numb_bins(ii)
+          grid((jj-1)*chunk+1+base:jj*chunk+base ,ii) = &
+            vect(jj)*binsize(ii) + data_min(ii)
+        end do
+        base = base + numb_bins(ii)*chunk
+      end do
+
+    end do
+
+  end subroutine
 
   !Simple arithmetic mean
   pure function mean(dataset, weight)

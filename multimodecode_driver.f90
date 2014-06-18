@@ -44,9 +44,12 @@ program multimodecode
   integer :: pfile
 
   !DEBUG
-  real(dp), dimension(20000,1) :: dataset
+  real(dp), dimension(20001,1) :: dataset
   real(dp), dimension(:,:), allocatable :: hist
   integer :: j
+  real(dp) :: logP
+  real(dp), dimension(size(dataset,2)) :: observ, stepsize
+  real(dp), dimension(:,:), allocatable :: g_mu_nu
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -92,31 +95,38 @@ program multimodecode
 
 !DEBUG
 !print*, "testing histogram"
+
 !call init_random_seed_serial()
 !do i=1,size(dataset,1)
 !do j=1,size(dataset,2)
 !  call random_number(dataset(i,j))
 !end do; end do
-!dataset=dataset*10
-!hist = histogram_Nd(dataset,method=1,norm=0)
-!print*, hist(size(hist,1),:)
-!print*, sum(hist(:,size(hist,2)))
-!hist = histogram_Nd(dataset,method=1,norm=1)
-!print*, hist(size(hist,1),:)
-!print*, sum(hist(:,size(hist,2))*0.37)
-!hist = histogram_Nd(dataset,method=1,norm=2)
-!print*, hist(size(hist,1),:)
-!print*, sum(hist(:,size(hist,2)))
-!stop
+!dataset=dataset
 
-!hist = histogram_Nd(dataset,method=2)
-!print*, hist(size(hist,1),:)
-!hist = histogram_Nd(dataset,method=3)
-!print*, hist(size(hist,1),:)
-!hist = histogram_Nd(dataset,method=4)
-!print*, hist(size(hist,1),:)
+!hist = histogram_Nd(dataset,method=1,norm=1)
+!do i=1,size(hist,1)
+!  write(*,'(10e15.7)'), hist(i,:)
+!end do
+
+!observ = (/0.9999,0.5/)
+!logP = logP_of_observ(observ,hist)
+
+!print*, "this is logP", logP
+
+!DEBUG
+!print*, "testing fisher_rao_metric"
+!observ = (/1.0/)
+!stepsize = 1e-3
+!
+!g_mu_nu = fisher_rao_metric(observ, stepsize)
+!
+!
 !
 !stop
+
+
+
+
 
   !Read initializing params from file
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
@@ -213,7 +223,7 @@ program multimodecode
 
       !Make the arrays for k values to sample
       allocate(k_input(steps))
-      incr=(kmax/kmin)**(1/real(steps-1))
+      incr=(kmax/kmin)**(1/dble(steps-1))
       do i=1,steps
         k_input(i) = kmin*incr**(i-1)
       end do

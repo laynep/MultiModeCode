@@ -32,8 +32,8 @@ CAMBOBJ       = constants.o utils.o subroutines.o inifile.o \
 	bessels.o $(EQUATIONS).o $(NONLINEAR).o lensing.o $(CMBMAIN).o $(CAMBFILE).o
 
 MODPKOBJ = modpk_modules.o modpk_numerics.o \
-					 modpk_qsf.o modpk_potential.o \
-					 modpk_rng.o	modpk_icsampling.o \
+					 modpk_qsf.o modpk_rng.o \
+  				 modpk_potential.o modpk_icsampling.o \
 					 modpk_utils.o dvode_f90_m.o modpk_odeint.o \
 					 modpk_backgrnd.o modpk.o # modpk_postprocessing.o
 

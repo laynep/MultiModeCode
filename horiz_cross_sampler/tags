@@ -5,7 +5,6 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 HCA	classes.py	/^    HCA = False$/;"	v	class:deltaN_model
-H_horiz_cross	potential.py	/^def H_horiz_cross(scale, choice="Nquad",**params):$/;"	f
 N_piv	driver.py	/^N_piv=55.0$/;"	v
 PR	classes.py	/^    def PR(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 V	classes.py	/^    def V(self,phi):$/;"	m	class:inflation_model
@@ -14,11 +13,16 @@ V_i	potential.py	/^def V_i(phi, choice="Nquad",**params):$/;"	f
 Z_i	classes.py	/^    def Z_i(self, phi_end=phi_zero):$/;"	m	class:deltaN_model
 __init__	classes.py	/^    def __init__(self, HC_approx, **infl_args):$/;"	m	class:deltaN_model
 __init__	classes.py	/^    def __init__(self, model, nfields):$/;"	m	class:inflation_model
-calc_observs	classes.py	/^    def calc_observs(self,phi_hc,phi_end=phi_zero):$/;"	m	class:deltaN_model
+__init__	classes.py	/^    def __init__(self, sampler, N_pivot=55.0, HC_approx=True, **infl_args):$/;"	m	class:universe
+alpha_s	classes.py	/^    def alpha_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+calc_observs	classes.py	/^    def calc_observs(self, phi_hc,phi_end=phi_zero):$/;"	m	class:deltaN_model
 check_choice	potential.py	/^def check_choice(choice):$/;"	f
+constant	classes.py	/^    def constant(self):$/;"	m	class:universe
 d2Ndphi2	classes.py	/^    def d2Ndphi2(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 d2V	classes.py	/^    def d2V(self,phi):$/;"	m	class:inflation_model
 d2Vdphi2	potential.py	/^def d2Vdphi2(phi,choice="Nquad",**params):$/;"	f
+d3V	classes.py	/^    def d3V(self,phi):$/;"	m	class:inflation_model
+d3Vdphi3	potential.py	/^def d3Vdphi3(phi,choice="Nquad",**params):$/;"	f
 dNdphi	classes.py	/^    def dNdphi(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 dV	classes.py	/^    def dV(self,phi):$/;"	m	class:inflation_model
 dVdphi	potential.py	/^def dVdphi(phi,choice="Nquad",**params):$/;"	f
@@ -26,18 +30,24 @@ dZ_ij	classes.py	/^    def dZ_ij(self, phi_hc, phi_end=phi_zero):$/;"	m	class:de
 deltaN_model	classes.py	/^class deltaN_model(inflation_model):$/;"	c
 eps_i	classes.py	/^    def eps_i(self, phi):$/;"	m	class:inflation_model
 eta_i	classes.py	/^    def eta_i(self, phi):$/;"	m	class:inflation_model
+f_NL	classes.py	/^    def f_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+get_new_params	classes.py	/^    def get_new_params(self):$/;"	m	class:universe
 inflation_model	classes.py	/^class inflation_model:$/;"	c
 load_params	classes.py	/^    def load_params(self, **params):$/;"	m	class:inflation_model
+load_sampler	classes.py	/^    def load_sampler(self, sampler):$/;"	m	class:universe
 m2	driver.py	/^m2 = 10.0**np.array([-10.0, -8.0])$/;"	v
-model	classes.py	/^    model = None$/;"	v	class:inflation_model
-n_t	classes.py	/^    def n_t(self, phi_hc):$/;"	m	class:deltaN_model
-nfields	classes.py	/^    nfields = None$/;"	v	class:inflation_model
-params	classes.py	/^    params = {$/;"	v	class:inflation_model
-phi	driver.py	/^phi = np.array([phi, phi])$/;"	v
-phi	driver.py	/^phi = np.sqrt(2.0*N_piv)$/;"	v
+n_s	classes.py	/^    def n_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+n_t	classes.py	/^    def n_t(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+nfields	driver.py	/^        nfields=1)$/;"	v
+nfields	driver.py	/^        nfields=1, )$/;"	v
+nfields	driver.py	/^nfields = 2$/;"	v
+phi	driver.py	/^phi = np.array([phi for i in xrange(nfields)])$/;"	v
+phi	driver.py	/^phi = np.sqrt(4.0*N_piv\/nfields)$/;"	v
 phi_end	driver.py	/^phi_end = np.array([1.0e0, 2.0e-1])$/;"	v
 phi_zero	classes.py	/^    phi_zero = None$/;"	v	class:deltaN_model
 potential	potential.py	/^def potential(phi, choice="Nquad", **params):$/;"	f
 r	classes.py	/^    def r(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-universe	classes.py	/^class universe(inflation_model):$/;"	c
-x	driver.py	/^x=deltaN_model(HC_approx=False, model="Nquad",nfields=2)$/;"	v
+tau_NL	classes.py	/^    def tau_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+universe	classes.py	/^class universe(deltaN_model):$/;"	c
+x	driver.py	/^x=deltaN_model(HC_approx=False, model="Nquad",$/;"	v
+y	driver.py	/^y = universe(sampler="constant",HC_approx=True, model="Nquad",$/;"	v

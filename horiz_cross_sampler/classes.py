@@ -60,6 +60,16 @@ Class for inflationary models, contains a potential with derivatives,  and metho
         V = self.V(phi)
         return np.diagonal(d2V)**2/V
 
+    def xi_i(self, phi):
+        """For sum-separable potentials, returns xi_i = dV_i*d3V_iii/V**2"""
+        d3V = self.d3V(phi)
+        dV = self.dV(phi)
+        V = self.V(phi)
+
+        d3V = [d3V[i,i,i] for i in xrange(self.nfields)]
+
+        return dV*d3V/V**2
+
 
 
 
@@ -215,20 +225,27 @@ class deltaN_model(inflation_model):
     def alpha_s(self, phi_hc, phi_end=phi_zero):
         """Running of the scalar spectral index."""
 
-        V = self.V(phi_hc)
-        dV = self.dV(phi_hc)
-        d2V = self.d2V(phi_hc)
-        d3V = self.d3V(phi_hc)
-        dN = self.dNdphi(phi_hc,phi_end)
+        eps_i = self.eps_i(phi_hc)
+        eps = np.sum(eps_i)
+        eta_i = self.eta_i(phi_hc)
+        xi_i = self.xi_i(phi_hc)
+        u_i = (self.V_i(phi_hc) + self.Z_i(phi_end))/self.V(phi_hc)
 
-        dN2 = np.sum(dN*dN)
+        sum1 = np.sum(u_i**2/eps_i)
 
-        alpha_s = (-2.0/V**3)*np.einsum('a,b,ab', dV, dV, d2V) \
-        + (2.0/V**4)*np.einsum('a,a', dV, dV)**2 \
-        + (4.0/V/dN2**2)*(V - np.einsum('a,b,ab',dN,dN,d2V))**2 \
-        + (2.0/V/dN2)*np.einsum('a,b,c,abc',dN,dN,dV,d3V) \
-        + (4.0/V/dN2)* (np.einsum('c,b,bc',dV,dN,d2V) - \
-                np.einsum('a,ac,b,bc',dN,d2V,dN,d2V))
+        print eps
+        print eps_i
+        print eta_i
+        print xi_i
+        print u_i
+        print sum1
+
+        alpha_s = -8.0*eps**2
+        alpha_s += 4.0*np.sum(eps_i*eta_i)
+        alpha_s += (-16.0/sum1**2)*(1.0 - np.sum(eta_i*u_i**2/2.0/eps_i))**2
+        alpha_s += (-8.0/sum1)*np.sum(eta_i*u_i*(1.0-eta_i*u_i/2.0/eps_i))
+        alpha_s += (4.0*eps/sum1)*np.sum(eta_i*u_i**2/eps_i)
+        alpha_s += (-2.0/sum1)*np.sum(xi_i*u_i**2/eps_i)
 
         return alpha_s
 
@@ -263,7 +280,7 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
     """
 
 
-    def __init__(self, sampler, N_pivot=55.0, HC_approx=True, **infl_args):
+    def __init__(self, sampler=None, N_pivot=55.0, HC_approx=True, **infl_args):
         deltaN_model.__init__(self,HC_approx,**infl_args)
 
         self.N_pivot = N_pivot
@@ -273,6 +290,9 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
     #Sampling routines
     def load_sampler(self, sampler):
         """Load the sampling routines."""
+        if sampler==None:
+            self.sampler=None
+            return
 
         if self.model != "Nquad":
             raise TypeError("Model not implemented in sampler.")
@@ -292,7 +312,8 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
             raise TypeError("Trying to set horizon crossing field value \
                     in model that isn't N-quadratic.  Not implemented.")
 
-        params, self.phi_hc = self.sampler(**samp_params)
+        if self.sampler != None:
+            params, self.phi_hc = self.sampler(**samp_params)
 
         self.load_params(m2=params)
 
@@ -322,15 +343,10 @@ Does a uniform sampling of a sphere with given radius for initial conditions."""
         mat=np.random.normal(0.0, sigma,
                 (nmoduli, self.nfields))
         mat=np.dot(mat.T,mat)
-        m2, eigvect = np.linalg.eigh(mat)
+        m2, eigvect = np.linalg.eigh(mat) #m. faster than eigvals
 
         #ICs on sphere
         mat = np.random.normal(0.0, 1.0, self.nfields)
         ICs = (radius/np.sqrt(np.sum(mat*mat)))*mat
 
         return m2, ICs
-
-
-
-
-

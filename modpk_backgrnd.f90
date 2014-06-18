@@ -7,7 +7,7 @@ MODULE background_evolution
   USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
     getH_with_t, stability_check_on_H, getEps_with_t
   USE modpk_utils, ONLY : bderivs, rkqs_r, use_t
-  use modpk_numerics, only : locate, polint, array_polint, stupid_locate
+  use modpk_numerics, only : locate, polint, array_polint
   use modpk_output, only : out_opt
 
   IMPLICIT NONE

@@ -6,7 +6,8 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t, d3Vdphi3
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t, d3Vdphi3, &
+       logP_of_observ, fisher_rao_metric
 
   public :: norm
   public :: bundle, field_bundle
@@ -1628,7 +1629,341 @@ CONTAINS
 
     stable = (3.0e0_dp -eps >1.0e-6)
 
+
   end subroutine stability_check_on_H
+
+  !From a histogram-estimate of a PDF, return the log(P) for a
+  !vector-valued observable, given the model parameters, which are
+  !implicit in the construction of the histogram
+  function logP_of_observ(observ, hist) result(logP)
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: hist
+    real(dp), dimension(:), intent(in) :: observ
+    real(dp) :: logP
+
+    real(dp), parameter :: logzero=-1e30_dp
+    real(dp), parameter :: tol_pdf = 1e-3_dp
+    integer(dp) :: ndimns
+
+    real(dp), dimension(size(hist,2)-1) :: binsize
+    integer :: bin_position
+    integer :: ii, jj
+
+    ndimns=size(hist,2)-1
+
+    !Find binsize from histogram
+    do jj=1, ndimns
+      do ii=2,size(hist,1)
+        !Hist bins organized in increasing, repeated "chunks"
+        if (hist(ii,jj) /= hist(1,jj)) then
+          binsize(jj)=hist(ii,jj)-hist(1,jj)
+          exit
+        end if
+      end do
+    end do
+
+    !Find which bin observ is in
+    !Could probably be improved with locate alg...
+    bin_position=0
+    do ii=1,size(hist,1)
+      if (all(observ .ge. hist(ii,1:ndimns)) .and.&
+        all(observ .le. hist(ii,1:ndimns)+binsize)) then
+        bin_position = ii
+        exit
+      end if
+    end do
+
+    if (bin_position==0) then
+      !If not in any bin, then set zero probability
+      logP = logzero
+      !DEBUG
+      print*, "setting logP=logzero A"
+      print*, "observ = ", observ
+      stop
+    else if (log(hist(bin_position,ndimns+1))<logzero) then
+      logP = logzero
+      !DEBUG
+      print*, "setting logP=logzero B"
+      print*, "observ = ", observ
+      stop
+    else
+      logP = log( hist(bin_position,ndimns+1))
+    end if
+
+  end function logP_of_observ
+
+  !Given parameters, returns the Fisher-Rao metric at that point in the
+  !parameter manifold.  Distance measured by F-R metric is the Fisher
+  !information
+  !g_mu_nu = <dlogP/dparam_mu dlogP/dparam_nu>
+  function fisher_rao_metric(param, stepsize) result(g_mu_nu)
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: param
+    real(dp), dimension(:), intent(in) :: stepsize
+    real(dp), dimension(size(param),size(param)) :: g_mu_nu
+
+    real(dp), dimension(size(param)) :: observ
+
+    real(dp), dimension(size(param)) :: dlogP
+    real(dp), dimension(size(param)) :: int_limit_min, int_limit_max
+
+    real(dp), dimension(size(param)) :: param_plus, param_minus
+    real(dp), dimension(size(param)) :: param_plus2, param_minus2
+    real(dp), dimension(size(param)) :: param_plus3, param_minus3
+
+    integer(dp) :: ii, jj, kk
+    integer(dp) :: ndimns, nbins_int(size(param))
+    real(dp), dimension(size(param)) :: binsize
+
+    real(dp), dimension(:,:), allocatable :: int_grid
+
+    real(dp), dimension(:,:), allocatable :: dataset
+    real(dp), dimension(:,:), allocatable :: hist_param
+
+    type :: hist_array
+      real(dp), dimension(:,:), allocatable :: hist
+    end type
+    type(hist_array), dimension(size(param)) :: hist_plus, hist_minus
+    type(hist_array), dimension(size(param)) :: hist_plus2, hist_minus2
+    type(hist_array), dimension(size(param)) :: hist_plus3, hist_minus3
+
+    real(dp) :: dV, P_o, dlogP_i, dlogP_j
+    logical :: quadrature
+
+    ndimns = size(param)
+
+    call obtain_derivs()
+
+    !Get run data for param
+    call inflation_sample(param, dataset)
+    !Build histograms from data
+    hist_param = histogram_Nd(dataset, method=2, norm=1)
+
+
+    !Average over observables for
+    !g_mu_nu = <dlogP/dparam_mu dlogP/dparam_nu>
+
+    quadrature = .false.
+    if (quadrature) then
+
+      call int_dlogP_quadrature()
+
+    else
+      !Integrate using the dataset from inflation_sample(param),
+      !since we have assumed this is a representative sample in order
+      !to build PDFs
+
+      call int_dlogP_MCMC()
+
+    end if
+
+
+    contains
+
+      subroutine int_limits()
+
+        !Find the integration limits
+        do ii=1,ndimns
+          int_limit_min(ii) = minval(hist_param(:,ii))
+          int_limit_max(ii) = maxval(hist_param(:,ii))
+
+          do jj=1,size(hist_plus)
+            int_limit_min(ii) = min(int_limit_min(ii) ,&
+              minval(hist_plus(jj)%hist(:,ii)), &
+              minval(hist_minus(jj)%hist(:,ii)))
+
+            int_limit_max(ii) = max(int_limit_max(ii) ,&
+              maxval(hist_plus(jj)%hist(:,ii)), &
+              maxval(hist_minus(jj)%hist(:,ii)))
+          end do
+        end do
+
+      end subroutine int_limits
+
+
+      subroutine obtain_derivs()
+
+        !Calc derivatives dlogP/dparam_mu
+        do ii=1,size(param)
+          !Get run data for param_plus and param_minus
+          !Build histograms from data
+          param_plus = param
+          param_plus(ii) = param_plus(ii) + stepsize(ii)
+          param_minus = param
+          param_minus(ii) = param_minus(ii) - stepsize(ii)
+
+          param_plus2 = param
+          param_plus2(ii) = param_plus2(ii) + 2.0e0_dp*stepsize(ii)
+          param_minus2 = param
+          param_minus2(ii) = param_minus2(ii) -2.0e0_dp* stepsize(ii)
+
+          param_plus3 = param
+          param_plus3(ii) = param_plus3(ii) + 3.0e0_dp*stepsize(ii)
+          param_minus3 = param
+          param_minus3(ii) = param_minus3(ii) -3.0e0_dp* stepsize(ii)
+
+          call inflation_sample(param_plus, dataset)
+          hist_plus(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+          call inflation_sample(param_minus, dataset)
+
+          hist_minus(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+          call inflation_sample(param_plus2, dataset)
+          hist_plus2(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+          call inflation_sample(param_minus2, dataset)
+          hist_minus2(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+          call inflation_sample(param_plus3, dataset)
+          hist_plus3(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+          call inflation_sample(param_minus3, dataset)
+          hist_minus3(ii)%hist = histogram_Nd(dataset, method=2, norm=1)
+          deallocate(dataset)
+
+        end do
+      end subroutine obtain_derivs
+
+      subroutine int_dlogP_quadrature()
+
+        !NB: Currently only integrates in quadrature.
+        !For higher dimensions, implement some other technique
+        !like Metropolis-Hastings, etc.
+
+        !Set the integration limits
+        call int_limits()
+
+        !Estimate how many integration bins are relevant
+        !Could be improved drastically...
+        do jj=1,ndimns
+          do ii=2,size(hist_param)
+            if (hist_param(ii,jj)>hist_param(1,jj)) then
+              binsize(jj) = (maxval(hist_param(:,jj)) - minval(hist_param(:,jj)))
+              nbins_int(jj) = &
+                binsize(jj) /(hist_param(ii,jj)-hist_param(1,jj))
+              exit
+            end if
+          end do
+        end do
+        !DEBUG
+        nbins_int = 20.0*nbins_int
+
+        !Switch to observable space binsize
+        binsize = (int_limit_max-int_limit_min)/nbins_int
+
+        !Make an integration grid
+        allocate(int_grid(product(nbins_int),ndimns))
+        call make_grid(nbins_int, int_limit_max, int_limit_min, int_grid)
+
+        !Perform the integration
+        g_mu_nu =0e0_dp
+        do ii=1,size(g_mu_nu,1); do jj=1,size(g_mu_nu,2)
+          if (jj<ii) then
+            g_mu_nu(ii,jj) = g_mu_nu(jj,ii)
+            cycle
+          end if
+          do kk=1,size(int_grid,1)
+
+            observ = int_grid(kk,:)+binsize/2.0
+
+            dV=product(binsize)
+            P_o = exp(logP_of_observ(observ,hist_param))
+            dlogP_i = (0.5e0_dp/stepsize(ii))*&
+              (logP_of_observ(observ,hist_plus(ii)%hist) &
+                - logP_of_observ(observ,hist_minus(ii)%hist))
+            dlogP_j = (0.5e0_dp/stepsize(jj))*&
+              (logP_of_observ(observ,hist_plus(jj)%hist) &
+                - logP_of_observ(observ,hist_minus(jj)%hist))
+
+            g_mu_nu(ii,jj) = g_mu_nu(ii,jj) + &
+              dV * P_o * dlogP_i * dlogP_j
+
+          end do
+
+        end do; end do
+
+      end subroutine int_dlogP_quadrature
+
+      subroutine int_dlogP_MCMC()
+
+        print*, "logP", logP_of_observ(observ,hist_param)
+
+        print*, "logP", logP_of_observ(observ,hist_plus(1)%hist)
+
+        print*, "dlogP O(2)", (1.0/stepsize(1))*(logP_of_observ(observ,hist_plus(1)%hist) - logP_of_observ(observ,hist_param))
+        print*, "dlogP O(4)", (1.0/stepsize(1))*(&
+          (1.0e0_dp/12.0e0_dp)*logP_of_observ(observ,hist_minus2(1)%hist)&
+          -(2.0e0_dp/3.0e0_dp)*logP_of_observ(observ,hist_minus(1)%hist)&
+          +(2.0e0_dp/3.0e0_dp)*logP_of_observ(observ,hist_plus(1)%hist)&
+          -(1.0e0_dp/12.0e0_dp)*logP_of_observ(observ,hist_plus2(1)%hist))
+        stop
+
+        g_mu_nu = 0e0_dp
+        do ii=1,size(g_mu_nu,1)
+          do jj=1,size(g_mu_nu,2)
+            do kk=1, size(dataset,1)
+
+              observ = dataset(kk,:)
+
+              !Get the derivs at this observ
+                  dlogP_i = (0.5e0_dp/stepsize(ii))*&
+                    (logP_of_observ(observ,hist_plus(ii)%hist) &
+                      - logP_of_observ(observ,hist_minus(ii)%hist))
+                  dlogP_j = (0.5e0_dp/stepsize(jj))*&
+                    (logP_of_observ(observ,hist_plus(jj)%hist) &
+                      - logP_of_observ(observ,hist_minus(jj)%hist))
+
+              !Integrate
+              g_mu_nu(ii,jj) = g_mu_nu(ii,jj) + &
+                dlogP_i*dlogP_j
+
+            end do
+          end do
+        end do
+
+        !Rescale
+        g_mu_nu = g_mu_nu/dble(size(dataset,1))
+
+
+        end subroutine int_dlogP_MCMC
+
+  end function fisher_rao_metric
+
+  !Given a parametrization of the inflationary model, obtain an
+  !MCMC sample of points in observable space from which we can
+  !build PDFs
+  subroutine inflation_sample(param, dataset)
+    use modpk_rng, only : init_random_seed_serial, normal_scalar
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: param
+    real(dp), dimension(:,:), allocatable, intent(out) :: dataset
+    integer :: i, j
+
+    print*, "std=", param(1)
+
+
+!DEBUG
+allocate(dataset(1000,1))
+call init_random_seed_serial()
+do i=1,size(dataset,1)
+  do j=1,size(dataset,2)
+    dataset(i,j) = normal_scalar(0.e0_dp,abs(param(1)))
+end do; end do
+dataset=dataset
+
+
+  end subroutine inflation_sample
+
+
 
 END MODULE potential
 
@@ -1751,62 +2086,49 @@ module modpk_deltaN_SR
     end function ns_SR
 
     !Running of ns
-    !Formula as in Lyth-Riotto Eq 116 hep-ph/9807278
+    !Formula as in Eq 6.14 1203.3792
     function alpha_s_SR(phi_pivot,phi_end) result(alpha_s)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: alpha_s, eps_piv, V
-      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
-      real(dp), dimension(size(phi_pivot),size(phi_pivot),size(phi_pivot)) :: d3V
-      real(dp), dimension(size(phi_pivot)) :: dV, dN
-      real(dp) :: alpha1, alpha2, alpha3, alpha4, alpha5
+      real(dp) :: alpha_s
 
-      integer :: aa, bb, cc, dd
+
+      real(dp), dimension(size(phi_pivot)) :: V_i, Z_i, u_i
+      real(dp) :: V, eps_piv
+      real(dp), dimension(size(phi_pivot)) :: eps_i_piv, eta_i_piv, &
+        xi_i_piv
+      real(dp) :: sum_ui_over_epsi
+      real(dp) :: term1, term2, term3, term4, term5, term6
 
       V = pot(phi_pivot)
-      dV = dVdphi(phi_pivot)
-      d2V = d2Vdphi2(phi_pivot)
-      d3V = d3Vdphi3(phi_pivot)
-      eps_piv = sum(eps_SR(phi_pivot))
-      dN = dNdphi_SR(phi_pivot,phi_end)
+      eps_i_piv = eps_SR(phi_pivot)
+      eps_piv = sum(eps_i_piv)
+      xi_i_piv = xi_SR(phi_pivot)
+      eta_i_piv = eta_SR(phi_pivot)
 
-      alpha1=0e0_dp
-      alpha2=0e0_dp
-      alpha3=0e0_dp
-      alpha4=0e0_dp
-      alpha5=0e0_dp
+      V_i = V_i_sum_sep(phi_pivot)
+      Z_i = Z_i_BE(phi_end)
+      u_i = (V_i + Z_i)/V
 
-      !First term
-      do aa=1,size(dV); do bb=1,size(dV)
-        alpha1 = alpha1 +&
-          dV(aa)*dV(bb)*d2V(aa,bb)
-      end do; end do
-      alpha1=alpha1*(-2.0e0_dp/V**3)
+      sum_ui_over_epsi = sum(u_i**2/eps_i_piv)
 
-      !Second term
-      alpha2 = (2.0e0_dp/V**4)*(sum(dV**2))**2
+      term1 = -8.0e0_dp * eps_piv**2
+      term2 = 4.0e0_dp * sum(eps_i_piv*eta_i_piv)
 
-      !Third term
-      do aa=1,size(dV); do bb=1,size(dV)
-        alpha3 = alpha3 + dN(aa)*dN(bb)*d2V(aa,bb)
-      end do; end do
-      alpha3=(V-alpha3)**2
-      alpha3=alpha3*(4.0e0_dp/V/(sum(dN**2))**2)
+      term3 = (-16.0e0_dp/sum_ui_over_epsi**2)*&
+        (1.0e0_dp - sum(eta_i_piv*u_i**2/2.0e0_dp/eps_i_piv))**2
 
-      !Fourth term
-      do aa=1,size(dV); do bb=1,size(dV); do cc=1,size(dV)
-        alpha4=alpha4 + &
-          dN(aa)*dN(bb)*dV(cc)*d3V(aa,bb,cc)
-      end do; end do; end do
-      alpha4=alpha4*(2.0e0_dp/V/sum(dN**2))
+      term4 = (-8.0e0_dp/sum_ui_over_epsi)*&
+        sum(eta_i_piv*u_i*(1.0e0_dp - &
+          eta_i_piv*u_i**2/2.0e0_dp/eps_i_piv))
 
-      !Fifth term
-      do bb=1,size(dV); do cc=1,size(dV); do aa=1,size(dV)
-        alpha5=alpha5 + &
-          (dV(cc) - dN(aa)*d2V(aa,cc))*dN(bb)*d2V(bb,cc)
-      end do; end do; end do
-      alpha5 = alpha5*(4.0e0_dp/V/sum(dN**2))
+      term5 = (4.0e0_dp*eps_piv/sum_ui_over_epsi)*&
+        sum(eta_i_piv*u_i**2/eps_i_piv)
 
-      alpha_s = alpha1 + alpha2 + alpha3 + alpha4 + alpha5
+      term6 = (-2.0e0_dp/sum_ui_over_epsi)*&
+        sum(xi_i_piv*u_i**2/eps_i_piv)
+
+      alpha_s = term1 + term2 + term3 + term4 + term5 + term6
+
 
     end function alpha_s_SR
 
@@ -1891,6 +2213,24 @@ module modpk_deltaN_SR
       end do
 
     end function eta_SR
+
+    function xi_SR(phi)
+      real(dp), dimension(:), intent(in) :: phi
+      real(dp), dimension(size(phi)) :: xi_SR
+      real(dp), dimension(size(phi),size(phi),size(phi)) :: d3V
+      real(dp) :: V
+      real(dp), dimension(size(phi)) :: dV
+      integer :: i
+
+      d3V = d3Vdphi3(phi)
+      V = pot(phi)
+      dV = dVdphi(phi)
+
+      do i=1, size(xi_SR)
+        xi_SR(i) = dV(i)*d3V(i,i,i)**2/V**2
+      end do
+
+    end function xi_SR
 
     !The function Z_i from Battefeld-Easther that encodes all details from the
     !end of inflation surface.  Eq. 31
@@ -1993,5 +2333,7 @@ module modpk_deltaN_SR
       deallocate(vparams_temp)
 
     end function V_i_sum_sep
+
+
 
 end module modpk_deltaN_SR

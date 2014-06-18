@@ -14,7 +14,7 @@ module modpk_icsampling
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
     fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
-    qsf_random=8
+    qsf_random=8, fisher_inf=9
 
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
@@ -64,7 +64,6 @@ module modpk_icsampling
         vparams_priors_min, vparams_priors_max
 
       real(dp), dimension(:,:), allocatable :: knot_temp
-
 
 
       phi0_priors_max=priors_max(1,:)
