@@ -6,9 +6,9 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 2
-  potential_choice = 15
+  potential_choice = 1
   vparam_rows = 6
-  more_potential_params = .true.
+  more_potential_params = .false.
 
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -19,8 +19,8 @@ Parameters to control the output of analytic approximations for
 comparison.  The deltaN calculation is only valid for
 sum-separable potentials.
 &analytical
-  use_deltaN_SR = .false.
-  use_horiz_cross_approx = .false.
+  use_deltaN_SR = .true.
+  use_horiz_cross_approx = .true.
   evaluate_modes = .true.
 /
 
@@ -50,7 +50,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     7=param_unif_prior, 8=qsf_random}
 
 &ic_sampling
-  sampling_techn = 9
+  sampling_techn = 3
   numb_samples = 1
 
   energy_scale = .1
@@ -119,9 +119,9 @@ Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
 
 &priors
-  phi0_priors_min = 0.0 0.0
+  phi0_priors_min = 2.0 2.0
 
-  phi0_priors_max = 6.0 6.0
+  phi0_priors_max = 30.0 30.0
 
 
   dphi0_priors_min = -1.262e0 -1.262e0
@@ -136,7 +136,7 @@ Uniform priors on fields and dphi/dt (NOT dphi/DN)
 If want to calculate the full power spectrum P(k)
 
 &full_pk
-  calc_full_pk = .true.
+  calc_full_pk = .false.
   steps = 100
   kmin = 1.0e-16
   kmax = 1.0e-14

@@ -220,6 +220,15 @@ class deltaN_model(inflation_model):
 
         ns += 1.0 - 2.0*eps - (2.0/sum(dN*dN))
 
+
+        #eta_i =self.eta_i(phi_hc)
+        #eps_i = self.eps_i(phi_hc)
+        #u_i = (self.V_i(phi_hc) + self.Z_i(phi_end))/self.V(phi_hc)
+        #eps = np.sum(eps_i)
+
+        #ns = 1.0 - 2.0*eps - (4.0/np.sum(u_i**2/eps_i))*\
+        #        (1.0 - np.sum(eta_i*u_i**2/2.0/eps_i))
+
         return ns
 
     def alpha_s(self, phi_hc, phi_end=phi_zero):
@@ -232,13 +241,6 @@ class deltaN_model(inflation_model):
         u_i = (self.V_i(phi_hc) + self.Z_i(phi_end))/self.V(phi_hc)
 
         sum1 = np.sum(u_i**2/eps_i)
-
-        print eps
-        print eps_i
-        print eta_i
-        print xi_i
-        print u_i
-        print sum1
 
         alpha_s = -8.0*eps**2
         alpha_s += 4.0*np.sum(eps_i*eta_i)

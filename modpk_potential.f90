@@ -1989,10 +1989,14 @@ module modpk_deltaN_SR
       real(dp) ::PR
       real(dp), dimension(size(phi_pivot)) :: dN
       real(dp) :: H_piv, V_piv, P_dphi
+      real(dp), dimension(size(phi_pivot)) :: eps_i, u_i
 
       V_piv = pot(phi_pivot)
       H_piv = sqrt(V_piv/3.0e0_dp)
       dN = dNdphi_SR(phi_pivot,phi_end)
+
+      eps_i = eps_SR(phi_pivot)
+      u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V_piv
 
       P_dphi = (H_piv/2.0e0_dp/pi)**2
 
@@ -2067,12 +2071,21 @@ module modpk_deltaN_SR
       real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
       real(dp), dimension(size(phi_pivot)) :: dV, dN
       integer :: ii, jj
+      real(dp), dimension(size(phi_pivot)) :: eps_i, eta_i, u_i
 
-      dV = dVdphi(phi_pivot)
+      !dV = dVdphi(phi_pivot)
       d2V = d2Vdphi2(phi_pivot)
-      eps_piv = sum(eps_SR(phi_pivot))
       dN = dNdphi_SR(phi_pivot,phi_end)
+      !eps_i = eps_SR(phi_pivot)
+      !eta_i = eta_SR(phi_pivot)
+      eps_piv = sum(eps_SR(phi_pivot))
       V = pot(phi_pivot)
+
+      !u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V
+
+      !ns = 1.0e0_dp - 2.0e0_dp*eps_piv &
+      !  - (4.0e0_dp/sum(u_i**2/eps_i))*&
+      !  (1.0e0_dp - sum(eta_i*u_i**2/2.0e0_dp/eps_i))
 
       ns = 1.0e0_dp &
         - 2.0e0_dp*eps_piv &

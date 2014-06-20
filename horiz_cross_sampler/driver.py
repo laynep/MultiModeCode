@@ -7,13 +7,12 @@ Simple driver function.
 import numpy as np
 from classes import *
 import sys
-import cProfile
 
 def main():
 
-    nfields=10
-    y = universe(sampler="MP_and_uniformsphere",HC_approx=True, model="Nquad",
-            nfields=nfields )
+    nfields=1
+    y = universe(sampler="MP_and_uniformsphere",HC_approx=True,
+            model="Nquad", nfields=nfields )
     radius = 2.0*np.sqrt(y.N_pivot)
 
     obs_to_calc = ('n_t', 'n_s', 'alpha_s')
@@ -25,7 +24,10 @@ def main():
     # <m_avg^2> = sigma^2 for GRM w/entries of std sigma
     m_avg = 5e-7
 
-    for i in xrange(10):
+    # How many samples to build PDF from
+    nsamples = 100
+
+    for i in xrange(nsamples):
 
         y.get_new_params( nmoduli=nmoduli, radius=radius, m_avg=m_avg)
 
@@ -39,10 +41,12 @@ def main():
         #print y.params["Nquad"]["m2"]/np.min(y.params["Nquad"]["m2"])
         #print y.observ['n_t']/( -y.observ['r']/8.0)
 
+
 if __name__=="__main__":
 
     profile=False
     if profile:
+        import cProfile
         cProfile.run('main()')
     else:
         main()

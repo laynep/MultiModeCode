@@ -482,8 +482,6 @@ contains
     real(dp) :: a_turn1, N_turn1, H_turn1, phi_test
     real(dp) :: a_turn2, N_turn2, H_turn2
     phi_test = real(ystart(1))
-    !DEBUG
-    print*, "test:", phi_test
     a_turn1 = 0e0_dp
     N_turn1=0e0_dp
     H_turn1=0e0_dp
