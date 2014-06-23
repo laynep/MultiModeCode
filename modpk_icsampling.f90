@@ -5,11 +5,8 @@
 !slowroll_samp = Sample phi0, set dphi in SR
 
 module modpk_icsampling
-  use potential, only : norm, pot, getH, &
-    turning_choice, &
-    number_knots_qsfrandom, stand_dev_qsfrandom, knot_positions, &
-    knot_range_min, knot_range_max, custom_knot_range
-
+  use potential, only : norm, pot, getH
+  use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   use internals, only : pi
@@ -17,7 +14,7 @@ module modpk_icsampling
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
     fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
-    qsf_random=8
+    qsf_random=8, fisher_inf=9
 
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
@@ -42,6 +39,7 @@ module modpk_icsampling
          numb_samples,energy_scale)
 
       use modpk_rng, only : normal
+      use modpk_numerics, only : heapsort
 
       integer, intent(in) :: sampling_techn, numb_samples
       real(dp), intent(in), optional :: energy_scale
@@ -66,7 +64,6 @@ module modpk_icsampling
         vparams_priors_min, vparams_priors_max
 
       real(dp), dimension(:,:), allocatable :: knot_temp
-
 
 
       phi0_priors_max=priors_max(1,:)
@@ -318,91 +315,6 @@ module modpk_icsampling
       H=sqrt(rho/3.0e0_dp)
 
       dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
-
-      contains
-
-        !**********************************************************
-        !Heapsorts an array based on the first column only.
-
-        !Adapted from Numerical Recipes pg 231.
-
-        pure subroutine heapsort(table)
-          implicit none
-
-        	real(dp), dimension(:,:), intent(inout) :: table
-        	integer :: n, l, ir, i, j, i_1, i_2
-        	real(dp), dimension(size(table,2)) :: rra	!row temporary placeholder.
-
-          if (size(table,1)==1) return
-
-        	rra=0_dp
-        	n=size(table,1)
-        	l = (n/2)+1	!note the integer division.
-        	ir = n
-        do1:	do
-        		if(l > 1) then
-        			l = l-1
-        			call vect_eq_tablerow_d(rra,l,table)
-        		else
-        			call vect_eq_tablerow_d(rra,ir,table)
-        			call row_equal_d(ir,1,table)
-        			ir = ir -1
-        			if(ir==1)then
-        				do i_1=1,size(table,2)
-        					table(1,i_1) = rra(i_1)
-        				end do
-        				return
-        			end if
-        		end if
-        		i = l
-        		j = l+l
-        do2:		do while(j <= ir)
-        			if(j < ir) then
-        				if(table(j,1) < table(j+1,1)) then
-        					j = j+1
-        				end if
-        			end if
-        			if(rra(1) < table(j,1)) then
-        				call row_equal_d(i,j,table)
-        				i = j
-        				j =j+j
-        			else
-        				j = ir + 1
-        			end if
-        		end do do2
-        		do i_2=1,size(table,2)
-        			table(i,i_2) = rra(i_2)
-        		end do
-        	end do do1
-
-
-        end subroutine heapsort
-
-
-        !this subroutine makes a vector (of rank equal to the number of columns in table) equal to the ith row in a table.
-        pure subroutine vect_eq_tablerow_d(vect,i,table)
-        implicit none
-
-        	real(dp), dimension(:), intent(inout) :: vect
-        	real(dp), dimension(:,:), intent(in) :: table
-        	integer, intent(in) :: i
-
-        	vect(:) = table(i,:)
-
-        end subroutine vect_eq_tablerow_d
-
-
-
-        !this subroutine changes the ith row of a table to equal the jth row.
-        pure subroutine row_equal_d(i,j,table)
-        implicit none
-
-        	real(dp), dimension(:,:), intent(inout) :: table
-        	integer, intent(in) :: i,j
-
-        	table(i,:) = table(j,:)
-
-        end subroutine row_equal_d
 
     end subroutine get_ic
 

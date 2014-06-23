@@ -12,6 +12,10 @@ program multimodecode
   use modpk_deltaN_SR
   use modpk_observables, only : observables
 
+  !DEBUG
+  use modpk_numerics
+  use modpk_rng
+
   implicit none
 
 
@@ -39,6 +43,14 @@ program multimodecode
 
   integer :: pfile
 
+  !DEBUG
+  real(dp), dimension(20001,1) :: dataset
+  real(dp), dimension(:,:), allocatable :: hist
+  integer :: j
+  real(dp) :: logP
+  real(dp), dimension(size(dataset,2)) :: observ, stepsize
+  real(dp), dimension(:,:), allocatable :: g_mu_nu
+
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     slowroll_infl_end, instreheat, vparam_rows, &
@@ -60,6 +72,61 @@ program multimodecode
   namelist /print_out/ out_opt, get_runningofrunning
 
   !------------------------------------------------
+
+  !DEBUG
+!  print*, "testing integration"
+!  allocate(turning_choice(1))
+!  turning_choice = 1
+!  num_inflaton = 2
+!  potential_choice = 15
+!  allocate(vparams(3,2))
+!  vparams(1,1) = -12.0e0_dp
+!  vparams(1,2) = -8.0e0_dp
+!  vparams(2,1) = 0e0_dp
+!  vparams(3,1) = 20e0_dp
+!
+!
+!#define XVECT (/4.0, 19.2/)
+!  print*, "V", pot(XVECT)
+!  print*, "dV", dVdphi(XVECT)
+!  print*, "d2V", d2Vdphi2(XVECT)
+!
+!  stop
+
+!DEBUG
+!print*, "testing histogram"
+
+!call init_random_seed_serial()
+!do i=1,size(dataset,1)
+!do j=1,size(dataset,2)
+!  call random_number(dataset(i,j))
+!end do; end do
+!dataset=dataset
+
+!hist = histogram_Nd(dataset,method=1,norm=1)
+!do i=1,size(hist,1)
+!  write(*,'(10e15.7)'), hist(i,:)
+!end do
+
+!observ = (/0.9999,0.5/)
+!logP = logP_of_observ(observ,hist)
+
+!print*, "this is logP", logP
+
+!DEBUG
+!print*, "testing fisher_rao_metric"
+!observ = (/1.0/)
+!stepsize = 1e-3
+!
+!g_mu_nu = fisher_rao_metric(observ, stepsize)
+!
+!
+!
+!stop
+
+
+
+
 
   !Read initializing params from file
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
@@ -156,7 +223,7 @@ program multimodecode
 
       !Make the arrays for k values to sample
       allocate(k_input(steps))
-      incr=(kmax/kmin)**(1/real(steps-1))
+      incr=(kmax/kmin)**(1/dble(steps-1))
       do i=1,steps
         k_input(i) = kmin*incr**(i-1)
       end do
@@ -170,7 +237,6 @@ program multimodecode
       end do
 
     end subroutine get_full_pk
-
 
     subroutine allocate_vars()
 
@@ -461,6 +527,7 @@ program multimodecode
     !Calculate observables for the power spectrum, as well as fNL, using the
     !delta-N formalism in slow-roll
     subroutine calculate_SR_observables(observs_SR)
+      use modpk_numerics, only : locate, array_polint, polint
       type(observables), intent(inout) :: observs_SR
       integer :: j, i
       real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
@@ -535,6 +602,12 @@ program multimodecode
 
 	    !Set random seed
 	    call init_random_seed()
+!!DEBUG
+!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+!print*, "NOT USING RANDOM SEED"
+!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+!call random_seed(PUT=(/711641855,   711641892/))
+
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."
