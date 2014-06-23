@@ -1,5 +1,5 @@
 !Use the DVODE integrator?
-#define DVODE
+!#define DVODE
 
 MODULE modpk_odeint
   use modpkparams, only : dp

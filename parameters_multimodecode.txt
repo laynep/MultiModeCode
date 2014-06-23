@@ -51,7 +51,7 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
 
 &ic_sampling
   sampling_techn = 3
-  numb_samples = 1
+  numb_samples = 10
 
   energy_scale = .1
 
@@ -153,7 +153,7 @@ Options for output from the code
   out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .true.
+  out_opt%save_traj = .false.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.

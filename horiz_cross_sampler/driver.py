@@ -10,7 +10,7 @@ import sys
 
 def main():
 
-    nfields=1
+    nfields=100
     y = universe(sampler="MP_and_uniformsphere",HC_approx=True,
             model="Nquad", nfields=nfields )
     radius = 2.0*np.sqrt(y.N_pivot)
