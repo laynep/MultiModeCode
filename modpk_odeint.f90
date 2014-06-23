@@ -221,15 +221,17 @@ contains
       print*, "MODPK: N-integration finished with eps>1.0 and"
       print*, "MODPK: without inflating or only transient periods of inflation."
       return
-    end if
 
-    PRINT*, 'too many steps in odeint_r', nstp, MAXSTP
-    PRINT*, "E-fold", x
-    print*, "Step size", h
-    print*, "epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-    print*, "V=", pot(y(1:num_inflaton))
-    PRINT*, "y=", y
-    ode_underflow=.TRUE.
+    else
+
+      PRINT*, 'too many steps in odeint_r', nstp, MAXSTP
+      PRINT*, "E-fold", x
+      print*, "Step size", h
+      print*, "epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+      print*, "V=", pot(y(1:num_inflaton))
+      PRINT*, "y=", y
+      ode_underflow=.TRUE.
+    end if
 
   CONTAINS
 
@@ -293,6 +295,7 @@ contains
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
           PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
           PRINT*,'MODPK: QUITTING'
+          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
           WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
           STOP
@@ -489,7 +492,6 @@ contains
     N_turn2=0e0_dp
     H_turn2 = 0e0_dp
 
-
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -514,55 +516,7 @@ contains
 
 #ifdef DVODE
     !Options for first call to dvode integrator
-
-    neq = 2*size(y) !Need reals for dvode, so 2* bc y is complex
-
-    if (allocated(atol)) deallocate(atol)
-    if (allocated(atol_real)) deallocate(atol_real)
-    if (allocated(atol_compl)) deallocate(atol_compl)
-    allocate(atol(neq))
-    allocate(atol_real(neq/2))
-    allocate(atol_compl(neq/2))
-
-    !Relative tolerance
-    rtol = 1.0e-10_dp
-
-    !Absolute tolerance
-    !atol = 1.0e-8_dp
-
-    !Real
-    atol_real(1:num_inflaton) = 1.0e-6_dp
-    atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
-    atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-    atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-    atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-6_dp
-
-    atol_compl(1:num_inflaton) = 1.0e-9_dp
-    atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
-    atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-    atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
-    atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-9_dp
-
-    atol(1:neq/2)=atol_real
-    atol((neq/2)+1:neq)=atol_compl
-
-    itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
-    !itask = 2
-    istate = 1 !Set =1 for 1st call to integrator
-
-    if (itask /=2) then
-      !Integrate until nefold_out
-      dN_step = sign(0.01e0_dp,x2-x1)
-      !dN_step = sign(0.001e0_dp,x2-x1)
-      nefold_out = x + dN_step
-    else
-      !Take only one step
-      nefold_out = Nefold_max
-    end if
-
-    ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
-      relerr=rtol,user_supplied_jacobian=.false.,mxstep=50000, &
-      mxhnil=1)
+    call initialize_dvode_MODES()
 
 #endif
 
@@ -578,15 +532,15 @@ contains
        end if
 
        IF (use_q) THEN
-          ! super-h use Q
-          CALL qderivs(x, y, dydx)
+         ! super-h use Q
+         CALL qderivs(x, y, dydx)
        ELSE
-          ! sub-h use psi
-          CALL derivs(x, y, dydx)
+         ! sub-h use psi
+         CALL derivs(x, y, dydx)
        END IF
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
+         CALL save_a_step
 
 #ifdef DVODE
 
@@ -636,17 +590,7 @@ contains
        END IF
 #endif
 
-       IF ((x-x2)*(x2-x1) >= 0.0) THEN
-          PRINT*,'MODPK: This could be a model for which inflation does not end.'
-          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
-          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING'
-          WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
-          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
-          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP
-          RETURN
-       END IF
+      call check_for_eternal_inflation_MODES()
 
        !MULTIFIELD
        phi = real(y(1:num_inflaton),kind=dp)
@@ -678,80 +622,16 @@ contains
            call find_turning_scales()
          end if
 
-         IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) THEN
+         ! if k<aH/eval_ps, then k<<aH
+         if(k .lt. a_init*exp(x)*getH(phi, delphi)/eval_ps) then
+           call evaluate_powerspectra()
+         end if
 
-           !MULTIFIELD
-           IF (use_q) THEN
-
-             !Y's are in \bar{Q}=Q/a_switch
-             qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
-             dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
-
-             ! with isocurv calculation
-             call powerspectrum(qij, dqij, phi, delphi, &
-               scalefac, power_internal, using_q=.true.)
-
-             power_internal%tensor=tensorpower(y(index_tensor_y) &
-                *scalefac/a_switch, scalefac)
-
-           ELSE
-
-             psi = y(index_ptb_y:index_ptb_vel_y-1)
-             dpsi = y(index_ptb_vel_y:index_tensor_y-1)
-
-             call powerspectrum(psi, dpsi, phi, delphi, &
-               scalefac, power_internal)
-
-             power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
-           END IF
-
-           !Record spectrum
-           if (out_opt%spectra) then
-             write(out_opt%spectraout,'(100E27.20)') &
-               x - (n_tot - N_pivot), &
-               power_internal%adiab, &
-               power_internal%isocurv,&
-               power_internal%entropy, &
-               power_internal%pnad, &
-               power_internal%tensor
-           end if
-
-           if (compute_zpower) then  !! compute only once upon horizon exit
-              power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
-              compute_zpower = .false.
-           end if
-
-           ! for single field, end mode evolution when the mode is frozen out of the horizon
-           ! for multifield, need to evolve the modes until the end of inflation to
-           ! include superhorizon evolution
-           IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
-           !END MULTIFIELD
-         END IF
        END IF
 
+       call check_inflation_ended_properly_MODES()
+
        IF(ode_infl_end) THEN
-          IF (slowroll_infl_end) THEN
-             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
-          ELSE
-             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-                PRINT*,'MODPK: reached. Please take another look at your inputs.'
-                PRINT*,'MODPK: QUITTING'
-                PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
-                STOP
-             ENDIF
-
-             !MULTIFIELD
-             IF (SIZE(phi) .EQ. 1) THEN
-                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
-                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
-             ELSE
-               if (check_stop_when_not_slowroll_infl_end(phi,delphi)) infl_ended = .TRUE.
-             END IF
-             !END MULTIFIELD
-          ENDIF
-
           IF (infl_ended) THEN
             IF (use_q) THEN
                ytmp(:) = y(:)
@@ -777,40 +657,22 @@ contains
             IF (save_steps) CALL save_a_step
 
             !For outputting field values
-            if (out_opt%fields_end_infl) then
+            if (out_opt%fields_end_infl) &
               write(out_opt%fields_end_out,'(500E28.20)') k, phi
-            end if
 
             RETURN
           END IF
        ENDIF
 
+       !switch to the Q variable for super-horizon evolution
+       !only apply the switch on y(1:4*num_inflaton+2)
        IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
-          !switch to the Q variable for super-horizon evolution
-          !only apply the switch on y(1:4*num_inflaton+2)
-          use_q = .TRUE.
-          a_switch = scalefac
-          !set intial condition in (Q*a_switch)
-          ytmp(:) = y(:)
-
-          y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
-          y(index_ptb_vel_y:index_tensor_y-1) = &
-            ytmp(index_ptb_vel_y:index_tensor_y-1) &
-            - y(index_ptb_y:index_ptb_vel_y-1)
-
-          y(index_tensor_y) = ytmp(index_tensor_y)
-          y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
-            - y(index_tensor_y)
-#ifdef DVODE
-          !Reset istate to let integrator know it's a new variable
-          istate=1
-#endif
+         call switch_to_qvar()
        end if
 
        IF (ode_underflow) RETURN
 
-#ifdef DVODE
-#else
+#ifndef DVODE
        IF (ABS(hnext) < hmin) THEN
           WRITE(*,*) 'stepsize smaller than minimum in odeint'
           stop
@@ -892,6 +754,176 @@ contains
 
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
+
+#ifdef DVODE
+    subroutine initialize_dvode_MODES()
+
+      neq = 2*size(y) !Need reals for dvode, so 2* bc y is complex
+
+      if (allocated(atol)) deallocate(atol)
+      if (allocated(atol_real)) deallocate(atol_real)
+      if (allocated(atol_compl)) deallocate(atol_compl)
+      allocate(atol(neq))
+      allocate(atol_real(neq/2))
+      allocate(atol_compl(neq/2))
+
+      !Relative tolerance
+      rtol = 1.0e-10_dp
+
+      !Absolute tolerance
+      !atol = 1.0e-8_dp
+
+      !Real
+      atol_real(1:num_inflaton) = 1.0e-6_dp
+      atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
+      atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
+      atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-6_dp
+
+      atol_compl(1:num_inflaton) = 1.0e-9_dp
+      atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
+      atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
+      atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
+      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-9_dp
+
+      atol(1:neq/2)=atol_real
+      atol((neq/2)+1:neq)=atol_compl
+
+      itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      !itask = 2
+      istate = 1 !Set =1 for 1st call to integrator
+
+      if (itask /=2) then
+        !Integrate until nefold_out
+        dN_step = sign(0.01e0_dp,x2-x1)
+        !dN_step = sign(0.001e0_dp,x2-x1)
+        nefold_out = x + dN_step
+      else
+        !Take only one step
+        nefold_out = Nefold_max
+      end if
+
+      ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
+        relerr=rtol,user_supplied_jacobian=.false.,mxstep=50000, &
+        mxhnil=1)
+
+    end subroutine initialize_dvode_MODES
+#endif
+
+    subroutine check_for_eternal_inflation_MODES()
+
+       IF ((x-x2)*(x2-x1) >= 0.0) THEN
+          PRINT*,'MODPK: This could be a model for which inflation does not end.'
+          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
+          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
+          PRINT*,'MODPK: QUITTING'
+          WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
+          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
+          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
+          STOP
+       END IF
+
+    end subroutine check_for_eternal_inflation_MODES
+
+    subroutine evaluate_powerspectra()
+
+      !MULTIFIELD
+      IF (use_q) THEN
+
+        !Y's are in \bar{Q}=Q/a_switch
+        qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
+        dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
+
+        ! with isocurv calculation
+        call powerspectrum(qij, dqij, phi, delphi, &
+          scalefac, power_internal, using_q=.true.)
+
+
+        power_internal%tensor=tensorpower(y(index_tensor_y) &
+           *scalefac/a_switch, scalefac)
+      ELSE
+
+        psi = y(index_ptb_y:index_ptb_vel_y-1)
+        dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+
+        call powerspectrum(psi, dpsi, phi, delphi, &
+          scalefac, power_internal)
+
+        power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
+      END IF
+
+      !Record spectrum
+      if (out_opt%spectra) then
+        write(out_opt%spectraout,'(100E27.20)') &
+          x - (n_tot - N_pivot), &
+          power_internal%adiab, &
+          power_internal%isocurv,&
+          power_internal%entropy, &
+          power_internal%pnad, &
+          power_internal%tensor
+      end if
+
+      if (compute_zpower) then  !! compute only once upon horizon exit
+         power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
+         compute_zpower = .false.
+      end if
+
+      ! for single field, end mode evolution when the mode is frozen out of the horizon
+      ! for multifield, need to evolve the modes until the end of inflation to
+      ! include superhorizon evolution
+      IF (num_inflaton .EQ. 1) infl_ended = .TRUE.
+      !END MULTIFIELD
+
+    end subroutine evaluate_powerspectra
+
+    subroutine check_inflation_ended_properly_MODES()
+
+       IF(ode_infl_end) THEN
+          IF (slowroll_infl_end) THEN
+             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
+          ELSE
+             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
+                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
+                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
+                PRINT*,'MODPK: reached. Please take another look at your inputs.'
+                PRINT*,'MODPK: QUITTING'
+                PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
+                STOP
+             ENDIF
+
+             !MULTIFIELD
+             IF (SIZE(phi) .EQ. 1) THEN
+                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
+                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
+             ELSE
+               if (check_stop_when_not_slowroll_infl_end(phi,delphi)) infl_ended = .TRUE.
+             END IF
+             !END MULTIFIELD
+          ENDIF
+        end if
+
+    end subroutine check_inflation_ended_properly_MODES
+
+    subroutine switch_to_qvar()
+          use_q = .TRUE.
+          a_switch = scalefac
+          !set intial condition in (Q*a_switch)
+          ytmp(:) = y(:)
+
+          y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
+          y(index_ptb_vel_y:index_tensor_y-1) = &
+            ytmp(index_ptb_vel_y:index_tensor_y-1) &
+            - y(index_ptb_y:index_ptb_vel_y-1)
+
+          y(index_tensor_y) = ytmp(index_tensor_y)
+          y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
+            - y(index_tensor_y)
+#ifdef DVODE
+          !Reset istate to let integrator know it's a new variable
+          istate=1
+#endif
+
+    end subroutine switch_to_qvar
 
     !DEBUG
     !Capture the first and second turn positions in N

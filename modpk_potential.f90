@@ -985,9 +985,10 @@ CONTAINS
     !NB: Default is for \psi_ij, making the q_ij eqns a little more complicated
     !NB: \psi_ij = a*q_ij
     !NB: d\psi_ij = a*(q_ij + dq_ij)
-    power_matrix=0e0_dp
-    d_power_matrix=0e0_dp
-    cross_matrix=0e0_dp
+
+    power_matrix=0e0_dp !in delta_phi
+    d_power_matrix=0e0_dp !in psi
+    cross_matrix=0e0_dp !in psi
 
     if (use_q) then
       !Don't divide out by scalefact
@@ -1094,8 +1095,6 @@ CONTAINS
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
 
-#ifdef COMPUTE_PRESS
-
       !Total pressure spectrum
       !<P P*>
       A_vect = get_A_vect_Ptotal(phi,dphi)
@@ -1162,8 +1161,6 @@ CONTAINS
       end do; end do
       power_press_adiab = (AAprod + BBprod) + (ABprod + BAprod)
 
-#endif
-
       !The values (AA + BB) --> -(AB+BA) as approaches adiab limit.
       !Taking diff of "large" numbs means large error in the difference
       !Check if power_pnad is smaller than DP accuracy and set to zero
@@ -1197,11 +1194,13 @@ CONTAINS
       power_spectrum%cross_ad_iso =  0e0_dp
     end if
 
-    power_spectrum%matrix  =  power_matrix
+    power_spectrum%phi_ij  =  power_matrix
     power_spectrum%adiab   =  power_adiab
     power_spectrum%isocurv =  power_isocurv
     power_spectrum%pnad    =  power_pnad
     power_spectrum%entropy =  power_entropy
+    power_spectrum%pressure =  power_pressure
+    power_spectrum%press_ad =  power_press_adiab
     power_spectrum%cross_ad_iso =  power_cross
 
 
@@ -1972,6 +1971,7 @@ END MODULE potential
 !sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
 module modpk_deltaN_SR
   use modpkparams, only : dp, vparams
+  use modpk_observables, only : power_spectra
   use internals, only : pi
   use potential, only : pot, dVdphi, d2Vdphi2, d3Vdphi3
   implicit none
@@ -1984,12 +1984,14 @@ module modpk_deltaN_SR
     !Evalutes adiabatic power spectrum under SR approximation at field positions
     !phi_end, given that the mode of interest crossed the horizon at phi_pivot
     !Assumes a massless, uncorrelated mode subhorizon
-    function PR_SR(phi_pivot,phi_end) result(PR)
+    function PR_SR(phi_pivot,phi_end, spectrum) result(PR)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
       real(dp) ::PR
       real(dp), dimension(size(phi_pivot)) :: dN
       real(dp) :: H_piv, V_piv, P_dphi
       real(dp), dimension(size(phi_pivot)) :: eps_i, u_i
+      type(power_spectra), intent(in), optional :: spectrum
+      integer :: ii, jj
 
       V_piv = pot(phi_pivot)
       H_piv = sqrt(V_piv/3.0e0_dp)
@@ -2002,16 +2004,44 @@ module modpk_deltaN_SR
 
       PR = sum(dN*dN)*P_dphi
 
+      if (present(spectrum)) then
+        PR=0e0_dp
+        do ii=1,size(dN); do jj=1,size(dN)
+          PR = PR+ &
+            dN(ii)*dN(jj)*spectrum%phi_ij(ii,jj)
+        end do; end do
+      end if
+
     end function PR_SR
 
-    function r_SR(phi_pivot,phi_end) result(r)
+    function r_SR(phi_pivot,phi_end, spectrum) result(r)
       real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
       real(dp) :: r
       real(dp), dimension(size(phi_pivot)) :: dN
+      type(power_spectra), intent(in), optional :: spectrum
+      real(dp) :: P_tens, P_scal, H, V
+
+      integer :: ii, jj
 
       dN = dNdphi_SR(phi_pivot,phi_end)
 
       r = 8.0e0_dp/sum(dN*dN)
+
+      if (present(spectrum)) then
+        V = pot(phi_pivot)
+        H = sqrt(V/3.0e0_dp)
+        P_tens = 8.0e0_dp*(H/2.0e0_dp/pi)**2
+
+        P_scal=0e0_dp
+        do ii=1,size(dN); do jj=1,size(dN)
+          P_scal = P_scal + &
+            dN(ii)*dN(jj)*spectrum%phi_ij(ii,jj)
+        end do; end do
+
+        r = P_tens/P_scal
+
+      end if
+
 
     end function r_SR
 

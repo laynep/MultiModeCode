@@ -808,8 +808,6 @@ print*, new_measure
     !constraint equation has one or more real solutions, solve for the
     !remaining Y(constraint).
     subroutine set_y_by_energy_constraint(y, constraint, energy_scale)
-
-      !use modpk_utils, only : laguerre_root_finder
       use modpk_rng, only : rand_sign
 
       real(dp), dimension(:), intent(inout) :: y
@@ -863,8 +861,6 @@ print*, new_measure
           print*, "algebraic constraint in by-hand."
           stop
         end if
-
-        !root = laguerre_root_finder(poly_degree)
 
       end if
 
@@ -1146,8 +1142,6 @@ print*, new_measure
 
       !Set intxn term over interval
 
-
-
       prior = log_param
 
       do i=1, size(vpnew,2)
@@ -1168,13 +1162,6 @@ print*, new_measure
           stop
         end if
       end do
-
-      !DEBUG
-      !print*, "Vparams from n_quadratic_mass_intxn_looping"
-      !do i=1,2
-      !  write(*, '(A8,I1,A5,100E18.7)'), "vparams(",i,",:) =", vparams(i,:)
-      !end do
-
 
     end subroutine n_quadratic_mass_intxn_looping
 
@@ -1262,6 +1249,7 @@ print*, new_measure
       !end do
 
 
+      !DEBUG
       print*, "mass ratio",sqrt((10e0**logmasses2(:))/(10e0**logmasses2(1)))
       print*, "alpha4",alpha4
       print*, "lambda", lambda

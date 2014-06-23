@@ -18,6 +18,7 @@ Set potential and its derivatives in modpk_potential.f90
 Parameters to control the output of analytic approximations for
 comparison.  The deltaN calculation is only valid for
 sum-separable potentials.
+
 &analytical
   use_deltaN_SR = .true.
   use_horiz_cross_approx = .true.
@@ -133,7 +134,8 @@ Uniform priors on fields and dphi/dt (NOT dphi/DN)
 
 
 ----------------
-If want to calculate the full power spectrum P(k)
+For calculating the full power spectrum P(k).  Samples in
+uniform increments in log(k).
 
 &full_pk
   calc_full_pk = .false.
@@ -146,7 +148,8 @@ If want to calculate the full power spectrum P(k)
   kmax = 0.04
 
 ----------------
-Options for output from the code
+Options for output from the code.
+
 &print_out
 
   out_opt%modpkoutput = .true.
@@ -160,5 +163,4 @@ Options for output from the code
   out_opt%modes = .false.
 
   get_runningofrunning = .false.
-
 /

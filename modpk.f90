@@ -114,14 +114,14 @@ CONTAINS
     index_uzeta_y = index_tensor_y + 2
 
     ! Make the powerspectrum array.
-    if (allocated(powerspectrum_out%matrix)) then
-      deallocate(powerspectrum_out%matrix)
+    if (allocated(powerspectrum_out%phi_ij)) then
+      deallocate(powerspectrum_out%phi_ij)
     end if
-    if (allocated(power_internal%matrix)) then
-      deallocate(power_internal%matrix)
+    if (allocated(power_internal%phi_ij)) then
+      deallocate(power_internal%phi_ij)
     end if
-    allocate(power_internal%matrix(num_inflaton,num_inflaton))
-    allocate(powerspectrum_out%matrix(num_inflaton,num_inflaton))
+    allocate(power_internal%phi_ij(num_inflaton,num_inflaton))
+    allocate(powerspectrum_out%phi_ij(num_inflaton,num_inflaton))
 
     !Evaluation scale
     k=kin*Mpc2Mpl
@@ -316,12 +316,6 @@ CONTAINS
 
           horiz_fract = horiz_fract*2.0e0_dp
 
-          !k = horiz_fract*aH
-          !horiz_fract=1e4_dp
-          !horiz_fract=1e3_dp
-          !horiz_fract=1e2_dp
-
-
           ah=LOG(k/horiz_fract)
           ah_index= locate(log_aharr(1:nactual_bg), ah)
 
@@ -332,7 +326,6 @@ CONTAINS
             k_start = 1e20_dp
             return
           end if
-
 
           j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
           call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
@@ -355,34 +348,23 @@ CONTAINS
           check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
           check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
 
-          do i=1, num_inflaton
-            do j=1, num_inflaton
-              check3(i,j) = abs( (dp_ik(i)*dV(j) + &
-                dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
-            end do
-          end do
+          do i=1, num_inflaton; do j=1, num_inflaton
+            check3(i,j) = abs( (dp_ik(i)*dV(j) + &
+              dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
+          end do; end do
 
-          do i=1, num_inflaton
-            do j=1, num_inflaton
-              check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
-            end do
-          end do
+          do i=1, num_inflaton; do j=1, num_inflaton
+            check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
+          end do; end do
 
-          tol = 1e-3_dp
+          tol = 1e-5_dp
           if   (check1 < tol  .and. &
-            any(check2 < tol) .and. &
-            any(check3 < tol) .and. &
-            any(check4 < tol)) then
+            all(check2 < tol) .and. &
+            all(check3 < tol) .and. &
+            all(check4 < tol)) then
 
             bd_consistent = .true.
 
-          else
-            !DEBUG
-            !if (check1 > tol)      print*, "check1 --- H: (", check1, ") >", tol
-            !if (any(check2 > tol)) print*, "check2 --- masses: (", check2, ") >", tol
-            !if (any(check3 > tol)) print*, "check3 --- off-diag: (", check3, ") >", tol
-            !if (any(check4 > tol)) print*, "check4 --- off-diag: (", check4, ") >", tol
-            !stop
           end if
 
           k_start = horiz_fract

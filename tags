@@ -1037,7 +1037,9 @@ calculate_observs_finitediff	modpk_modules.f90	/^    subroutine calculate_observ
 calculate_pk_observables	multimodecode_driver.f90	/^    subroutine calculate_pk_observables(/;"	s	program:multimodecode
 camb_interface	modpk_modules.f90	/^MODULE camb_interface$/;"	m
 check_for_eternal_inflation	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation$/;"	s	subroutine:odeint_r
+check_for_eternal_inflation_MODES	modpk_odeint.f90	/^    subroutine check_for_eternal_inflation_MODES(/;"	s	subroutine:odeint_c
 check_inflation_ended_properly	modpk_odeint.f90	/^     subroutine check_inflation_ended_properly(/;"	s	subroutine:odeint_r
+check_inflation_ended_properly_MODES	modpk_odeint.f90	/^    subroutine check_inflation_ended_properly_MODES(/;"	s	subroutine:odeint_c
 check_inflation_started_properly	modpk_odeint.f90	/^     subroutine check_inflation_started_properly(/;"	s	subroutine:odeint_r
 check_stop_when_not_slowroll_infl_end	modpk_odeint.f90	/^  logical function check_stop_when_not_slowroll_infl_end(/;"	f	module:modpk_odeint
 choose_initial_parameter	modpk_qsf.f90	/^  subroutine choose_initial_parameter(/;"	s	module:modpk_qsf
@@ -1093,6 +1095,7 @@ equal_displacement_ic	modpk_icsampling.f90	/^    subroutine equal_displacement_i
 eta_SR	modpk_potential.f90	/^    function eta_SR(/;"	f	module:modpk_deltaN_SR
 eval_ps	modpk_modules.f90	/^  real(dp) :: eval_ps,/;"	v	module:modpk_observables
 evaluate_modes	modpk_modules.f90	/^  logical :: evaluate_modes$/;"	v	module:modpkparams
+evaluate_powerspectra	modpk_odeint.f90	/^    subroutine evaluate_powerspectra(/;"	s	subroutine:odeint_c
 evolve	modpk.f90	/^  SUBROUTINE evolve(/;"	s	module:access_modpk
 exp_scalar	modpk_potential.f90	/^    real(dp) :: exp_scalar=/;"	k	type:bundle
 fNL_SR	modpk_potential.f90	/^    function fNL_SR(/;"	f	module:modpk_deltaN_SR
@@ -1158,6 +1161,7 @@ init_random_seed_parallel	modpk_rng.f90	/^subroutine init_random_seed_parallel(/
 init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial(/;"	s	module:modpk_rng
 init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(/;"	s	program:multimodecode
 initialize_dvode	modpk_odeint.f90	/^    subroutine initialize_dvode(/;"	s	subroutine:odeint_r
+initialize_dvode_MODES	modpk_odeint.f90	/^    subroutine initialize_dvode_MODES(/;"	s	subroutine:odeint_c
 initialphi	modpk_potential.f90	/^  FUNCTION initialphi(/;"	f	module:potential
 instreheat	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs, instreheat$/;"	v	module:modpkparams
 int_limits	modpk_potential.f90	/^      subroutine int_limits(/;"	s	function:fisher_rao_metric
@@ -1371,6 +1375,7 @@ stand_dev_qsfrandom	modpk_qsf.f90	/^  real(dp), dimension(:), allocatable :: sta
 stepsize	multimodecode_driver.f90	/^  real(dp), dimension(size(dataset,2)) :: observ, stepsize$/;"	v	program:multimodecode
 stupid_locate	modpk_numerics.f90	/^  pure integer function stupid_locate(/;"	f	module:modpk_numerics
 summand	modpk_modules.f90	/^    real(dp) :: summand /;"	k	type:KahanSum
+switch_to_qvar	modpk_odeint.f90	/^    subroutine switch_to_qvar(/;"	s	subroutine:odeint_c
 tauNL_SR	modpk_potential.f90	/^    function tauNL_SR(/;"	f	module:modpk_deltaN_SR
 tau_NL	modpk_modules.f90	/^    real(dp) :: tau_NL$/;"	k	type:observables
 tensor	modpk_modules.f90	/^    real(dp) :: tensor$/;"	k	type:power_spectra
