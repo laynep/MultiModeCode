@@ -492,7 +492,6 @@ contains
     N_turn2=0e0_dp
     H_turn2 = 0e0_dp
 
-
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
     x=x1
@@ -533,15 +532,15 @@ contains
        end if
 
        IF (use_q) THEN
-          ! super-h use Q
-          CALL qderivs(x, y, dydx)
+         ! super-h use Q
+         CALL qderivs(x, y, dydx)
        ELSE
-          ! sub-h use psi
-          CALL derivs(x, y, dydx)
+         ! sub-h use psi
+         CALL derivs(x, y, dydx)
        END IF
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
+         CALL save_a_step
 
 #ifdef DVODE
 
@@ -624,8 +623,9 @@ contains
          end if
 
          ! if k<aH/eval_ps, then k<<aH
-         IF(k .LT. a_init*exp(x)*getH(phi, delphi)/eval_ps) &
+         if(k .lt. a_init*exp(x)*getH(phi, delphi)/eval_ps) then
            call evaluate_powerspectra()
+         end if
 
        END IF
 

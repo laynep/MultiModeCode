@@ -202,7 +202,7 @@ module modpk_observables
     !Mode
     real(dp) :: k
     !Ptb spectra
-    complex(dp), dimension(:,:), allocatable :: matrix
+    complex(dp), dimension(:,:), allocatable :: phi_ij
     !Proj ptb spectra onto adiab direction
     real(dp) :: adiab
     !Tensor mode spectrum
@@ -215,6 +215,10 @@ module modpk_observables
     real(dp) :: cross_ad_iso
     !Total non-adiab pressure ptb spectrum
     real(dp) :: pnad
+    !Total pressure ptb spectrum
+    real(dp) :: pressure
+    !Adiab pressure ptb spectrum
+    real(dp) :: press_ad
     !Total entropic ptb spectrum, proportional to non-adiab pressure ptb
     real(dp) :: entropy
     !Expansion scalar for field space bundle width
@@ -403,6 +407,7 @@ module modpk_observables
 
         this%alpha_s = log(pkhigh1%adiab*pklow1%adiab/pk0%adiab**2)/dlnk**2
 
+        !Default
         this%runofrun = 0e0_dp
 
       end if

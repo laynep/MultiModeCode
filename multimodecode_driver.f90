@@ -332,6 +332,10 @@ program multimodecode
       write(*, out_opt%e2_fmt)&
         "r = Pt/Ps =", observ_modes%r, '(', SR_pred%r, ')'
 
+      !DEBUG
+      write(*, out_opt%e2_fmt)&
+        "r m^2 phi^2 =", observ_modes%r, '(', 8.0/N_pivot, ')'
+
       write(*, out_opt%e2_fmt)&
         "n_s =", observ_modes%ns, '(', SR_pred%ns,')'
       if (num_inflaton>1) then
@@ -344,6 +348,8 @@ program multimodecode
       end if
       write(*, out_opt%e2_fmt)&
         "n_t =", observ_modes%nt, '(', SR_pred%nt , ')'
+      write(*, out_opt%e2_fmt)&
+        "r/n_t =", observ_modes%r/observ_modes%nt
       write(*, out_opt%e2_fmt)&
         "alpha_s =", observ_modes%alpha_s, '(', SR_pred%alpha_s , ')'
       if (get_runningofrunning) then
