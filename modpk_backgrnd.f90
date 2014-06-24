@@ -250,7 +250,7 @@ CONTAINS
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
     use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic,&
-      slowroll_samp, iso_N, param_unif_prior, qsf_random
+      slowroll_samp, iso_N, param_unif_prior, qsf_random, qsf_parametric
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -292,11 +292,10 @@ CONTAINS
 
     vv = 0e0_dp
 
-    !DEBUG
-    !if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N) then
     if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
       sampling_techn==reg_samp .or. &
       sampling_techn==qsf_random .or. &
+      sampling_techn==qsf_parametric .or. &
       (sampling_techn==param_unif_prior .and. num_inflaton==1)) then
 
       if( sampling_techn == reg_samp .and. &
@@ -426,15 +425,6 @@ CONTAINS
           epsarr(i) = getEps(phiarr(:,i),dphiarr(:,i))
           sigma_arr(i) = sqrt(dot_product((phiarr(:,i)-phi_init),(phiarr(:,i)-phi_init)))
 
-          !DEBUG
-          !Do we even need this to compute the bundle width anymore?
-          
-          !! compute d\theta/dN_e
-          !dotphi = sqrt(dot_product(dphiarr(:,i), dphiarr(:,i)))
-          !Vp = dVdphi(phiarr(:,i))
-          !Vz = dot_product(Vp, phiarr(:,i))/dotphi
-          !grad_V = sqrt(dot_product(Vp, Vp))
-          !dtheta_dN = sqrt((grad_V + Vz)*(grad_V - Vz))/(dotphi*hubarr(i)**2)
        END DO
        !END MULTIFIELD
 
@@ -459,17 +449,30 @@ CONTAINS
 
           !Check for interpolation errors
           if(dalpha > 0.1 .or. dv > 0.1 .or. bb(1) > 0.1) THEN
-             print*,'MODPK: The interpolation in SUBROUTINE trial_background has suspiciously large'
-             print*,'MODPK: errors. Your model smells fishy.'
-             print*,'MODPK: QUITTING'
-             print*,"MODPK: dalpha", dalpha
-             print*,"MODPK: dv", dv
-             print*,"MODPK: bb", bb
-             print*,"MODPK: lna", lna(kount-5:kount), "alpha_e", alpha_e
-             print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
-             stop
+
+             !Check if didn't get enough e-folds
+             if (lna(kount) < N_pivot) then
+               print*
+               if (out_opt%modpkoutput)&
+                 write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
+               if (out_opt%modpkoutput)&
+                 write(*, *), "MODPK: lna(kount) - lna(1) =", lna(kount) - lna(1),"< ",N_pivot
+               pk_bad = 6
+               return
+             else
+
+               print*,'MODPK: The interpolation in SUBROUTINE trial_background has suspiciously large'
+               print*,'MODPK: errors. Your model smells fishy.'
+               print*,'MODPK: QUITTING'
+               print*,"MODPK: dalpha", dalpha
+               print*,"MODPK: dv", dv
+               print*,"MODPK: bb", bb
+               print*,"MODPK: lna", lna(kount-5:kount), "alpha_e", alpha_e
+               print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
+               stop
+             end if
            endif
-          
+
        ELSE
           if (size(phi_init) .eq. 1) then
              ep = abs(phi_init(1) - phi_infl_end(1))

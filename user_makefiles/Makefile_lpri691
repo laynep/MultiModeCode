@@ -6,7 +6,7 @@ FFLAGS = -O3 -cpp -fopenmp -ffast-math -fdefault-real-8 # -fdefault-real-8
 
 ifdef DEBUG
 F90C     = gfortran
-FFLAGS = -cpp -O0 -fdefault-real-8
+FFLAGS = -cpp -O0 -fdefault-real-8 -g -p
 endif
 
 #ifort compile options
@@ -14,7 +14,7 @@ else
 
 ifdef DEBUG
 F90C     = ifort
-FFLAGS = -fpp  -g -traceback -debug #-O0 -openmp  -fast # -DMPI
+FFLAGS = -fpp  -g -p -traceback -debug #-O0 -openmp  -fast # -DMPI
 
 ifdef QUAD
 FFLAGS+= -r16

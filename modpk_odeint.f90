@@ -4,7 +4,8 @@
 MODULE modpk_odeint
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
-  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic
+  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic, &
+    slowroll_samp, iso_N, qsf_random, qsf_parametric
 #ifdef DVODE
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
@@ -135,14 +136,7 @@ contains
        call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
        !Record the background trajectory
-       if (out_opt%save_traj) write(out_opt%trajout,'(100E18.10)'),&
-         x, &
-         y(:), &
-         getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         dVdphi(y(1:num_inflaton)), &
-         d2Vdphi2(y(1:num_inflaton))
+       if (out_opt%save_traj) call print_traj()
 
        CALL derivs(x,y,dydx)
        !If get bad deriv, then override this error when IC sampling
@@ -188,7 +182,11 @@ contains
        !END MULTIFIELD
 
        call check_inflation_ended_properly(leave)
-       if (leave) return
+       if (leave) then
+          !Record the background trajectory
+          if (out_opt%save_traj) call print_traj()
+         return
+       end if
 
       if (abs(x2-x)<1e-10) then
         print*, "reached end of N-integration...."
@@ -287,6 +285,18 @@ contains
     end subroutine initialize_dvode
 #endif
 
+    subroutine print_traj()
+       write(out_opt%trajout,'(100E18.10)'),&
+         x, &
+         y(:), &
+         pot(y(1:num_inflaton)),&
+         getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+         getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+         geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+         dVdphi(y(1:num_inflaton)), &
+         d2Vdphi2(y(1:num_inflaton))
+    end subroutine print_traj
+
     subroutine check_for_eternal_inflation
 
        IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
@@ -306,7 +316,15 @@ contains
      subroutine check_inflation_started_properly()
 
        IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
-         if (sampling_techn==reg_samp) then
+
+         if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
+           sampling_techn==reg_samp .or. &
+           sampling_techn==qsf_random .or. &
+           sampling_techn==qsf_parametric) then
+
+         !if (sampling_techn==reg_samp) then
+
+
            slowroll_start=.true.
          else
            !If scan ICs, say inflating iff eps<1 for "extended" period,

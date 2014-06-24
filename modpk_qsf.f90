@@ -20,6 +20,7 @@ module modpk_qsf
   type :: qsf_reference
     real(dp), dimension(:), allocatable :: phi
     real(dp) :: param
+    integer :: hunt_guess
     logical :: traj_init = .false.
     real(dp), dimension(:,:), allocatable :: phi_light_vs_param
     contains
@@ -145,7 +146,7 @@ contains
        end if 
 
     case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+       write(*,*) 'QSF: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
 
   end function turning_function
@@ -213,7 +214,7 @@ contains
        end if 
 
     case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+       write(*,*) 'QSF: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
 
 
@@ -272,7 +273,7 @@ contains
        !two-knot trajectory
       d2turndphi2 = 0e0_dp
     case default
-       write(*,*) 'MODPK: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
+       write(*,*) 'QSF: Need to set turning_function in modpk_potential.f90 for turning_choice =',turning_choice
     end select
 
 
@@ -335,10 +336,17 @@ contains
     real(dp), dimension(num_inflaton) :: funct
 
     select case(turning_choice(1))
-    case(1)
+    case(0)
       !Line
+      funct = param
+    case(1)
+      !Parabola
       funct(1) = param
       funct(2) = param**2
+    case(2)
+      !Helix
+      funct(1) = sin(param)
+      funct(2) = cos(param)
     case default
       print*, "ERROR: turning_function_parametric not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
@@ -354,10 +362,17 @@ contains
     real(dp), dimension(num_inflaton) :: funct
 
     select case(turning_choice(1))
-    case(1)
+    case(0)
       !Line
+      funct = 1e0_dp
+    case(1)
+      !Parabola
       funct(1) = 1e0_dp
       funct(2) = 2e0_dp*param
+    case(2)
+      !Helix
+      funct(1) = cos(param)
+      funct(2) = -sin(param)
     case default
       print*, "ERROR: turning_function_parametric not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
@@ -373,10 +388,17 @@ contains
     real(dp), dimension(num_inflaton) :: funct
 
     select case(turning_choice(1))
-    case(1)
+    case(0)
       !Line
+      funct = 0e0_dp
+    case(1)
+      !Parabola
       funct(1) = 0e0_dp
       funct(2) = 2e0_dp
+    case(2)
+      !Helix
+      funct(1) = -sin(param)
+      funct(2) = -cos(param)
     case default
       print*, "ERROR: turning_function_parametric not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
@@ -437,11 +459,12 @@ contains
   !When initializing the integration around the parametrized curve,
   !this function will get the first guess for the parameter that puts
   !phi closest to the line
-  subroutine choose_initial_parameter(this)
+  subroutine choose_initial_parameter(this, phi_light0)
     implicit none
 
     class(qsf_reference) :: this
-    integer :: npoints
+    integer :: ii
+    real(dp), intent(in) :: phi_light0
 
 
     if (.not. allocated(this%phi_light_vs_param)) then
@@ -450,8 +473,11 @@ contains
       stop
     end if
 
-    npoints = size(this%phi_light_vs_param,1)
-    this%param = this%phi_light_vs_param(npoints,2)
+#define LIGHT (this%phi_light_vs_param(:,1))
+    ii= locate(LIGHT, phi_light0)
+    this%hunt_guess = ii
+    this%param = this%phi_light_vs_param(ii,2)
+#undef LIGHT
 
 
   end subroutine choose_initial_parameter
@@ -469,7 +495,7 @@ contains
 
     real(dp) :: dx
     real(dp), dimension(:,:), allocatable :: length
-    integer(dp), parameter :: maxsteps=1e5
+    integer(dp), parameter :: maxsteps=1e6
 
     integer :: ii, counter
     real(dp) :: x_a, x_b
@@ -479,7 +505,7 @@ contains
     if (present(stepsize)) then
       dx = stepsize
     else
-      dx = 1e-2_dp
+      dx = 1e-4_dp
     end if
 
     !Integrate along parametric curve and record values for interpolation
@@ -498,7 +524,7 @@ contains
       x_a = x_b
 
       !Check if have gone far enough
-      if (length(counter,1)>phi_start) exit
+      if (length(counter,1)>1.25*phi_start) exit
 
       if (ii==maxsteps-1) then
         print*, "QSF: Couldn't integrate until length of curve=", phi_start
@@ -514,13 +540,6 @@ contains
 
     this%traj_init = .true.
 
-    !DEBUG
-    !print*, "from integrate_through_trajectory"
-    !print*, "phi_init", turning_function_parametric(&
-    !  this%phi_light_vs_param(counter,2))
-    !stop
-
-
   end subroutine integrate_through_trajectory
 
   !After the trajectory has been integrated, this will give the
@@ -530,6 +549,7 @@ contains
 
     class(qsf_reference) :: this
     real(dp), intent(in) :: param
+    integer :: param_guess
     real(dp) :: phi_light
     real(dp) :: del_phi
 
@@ -540,26 +560,73 @@ contains
       stop
     end if
 
-#define LIGHT (this%phi_light_vs_param(:,1))
-#define P_ARR (this%phi_light_vs_param(:,2))
+    param_guess = this%hunt_guess
+
+    call locator()
+    call interpolator()
+
+    this%hunt_guess = param_guess
+
+
+    contains
+
+      subroutine locator()
+        integer :: low, high
+
 #define INTLEN size(this%phi_light_vs_param,1)
-    !Simple interpolation, since traj is monotonic in param
-    ii= locate(P_ARR, param)
-    jj=min(max(ii-(4-1)/2,1),INTLEN+1-4)
+
+        low = max(1, param_guess-100)
+        high = min(INTLEN, param_guess+100)
+
+!DEBUG
+!#define LIGHT (this%phi_light_vs_param(:,1))
+!#define P_ARR (this%phi_light_vs_param(:,2))
+#define LIGHT (this%phi_light_vs_param(low:high,1))
+#define P_ARR (this%phi_light_vs_param(low:high,2))
+
+        !P_ARR is monotonic
+        param_guess = param_guess - low
+        call hunt(P_ARR, param, param_guess)
+        param_guess = param_guess + low
+        ii = param_guess
+        !ii= locate(P_ARR, param)
+
+        jj=min(max(ii-(4-1)/2,1),INTLEN+1-4)
 
 #undef P_ARR
 #undef LIGHT
+
+      end subroutine
+
+      subroutine interpolator()
 #define LIGHT (this%phi_light_vs_param(jj:jj+4,1))
 #define P_ARR (this%phi_light_vs_param(jj:jj+4,2))
 
-    call polint(&
-      P_ARR, &
-      LIGHT,&
-      param, phi_light, del_phi)
+        call polint(&
+          P_ARR, &
+          LIGHT,&
+          param, phi_light, del_phi)
+
+          !Check for interpolation errors
+          if(del_phi > 0.1) then
+            print*,'QSF: The interpolation in get_phi_light/locator has suspiciously large'
+            print*,'QSF: QUITTING'
+            print*,"QSF: del_phi", del_phi
+            print*,"QSF: P_ARR", P_ARR, "param", param
+            print*,"QSF: LIGHT", LIGHT
+            stop
+          else if (phi_light > this%phi_light_vs_param(INTLEN,1)) then
+            print*, "QSF: phi_light > LIGHT(MAX)"
+            print*, "QSF: phi_light =", phi_light
+            print*, "QSF: LIGHT(MAX) =", this%phi_light_vs_param(INTLEN,1)
+            stop
+          end if
 
 #undef LIGHT
 #undef P_ARR
 #undef INTLEN
+
+      end subroutine
 
   end function get_phi_light
 

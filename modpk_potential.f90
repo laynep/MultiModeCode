@@ -191,32 +191,14 @@ CONTAINS
       end do
 
     case(15)
+
       !"Numerical" QSF trajectory
       !(1/2)m_L^2 phi_L^2 + (1/2)M_heavy^2 D^2
       !for D^2 = MIN( sum_i (phi_i - funct_i(param))^2; wrt param)
       !Where param_min is found numerically
+
       m_light2 = 10.0e0_dp**vparams(1,1)
       M_heavy2 = 10.0e0_dp**vparams(1,2)
-      param0 = vparams(2,1)
-      phi_light0 = vparams(3,1)
-
-!DEBUG
-!print*, "GETTING HERE"
-
-      !Initialize if first time
-      if (.not. qsf_runref%traj_init) then
-        !Integrate through traj and set-up interpolation if first time
-        call qsf_runref%initialize_traj(phi_light0,param0)
-
-        !Find the initial param that coincides with setting
-        !IC in minimum of valley (dist=0) with phi_light=phi_light0
-        call qsf_runref%get_init_param()
-      end if
-
-!DEBUG
-!print*, "phi_light0", phi_light0
-!print*, "init param", qsf_runref%param
-
 
       !Find the parameter that gives the minimum distance
       !between phi and the parametrized curve
@@ -230,29 +212,25 @@ CONTAINS
       end if
       qsf_runref%phi = phi
 
-
       !Closest approach to parameterized curve
       param_closest = zero_finder(distance_deriv, &
         distance_2deriv, qsf_runref%param)
       dist = distance(param_closest)
 
-      !Reset param guess for next time through
-      qsf_runref%param = param_closest
-
       !Get the integrated distance this closest point is up the curve
       phi_light = qsf_runref%phi_light(param_closest)
 
+      !DEBUG
+      !print*, "this is phi_light", phi_light
+      !print*, "this is dist", dist
+      !print*, "this is param_guess", qsf_runref%hunt_guess
+      !print*, "this is param_closest", param_closest
+
+      !Reset param guess for next time through
+      qsf_runref%param = param_closest
+
       V_potential = 0.5e0_dp*m_light2*phi_light**2 &
         + 0.5e0_dp*M_heavy2*dist**2
-
-      !DEBUG
-      !print*, "param_closest", param_closest
-      !print*, "phi", phi
-      !print*, "funct(param)", turning_function_parametric(param_closest)
-      !print*, "dist", dist
-      !print*, "V", V_potential
-
-
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice

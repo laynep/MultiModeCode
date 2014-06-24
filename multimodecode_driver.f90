@@ -150,8 +150,9 @@ program multimodecode
 
     call calculate_pk_observables(k_pivot,dlnk)
 
-  !Eqen sampling
-  else if (sampling_techn == eqen_samp .or. &
+  else if &
+    !Eqen sampling
+    (sampling_techn == eqen_samp .or. &
     !Set vels in SR and fields on iso-N surface for N-quad
     sampling_techn == iso_N .or.&
     !Set vels in SR
@@ -161,7 +162,9 @@ program multimodecode
     !Loop over different vparams for given num_inflaton
     sampling_techn == parameter_loop_samp .or. &
     sampling_techn == param_unif_prior .or. &
-    sampling_techn == qsf_random  &
+    !QSF trajectories
+    sampling_techn == qsf_random .or.  &
+    sampling_techn == qsf_parametric &
     ) then
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
@@ -608,12 +611,6 @@ program multimodecode
 
 	    !Set random seed
 	    call init_random_seed()
-!!DEBUG
-!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!print*, "NOT USING RANDOM SEED"
-!print*, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-!call random_seed(PUT=(/711641855,   711641892/))
-
 
       if (allocated(phi0_priors_max)) then
         print*, "ERROR: Priors allocated before initialization."

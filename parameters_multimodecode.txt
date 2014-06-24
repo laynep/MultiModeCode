@@ -6,9 +6,9 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 2
-  potential_choice = 1
+  potential_choice = 15
   vparam_rows = 6
-  more_potential_params = .false.
+  more_potential_params = .true.
 
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -20,7 +20,7 @@ comparison.  The deltaN calculation is only valid for
 sum-separable potentials.
 
 &analytical
-  use_deltaN_SR = .true.
+  use_deltaN_SR = .false.
   use_horiz_cross_approx = .true.
   evaluate_modes = .true.
 /
@@ -35,7 +35,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 &more_params
   effective_V_choice = 1
-  turning_choice = 1
+  turning_choice = 0
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
 
@@ -51,8 +51,8 @@ NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     7=param_unif_prior, 8=qsf_random}
 
 &ic_sampling
-  sampling_techn = 3
-  numb_samples = 10
+  sampling_techn = 9
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -72,11 +72,11 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 25.0 0.416481652821956
+  phi_init0 = 1.0 1.0
 
-  vparams(1,:) = -10.2789840467449       -12.1602803162336
-  vparams(2,:) = -1000000.0       -6.0
-  vparams(3,:) =  0.0        1.00
+  vparams(1,:) = -12.2789840467449       -8.1602803162336
+  vparams(2,:) = 0.0       -6.0
+  vparams(3,:) =  15.0        1.00
 
   vparams(4,:) = 0.0       10
   vparams(5,:) = 0.0       .050
@@ -85,6 +85,8 @@ the smallest mass; others are discarded.
 
 /
 =======
+  phi_init0 = 25.0 0.416481652821956
+
   vparams(1,:) = -9.711 -10.48
   vparams(2,:) = -1000000.0       -5.0
   vparams(3,:) =  0.0        1.0000
@@ -156,7 +158,7 @@ Options for output from the code.
   out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .false.
+  out_opt%save_traj = .true.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.

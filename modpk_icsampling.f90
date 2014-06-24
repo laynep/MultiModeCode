@@ -14,7 +14,7 @@ module modpk_icsampling
 
   integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
     fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
-    qsf_random=8, fisher_inf=9
+    qsf_random=8, qsf_parametric=9, fisher_inf=10
 
   integer, parameter :: bad_ic=6
   integer :: sampling_techn
@@ -64,6 +64,8 @@ module modpk_icsampling
         vparams_priors_min, vparams_priors_max
 
       real(dp), dimension(:,:), allocatable :: knot_temp
+
+      real(dp) :: param0, phi_light0
 
 
       phi0_priors_max=priors_max(1,:)
@@ -299,6 +301,26 @@ module modpk_icsampling
           knot_positions(i,1:number_knots_qsfrandom(i),:) = knot_temp
 
         end do
+
+      !-----------------------------------------
+      else if (sampling_techn == qsf_parametric) then
+        !"Numerical" QSF trajectory, needs to set initial position based off the
+        !parametric curve.
+
+        param0 = vparams(2,1)
+        phi_light0 = vparams(3,1)
+
+
+        !Integrate through traj and set-up interpolation if first time
+        call qsf_runref%initialize_traj(phi_light0,param0)
+
+        !Find the initial param that coincides with setting
+        !IC in minimum of valley (dist=0) with phi_light=phi_light0
+        call qsf_runref%get_init_param(phi_light0)
+
+        !Set initial condition from this parameter in the valley
+        y_background(1:num_inflaton) = turning_function_parametric(qsf_runref%param)
+        y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
 
       !-----------------------------------------
       else
