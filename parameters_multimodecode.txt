@@ -35,7 +35,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 &more_params
   effective_V_choice = 1
-  turning_choice = 0
+  turning_choice = 2
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
 
@@ -76,7 +76,7 @@ the smallest mass; others are discarded.
 
   vparams(1,:) = -12.2789840467449       -8.1602803162336
   vparams(2,:) = 0.0       -6.0
-  vparams(3,:) =  15.0        1.00
+  vparams(3,:) =  20.0        1.00
 
   vparams(4,:) = 0.0       10
   vparams(5,:) = 0.0       .050

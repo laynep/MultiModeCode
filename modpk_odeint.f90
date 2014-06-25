@@ -118,6 +118,7 @@ contains
 
     DO nstp=1,MAXSTP
 
+
        if (any(isnan(y))) then
          print*, "ERROR in odeint_r"
          print*, "ERROR: y has a NaN value."
@@ -183,8 +184,8 @@ contains
 
        call check_inflation_ended_properly(leave)
        if (leave) then
-          !Record the background trajectory
-          if (out_opt%save_traj) call print_traj()
+         !Record the background trajectory
+         if (out_opt%save_traj) call print_traj()
          return
        end if
 
@@ -305,7 +306,7 @@ contains
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
           PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
           PRINT*,'MODPK: QUITTING'
-          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
+          WRITE(*, *) 'x, x1, x2 :', x, x1, x2
           WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
           STOP
@@ -317,13 +318,11 @@ contains
 
        IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
 
-         if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
+         if (sampling_techn==slowroll_samp .or. &
+           sampling_techn==iso_N .or.&
            sampling_techn==reg_samp .or. &
            sampling_techn==qsf_random .or. &
            sampling_techn==qsf_parametric) then
-
-         !if (sampling_techn==reg_samp) then
-
 
            slowroll_start=.true.
          else

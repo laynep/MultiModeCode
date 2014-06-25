@@ -544,7 +544,7 @@ contains
 
   !After the trajectory has been integrated, this will give the
   !distance along the trajectory (from param0) to a reference param
-  function get_phi_light(this, param) result(phi_light)
+  function get_phi_light(this, param, use_locate) result(phi_light)
     implicit none
 
     class(qsf_reference) :: this
@@ -552,6 +552,8 @@ contains
     integer :: param_guess
     real(dp) :: phi_light
     real(dp) :: del_phi
+
+    logical, intent(in), optional :: use_locate
 
     integer :: ii, jj
 
@@ -562,8 +564,46 @@ contains
 
     param_guess = this%hunt_guess
 
-    call locator()
+    if (present(use_locate) .and. use_locate) then
+      call locator()
+    else
+      call hunter()
+    end if
     call interpolator()
+
+#define INTLEN size(this%phi_light_vs_param,1)
+
+    !Check for interpolation errors
+    if(abs(del_phi) > 0.1 .or. &
+      phi_light<this%phi_light_vs_param(1,1) .or. &
+      phi_light > this%phi_light_vs_param(INTLEN,1)) then
+
+      if (.not. present(use_locate) .or. .not. use_locate) then
+        !Try locate, instead of hunt
+        !DEBUG
+        print*, "Try locate, instead of hunt"
+        call locator()
+        call interpolator()
+      end if
+
+    end if
+
+    if(abs(del_phi) > 0.1) then
+      print*,'QSF: The interpolation in get_phi_light/locator has suspiciously large errors'
+      print*,'QSF: QUITTING'
+      print*,"QSF: del_phi", del_phi
+      stop
+    else if (phi_light > this%phi_light_vs_param(INTLEN,1) .or. &
+      phi_light < this%phi_light_vs_param(1,1)) then
+      print*, "QSF: phi_light is out of bounds"
+      print*, "QSF: phi_light > LIGHT(MAX) or < LIGHT(MIN)"
+      print*, "QSF: phi_light =", phi_light
+      print*, "QSF: LIGHT(MAX) =", this%phi_light_vs_param(INTLEN,1)
+      print*, "QSF: LIGHT(MIN) =", this%phi_light_vs_param(1,1)
+      print*, "QSF: param_guess =", param_guess
+      print*, "QSF: param =", param
+      stop
+    end if
 
     this%hunt_guess = param_guess
 
@@ -571,16 +611,28 @@ contains
     contains
 
       subroutine locator()
-        integer :: low, high
 
-#define INTLEN size(this%phi_light_vs_param,1)
+
+#define LIGHT (this%phi_light_vs_param(:,1))
+#define P_ARR (this%phi_light_vs_param(:,2))
+
+        !P_ARR is monotonic
+        ii= locate(P_ARR, param)
+
+        jj=min(max(ii-(4-1)/2,1),INTLEN+1-4)
+
+#undef P_ARR
+#undef LIGHT
+
+      end subroutine
+
+      !Major speed-up
+      subroutine hunter()
+        integer :: low, high
 
         low = max(1, param_guess-100)
         high = min(INTLEN, param_guess+100)
 
-!DEBUG
-!#define LIGHT (this%phi_light_vs_param(:,1))
-!#define P_ARR (this%phi_light_vs_param(:,2))
 #define LIGHT (this%phi_light_vs_param(low:high,1))
 #define P_ARR (this%phi_light_vs_param(low:high,2))
 
@@ -589,14 +641,13 @@ contains
         call hunt(P_ARR, param, param_guess)
         param_guess = param_guess + low
         ii = param_guess
-        !ii= locate(P_ARR, param)
 
         jj=min(max(ii-(4-1)/2,1),INTLEN+1-4)
 
 #undef P_ARR
 #undef LIGHT
 
-      end subroutine
+      end subroutine hunter
 
       subroutine interpolator()
 #define LIGHT (this%phi_light_vs_param(jj:jj+4,1))
@@ -607,26 +658,10 @@ contains
           LIGHT,&
           param, phi_light, del_phi)
 
-          !Check for interpolation errors
-          if(del_phi > 0.1) then
-            print*,'QSF: The interpolation in get_phi_light/locator has suspiciously large'
-            print*,'QSF: QUITTING'
-            print*,"QSF: del_phi", del_phi
-            print*,"QSF: P_ARR", P_ARR, "param", param
-            print*,"QSF: LIGHT", LIGHT
-            stop
-          else if (phi_light > this%phi_light_vs_param(INTLEN,1)) then
-            print*, "QSF: phi_light > LIGHT(MAX)"
-            print*, "QSF: phi_light =", phi_light
-            print*, "QSF: LIGHT(MAX) =", this%phi_light_vs_param(INTLEN,1)
-            stop
-          end if
-
+      end subroutine
 #undef LIGHT
 #undef P_ARR
 #undef INTLEN
-
-      end subroutine
 
   end function get_phi_light
 

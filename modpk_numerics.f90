@@ -91,14 +91,14 @@ module modpk_numerics
     !Modified from: http://faculty.washington.edu/rjl/classes/am583s2013/notes/fortran_newton.html
     function zero_finder(f, fp, x0, iters, debugging) result(x)
 
-      ! Estimate the zero of f(x) using Newton's method. 
+      ! Estimate the zero of f(x) using Newton's method.
       ! Input:
       !   f:  the function to find a root of
       !   fp: function returning the derivative f'
       !   x0: the initial guess
       !   debug: logical, prints iterations if debug=.true.
       ! Returns:
-      !   the estimate x satisfying f(x)=0 (assumes Newton converged!) 
+      !   the estimate x satisfying f(x)=0 (assumes Newton converged!)
       !   the number of iterations iters
 
       implicit none

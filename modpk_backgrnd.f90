@@ -9,6 +9,7 @@ MODULE background_evolution
   USE modpk_utils, ONLY : bderivs, rkqs_r, use_t
   use modpk_numerics, only : locate, polint, array_polint
   use modpk_output, only : out_opt
+  use modpk_qsf
 
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -419,6 +420,11 @@ CONTAINS
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
 
        !MULTIFIELD
+       if (sampling_techn == qsf_parametric) then
+         !Reset the hunt_guess for determing vv below
+         call qsf_runref%get_init_param(vparams(3,1))
+       end if
+
        DO i=1,kount
           vv(i) = pot(phiarr(:,i))
           hubarr(i) = getH(phiarr(:, i),dphiarr(:,i))

@@ -200,6 +200,8 @@ CONTAINS
       m_light2 = 10.0e0_dp**vparams(1,1)
       M_heavy2 = 10.0e0_dp**vparams(1,2)
 
+      param0 = vparams(2,1)
+
       !Find the parameter that gives the minimum distance
       !between phi and the parametrized curve
       if (allocated(qsf_runref%phi)) then
@@ -217,17 +219,17 @@ CONTAINS
         distance_2deriv, qsf_runref%param)
       dist = distance(param_closest)
 
+      !DEBUG
+      if (param_closest < param0) param_closest = param0
+
       !Get the integrated distance this closest point is up the curve
       phi_light = qsf_runref%phi_light(param_closest)
 
-      !DEBUG
-      !print*, "this is phi_light", phi_light
-      !print*, "this is dist", dist
-      !print*, "this is param_guess", qsf_runref%hunt_guess
-      !print*, "this is param_closest", param_closest
-
       !Reset param guess for next time through
       qsf_runref%param = param_closest
+
+      !DEBUG
+      !print*, "this is param_closest", param_closest
 
       V_potential = 0.5e0_dp*m_light2*phi_light**2 &
         + 0.5e0_dp*M_heavy2*dist**2
@@ -409,7 +411,7 @@ CONTAINS
 
        case(15)
          !Numerical QSF
-         stepsize = 1.0e-6_dp
+         stepsize = 1.0e-4_dp
          call num_first_deriv(pot, phi, stepsize, numderiv)
          first_deriv = numderiv
 
@@ -642,7 +644,7 @@ CONTAINS
 
        case(15)
          !Numerical QSF
-         stepsize = 1.0e-6_dp
+         stepsize = 1.0e-4_dp
          call num_second_deriv(pot, phi, stepsize, numderiv)
          second_deriv = numderiv
 
