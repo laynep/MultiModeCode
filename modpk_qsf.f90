@@ -580,8 +580,6 @@ contains
 
       if (.not. present(use_locate) .or. .not. use_locate) then
         !Try locate, instead of hunt
-        !DEBUG
-        print*, "Try locate, instead of hunt"
         call locator()
         call interpolator()
       end if

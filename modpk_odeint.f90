@@ -1,15 +1,10 @@
-!Use the DVODE integrator?
-!#define DVODE
-
 MODULE modpk_odeint
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
   use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic, &
     slowroll_samp, iso_N, qsf_random, qsf_parametric
-#ifdef DVODE
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
-#endif
   use modpk_output, only : out_opt
   implicit none
 
@@ -28,11 +23,7 @@ contains
     use modpk_observables
     use modpkparams
     use potential
-#ifdef DVODE
     use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode
-#else
-    use modpk_utils, only : reallocate_rv, reallocate_rm
-#endif
 
     implicit none
     real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -81,13 +72,12 @@ contains
     logical :: infl_checking
     logical :: leave
 
-#ifdef DVODE
+    !For DVODE integrator
     integer :: neq, istats(31)
     integer :: itask, istate
     real(dp) :: rtol, rstats(22), nefold_out, dN_step
     real(dp), dimension(:), allocatable :: atol
     type (vode_opts) :: ode_integrator_opt
-#endif
 
     !Inits for checking whether in
     !extended inflation period (for IC scan)
@@ -109,12 +99,11 @@ contains
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
-#ifdef DVODE
-    !Options for first call to dvode integrator
+    if (use_dvode_integrator) then
+      !Options for first call to dvode integrator
 
-    call initialize_dvode()
-
-#endif
+      call initialize_dvode()
+    end if
 
     DO nstp=1,MAXSTP
 
@@ -146,31 +135,32 @@ contains
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
 
-#ifdef DVODE
+      if (use_dvode_integrator) then
 
-       call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
-         itask,istate,ode_integrator_opt)
-       call get_stats(rstats,istats)
+        call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
+          itask,istate,ode_integrator_opt)
+        call get_stats(rstats,istats)
 
-       if (istate<0) then
-         print*, "ERROR in dvode_f90 istate=", istate
-         stop
-       end if
+        if (istate<0) then
+          print*, "ERROR in dvode_f90 istate=", istate
+          stop
+        end if
 
-#else
+      else
 
-       yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
+        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
-       IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
+        IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
 
-       CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+        CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
 
-       IF (hdid == h) THEN
-          nok=nok+1
-       ELSE
-          nbad=nbad+1
-       END IF
-#endif
+        IF (hdid == h) THEN
+           nok=nok+1
+        ELSE
+           nbad=nbad+1
+        END IF
+
+      end if
 
        call check_for_eternal_inflation()
 
@@ -197,19 +187,20 @@ contains
       end if
 
        IF (ode_underflow) RETURN
-#ifndef DVODE
-       IF (ABS(hnext) < hmin) THEN
-          write(*,*) 'stepsize smaller than minimum in odeint'
-          STOP
-       END IF
-#endif
+
+       if ( .not. use_dvode_integrator) then
+         IF (ABS(hnext) < hmin) THEN
+            write(*,*) 'stepsize smaller than minimum in odeint'
+            STOP
+         END IF
+       end if
 
        !Set up next N-step
-#ifdef DVODE
-       if (itask/=2) nefold_out = x + dN_step
-#else
-       h=hnext
-#endif
+       if (use_dvode_integrator) then
+         if (itask/=2) nefold_out = x + dN_step
+       else
+         h=hnext
+       end if
 
     END DO
 
@@ -246,7 +237,6 @@ contains
       xsav=x
     END SUBROUTINE save_a_step
 
-#ifdef DVODE
     subroutine initialize_dvode()
 
       neq = size(y)
@@ -284,7 +274,6 @@ contains
         H0=1e-9_dp)
 
     end subroutine initialize_dvode
-#endif
 
     subroutine print_traj()
        write(out_opt%trajout,'(100E18.10)'),&
@@ -421,12 +410,8 @@ contains
     USE potential, only : tensorpower, getH, getEps, zpower,&
       powerspectrum
     use modpk_qsf, only : turning_choice
-#ifdef DVODE
     use modpk_utils, only : reallocate_rv, reallocate_rm, mode_derivs_dvode, &
       qderivs_dvode
-#else
-    use modpk_utils, only : reallocate_rv, reallocate_rm
-#endif
 
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -487,7 +472,7 @@ contains
     real(dp) :: nk_sum, Nprime(num_inflaton), Nprimeprime(num_inflaton,num_inflaton)
     integer :: ii, jj, kk
 
-#ifdef DVODE
+    !For DVODE integrator
     real(dp), dimension(size(ystart)*2) :: yreal, dyrealdx
 
     integer :: neq, istats(31)
@@ -495,7 +480,6 @@ contains
     real(dp) :: rtol, rstats(22), nefold_out, dN_step
     real(dp), dimension(:), allocatable :: atol, atol_real, atol_compl
     type (vode_opts) :: ode_integrator_opt
-#endif
 
     !DEBUG
     !for two-knot QSF trajectory
@@ -531,11 +515,10 @@ contains
     compute_zpower = .true.
     eps_adjust = eps
 
-#ifdef DVODE
-    !Options for first call to dvode integrator
-    call initialize_dvode_MODES()
-
-#endif
+    if (use_dvode_integrator) then
+      !Options for first call to dvode integrator
+      call initialize_dvode_MODES()
+    end if
 
    DO nstp=1,MAXSTP
 
@@ -559,55 +542,56 @@ contains
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
          CALL save_a_step
 
-#ifdef DVODE
+       if (use_dvode_integrator) then
 
-       !Cmplx --> real
-       yreal(1:neq/2) = real(y)
-       yreal(neq/2+1:neq) = aimag(y)
+         !Cmplx --> real
+         yreal(1:neq/2) = real(y)
+         yreal(neq/2+1:neq) = aimag(y)
 
-       if (use_q) then
-         call dvode_f90(qderivs_dvode,neq,yreal,x,nefold_out, &
-           itask,istate,ode_integrator_opt)
+         if (use_q) then
+           call dvode_f90(qderivs_dvode,neq,yreal,x,nefold_out, &
+             itask,istate,ode_integrator_opt)
+         else
+           call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
+             itask,istate,ode_integrator_opt)
+         end if
+         call get_stats(rstats,istats)
+
+         if (istate<0) then
+           print*, "ERROR in dvode_f90 istate=", istate
+           stop
+         end if
+
+         !Set complex y from real y's
+         y = cmplx(yreal(1:neq/2),yreal(neq/2+1:neq))
+
        else
-         call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
-           itask,istate,ode_integrator_opt)
+
+         ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
+
+         !"Trick" to get constant fractional errors except very near
+         !zero-crossings. (Numerical Recipes)
+         yscal(:)=cmplx(ABS(real(y(:),kind=dp))+ABS(h*real(dydx(:),kind=dp))+TINY, &
+           ABS(real(y(:)*(0,-1),kind=dp))+ABS(h*real(dydx(:)*(0,-1),kind=dp))+TINY)
+
+
+         IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
+
+         IF (use_q) THEN
+            CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,qderivs)
+         ELSE
+            CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,derivs)
+         END IF
+
+         IF (hdid == h) THEN
+            nok=nok+1
+         ELSE
+            nbad=nbad+1
+         END IF
+
        end if
-       call get_stats(rstats,istats)
 
-       if (istate<0) then
-         print*, "ERROR in dvode_f90 istate=", istate
-         stop
-       end if
-
-       !Set complex y from real y's
-       y = cmplx(yreal(1:neq/2),yreal(neq/2+1:neq))
-
-#else
-
-       ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
-
-       !"Trick" to get constant fractional errors except very near
-       !zero-crossings. (Numerical Recipes)
-       yscal(:)=cmplx(ABS(real(y(:),kind=dp))+ABS(h*real(dydx(:),kind=dp))+TINY, &
-         ABS(real(y(:)*(0,-1),kind=dp))+ABS(h*real(dydx(:)*(0,-1),kind=dp))+TINY)
-
-
-       IF ((x+h-x2)*(x+h-x1) > 0.0) h=x2-x
-
-       IF (use_q) THEN
-          CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,qderivs)
-       ELSE
-          CALL rkqs_c(y,dydx,x,h,eps_adjust,yscal,hdid,hnext,derivs)
-       END IF
-
-       IF (hdid == h) THEN
-          nok=nok+1
-       ELSE
-          nbad=nbad+1
-       END IF
-#endif
-
-      call check_for_eternal_inflation_MODES()
+       call check_for_eternal_inflation_MODES()
 
        !MULTIFIELD
        phi = real(y(1:num_inflaton),kind=dp)
@@ -619,10 +603,12 @@ contains
        scalefac = a_init*exp(x)
 
        !Increase accuracy requirements when not in SR
-       if (getEps(phi,delphi)>0.2e0_dp) then
-         eps_adjust=1e-12_dp
-         if (getEps(phi,delphi)>0.9e0_dp) then
-           eps_adjust=1e-17_dp
+       if (use_high_accuracy) then
+         if (getEps(phi,delphi)>0.2e0_dp) then
+           eps_adjust=1e-12_dp
+           if (getEps(phi,delphi)>0.9e0_dp) then
+             eps_adjust=1e-17_dp
+           end if
          end if
        else
          eps_adjust = eps
@@ -689,19 +675,19 @@ contains
 
        IF (ode_underflow) RETURN
 
-#ifndef DVODE
-       IF (ABS(hnext) < hmin) THEN
-          WRITE(*,*) 'stepsize smaller than minimum in odeint'
-          stop
+       if (.not. use_dvode_integrator) then
+         IF (ABS(hnext) < hmin) THEN
+            WRITE(*,*) 'stepsize smaller than minimum in odeint'
+            stop
+         end if
        end if
-#endif
 
        !Set up next N-step
-#ifdef DVODE
-       if (itask/=2) nefold_out = x + dN_step
-#else
-       h=hnext
-#endif
+       if (use_dvode_integrator) then
+         if (itask/=2) nefold_out = x + dN_step
+       else
+         h=hnext
+       end if
 
     end do
 
@@ -772,7 +758,6 @@ contains
     END SUBROUTINE save_a_step
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
 
-#ifdef DVODE
     subroutine initialize_dvode_MODES()
 
       neq = 2*size(y) !Need reals for dvode, so 2* bc y is complex
@@ -825,7 +810,6 @@ contains
         mxhnil=1)
 
     end subroutine initialize_dvode_MODES
-#endif
 
     subroutine check_for_eternal_inflation_MODES()
 
@@ -935,10 +919,12 @@ contains
           y(index_tensor_y) = ytmp(index_tensor_y)
           y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
             - y(index_tensor_y)
-#ifdef DVODE
-          !Reset istate to let integrator know it's a new variable
-          istate=1
-#endif
+
+          if (use_dvode_integrator) then
+            !Reset istate to let integrator know it's a new variable
+            istate=1
+          end if
+
 
     end subroutine switch_to_qvar
 

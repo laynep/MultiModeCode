@@ -52,8 +52,13 @@ MODULE modpkparams
 
   real(dp) :: modpk_ns, modpk_nt, modpk_nrun, modpk_As, modpk_r
 
+  !Flags for analytical calculations
   logical :: use_deltaN_SR
   logical :: evaluate_modes
+
+  !Flags for technical options
+  logical :: use_high_accuracy
+  logical :: use_dvode_integrator
 
 END MODULE modpkparams
 

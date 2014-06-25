@@ -71,6 +71,8 @@ program multimodecode
 
   namelist /print_out/ out_opt, get_runningofrunning
 
+  namelist /technical/ use_high_accuracy, use_dvode_integrator
+
   !------------------------------------------------
 
   !DEBUG
@@ -140,6 +142,7 @@ program multimodecode
 	read(unit=pfile, nml=ic_sampling)
 	read(unit=pfile, nml=params)
 	read(unit=pfile, nml=print_out)
+	read(unit=pfile, nml=technical)
 	close(unit=pfile)
 
   call output_initial_data()

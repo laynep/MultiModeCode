@@ -491,11 +491,11 @@ CONTAINS
             !If we have stopped inflation "by hand", then we can auto-set these
             select case(potential_choice)
             case(13)
-              dalpha =0e0_dp
+              dalpha = 0e0_dp
               dv = 0e0_dp
               bb = 0e0_dp
 
-              alpha_e =lna(nactual_bg)
+              alpha_e = lna(nactual_bg)
               V_end = vv(nactual_bg)
               phi_infl_end = phiarr(:,nactual_bg)
 
@@ -609,4 +609,4 @@ CONTAINS
   END SUBROUTINE backgrnd_efold
 
 
-END MODULE BACKGROUND_EVOLUTION
+end module background_evolution

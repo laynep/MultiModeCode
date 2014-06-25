@@ -228,8 +228,6 @@ CONTAINS
       !Reset param guess for next time through
       qsf_runref%param = param_closest
 
-      !DEBUG
-      !print*, "this is param_closest", param_closest
 
       V_potential = 0.5e0_dp*m_light2*phi_light**2 &
         + 0.5e0_dp*M_heavy2*dist**2
