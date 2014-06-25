@@ -44,6 +44,7 @@ MODULE modpkparams
   real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
 
   real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(:,:) !The first index is the multifield index
+  real(dp), allocatable :: param_arr(:)
   real(dp) :: sigma_arr(nsteps)
   real(dp) :: delsigma = M_Pl      !specify total field distance travelled before inflation ends
   !END MULTIFIELD
@@ -175,6 +176,7 @@ MODULE ode_path
   LOGICAL :: infl_ended
   real(dp) :: dxsav
   real(dp), DIMENSION(:), POINTER :: xp
+  real(dp), DIMENSION(:), POINTER :: param_p
   real(dp), DIMENSION(:,:), POINTER :: yp
 END MODULE ode_path
 

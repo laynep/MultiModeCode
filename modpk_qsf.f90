@@ -24,7 +24,7 @@ module modpk_qsf
     logical :: traj_init = .false.
     real(dp), dimension(:,:), allocatable :: phi_light_vs_param
     contains
-      procedure :: get_init_param => choose_initial_parameter
+      procedure :: get_param => choose_parameter
       procedure :: initialize_traj => integrate_through_trajectory
       procedure :: phi_light => get_phi_light
   end type
@@ -459,28 +459,43 @@ contains
   !When initializing the integration around the parametrized curve,
   !this function will get the first guess for the parameter that puts
   !phi closest to the line
-  subroutine choose_initial_parameter(this, phi_light0)
+  subroutine choose_parameter(this, phi_light, param)
     implicit none
 
     class(qsf_reference) :: this
     integer :: ii
-    real(dp), intent(in) :: phi_light0
+    real(dp), intent(in), optional :: phi_light, param
 
-
+    !Check for functionality
     if (.not. allocated(this%phi_light_vs_param)) then
       print*, "QSF: Trying to set initial parameter guess,"
       print*, "QSF: but haven't integrated trajectory yet."
       stop
+    else if (present(phi_light) .and. present(param) ) then
+      print*, "QSF: Can't have both phi_light and param."
+      stop
     end if
 
+    if (present(phi_light)) then
+
 #define LIGHT (this%phi_light_vs_param(:,1))
-    ii= locate(LIGHT, phi_light0)
-    this%hunt_guess = ii
-    this%param = this%phi_light_vs_param(ii,2)
+      ii= locate(LIGHT, phi_light)
+      this%hunt_guess = ii
+      this%param = this%phi_light_vs_param(ii,2)
 #undef LIGHT
+    else if (present(param)) then
+#define PK_ARR (this%phi_light_vs_param(:,2))
+      ii= locate(PK_ARR, param)
+      this%hunt_guess = ii
+#undef PK_ARR
 
+    else
+      print*, "QSF: Give choose_parameter either phi_light or param."
+      print*, "QSF: Neither is present."
+      stop
+    end if
 
-  end subroutine choose_initial_parameter
+  end subroutine choose_parameter
 
   !Since the valley is defined parametrically in field-space,
   !we need to find how far up the valley we are for any
@@ -500,7 +515,13 @@ contains
     integer :: ii, counter
     real(dp) :: x_a, x_b
 
-    if (this%traj_init) return
+    !If already initialized, then reset everything
+    if (this%traj_init) then
+      this%traj_init = .false.
+      if (allocated(this%phi_light_vs_param)) then
+        deallocate(this%phi_light_vs_param)
+      end if
+    end if
 
     if (present(stepsize)) then
       dx = stepsize
@@ -513,7 +534,7 @@ contains
     length(1,:) = (/ 0.0e0_dp, param0 /) !length=(/path_length,param/)
 
     counter=1
-    x_a = param0
+    x_a = length(1,2)
     do ii=1, maxsteps-1
       counter = counter + 1
 
@@ -599,7 +620,6 @@ contains
       print*, "QSF: LIGHT(MAX) =", this%phi_light_vs_param(INTLEN,1)
       print*, "QSF: LIGHT(MIN) =", this%phi_light_vs_param(1,1)
       print*, "QSF: param_guess =", param_guess
-      print*, "QSF: param =", param
       stop
     end if
 
@@ -628,8 +648,8 @@ contains
       subroutine hunter()
         integer :: low, high
 
-        low = max(1, param_guess-100)
-        high = min(INTLEN, param_guess+100)
+        low = max(1, param_guess-50)
+        high = min(INTLEN, param_guess+50)
 
 #define LIGHT (this%phi_light_vs_param(low:high,1))
 #define P_ARR (this%phi_light_vs_param(low:high,2))

@@ -129,7 +129,12 @@ CONTAINS
     !END MULTIFIELD
 
     IF(pk_bad==0) THEN
+
        !Matching condition
+       if (sampling_techn == qsf_parametric) then
+         !Reset the hunt_guess for determing vv below
+         call qsf_runref%get_param(phi_light=vparams(3,1))
+       end if
        V_i=pot(phi_init)
 
        !MULTIFIELD
@@ -305,6 +310,11 @@ CONTAINS
 
       !dphi/dalpha(x1) slowroll approx
       !MULTIFIELD
+      if (sampling_techn == qsf_parametric) then
+        !Reset the hunt_guess for determing vv below
+        call qsf_runref%get_param(phi_light=vparams(3,1))
+      end if
+
       h_init=SQRT(pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
            (1.e0_dp+SQRT(1.e0_dp+2.e0_dp/3.e0_dp* M_Pl**2 *&
            dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) &
@@ -324,6 +334,7 @@ CONTAINS
 
     end if
     !END MULTIFIELD
+
 
     !Call the integrator
     ode_underflow = .FALSE.
@@ -357,7 +368,8 @@ CONTAINS
     !If unstable, then integrate in cosmic time t until reach stable region
     !for e-fold integrator
     H_stable = .false.
-    call stability_check_on_H(H_stable,y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton),&
+    call stability_check_on_H(H_stable,y(1:num_inflaton),&
+      y(num_inflaton+1:2*num_inflaton),&
       using_t=.false.)
 
     if (.not. H_stable) then
@@ -418,14 +430,16 @@ CONTAINS
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
+       if (sampling_techn == qsf_parametric) param_arr(1:kount) = param_p(1:kount)
 
        !MULTIFIELD
        if (sampling_techn == qsf_parametric) then
          !Reset the hunt_guess for determing vv below
-         call qsf_runref%get_init_param(vparams(3,1))
+         call qsf_runref%get_param(phi_light=vparams(3,1))
        end if
 
        DO i=1,kount
+
           vv(i) = pot(phiarr(:,i))
           hubarr(i) = getH(phiarr(:, i),dphiarr(:,i))
           epsarr(i) = getEps(phiarr(:,i),dphiarr(:,i))

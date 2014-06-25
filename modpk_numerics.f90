@@ -387,12 +387,14 @@ module modpk_numerics
       INTEGER*4 :: m,n,ns
       INTEGER*4, DIMENSION(1) :: imin
       real(dp), DIMENSION(size(xa)) :: c,d,den,ho,absho
+
       if (size(xa)==size(ya)) then
          n=size(xa)
       else
          write(*,*) 'Wrong array sizes in polint'
          stop
       end if
+
       c=ya
       d=ya
       ho=xa-x
@@ -422,6 +424,7 @@ module modpk_numerics
     END SUBROUTINE polint
 
     !MULTIFIELD
+    !Scalar interpolating function with vector argument
     SUBROUTINE array_polint(xa, ya, x, y, dy)
       IMPLICIT NONE
 
@@ -435,7 +438,6 @@ module modpk_numerics
       end do
 
     END SUBROUTINE array_polint
-    !END MULTIFIELD
 
     !Integrates a one-dimensional real function from x0 to xend using
     !the trapezoid rule with given number of steps

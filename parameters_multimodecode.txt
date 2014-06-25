@@ -36,9 +36,9 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 &more_params
   effective_V_choice = 1
   turning_choice = 1
+
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
-
   custom_knot_range = .true.
   knot_range_min = 10.0
   knot_range_max = 20.0
@@ -48,7 +48,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 Parameters to control how the ICs are sampled
 NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
     4=fromfile_samp,5=parameter_loop_samp,6=isoN,
-    7=param_unif_prior, 8=qsf_random}
+    7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
 &ic_sampling
   sampling_techn = 9
@@ -74,9 +74,9 @@ the smallest mass; others are discarded.
 
   phi_init0 = 1.0 1.0
 
-  vparams(1,:) = -12.2789840467449       -8.1602803162336
+  vparams(1,:) = -12.0       -8.0
   vparams(2,:) = 0.0       -6.0
-  vparams(3,:) =  20.0        1.00
+  vparams(3,:) =  17.0        1.00
 
   vparams(4,:) = 0.0       10
   vparams(5,:) = 0.0       .050

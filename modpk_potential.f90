@@ -219,11 +219,32 @@ CONTAINS
         distance_2deriv, qsf_runref%param)
       dist = distance(param_closest)
 
-      !DEBUG
-      if (param_closest < param0) param_closest = param0
+      !Check not getting too far off line
+      if (dist >1e-1_dp) then
+        print*, "QSF: The trajectory is significantly deviating from the &
+          parametric curve."
+        print*, "QSF: dist =", dist
+        print*, "QSF: which is pretty large."
+        print*, "QSF: Check that you have actually found the closest parameter"
+        print*, "QSF: and that you're not taking steps that are too large."
+        print*, "QSF: param_closest =", param_closest
+        print*, "QSF: phi =", phi
+        !stop
+      end if
 
       !Get the integrated distance this closest point is up the curve
       phi_light = qsf_runref%phi_light(param_closest)
+
+      !DEBUG
+      if (param_closest < param0 .or. phi_light > vparams(3,1)) then
+        print*, "param_closest = ", param_closest
+        print*, "phi = ", phi
+        print*, "phi_light = ", phi_light
+        print*, "qsf_runref%param = ", qsf_runref%param
+        print*, "dist = ", dist
+        print*, "dist2 = ", distance(4.0e0_dp)
+        stop
+      end if
 
       !Reset param guess for next time through
       qsf_runref%param = param_closest
@@ -641,6 +662,7 @@ CONTAINS
          end do
 
        case(15)
+
          !Numerical QSF
          stepsize = 1.0e-4_dp
          call num_second_deriv(pot, phi, stepsize, numderiv)

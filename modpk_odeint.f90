@@ -24,6 +24,7 @@ contains
     use modpkparams
     use potential
     use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode
+    use modpk_qsf
 
     implicit none
     real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -96,17 +97,16 @@ contains
     IF (save_steps) THEN
        xsav=x-2.0e0_dp*dxsav
        ALLOCATE(xp(256))
+       if (sampling_techn == qsf_parametric) ALLOCATE(param_p(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
     if (use_dvode_integrator) then
       !Options for first call to dvode integrator
-
       call initialize_dvode()
     end if
 
     DO nstp=1,MAXSTP
-
 
        if (any(isnan(y))) then
          print*, "ERROR in odeint_r"
@@ -162,22 +162,22 @@ contains
 
       end if
 
-       call check_for_eternal_inflation()
+      call check_for_eternal_inflation()
 
-       !MULTIFIELD
-       phi = y(1:num_inflaton)
-       dphi = y(num_inflaton+1 : 2*num_inflaton)
+      !MULTIFIELD
+      phi = y(1:num_inflaton)
+      dphi = y(num_inflaton+1 : 2*num_inflaton)
 
-       call check_inflation_started_properly()
+      call check_inflation_started_properly()
 
-       !END MULTIFIELD
+      !END MULTIFIELD
 
-       call check_inflation_ended_properly(leave)
-       if (leave) then
-         !Record the background trajectory
-         if (out_opt%save_traj) call print_traj()
-         return
-       end if
+      call check_inflation_ended_properly(leave)
+      if (leave) then
+        !Record the background trajectory
+        if (out_opt%save_traj) call print_traj()
+        return
+      end if
 
       if (abs(x2-x)<1e-10) then
         print*, "reached end of N-integration...."
@@ -186,21 +186,21 @@ contains
         stop
       end if
 
-       IF (ode_underflow) RETURN
+      IF (ode_underflow) RETURN
 
-       if ( .not. use_dvode_integrator) then
-         IF (ABS(hnext) < hmin) THEN
-            write(*,*) 'stepsize smaller than minimum in odeint'
-            STOP
-         END IF
-       end if
+      if ( .not. use_dvode_integrator) then
+        IF (ABS(hnext) < hmin) THEN
+           write(*,*) 'stepsize smaller than minimum in odeint'
+           STOP
+        END IF
+      end if
 
-       !Set up next N-step
-       if (use_dvode_integrator) then
-         if (itask/=2) nefold_out = x + dN_step
-       else
-         h=hnext
-       end if
+      !Set up next N-step
+      if (use_dvode_integrator) then
+        if (itask/=2) nefold_out = x + dN_step
+      else
+        h=hnext
+      end if
 
     END DO
 
@@ -230,11 +230,19 @@ contains
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
          xp=>reallocate_rv(xp,2*SIZE(xp))
+         if (sampling_techn==qsf_parametric) &
+           param_p=>reallocate_rv(param_p,2*SIZE(xp))
          yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
       END IF
       xp(kount)=x
       yp(:,kount)=y(:)
       xsav=x
+
+      !For numerical QSF trajs
+      if (sampling_techn==qsf_parametric) then
+        param_p(kount) = qsf_runref%param
+      end if
+
     END SUBROUTINE save_a_step
 
     subroutine initialize_dvode()
@@ -245,10 +253,15 @@ contains
       allocate(atol(neq))
 
       !Relative tolerance
-      rtol = 1.e-6_dp
-
       !Absolute tolerance
-      atol = 1.0e-8_dp
+      if (use_high_accuracy) then
+        rtol = 1.e-8_dp
+        atol = 1.0e-8_dp
+      else
+        rtol = 1.e-5_dp
+        atol = 1.0e-5_dp
+      end if
+
       !atol(1) = 1.e-8_dp
       !atol(2) = 1.e-14_dp
       !atol(3) = 1.e-6_dp
@@ -567,7 +580,8 @@ contains
 
        else
 
-         ! for yscal, evaluate real and imaginary parts separately, and then assemble them into complex format
+         ! for yscal, evaluate real and imaginary parts separately,
+         ! and then assemble them into complex format
 
          !"Trick" to get constant fractional errors except very near
          !zero-crossings. (Numerical Recipes)
@@ -790,6 +804,11 @@ contains
 
       atol(1:neq/2)=atol_real
       atol((neq/2)+1:neq)=atol_compl
+
+      if (.not. use_high_accuracy) then
+        rtol = rtol * 1e5_dp
+        atol = atol * 1e4_dp
+      end if
 
       itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
       !itask = 2

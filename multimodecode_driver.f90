@@ -272,6 +272,7 @@ program multimodecode
       allocate(phidot_sign(num_inflaton))
       allocate(phiarr(num_inflaton, 1:nsteps))
       allocate(dphiarr(num_inflaton, 1:nsteps))
+      allocate(param_arr(1:nsteps))
       allocate(phi_infl_end(num_inflaton))
       allocate(phi_pivot(num_inflaton))
       allocate(dphi_pivot(num_inflaton))

@@ -310,13 +310,12 @@ module modpk_icsampling
         param0 = vparams(2,1)
         phi_light0 = vparams(3,1)
 
-
         !Integrate through traj and set-up interpolation if first time
         call qsf_runref%initialize_traj(phi_light0,param0)
 
         !Find the initial param that coincides with setting
         !IC in minimum of valley (dist=0) with phi_light=phi_light0
-        call qsf_runref%get_init_param(phi_light0)
+        call qsf_runref%get_param(phi_light=phi_light0)
 
         !Set initial condition from this parameter in the valley
         y_background(1:num_inflaton) = turning_function_parametric(qsf_runref%param)

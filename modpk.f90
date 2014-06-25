@@ -69,6 +69,7 @@ CONTAINS
     USE modpk_utils, ONLY : derivs, qderivs, rkqs_c
     use modpk_numerics, only : locate, polint, array_polint
     use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
+    use modpk_qsf
     IMPLICIT NONE
 
     type(power_spectra), intent(out) :: powerspectrum_out
@@ -170,7 +171,10 @@ CONTAINS
     CALL polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
     CALL polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
-    a_ik=EXP(alpha_ik)*a_init
+    if (sampling_techn == qsf_parametric) &
+      call get_param_guess(ah)
+
+    a_ik=exp(alpha_ik)*a_init
 
     x1=alpha_ik
 
@@ -221,25 +225,28 @@ CONTAINS
     h1=1e-5 !guessed start stepsize
 
     !Some fast-roll cases need high accuracy; activate conditionally in odeint_c
-    accuracy=1.0e-7_dp !has a big impact on the speed of the code
+    if (use_high_accuracy) then
+      !has a big impact on the speed of the code
+      accuracy=1.0e-7_dp
+    else
+      accuracy=1.0e-6_dp
+    end if
 
     hmin=1e-30_dp !minimum stepsize
 
     CALL odeint(y, x1, x2, accuracy, h1, hmin, derivs, qderivs, rkqs_c)
     nactual_mode = kount  ! update nactual after evolving the modes
 
-    IF(.NOT. ode_underflow) THEN
+    if(.not. ode_underflow) then
       powerspectrum_out = power_internal
       powerspectrum_out%bundle_exp_scalar=field_bundle%exp_scalar
-    ELSE
+    else
       powerspectrum_out%adiab= 0e0_dp
       powerspectrum_out%isocurv=0e0_dp
       powerspectrum_out%tensor=0e0_dp
       pk_bad=1
-    ENDIF
+    endif
 
-
-    RETURN
 
     contains
 
@@ -334,6 +341,9 @@ CONTAINS
           call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
           call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
+          if (sampling_techn == qsf_parametric) &
+            call get_param_guess(ah)
+
           a_ik = exp(alpha_ik)*a_init
           eps = getEps(p_ik, dp_ik)
 
@@ -373,6 +383,21 @@ CONTAINS
 
       end subroutine set_consistent_BD_scale
 
-  END SUBROUTINE evolve
+      !For numerical QSF trajectories, need to restart the guess for Newtonian
+      !optimization
+      subroutine get_param_guess(ah0)
+        implicit none
 
-END MODULE access_modpk
+        real(dp), intent(in) :: ah0
+
+
+        !Get a guess for the initial param (should be pretty good)
+        call polint(log_aharr(j:j+4),param_arr(j:j+4), &
+          ah0, qsf_runref%param, dh)
+        call qsf_runref%get_param(param=qsf_runref%param)
+
+      end subroutine get_param_guess
+
+  end subroutine evolve
+
+end module access_modpk

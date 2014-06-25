@@ -207,8 +207,8 @@ CONTAINS
     !     y(2n+n**2+1:2n+2n**2) = dpsi/dalpha       dydx(3n+1:4n)=d^2psi/dalpha^2
     !     y(2n+2n**2+1) = v                  dydx(4n+1)=dv/dalpha
     !     y(2n+2n**2+2) = dv/dalpha          dydx(4n+2)=d^2v/dalpha^2
-    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2  
-    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2  
+    !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2
+    !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2
 
     phi = real(y(1:num_inflaton),kind=dp)
     delphi = real(y(num_inflaton+1:2*num_inflaton),kind=dp)
@@ -297,13 +297,11 @@ CONTAINS
 
     ! adiabatic ptb
     yprime(index_uzeta_y) = du_zeta
-    thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2 
+    thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2
     yprime(index_uzeta_y+1) = -(1.0e0_dp - epsilon)*du_zeta -&
       (k/scale_factor/hubble)**2*u_zeta &
       + (2.0e0_dp + 5.0e0_dp*epsilon - 2.0e0_dp*epsilon**2 + &
       2.0e0_dp*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
-
-    RETURN
 
     contains
 
@@ -312,10 +310,11 @@ CONTAINS
         real(dp), dimension(num_inflaton, num_inflaton), intent(out) :: mass_matrix
 
         if (potential_choice .eq. 7) then
-          ! for exponential potential 7, Cab is excatly zero, need to set this in order to prevent numerical error
+          ! for exponential potential 7, Cab is excatly zero
+          ! need to set this in order to prevent numerical error
           mass_matrix = 0e0_dp
         else
-           forall (i=1:num_inflaton, j=1:num_inflaton) & 
+           forall (i=1:num_inflaton, j=1:num_inflaton) &
                 mass_matrix(i,j) = Vpp(i,j) +  &
                 (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
                 + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
@@ -672,4 +671,4 @@ CONTAINS
   end function convert_matrix_to_hacked_vector
 
 
-END MODULE modpk_utils
+end module modpk_utils
