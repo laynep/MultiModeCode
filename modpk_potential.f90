@@ -215,28 +215,29 @@ CONTAINS
       qsf_runref%phi = phi
 
       !Closest approach to parameterized curve
-      param_closest = zero_finder(distance_deriv, &
-        distance_2deriv, qsf_runref%param)
+      param_closest = qsf_runref%min_dist()
       dist = distance(param_closest)
 
       !Check not getting too far off line
-      if (dist >1e-1_dp) then
+      !if (dist >5e-1_dp) then
+      if (dist >1e0_dp) then
         print*, "QSF: The trajectory is significantly deviating from the &
           parametric curve."
         print*, "QSF: dist =", dist
-        print*, "QSF: which is pretty large."
         print*, "QSF: Check that you have actually found the closest parameter"
-        print*, "QSF: and that you're not taking steps that are too large."
+        print*, "QSF: or that you're not taking steps that are too large."
         print*, "QSF: param_closest =", param_closest
         print*, "QSF: phi =", phi
-        !stop
+        print*, "QSF: turning_function_parametric =", &
+          turning_function_parametric(param_closest)
+        stop
       end if
 
       !Get the integrated distance this closest point is up the curve
       phi_light = qsf_runref%phi_light(param_closest)
 
       !DEBUG
-      if (param_closest < param0 .or. phi_light > vparams(3,1)) then
+      if (param_closest < param0 .or. phi_light > 1.25*vparams(3,1)) then
         print*, "param_closest = ", param_closest
         print*, "phi = ", phi
         print*, "phi_light = ", phi_light
@@ -430,7 +431,7 @@ CONTAINS
 
        case(15)
          !Numerical QSF
-         stepsize = 1.0e-4_dp
+         stepsize = 1.0e-8_dp
          call num_first_deriv(pot, phi, stepsize, numderiv)
          first_deriv = numderiv
 
@@ -664,7 +665,7 @@ CONTAINS
        case(15)
 
          !Numerical QSF
-         stepsize = 1.0e-4_dp
+         stepsize = 1.0e-5_dp
          call num_second_deriv(pot, phi, stepsize, numderiv)
          second_deriv = numderiv
 

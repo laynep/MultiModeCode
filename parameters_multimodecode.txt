@@ -35,7 +35,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 &more_params
   effective_V_choice = 1
-  turning_choice = 1
+  turning_choice = 3
 
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
@@ -74,11 +74,11 @@ the smallest mass; others are discarded.
 
   phi_init0 = 1.0 1.0
 
-  vparams(1,:) = -12.0       -8.0
-  vparams(2,:) = 0.0       -6.0
+  vparams(1,:) = -12.0       -7.0
+  vparams(2,:) = 0.0       1.0
   vparams(3,:) =  17.0        1.00
+  vparams(4,:) = 12.0       -1
 
-  vparams(4,:) = 0.0       10
   vparams(5,:) = 0.0       .050
   vparams(6,:) = 0.0       0.416481652821956
 
@@ -141,12 +141,12 @@ uniform increments in log(k).
 
 &full_pk
   calc_full_pk = .false.
-  steps = 100
-  kmin = 1.0e-16
-  kmax = 1.0e-14
-/
+  steps = 50
   kmin = 1.0e-2
   kmax = 5.0e0
+/
+  kmin = 1.0e-16
+  kmax = 1.0e-14
   kmax = 0.04
 
 ----------------
@@ -169,8 +169,10 @@ Options for output from the code.
 
 ----------------
 Advanced options for technical features.
+Set accuracy_setting = {0,1,2} for increasingly accurate integration.
+Recommended: accuracy_setting = 1.
 
 &technical
-  use_high_accuracy = .false.
+  accuracy_setting = 1
   use_dvode_integrator = .true.
 /

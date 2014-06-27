@@ -127,8 +127,7 @@ module modpk_numerics
       logical :: debug
       integer, intent(out), optional :: iters
       integer, parameter :: maxiter = 1000
-      real(dp), parameter :: tol = 1.e-6_dp
-      real(dp), parameter :: dtol = 1.e-5_dp
+      real(dp), parameter :: tol = 1.e-6_dp !Need this to be pretty conservative
 
       ! Declare any local variables:
       real(dp) :: deltax, fx, fxprime
@@ -179,9 +178,9 @@ module modpk_numerics
 
           fx = f(x)
           if (abs(fx) > tol) then
-              print *, '*** Warning: has not yet converged'
-              endif
+              print *, '*** Warning: has not yet converged', abs(fx) - tol
           endif
+      endif
 
       ! number of iterations taken:
       if (present(iters)) iters = k-1
@@ -222,6 +221,7 @@ module modpk_numerics
         df(i) = (0.5e0_dp/h(i))*&
           (f(x + x_step) - f(x - x_step))
       end do
+
 
     end subroutine num_first_deriv
 

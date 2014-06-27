@@ -58,7 +58,7 @@ MODULE modpkparams
   logical :: evaluate_modes
 
   !Flags for technical options
-  logical :: use_high_accuracy
+  integer :: accuracy_setting
   logical :: use_dvode_integrator
 
 END MODULE modpkparams

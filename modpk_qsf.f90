@@ -1,6 +1,7 @@
 module modpk_qsf
   use modpkparams
   use modpk_numerics
+  use internals, only : pi
   implicit none
 
   !Need one choice for every heavy direction (assumes one light direction)
@@ -27,6 +28,7 @@ module modpk_qsf
       procedure :: get_param => choose_parameter
       procedure :: initialize_traj => integrate_through_trajectory
       procedure :: phi_light => get_phi_light
+      procedure :: min_dist => distance_minimizer
   end type
 
   type(qsf_reference) :: qsf_runref
@@ -335,6 +337,8 @@ contains
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
+    real(dp) :: phi_turn, slope
+
     select case(turning_choice(1))
     case(0)
       !Line
@@ -347,6 +351,19 @@ contains
       !Helix
       funct(1) = sin(param)
       funct(2) = cos(param)
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+      slope = vparams(4,2)
+
+      if (param < phi_turn) then
+        funct(1) = param
+        funct(2) = 0e0_dp
+      else
+        funct(1) = slope*(param-phi_turn) + phi_turn
+        funct(2) = (param-phi_turn)
+      end if
+
     case default
       print*, "ERROR: turning_function_parametric not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
@@ -361,6 +378,8 @@ contains
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
+    real(dp) :: phi_turn, slope
+
     select case(turning_choice(1))
     case(0)
       !Line
@@ -373,8 +392,20 @@ contains
       !Helix
       funct(1) = cos(param)
       funct(2) = -sin(param)
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+      slope = vparams(4,2)
+
+      if (param < phi_turn) then
+        funct(1) = 1e0_dp
+        funct(2) = 0e0_dp
+      else
+        funct(1) = slope
+        funct(2) = 1e0_dp
+      end if
     case default
-      print*, "ERROR: turning_function_parametric not implemented for"
+      print*, "ERROR: dturndparam not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
       stop
     end select
@@ -386,6 +417,8 @@ contains
     implicit none
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
+
+    real(dp) :: phi_turn
 
     select case(turning_choice(1))
     case(0)
@@ -399,8 +432,19 @@ contains
       !Helix
       funct(1) = -sin(param)
       funct(2) = -cos(param)
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+
+      if (param < phi_turn) then
+        funct(1) = 0e0_dp
+        funct(2) = 0e0_dp
+      else
+        funct(1) = 0e0_dp
+        funct(2) = 0e0_dp
+      end if
     case default
-      print*, "ERROR: turning_function_parametric not implemented for"
+      print*, "ERROR: d2turndparam2 not implemented for"
       print*, "ERROR: turning_choice = ", turning_choice
       stop
     end select
@@ -682,5 +726,86 @@ contains
 #undef INTLEN
 
   end function get_phi_light
+
+
+  !Finds param_closest which minimizes the distance between
+  !a field space point and the parametric curve
+  !that is used to define the minimum of the QSF valley.  For some parametrized
+  !curves this can be done analytically, else we use Newtonian optimization.
+  function distance_minimizer(this) result(param_closest)
+
+    class(qsf_reference) :: this
+    real(dp) :: param_closest
+
+    real(dp) :: phi_turn, slope
+    real(dp) :: t_less, t_great
+    real(dp) :: d_less, d_great, d_turn
+    logical :: at_corner, fixing
+
+    select case(turning_choice(1))
+    !case(1)
+      !Parabola
+    !case(2)
+    !  !Helix
+    !  if (abs(this%phi(1)) < 1e-5_dp) then
+    !    !Protect against divide by zero
+    !    if (this%phi(2) > 0e0_dp) then
+    !      param_closest = pi/2.0e0_dp
+    !    else
+    !      param_closest = 3.0e0_dp*pi/2.0e0_dp
+    !    end if
+    !  else
+    !    param_closest = atan(this%phi(2)/this%phi(1))
+    !  end if
+
+    !  !Use the param guess to guess the winding number
+    !  param_closest = (3.0e0_dp/2.0e0_dp)*pi &
+    !    -param_closest &
+    !    + (2.0e0_dp*pi)*floor(this%param/2.0e0_dp/pi)
+
+    !  if (abs(param_closest-this%param)>1e0_dp) then
+
+    !    !Try fixing winding number
+    !    param_closest = param_closest + pi
+
+    !    if (abs(param_closest-this%param)>1e0_dp) then
+    !      param_closest = param_closest - 2.0e0_dp*pi
+    !    end if
+
+    !  end if
+
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+      slope = vparams(4,2)
+
+      t_less = this%phi(1)
+      t_great = (1.0e0_dp + slope**2)**(-1)*&
+        (slope*this%phi(1) +&
+        slope**2*phi_turn - &
+        slope*phi_turn + &
+        this%phi(2) + phi_turn)
+
+      !Try different distances
+      d_less = distance(t_less)
+      d_great = distance(t_great)
+      d_turn = distance(phi_turn)
+      if (d_less <= d_great .and. d_less <=d_turn) then
+        param_closest = t_less
+      else if (d_great <= d_less .and. d_great <=d_turn) then
+        param_closest = t_great
+      else
+        param_closest = phi_turn
+      end if
+
+
+    case default
+      !Use Newtonian optimization
+      param_closest = zero_finder(distance_deriv, &
+        distance_2deriv, this%param)
+    end select
+
+  end function distance_minimizer
+
 
 end module modpk_qsf

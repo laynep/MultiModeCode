@@ -254,9 +254,12 @@ contains
 
       !Relative tolerance
       !Absolute tolerance
-      if (use_high_accuracy) then
+      if (accuracy_setting==2) then
         rtol = 1.e-8_dp
         atol = 1.0e-8_dp
+      else if (accuracy_setting==1) then
+        rtol = 1.e-6_dp
+        atol = 1.0e-6_dp
       else
         rtol = 1.e-5_dp
         atol = 1.0e-5_dp
@@ -576,7 +579,7 @@ contains
          end if
 
          !Set complex y from real y's
-         y = cmplx(yreal(1:neq/2),yreal(neq/2+1:neq))
+         y = cmplx(yreal(1:neq/2),yreal(neq/2+1:neq), kind=dp)
 
        else
 
@@ -617,11 +620,13 @@ contains
        scalefac = a_init*exp(x)
 
        !Increase accuracy requirements when not in SR
-       if (use_high_accuracy) then
+       if (accuracy_setting>0) then
          if (getEps(phi,delphi)>0.2e0_dp) then
            eps_adjust=1e-12_dp
-           if (getEps(phi,delphi)>0.9e0_dp) then
-             eps_adjust=1e-17_dp
+           if (accuracy_setting==2) then
+             if (getEps(phi,delphi)>0.9e0_dp) then
+               eps_adjust=1e-16_dp
+             end if
            end if
          end if
        else
@@ -805,9 +810,9 @@ contains
       atol(1:neq/2)=atol_real
       atol((neq/2)+1:neq)=atol_compl
 
-      if (.not. use_high_accuracy) then
+      if (accuracy_setting==0) then
         rtol = rtol * 1e5_dp
-        atol = atol * 1e4_dp
+        atol = atol * 1e2_dp
       end if
 
       itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values

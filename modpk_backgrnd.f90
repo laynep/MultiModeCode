@@ -307,7 +307,6 @@ CONTAINS
       if( sampling_techn == reg_samp .and. &
         out_opt%modpkoutput) print*, "Setting velocity in slow-roll"
 
-
       !dphi/dalpha(x1) slowroll approx
       !MULTIFIELD
       if (sampling_techn == qsf_parametric) then

@@ -12,10 +12,6 @@ program multimodecode
   use modpk_deltaN_SR
   use modpk_observables, only : observables
 
-  !DEBUG
-  use modpk_numerics
-  use modpk_rng
-
   implicit none
 
 
@@ -43,14 +39,6 @@ program multimodecode
 
   integer :: pfile
 
-  !DEBUG
-  real(dp), dimension(20001,1) :: dataset
-  real(dp), dimension(:,:), allocatable :: hist
-  integer :: j
-  real(dp) :: logP
-  real(dp), dimension(size(dataset,2)) :: observ, stepsize
-  real(dp), dimension(:,:), allocatable :: g_mu_nu
-
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
     slowroll_infl_end, instreheat, vparam_rows, &
@@ -71,63 +59,9 @@ program multimodecode
 
   namelist /print_out/ out_opt, get_runningofrunning
 
-  namelist /technical/ use_high_accuracy, use_dvode_integrator
+  namelist /technical/ accuracy_setting, use_dvode_integrator
 
   !------------------------------------------------
-
-  !DEBUG
-!  print*, "testing integration"
-!  allocate(turning_choice(1))
-!  turning_choice = 1
-!  num_inflaton = 2
-!  potential_choice = 15
-!  allocate(vparams(3,2))
-!  vparams(1,1) = -12.0e0_dp
-!  vparams(1,2) = -8.0e0_dp
-!  vparams(2,1) = 0e0_dp
-!  vparams(3,1) = 20e0_dp
-!
-!
-!#define XVECT (/4.0, 19.2/)
-!  print*, "V", pot(XVECT)
-!  print*, "dV", dVdphi(XVECT)
-!  print*, "d2V", d2Vdphi2(XVECT)
-!
-!  stop
-
-!DEBUG
-!print*, "testing histogram"
-
-!call init_random_seed_serial()
-!do i=1,size(dataset,1)
-!do j=1,size(dataset,2)
-!  call random_number(dataset(i,j))
-!end do; end do
-!dataset=dataset
-
-!hist = histogram_Nd(dataset,method=1,norm=1)
-!do i=1,size(hist,1)
-!  write(*,'(10e15.7)'), hist(i,:)
-!end do
-
-!observ = (/0.9999,0.5/)
-!logP = logP_of_observ(observ,hist)
-
-!print*, "this is logP", logP
-
-!DEBUG
-!print*, "testing fisher_rao_metric"
-!observ = (/1.0/)
-!stepsize = 1e-3
-!
-!g_mu_nu = fisher_rao_metric(observ, stepsize)
-!
-!
-!
-!stop
-
-
-
 
 
   !Read initializing params from file
@@ -341,7 +275,7 @@ program multimodecode
 
       !DEBUG
       write(*, out_opt%e2_fmt)&
-        "r m^2 phi^2 =", observ_modes%r, '(', 8.0/N_pivot, ')'
+        "r (m^2 phi^2) =", observ_modes%r, '(', 8.0/N_pivot, ')'
 
       write(*, out_opt%e2_fmt)&
         "n_s =", observ_modes%ns, '(', SR_pred%ns,')'
@@ -356,7 +290,7 @@ program multimodecode
       write(*, out_opt%e2_fmt)&
         "n_t =", observ_modes%nt, '(', SR_pred%nt , ')'
       write(*, out_opt%e2_fmt)&
-        "r/n_t =", observ_modes%r/observ_modes%nt
+        "r/n_t =", observ_modes%r/observ_modes%nt, '(', -(8.0-observ_modes%r/2.0) , ')'
       write(*, out_opt%e2_fmt)&
         "alpha_s =", observ_modes%alpha_s, '(', SR_pred%alpha_s , ')'
       if (get_runningofrunning) then

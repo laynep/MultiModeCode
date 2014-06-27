@@ -225,11 +225,13 @@ CONTAINS
     h1=1e-5 !guessed start stepsize
 
     !Some fast-roll cases need high accuracy; activate conditionally in odeint_c
-    if (use_high_accuracy) then
+    if (accuracy_setting==2) then
       !has a big impact on the speed of the code
       accuracy=1.0e-7_dp
-    else
+    else if (accuracy_setting==1) then
       accuracy=1.0e-6_dp
+    else
+      accuracy=1.0e-4_dp
     end if
 
     hmin=1e-30_dp !minimum stepsize
@@ -389,11 +391,11 @@ CONTAINS
         implicit none
 
         real(dp), intent(in) :: ah0
-
+        real(dp) :: dh0
 
         !Get a guess for the initial param (should be pretty good)
         call polint(log_aharr(j:j+4),param_arr(j:j+4), &
-          ah0, qsf_runref%param, dh)
+          ah0, qsf_runref%param, dh0)
         call qsf_runref%get_param(param=qsf_runref%param)
 
       end subroutine get_param_guess
