@@ -813,6 +813,9 @@ contains
       if (accuracy_setting==0) then
         rtol = rtol * 1e5_dp
         atol = atol * 1e2_dp
+      else if (accuracy_setting==1) then
+        rtol = rtol * 1e3_dp
+        atol = atol * 1e1_dp
       end if
 
       itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
@@ -821,8 +824,8 @@ contains
 
       if (itask /=2) then
         !Integrate until nefold_out
-        dN_step = sign(0.01e0_dp,x2-x1)
-        !dN_step = sign(0.001e0_dp,x2-x1)
+        !dN_step = sign(0.01e0_dp,x2-x1)
+        dN_step = sign(0.001e0_dp,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step

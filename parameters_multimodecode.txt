@@ -74,10 +74,10 @@ the smallest mass; others are discarded.
 
   phi_init0 = 1.0 1.0
 
-  vparams(1,:) = -12.0       -7.0
+  vparams(1,:) = -12.0       -8.0
   vparams(2,:) = 0.0       1.0
   vparams(3,:) =  17.0        1.00
-  vparams(4,:) = 12.0       -1
+  vparams(4,:) = 15.0       -1
 
   vparams(5,:) = 0.0       .050
   vparams(6,:) = 0.0       0.416481652821956
@@ -140,10 +140,10 @@ For calculating the full power spectrum P(k).  Samples in
 uniform increments in log(k).
 
 &full_pk
-  calc_full_pk = .false.
-  steps = 50
-  kmin = 1.0e-2
-  kmax = 5.0e0
+  calc_full_pk = .true.
+  steps = 100
+  kmin = 1.0e-3
+  kmax = 1.0e-1
 /
   kmin = 1.0e-16
   kmax = 1.0e-14
@@ -171,6 +171,7 @@ Options for output from the code.
 Advanced options for technical features.
 Set accuracy_setting = {0,1,2} for increasingly accurate integration.
 Recommended: accuracy_setting = 1.
+Use DVODE integrator for stiff problems.
 
 &technical
   accuracy_setting = 1

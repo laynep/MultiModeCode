@@ -1,7 +1,17 @@
 !Some numerical routines
 module modpk_numerics
-  use modpkparams, only : dp
+  use modpkparams, only : dp, num_inflaton
   implicit none
+
+  interface num_first_deriv
+  	module procedure num_first_deriv
+  	module procedure num_first_deriv_vectorfunct
+  end interface
+
+  interface num_second_deriv
+  	module procedure num_second_deriv
+  	module procedure num_second_deriv_vectorfunct
+  end interface
 
   contains
 
@@ -273,6 +283,68 @@ module modpk_numerics
       end do; end do
 
     end subroutine num_second_deriv
+
+    subroutine num_first_deriv_vectorfunct(f, x, h, df)
+      implicit none
+
+      ! Estimate the (partial) derivs of f(x) using central diff
+      ! Input:
+      !   f:  the function to find derivs of
+      !   x:  the point to differentiate around
+      !   h:  the step-size for finite diff
+      ! Returns:
+      !   the estimate df of each (partial) deriv at x
+
+      interface
+        function f(x)
+          use modpkparams
+          implicit none
+          real(dp), intent(in) :: x
+          real(dp), dimension(num_inflaton) :: f
+        end function f
+      end interface
+
+      real(dp), intent(in) :: x, h
+      real(dp), dimension(:), allocatable, intent(out) :: df
+
+      integer :: i
+
+      allocate(df(num_inflaton))
+
+      df = (0.5e0_dp/h)*(f(x + h) - f(x - h))
+
+
+    end subroutine num_first_deriv_vectorfunct
+
+    subroutine num_second_deriv_vectorfunct(f, x, h, d2f)
+      ! Estimate the second (partial) derivs of f(x) using central diff
+      ! Input:
+      !   f:  the function to find derivs of
+      !   x:  the point to differentiate around
+      !   h:  the step-size for finite diff (assumes same step each dimn)
+      ! Returns:
+      !   the estimate df of each (partial) deriv at x
+
+      interface
+        function f(x)
+          use modpkparams
+          implicit none
+          real(dp), intent(in) :: x
+          real(dp), dimension(num_inflaton) :: f
+        end function f
+      end interface
+
+      real(dp), intent(in) :: x, h
+      real(dp), dimension(:,:), allocatable, intent(out) :: d2f
+
+      integer :: i, j
+
+      allocate(d2f(num_inflaton,1))
+
+      d2f(:,1) = (1.0e0_dp/h**2)*&
+        (f(x + h) - 2e0_dp*f(x) + f(x - h))
+
+    end subroutine num_second_deriv_vectorfunct
 
     pure FUNCTION locate(xx,x)
       IMPLICIT NONE

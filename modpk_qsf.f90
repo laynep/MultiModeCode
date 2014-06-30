@@ -21,6 +21,7 @@ module modpk_qsf
   type :: qsf_reference
     real(dp), dimension(:), allocatable :: phi
     real(dp) :: param
+    real(dp) :: param_step=1e-8_dp
     integer :: hunt_guess
     logical :: traj_init = .false.
     real(dp), dimension(:,:), allocatable :: phi_light_vs_param
@@ -28,6 +29,8 @@ module modpk_qsf
       procedure :: get_param => choose_parameter
       procedure :: initialize_traj => integrate_through_trajectory
       procedure :: phi_light => get_phi_light
+      procedure :: dphi_light_dparam => dphi_light_dparam
+      procedure :: d2phi_light_dparam2 => d2phi_light_dparam2
       procedure :: min_dist => distance_minimizer
   end type
 
@@ -375,6 +378,7 @@ contains
   !Deriv wrt parameter
   function dturndparam(param) result(funct)
     implicit none
+
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
@@ -451,6 +455,72 @@ contains
 
   end function d2turndparam2
 
+  !Partial derivative of parameter of closest approach for
+  !turning_function_parametric with respect to the field values.
+  function dparam_closest_dphi(param_closest) result(funct)
+    implicit none
+    real(dp), intent(in) :: param_closest
+    real(dp), dimension(num_inflaton) :: funct
+
+    real(dp) :: phi_turn, slope
+
+    select case(turning_choice(1))
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+      slope = vparams(4,2)
+
+      if (param_closest < phi_turn) then
+        funct(1) = 1.0e0_dp
+        funct(2) = 0.0e0_dp
+      else if (param_closest > phi_turn) then
+        funct(1) = ((1.0e0_dp+slope**2)**(-1))*slope
+        funct(2) = ((1.0e0_dp+slope**2)**(-1))
+      else
+        funct(1) = 0e0_dp
+        funct(2) = 0e0_dp
+      end if
+
+    case default
+
+      print*, "QSF: dparam_closest_dphi not implemented for"
+      print*, "QSF: turning_choice =", turning_choice
+      stop
+
+    end select
+
+
+  end function dparam_closest_dphi
+
+  !Second partial derivative of parameter of closest approach for
+  !turning_function_parametric with respect to the field values.
+  function d2param_closest_dphi2(param_closest) result(funct)
+    implicit none
+    real(dp), intent(in) :: param_closest
+    real(dp), dimension(num_inflaton, num_inflaton) :: funct
+
+    real(dp) :: phi_turn, slope
+
+    select case(turning_choice(1))
+    case(3)
+      !One sharp turn
+      phi_turn = vparams(4,1)
+      slope = vparams(4,2)
+
+      funct = 0e0_dp
+
+    case default
+
+      print*, "QSF: d2param_closest_dphi2 not implemented for"
+      print*, "QSF: turning_choice =", turning_choice
+      stop
+
+    end select
+
+
+  end function d2param_closest_dphi2
+
+  !Euclidean distance function
   function distance(t)
     use modpkparams
     implicit none
@@ -806,6 +876,45 @@ contains
     end select
 
   end function distance_minimizer
+
+  !Derivative of the light field with respect to the parameter at which we
+  !perform the interpolation of the pre-integrated trajectory.
+  function dphi_light_dparam(this,param) result(dot_phi)
+    implicit none
+
+    class(qsf_reference) :: this
+    real(dp) :: dot_phi
+    real(dp), intent(in) :: param
+    real(dp), dimension(num_inflaton) :: dfunct
+
+    integer :: i
+
+    dfunct = dturndparam(param)
+    dot_phi = sqrt( sum( dfunct**2))
+
+  end function dphi_light_dparam
+
+  !Second derivative of the light field with respect to the parameter at which we
+  !perform the interpolation of the pre-integrated trajectory.
+  function d2phi_light_dparam2(this,param) result(ddot_phi)
+    implicit none
+
+    class(qsf_reference) :: this
+    real(dp) :: ddot_phi
+    real(dp), intent(in) :: param
+    real(dp), dimension(num_inflaton) :: dfunct
+    real(dp), dimension(num_inflaton) :: d2funct
+    real(dp) :: dot_phi
+
+    integer :: i
+
+    dfunct = dturndparam(param)
+    d2funct = d2turndparam2(param)
+    dot_phi = this%dphi_light_dparam(param)
+
+    ddot_phi = (1.0e0_dp/dot_phi)* sum( dfunct*d2funct)
+
+  end function d2phi_light_dparam2
 
 
 end module modpk_qsf
