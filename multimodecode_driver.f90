@@ -236,6 +236,8 @@ program multimodecode
         call SR_pred%set_zero()
       end if
 
+      !Background stats
+
       if (.not. out_opt%output_reduced) then
         do i=1,size(vparams,1)
           print*, "vparams", vparams(i,:)
@@ -246,10 +248,14 @@ program multimodecode
         "Number of Inflaton =", num_inflaton
       write(*, out_opt%i_fmt) &
         "Potential Choice =", potential_choice
+      if (potential_choice == 14 .or. potential_choice==15) then
+        write(*, out_opt%i_fmt) &
+          "Turning Choice =", turning_choice
+      end if
       write(*, out_opt%e_fmt) &
         "N_pivot =", N_pivot
-      !write(*, out_opt%e2_fmt) &
-      !  "phi_pivot =", phi_pivot(1), '(', phi_piv_pred , ')'
+      write(*, out_opt%e2_fmt) &
+        "phi_pivot =", phi_pivot(:)!, '(', phi_piv_pred , ')'
       if (potential_choice==1) then
         write(*, out_opt%e2_fmt)&
           "N_tot =", N_tot,'(', &
@@ -258,6 +264,12 @@ program multimodecode
         write(*, out_opt%e2_fmt)&
           "N_tot =", N_tot
       end if
+
+
+      !Mode stats
+
+      if (.not. evaluate_modes) return
+
       write(*, out_opt%e2_fmt)&
         "Ps =", observ_modes%As, '(', SR_pred%As , ')'
       write(*, out_opt%e2_fmt),&
@@ -273,9 +285,10 @@ program multimodecode
       write(*, out_opt%e2_fmt)&
         "r = Pt/Ps =", observ_modes%r, '(', SR_pred%r, ')'
 
-      !DEBUG
-      write(*, out_opt%e2_fmt)&
-        "r (m^2 phi^2) =", observ_modes%r, '(', 8.0/N_pivot, ')'
+      if (potential_choice==1 .or. potential_choice==15) then
+        write(*, out_opt%e2_fmt)&
+          "r (m^2 phi^2) =", observ_modes%r, '(', 8.0/N_pivot, ')'
+      end if
 
       write(*, out_opt%e2_fmt)&
         "n_s =", observ_modes%ns, '(', SR_pred%ns,')'

@@ -21,7 +21,6 @@ module modpk_qsf
   type :: qsf_reference
     real(dp), dimension(:), allocatable :: phi
     real(dp) :: param
-    real(dp) :: param_step=1e-8_dp
     integer :: hunt_guess
     logical :: traj_init = .false.
     real(dp), dimension(:,:), allocatable :: phi_light_vs_param

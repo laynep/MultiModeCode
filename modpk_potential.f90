@@ -437,47 +437,44 @@ CONTAINS
 
        case(15)
          !Numerical QSF
-         m_light2 = 10.0e0_dp**vparams(1,1)
-         M_heavy2 = 10.0e0_dp**vparams(1,2)
-
-         qsf_runref%phi = phi
-
-         !Find point of closest approach
-         param_closest = qsf_runref%min_dist()
-
-         !Get the integrated distance this closest point is up the curve
-         !and the derivs of the integrated distance
-         phi_light = qsf_runref%phi_light(param_closest)
-         dphi_light = qsf_runref%dphi_light_dparam(param_closest)
-
-         !Get turn funct and its derivs
-         turnfunct = turning_function_parametric(param_closest)
-         dturnfunct = dturndparam(param_closest)
 
          select case(turning_choice(1))
          case (:3)
+           m_light2 = 10.0e0_dp**vparams(1,1)
+           M_heavy2 = 10.0e0_dp**vparams(1,2)
+
+           qsf_runref%phi = phi
+
+           !Find point of closest approach
+           param_closest = qsf_runref%min_dist()
+
+           !Reset param guess for next time through
+           qsf_runref%param = param_closest
+
+           !Get the integrated distance this closest point is up the curve
+           !and the derivs of the integrated distance
+           phi_light = qsf_runref%phi_light(param_closest)
+           dphi_light = qsf_runref%dphi_light_dparam(param_closest)
+
+           !Get turn funct and its derivs
+           turnfunct = turning_function_parametric(param_closest)
+           dturnfunct = dturndparam(param_closest)
 
            dparam_dphi = dparam_closest_dphi(param_closest)
 
+           !Build dVdphi
+           first_deriv = m_light2*phi_light*dphi_light*dparam_dphi &
+             + M_heavy2*(phi - turnfunct) &
+             - M_heavy2*dparam_dphi*sum( dturnfunct*(phi - turnfunct))
+
          case default
 
-           !Use numerical differentiation of turning_function
-           call num_first_deriv(turning_function_parametric, param_closest, &
-             qsf_runref%param_step, numderiv)
-           dparam_dphi = numderiv
+           !Take derivs of potential directly via central diff
+           stepsize = 1.0e-8_dp
+           call num_first_deriv(pot, phi, stepsize, numderiv)
+           first_deriv = numderiv
 
          end select
-
-         !Build dVdphi
-         first_deriv = m_light2*phi_light*dphi_light*dparam_dphi &
-           + M_heavy2*(phi - turnfunct) &
-           - M_heavy2*dparam_dphi*sum( dturnfunct*(phi - turnfunct))
-
-         !DEBUG
-        !Take derivs of potential directly via central diff
-        !stepsize = 1.0e-8_dp
-        !call num_first_deriv(pot, phi, stepsize, numderiv)
-        !first_deriv = numderiv
 
 
        !END MULTIFIELD
@@ -717,88 +714,72 @@ CONTAINS
 
        case(15)
 
-         !Numerical QSF
-         m_light2 = 10.0e0_dp**vparams(1,1)
-         M_heavy2 = 10.0e0_dp**vparams(1,2)
-
-         qsf_runref%phi = phi
-
-         !Find point of closest approach
-         param_closest = qsf_runref%min_dist()
-
-         !Get the integrated distance this closest point is up the curve
-         !and the derivs of the integrated distance
-         phi_light = qsf_runref%phi_light(param_closest)
-         dphi_light = qsf_runref%dphi_light_dparam(param_closest)
-         d2phi_light = qsf_runref%d2phi_light_dparam2(param_closest)
-
-         !Get turn funct and its derivs
-         turnfunct = turning_function_parametric(param_closest)
-         dturnfunct = dturndparam(param_closest)
-         d2turnfunct = d2turndparam2(param_closest)
-
          select case(turning_choice(1))
          case (:3)
+
+           !Numerical QSF
+           m_light2 = 10.0e0_dp**vparams(1,1)
+           M_heavy2 = 10.0e0_dp**vparams(1,2)
+
+           qsf_runref%phi = phi
+
+           !Find point of closest approach
+           param_closest = qsf_runref%min_dist()
+
+           !Reset param guess for next time through
+           qsf_runref%param = param_closest
+
+           !Get the integrated distance this closest point is up the curve
+           !and the derivs of the integrated distance
+           phi_light = qsf_runref%phi_light(param_closest)
+           dphi_light = qsf_runref%dphi_light_dparam(param_closest)
+           d2phi_light = qsf_runref%d2phi_light_dparam2(param_closest)
+
+           !Get turn funct and its derivs
+           turnfunct = turning_function_parametric(param_closest)
+           dturnfunct = dturndparam(param_closest)
+           d2turnfunct = d2turndparam2(param_closest)
+
 
            dparam_dphi = dparam_closest_dphi(param_closest)
            d2param_dphi2 = d2param_closest_dphi2(param_closest)
 
-         case default
-
-           !Use numerical differentiation of turning_function
-           call num_first_deriv(turning_function_parametric, param_closest, &
-             qsf_runref%param_step, numderiv1)
-           dparam_dphi = numderiv1
-
-           call num_second_deriv(turning_function_parametric, param_closest, &
-             qsf_runref%param_step, numderiv)
-           d2param_dphi2 = numderiv
-
-         end select
-
-         !Identity matrix
-         delta=0e0_dp
-         do ii=1, num_inflaton
-           delta(ii,ii) = 1.0e0_dp
-         end do
-
-         !Build d2Vdphi2
-
-         second_deriv = 0e0_dp
-         do ii=1,num_inflaton; do jj=1,num_inflaton
-
-           do ll=1, num_inflaton
-             second_deriv(ii,jj) = second_deriv(ii,jj) &
-               - M_heavy2*d2turnfunct(ll)*dparam_dphi(jj)* &
-                 (phi(ll)-turnfunct(ll))*dparam_dphi(ii) &
-               - M_heavy2*dturnfunct(ll)*&
-                 (delta(ll,jj)-dturnfunct(ll)*dparam_dphi(jj))*dparam_dphi(ii) &
-               - M_heavy2*dturnfunct(ll)*&
-                 (phi(ll)-turnfunct(ll))*d2param_dphi2(ii,jj)
+           !Identity matrix
+           delta=0e0_dp
+           do ii=1, num_inflaton
+             delta(ii,ii) = 1.0e0_dp
            end do
 
-           second_deriv(ii,jj) = second_deriv(ii,jj) &
-             + m_light2*(dphi_light**2)*dparam_dphi(ii)*dparam_dphi(jj) &
-             + m_light2*phi_light*d2phi_light*dparam_dphi(ii)*dparam_dphi(jj) &
-             + m_light2*phi_light*dphi_light*d2param_dphi2(ii,jj) &
-             + M_heavy2*(delta(ii,jj) - dturnfunct(ii)*dparam_dphi(jj))
+           !Build d2Vdphi2
+           second_deriv = 0e0_dp
+           do ii=1,num_inflaton; do jj=1,num_inflaton
 
-         end do; end do
+             do ll=1, num_inflaton
+               second_deriv(ii,jj) = second_deriv(ii,jj) &
+                 - M_heavy2*d2turnfunct(ll)*dparam_dphi(jj)* &
+                   (phi(ll)-turnfunct(ll))*dparam_dphi(ii) &
+                 - M_heavy2*dturnfunct(ll)*&
+                   (delta(ll,jj)-dturnfunct(ll)*dparam_dphi(jj))*dparam_dphi(ii) &
+                 - M_heavy2*dturnfunct(ll)*&
+                   (phi(ll)-turnfunct(ll))*d2param_dphi2(ii,jj)
+             end do
 
-         !DEBUG
-         !Take second derivs of potential directly via central diff
-         stepsize = 1.0e-4_dp
-         call num_second_deriv(pot, phi, stepsize, numderiv)
-         !second_deriv = numderiv
+             second_deriv(ii,jj) = second_deriv(ii,jj) &
+               + m_light2*(dphi_light**2)*dparam_dphi(ii)*dparam_dphi(jj) &
+               + m_light2*phi_light*d2phi_light*dparam_dphi(ii)*dparam_dphi(jj) &
+               + m_light2*phi_light*dphi_light*d2param_dphi2(ii,jj) &
+               + M_heavy2*(delta(ii,jj) - dturnfunct(ii)*dparam_dphi(jj))
 
-         !DEBUG
-         print*, "testing analytical second deriv:"
-         print*, second_deriv
-         print*, "testing numerical second deriv:"
-         print*, numderiv
-         print*, "param_closest:", param_closest
-         print*, "--------------"
+           end do; end do
 
+         case default
+
+           !Take second derivs of potential directly via central diff
+           stepsize = 1.0e-4_dp
+           call num_second_deriv(pot, phi, stepsize, numderiv)
+           second_deriv = numderiv
+
+         end select
 
        case default
           write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'

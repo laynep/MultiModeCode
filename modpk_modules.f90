@@ -92,7 +92,7 @@ module modpk_output
 
     !Writing fmts
     character(16) :: e_fmt = '(a25, es12.4)'
-    character(36) :: e2_fmt = '(a25, es17.9, a3, es16.9, a1)'
+    character(36) :: e2_fmt = '(a25, 900es17.9, a3, 900es16.9, a1)'
     character(16) :: i_fmt = '(a25,I3)'
     character(16) :: array_fmt
     character(len=2) :: ci

@@ -255,8 +255,8 @@ contains
       !Relative tolerance
       !Absolute tolerance
       if (accuracy_setting==2) then
-        rtol = 1.e-8_dp
-        atol = 1.0e-8_dp
+        rtol = 1.e-12_dp
+        atol = 1.0e-12_dp
       else if (accuracy_setting==1) then
         rtol = 1.e-6_dp
         atol = 1.0e-6_dp
@@ -265,14 +265,10 @@ contains
         atol = 1.0e-5_dp
       end if
 
-      !atol(1) = 1.e-8_dp
-      !atol(2) = 1.e-14_dp
-      !atol(3) = 1.e-6_dp
-
       istate = 1 !Set =1 for 1st call to integrator
 
-      !itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
-      itask  = 2 !Take only one time-step and output
+      itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      !itask  = 2 !Take only one time-step and output
 
       if (itask /=2) then
         !Integrate until nefold_out
@@ -572,6 +568,15 @@ contains
              itask,istate,ode_integrator_opt)
          end if
          call get_stats(rstats,istats)
+         !DEBUG
+         !print*, "this is last stepsize used", rstats(11)
+         !print*, "this is next stepsize attempt", rstats(12)
+         !print*, "this is current value of N", rstats(13)
+         !print*, "this is tolerance scale factor", rstats(14)
+         if (rstats(14) > 1.0) then
+           print*, "this is tolerance scale factor", rstats(14)
+           stop
+         end if
 
          if (istate<0) then
            print*, "ERROR in dvode_f90 istate=", istate
@@ -688,7 +693,8 @@ contains
 
        !switch to the Q variable for super-horizon evolution
        !only apply the switch on y(1:4*num_inflaton+2)
-       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps .and. (.not. use_q)) THEN
+       IF (k .LT. a_init*exp(x)*getH(phi, delphi)/useq_ps &
+         .and. (.not. use_q)) THEN
          call switch_to_qvar()
        end if
 
@@ -792,20 +798,35 @@ contains
       rtol = 1.0e-10_dp
 
       !Absolute tolerance
-      !atol = 1.0e-8_dp
 
       !Real
       atol_real(1:num_inflaton) = 1.0e-6_dp
       atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
       atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
       atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-6_dp
+      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
 
       atol_compl(1:num_inflaton) = 1.0e-9_dp
       atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
       atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
       atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
-      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-9_dp
+      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
+
+      !DEBUG
+      !print*, "playing around with accuracy in odeint_c"
+      !accuracy_setting=2
+
+      !atol_real(1:num_inflaton) = 1.0e-12_dp
+      !atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
+      !atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
+      !atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      !atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
+
+      !atol_compl(1:num_inflaton) = 1.0e-12_dp
+      !atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
+      !atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
+      !atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      !atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
 
       atol(1:neq/2)=atol_real
       atol((neq/2)+1:neq)=atol_compl
@@ -816,10 +837,15 @@ contains
       else if (accuracy_setting==1) then
         rtol = rtol * 1e3_dp
         atol = atol * 1e1_dp
+      else if (accuracy_setting==2) then
+        !DEBUG
+        !print*, "setting accuracy in odeint_c by hand"
+        !rtol = 1e-8_dp
+        !atol = 1e-6_dp
       end if
 
-      itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
-      !itask = 2
+      !itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      itask = 2
       istate = 1 !Set =1 for 1st call to integrator
 
       if (itask /=2) then
@@ -832,8 +858,8 @@ contains
         nefold_out = Nefold_max
       end if
 
-      ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
-        relerr=rtol,user_supplied_jacobian=.false.,mxstep=50000, &
+      ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
+        relerr=rtol, user_supplied_jacobian=.false., mxstep=1000, &
         mxhnil=1)
 
     end subroutine initialize_dvode_MODES

@@ -1055,6 +1055,8 @@ cross_ad_iso	modpk_modules.f90	/^    real(dp) :: cross_ad_iso$/;"	k	type:power_s
 custom_knot_range	modpk_qsf.f90	/^  logical :: custom_knot_range$/;"	v	module:modpk_qsf
 d2Ndphi2_SR	modpk_potential.f90	/^    function d2Ndphi2_SR(/;"	f	module:modpk_deltaN_SR
 d2Vdphi2	modpk_potential.f90	/^  recursive function d2Vdphi2(/;"	f	module:potential
+d2param_closest_dphi2	modpk_qsf.f90	/^  function d2param_closest_dphi2(/;"	f	module:modpk_qsf
+d2phi_light_dparam2	modpk_qsf.f90	/^  function d2phi_light_dparam2(/;"	f	module:modpk_qsf
 d2turndparam2	modpk_qsf.f90	/^  function d2turndparam2(/;"	f	module:modpk_qsf
 d2turndphi2	modpk_qsf.f90	/^  real(dp) function d2turndphi2(/;"	f	module:modpk_qsf
 d3Vdphi3	modpk_potential.f90	/^  function d3Vdphi3(/;"	f	module:potential
@@ -1077,6 +1079,7 @@ dparam_closest_dphi	modpk_qsf.f90	/^  function dparam_closest_dphi(/;"	f	module:
 dphi_init	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0/;"	v	module:modpkparams
 dphi_init0	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: dphi_init0(/;"	v	module:modpkparams
 dphi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N$/;"	v	module:modpk_icsampling
+dphi_light_dparam	modpk_qsf.f90	/^  function dphi_light_dparam(/;"	f	module:modpk_qsf
 dphi_pivot	modpk_modules.f90	/^  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(/;"	v	module:modpkparams
 dphiarr	modpk_modules.f90	/^  real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(/;"	v	module:modpkparams
 driver_modpk	driver_modpk.f90	/^PROGRAM driver_modpk$/;"	p
@@ -1281,7 +1284,6 @@ outsamp_SR	modpk_modules.f90	/^    integer :: outsamp_SR$/;"	k	type:print_option
 param	modpk_qsf.f90	/^    real(dp) :: param$/;"	k	type:qsf_reference
 param_arr	modpk_modules.f90	/^  real(dp), allocatable :: param_arr(/;"	v	module:modpkparams
 param_p	modpk_modules.f90	/^  real(dp), DIMENSION(:), POINTER :: param_p$/;"	v	module:ode_path
-param_step	modpk_qsf.f90	/^    real(dp) :: param_step=/;"	k	type:qsf_reference
 param_unif_prior	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=/;"	v	module:modpk_icsampling
 parameter_loop_samp	modpk_icsampling.f90	/^    fromfile_samp=4, parameter_loop_samp=/;"	v	module:modpk_icsampling
 params	multimodecode_driver.f90	/^  namelist \/params\//;"	n	program:multimodecode
