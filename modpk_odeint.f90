@@ -23,7 +23,8 @@ contains
     use modpk_observables
     use modpkparams
     use potential
-    use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode
+    use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode, &
+      jacobian_background_DVODE
     use modpk_qsf
 
     implicit none
@@ -137,8 +138,13 @@ contains
 
       if (use_dvode_integrator) then
 
-        call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
-          itask,istate,ode_integrator_opt)
+        if (use_analytical_jacobian) then
+          call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
+            itask,istate,ode_integrator_opt,J_FCN=jacobian_background_DVODE)
+        else
+          call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
+            itask,istate,ode_integrator_opt)
+        end if
         call get_stats(rstats,istats)
 
         if (istate<0) then
@@ -280,10 +286,21 @@ contains
       end if
 
       !Force initial step-size guess very small
-      ode_integrator_opt = set_intermediate_opts(dense_j=.true.,abserr_vector=atol,      &
-        relerr=rtol,user_supplied_jacobian=.false., &
-        mxstep=50000,&
-        H0=1e-9_dp)
+      if (use_analytical_jacobian) then
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+          abserr_vector=atol,&
+          relerr=rtol,&
+          user_supplied_jacobian=.true., &
+          mxstep=50000,&
+          H0=1e-9_dp)
+      else
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+          abserr_vector=atol,&
+          relerr=rtol,&
+          user_supplied_jacobian=.false., &
+          mxstep=50000,&
+          H0=1e-9_dp)
+      end if
 
     end subroutine initialize_dvode
 
@@ -568,15 +585,6 @@ contains
              itask,istate,ode_integrator_opt)
          end if
          call get_stats(rstats,istats)
-         !DEBUG
-         !print*, "this is last stepsize used", rstats(11)
-         !print*, "this is next stepsize attempt", rstats(12)
-         !print*, "this is current value of N", rstats(13)
-         !print*, "this is tolerance scale factor", rstats(14)
-         if (rstats(14) > 1.0) then
-           print*, "this is tolerance scale factor", rstats(14)
-           stop
-         end if
 
          if (istate<0) then
            print*, "ERROR in dvode_f90 istate=", istate
@@ -800,33 +808,33 @@ contains
       !Absolute tolerance
 
       !Real
-      atol_real(1:num_inflaton) = 1.0e-6_dp
-      atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
-      atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-      atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
-
-      atol_compl(1:num_inflaton) = 1.0e-9_dp
-      atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
-      atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-      atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
-      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
-
-      !DEBUG
-      !print*, "playing around with accuracy in odeint_c"
-      !accuracy_setting=2
-
-      !atol_real(1:num_inflaton) = 1.0e-12_dp
-      !atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
-      !atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
+      !atol_real(1:num_inflaton) = 1.0e-6_dp
+      !atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
+      !atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
       !atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
       !atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
 
-      !atol_compl(1:num_inflaton) = 1.0e-12_dp
-      !atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
-      !atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
-      !atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      !atol_compl(1:num_inflaton) = 1.0e-9_dp
+      !atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
+      !atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
+      !atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
       !atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
+
+      !DEBUG
+      print*, "playing around with accuracy in odeint_c"
+      accuracy_setting=2
+
+      atol_real(1:num_inflaton) = 1.0e-12_dp
+      atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
+      atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
+      atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
+
+      atol_compl(1:num_inflaton) = 1.0e-12_dp
+      atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
+      atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
+      atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
+      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
 
       atol(1:neq/2)=atol_real
       atol((neq/2)+1:neq)=atol_compl

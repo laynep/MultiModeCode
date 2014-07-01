@@ -60,6 +60,7 @@ MODULE modpkparams
   !Flags for technical options
   integer :: accuracy_setting
   logical :: use_dvode_integrator
+  logical :: use_analytical_jacobian
 
 END MODULE modpkparams
 

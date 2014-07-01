@@ -59,7 +59,8 @@ program multimodecode
 
   namelist /print_out/ out_opt, get_runningofrunning
 
-  namelist /technical/ accuracy_setting, use_dvode_integrator
+  namelist /technical/ accuracy_setting, use_dvode_integrator, &
+    use_analytical_jacobian
 
   !------------------------------------------------
 

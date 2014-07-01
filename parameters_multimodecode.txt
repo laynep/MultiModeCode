@@ -22,7 +22,7 @@ sum-separable potentials.
 &analytical
   use_deltaN_SR = .false.
   use_horiz_cross_approx = .true.
-  evaluate_modes = .true.
+  evaluate_modes = .false.
 /
 
 ----------------
@@ -141,4 +141,5 @@ Use DVODE integrator for stiff problems.
 &technical
   accuracy_setting = 2
   use_dvode_integrator = .true.
+  use_analytical_jacobian = .true.
 /

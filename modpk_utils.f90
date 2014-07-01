@@ -42,13 +42,12 @@ CONTAINS
 
     !Take the real values and pack into complex
 
-    !y_comp = cmplx(real_comp, im_comp)
-    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq))
+    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq),kind=dp)
 
     call derivs(t,y_comp,ydot_comp)
 
     !Take the complex values and unpack into reals
-    ydot(1:neq/2) = real(ydot_comp)
+    ydot(1:neq/2) = real(ydot_comp,kind=dp)
     ydot(neq/2+1:neq) = aimag(ydot_comp)
 
   end subroutine mode_derivs_dvode
@@ -66,13 +65,12 @@ CONTAINS
 
     !Take the real values and pack into complex
 
-    !y_comp = cmplx(real_comp, im_comp)
-    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq))
+    y_comp = cmplx(y(1:neq/2), y(neq/2+1:neq),kind=dp)
 
     call qderivs(t,y_comp,ydot_comp)
 
     !Take the complex values and unpack into reals
-    ydot(1:neq/2) = real(ydot_comp)
+    ydot(1:neq/2) = real(ydot_comp,kind=dp)
     ydot(neq/2+1:neq) = aimag(ydot_comp)
 
   end subroutine qderivs_dvode
@@ -669,6 +667,63 @@ CONTAINS
     end do; end do
 
   end function convert_matrix_to_hacked_vector
+
+  !For ODE system y_i'(t) = f_i[y_j(t)], this returns the Jacobian df_i/dy_j,
+  !with df(i)/dy(j) loaded into PD(i,j).
+  !Valid for background evolution.  Used with the DVODE integrator when invoking
+  !stiff solving methods.
+  subroutine jacobian_background_DVODE(neq, t, y, ml, mu, pd, nrowpd)
+    use modpkparams
+    use potential, only : getEps, pot, dVdphi, d2Vdphi2
+    implicit none
+
+    integer, intent(in) :: neq, nrowpd, ml, mu
+    real(dp), intent(in) :: t, y(neq)
+    real(dp), intent(out) :: pd(nrowpd,neq)
+
+    real(dp), dimension(num_inflaton) :: phi, dphi, dV
+    real(dp) :: eps, V_pot
+    real(dp), dimension(num_inflaton, num_inflaton) :: d2V
+    real(dp), dimension(2*num_inflaton, 2*num_inflaton) :: delta
+
+    integer :: ii, jj
+
+    !f(i) = y(i+num_inflaton)  for   1 <= i <= num_inflaton
+    !f(i) = -(3-eps)*y(i-num_inflaton) - H**-2 * dVdphi(i-num_inflaton)
+    !                 for   num_inflaton + 1 <= i <= 2*num_inflaton
+
+    phi = y(1:num_inflaton)
+    dphi = y(num_inflaton+1:2*num_inflaton)
+
+    eps = getEps(phi,dphi)
+    V_pot = pot(phi)
+    dV = dVdphi(phi)
+    d2V = d2Vdphi2(phi)
+
+    !Bc 2nd order ODE
+    pd = 0e0_dp
+    do ii=1,num_inflaton
+      pd(ii,ii+num_inflaton) = 1.0e0_dp
+    end do
+
+    !Derivs wrt phi
+    forall ( ii=1:num_inflaton, jj=1:num_inflaton)&
+      pd(ii+num_inflaton,jj) = -(3.0e0_dp - eps)*&
+        (d2V(ii,jj)/V_pot - (dV(ii)*dV(jj)/V_pot**2))
+
+    !Derivs wrt dphi
+    delta = 0e0_dp
+    do ii=1,2*num_inflaton
+      delta(ii,ii) = 1e0_dp
+    end do
+
+    forall ( ii=1:num_inflaton, jj=1:num_inflaton)&
+      pd(ii+num_inflaton,jj+num_inflaton) = &
+        -(3.0e0_dp-eps)*delta(ii,jj) &
+        + dphi(ii)*dphi(jj) &
+        + dV(ii)*dphi(jj)/V_pot
+
+  end subroutine jacobian_background_DVODE
 
 
 end module modpk_utils
