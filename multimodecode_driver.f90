@@ -59,8 +59,7 @@ program multimodecode
 
   namelist /print_out/ out_opt, get_runningofrunning
 
-  namelist /technical/ accuracy_setting, use_dvode_integrator, &
-    use_analytical_jacobian
+  namelist /technical/ tech_opt
 
   !------------------------------------------------
 
@@ -255,8 +254,8 @@ program multimodecode
       end if
       write(*, out_opt%e_fmt) &
         "N_pivot =", N_pivot
-      write(*, out_opt%e2_fmt) &
-        "phi_pivot =", phi_pivot(:)!, '(', phi_piv_pred , ')'
+      write(*, out_opt%e_fmt) &
+        "phi_pivot =", phi_pivot(:)
       if (potential_choice==1) then
         write(*, out_opt%e2_fmt)&
           "N_tot =", N_tot,'(', &

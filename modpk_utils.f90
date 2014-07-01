@@ -189,12 +189,12 @@ CONTAINS
     ! background quantity
     real(dp) :: hubble, dhubble, scale_factor, epsilon, dotphi, eta
     real(dp) :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
-    real(dp), DIMENSION(num_inflaton) :: phi, delphi, Vp
-    real(dp), DIMENSION(num_inflaton, num_inflaton) :: Cab, Vpp
+    real(dp), dimension(num_inflaton) :: phi, delphi, Vp
+    real(dp), dimension(num_inflaton, num_inflaton) :: Cab, d2V
 
-    COMPLEX(DP), DIMENSION(num_inflaton*num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
-    COMPLEX(DP) :: v, dv                                        ! tensor perturbations
-    COMPLEX(DP) :: u_zeta, du_zeta
+    complex(dp), dimension(num_inflaton*num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
+    complex(dp) :: v, dv                                        ! tensor perturbations
+    complex(dp) :: u_zeta, du_zeta
 
     integer :: i, j
 
@@ -215,9 +215,9 @@ CONTAINS
     !Aliases to potential derivatives
     epsilon = getEps(phi, delphi)
     eta = geteta(phi, delphi)
-    Vpp = d2Vdphi2(phi)
+    d2V = d2Vdphi2(phi)
     Vp = dVdphi(phi)
-    Vzz = dot_product(delphi, matmul(Vpp, delphi))/dotphi**2
+    Vzz = dot_product(delphi, matmul(d2V, delphi))/dotphi**2
     Vz = dot_product(Vp, delphi)/dotphi
     grad_V = sqrt(dot_product(Vp, Vp))
 
@@ -246,7 +246,7 @@ CONTAINS
 
     hubble=getH(phi,delphi)
     dhubble=getdHdalpha(phi,delphi)
-    scale_factor=a_init*EXP(x)
+    scale_factor=a_init*exp(x)
 
     ! Alias y's into real variable names
     ! NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
@@ -276,7 +276,7 @@ CONTAINS
     if (using_q_superh) then
       yprime(index_ptb_vel_y:index_tensor_y-1) = -(3.0e0_dp - epsilon)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
-        -dot(Cab, psi)/hubble**2
+        - dot(Cab, psi)/hubble**2
     else
       yprime(index_ptb_vel_y:index_tensor_y-1) = -(1.0e0_dp - epsilon)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
@@ -313,7 +313,7 @@ CONTAINS
           mass_matrix = 0e0_dp
         else
            forall (i=1:num_inflaton, j=1:num_inflaton) &
-                mass_matrix(i,j) = Vpp(i,j) +  &
+                mass_matrix(i,j) = d2V(i,j) +  &
                 (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
                 + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
         end if
@@ -338,9 +338,10 @@ CONTAINS
 
         matrixB=convert_hacked_vector_to_matrix(hacked_vector)
 
-        do i=1, n; do j=1,n; do k=1,n
-          matrixC(i,j) = matrixC(i,j) + matrixA(i,k)*matrixB(k,j)
-        end do; end do; end do
+        !do i=1, n; do j=1,n; do k=1,n
+        !  matrixC(i,j) = matrixC(i,j) + matrixA(i,k)*matrixB(k,j)
+        !end do; end do; end do
+        matrixC = matmul(matrixA, matrixB)
 
         outvect = convert_matrix_to_hacked_vector(matrixC)
 
@@ -644,9 +645,8 @@ CONTAINS
     n=int(sqrt(real(size(matrix_as_vector))))
     allocate(real_matrix(n,n))
 
-    do i=1,n; do j=1,n
+    forall (i=1:n, j=1:n) &
       real_matrix(i,j) = matrix_as_vector((i-1)*n+j)
-    end do; end do
 
   end function convert_hacked_vector_to_matrix
 
@@ -662,9 +662,8 @@ CONTAINS
     n=size(matrix,1)*size(matrix,2)
     allocate(hacked_vector(n))
 
-    do i=1,size(matrix,1); do j=1,size(matrix,2)
+    forall (i=1:size(matrix,1), j=1:size(matrix,2)) &
       hacked_vector((i-1)*size(matrix,2)+j) = matrix(i,j)
-    end do; end do
 
   end function convert_matrix_to_hacked_vector
 
@@ -724,6 +723,108 @@ CONTAINS
         + dV(ii)*dphi(jj)/V_pot
 
   end subroutine jacobian_background_DVODE
+
+  !For ODE system y_i'(t) = f_i[y_j(t)], this returns the Jacobian df_i/dy_j,
+  !with df(i)/dy(j) loaded into PD(i,j).
+  !Valid for mode evolution with psi variable, ie, not when use_q.
+  !Used with the DVODE integrator when invoking stiff solving methods.
+  subroutine jacobian_psi_modes_DVODE(neq, t, y, ml, mu, pd, nrowpd)
+    use modpkparams
+    use internals
+    USE potential, ONLY: pot, dVdphi, d2Vdphi2, d3Vdphi3, &
+      getH, getdHdalpha, getEps, getEta
+    implicit none
+
+    integer, intent(in) :: neq, nrowpd, ml, mu
+    real(dp), intent(in) :: t, y(neq)
+    real(dp), intent(out) :: pd(nrowpd,neq)
+
+    complex(dp), dimension(neq/2) :: y_comp, ydot_comp
+
+    real(dp), dimension(2*num_inflaton,2*num_inflaton) :: pd_back
+    real(dp), dimension(2*num_inflaton) :: y_back
+
+    real(dp), dimension(num_inflaton) :: phi, dphi
+    complex(dp), dimension(num_inflaton*num_inflaton) :: psi, dpsi
+    real(dp), dimension(nrowpd,neq) :: delta
+    integer :: ii, jj, kk, ll
+
+    real(dp) :: hubble, dhubble, scale_factor, epsilon, dotphi, eta
+    real(dp) :: Vzz, Vz, grad_V, V_pot
+    real(dp), dimension(num_inflaton) :: dV
+    real(dp), dimension(num_inflaton, num_inflaton) :: Cab, d2V
+    real(dp), dimension(num_inflaton, num_inflaton, num_inflaton) :: dCdphi, &
+      dCddelphi, d3V
+
+
+    y_back = y(1:2*num_inflaton)
+    call jacobian_background_DVODE(NEQ=size(pd_back,2), t=t, y=y_back, &
+      ml=ml, mu=mu, pd=pd_back, nrowpd=size(pd_back,1))
+    pd(1:size(pd_back,1),1:size(pd_back,2)) = pd_back
+
+    phi = real(y(1:num_inflaton),kind=dp)
+    dphi = real(y(num_inflaton+1:2*num_inflaton),kind=dp)
+    psi = y(index_ptb_y:index_ptb_vel_y-1)
+    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+
+    delta=0e0_dp
+    do ii=1,nrowpd
+      delta(ii,ii) = 1e0_dp
+    end do
+
+    !Aliases to potential derivatives
+    epsilon = getEps(phi, dphi)
+    V_pot = pot(phi)
+    d3V = d3Vdphi3(phi)
+    d2V = d2Vdphi2(phi)
+    dV = dVdphi(phi)
+    Vzz = dot_product(dphi, matmul(d2V, dphi))/dotphi**2
+    Vz = dot_product(dV, dphi)/dotphi
+    grad_V = sqrt(dot_product(dV, dV))
+    hubble=getH(phi,dphi)
+    dhubble=getdHdalpha(phi,dphi)
+    scale_factor=a_init*EXP(t)
+
+    ! Build the mass matrix, Cab and its derivatives
+    forall (ii=1:num_inflaton, jj=1:num_inflaton) &
+         Cab(ii,jj) = d2V(ii,jj) +  &
+         (dphi(ii)*dV(jj) + dphi(jj)*dV(ii)) &
+         + (3e0_dp-epsilon)*hubble**2 * dphi(ii)*dphi(jj)
+
+    forall (ii=1:num_inflaton, ll=1:num_inflaton, kk=1:num_inflaton)
+        dCdphi(ii,ll,kk) = (1.0e0_dp/hubble**2)*&
+          (d3V(ii,ll,kk) - (dV(kk)/V_pot)*d2V(ii,ll) &
+          - (dV(kk)/V_pot)*(dphi(ii)*dV(ll)+dphi(ll)*dV(ii)) &
+          + dphi(ii)*d2V(ll,kk) + dphi(ll)*d2V(ii,kk))
+
+        dCddelphi(ii,ll,kk) = (1.0e0_dp/V_pot)*&
+          (-dphi(kk)*d2V(ii,ll) &
+          -dphi(kk)*(dphi(ii)*dV(ll) + dphi(ll)*dV(ii)) &
+          +(3.0e0_dp - epsilon)*(delta(ii,kk)*dV(ll) + delta(ll,kk)*dV(ii))&
+          -dphi(kk)*dphi(ii)*dphi(ll) &
+          +(3.0e0_dp - epsilon)*delta(ii,kk)*dphi(ll)&
+          +(3.0e0_dp - epsilon)*dphi(ii)*delta(ll,kk))
+
+    end forall
+
+
+    if (using_q_superh) then
+      !DEBUG
+      print*, "using_q_superh not yet implemented in jacobian_psi_modes_DVODE"
+      stop
+    else
+      !DEBUG
+      print*, "Cab", Cab
+      print*, "dCdphi", dCdphi
+      print*, "dCddelphi", dCddelphi
+      print*, "back jacobian:"
+      print*, pd_back
+      stop
+    end if
+
+
+
+  end subroutine jacobian_psi_modes_DVODE
 
 
 end module modpk_utils

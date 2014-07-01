@@ -795,10 +795,11 @@ CONTAINS
 #undef DELTAPHI
 #undef EXPTERM
 
-  !Only really used to get the 3rd order SR parameters for the SR approximation
-  !of the scalar running, alpha_s
+  !Only used to get the 3rd order SR parameters for the SR approximation
+  !of the scalar running, alpha_s, and if you wish to give an analytical
+  !Jacobian for the mode equation evolution.
   function d3Vdphi3(phi) result(third_deriv)
-    real(dp), INTENT(IN) :: phi(:)
+    real(dp), intent(in) :: phi(:)
     real(dp) :: third_deriv(size(phi),size(phi),size(phi))
     real(dp) :: m2_V(size(phi))
     integer :: ii
@@ -811,6 +812,10 @@ CONTAINS
       do ii=1,size(phi)
         third_deriv(ii,ii,ii)=m2_V(ii)
       end do
+    case(15)
+      !DEBUG
+      print*, "testing --- fake d3Vdphi3 for numerical qsf..."
+      third_deriv = 0e0_dp
     case default
       print*, "ERROR: d3Vdphi3 not defined for potential_choice =", &
         potential_choice
@@ -1057,10 +1062,10 @@ CONTAINS
     numb_infl=size(dphi)
 
     ! Convert hacked vector to matrix
-    do i=1,numb_infl; do j=1, numb_infl
+    forall (i=1:numb_infl, j=1:numb_infl)
       ptb_matrix(i,j) = psi((i-1)*numb_infl+j)
       dptb_matrix(i,j) = dpsi((i-1)*numb_infl+j)
-    end do; end do
+    end forall
 
     ! Make projection vector along adiabatic and isocurv directions
     ! NB: phi_dot_0_scaled = sqrt(2*epsilon) = phi_dot_0/H

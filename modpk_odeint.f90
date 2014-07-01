@@ -102,7 +102,7 @@ contains
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
-    if (use_dvode_integrator) then
+    if (tech_opt%use_dvode_integrator) then
       !Options for first call to dvode integrator
       call initialize_dvode()
     end if
@@ -136,9 +136,9 @@ contains
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
 
-      if (use_dvode_integrator) then
+      if (tech_opt%use_dvode_integrator) then
 
-        if (use_analytical_jacobian) then
+        if (tech_opt%use_analytical_jacobian) then
           call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
             itask,istate,ode_integrator_opt,J_FCN=jacobian_background_DVODE)
         else
@@ -194,7 +194,7 @@ contains
 
       IF (ode_underflow) RETURN
 
-      if ( .not. use_dvode_integrator) then
+      if ( .not. tech_opt%use_dvode_integrator) then
         IF (ABS(hnext) < hmin) THEN
            write(*,*) 'stepsize smaller than minimum in odeint'
            STOP
@@ -202,7 +202,7 @@ contains
       end if
 
       !Set up next N-step
-      if (use_dvode_integrator) then
+      if (tech_opt%use_dvode_integrator) then
         if (itask/=2) nefold_out = x + dN_step
       else
         h=hnext
@@ -260,10 +260,10 @@ contains
 
       !Relative tolerance
       !Absolute tolerance
-      if (accuracy_setting==2) then
+      if (tech_opt%accuracy_setting==2) then
         rtol = 1.e-12_dp
         atol = 1.0e-12_dp
-      else if (accuracy_setting==1) then
+      else if (tech_opt%accuracy_setting==1) then
         rtol = 1.e-6_dp
         atol = 1.0e-6_dp
       else
@@ -278,7 +278,8 @@ contains
 
       if (itask /=2) then
         !Integrate until nefold_out
-        dN_step = sign(0.001e0_dp,x2-x1)
+        !dN_step = sign(0.001e0_dp,x2-x1)
+        dN_step = sign(0.01e0_dp,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
@@ -286,7 +287,7 @@ contains
       end if
 
       !Force initial step-size guess very small
-      if (use_analytical_jacobian) then
+      if (tech_opt%use_analytical_jacobian) then
         ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
           abserr_vector=atol,&
           relerr=rtol,&
@@ -440,7 +441,7 @@ contains
       powerspectrum
     use modpk_qsf, only : turning_choice
     use modpk_utils, only : reallocate_rv, reallocate_rm, mode_derivs_dvode, &
-      qderivs_dvode
+      qderivs_dvode, jacobian_psi_modes_DVODE
 
     IMPLICIT NONE
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -544,7 +545,7 @@ contains
     compute_zpower = .true.
     eps_adjust = eps
 
-    if (use_dvode_integrator) then
+    if (tech_opt%use_dvode_integrator) then
       !Options for first call to dvode integrator
       call initialize_dvode_MODES()
     end if
@@ -571,7 +572,7 @@ contains
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
          CALL save_a_step
 
-       if (use_dvode_integrator) then
+       if (tech_opt%use_dvode_integrator) then
 
          !Cmplx --> real
          yreal(1:neq/2) = real(y)
@@ -581,8 +582,13 @@ contains
            call dvode_f90(qderivs_dvode,neq,yreal,x,nefold_out, &
              itask,istate,ode_integrator_opt)
          else
-           call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
-             itask,istate,ode_integrator_opt)
+           if (tech_opt%use_analytical_jacobian) then
+             call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
+               itask,istate,ode_integrator_opt,J_FCN=jacobian_psi_modes_DVODE)
+           else
+             call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
+               itask,istate,ode_integrator_opt)
+           end if
          end if
          call get_stats(rstats,istats)
 
@@ -633,10 +639,10 @@ contains
        scalefac = a_init*exp(x)
 
        !Increase accuracy requirements when not in SR
-       if (accuracy_setting>0) then
+       if (tech_opt%accuracy_setting>0) then
          if (getEps(phi,delphi)>0.2e0_dp) then
            eps_adjust=1e-12_dp
-           if (accuracy_setting==2) then
+           if (tech_opt%accuracy_setting==2) then
              if (getEps(phi,delphi)>0.9e0_dp) then
                eps_adjust=1e-16_dp
              end if
@@ -658,9 +664,8 @@ contains
          end if
 
          ! if k<aH/eval_ps, then k<<aH
-         if(k .lt. a_init*exp(x)*getH(phi, delphi)/eval_ps) then
+         if(k .lt. a_init*exp(x)*getH(phi, delphi)/eval_ps) &
            call evaluate_powerspectra()
-         end if
 
        END IF
 
@@ -708,7 +713,7 @@ contains
 
        IF (ode_underflow) RETURN
 
-       if (.not. use_dvode_integrator) then
+       if (.not. tech_opt%use_dvode_integrator) then
          IF (ABS(hnext) < hmin) THEN
             WRITE(*,*) 'stepsize smaller than minimum in odeint'
             stop
@@ -716,7 +721,7 @@ contains
        end if
 
        !Set up next N-step
-       if (use_dvode_integrator) then
+       if (tech_opt%use_dvode_integrator) then
          if (itask/=2) nefold_out = x + dN_step
        else
          h=hnext
@@ -822,7 +827,7 @@ contains
 
       !DEBUG
       print*, "playing around with accuracy in odeint_c"
-      accuracy_setting=2
+      tech_opt%accuracy_setting=2
 
       atol_real(1:num_inflaton) = 1.0e-12_dp
       atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
@@ -839,36 +844,42 @@ contains
       atol(1:neq/2)=atol_real
       atol((neq/2)+1:neq)=atol_compl
 
-      if (accuracy_setting==0) then
+      if (tech_opt%accuracy_setting==0) then
         rtol = rtol * 1e5_dp
         atol = atol * 1e2_dp
-      else if (accuracy_setting==1) then
+      else if (tech_opt%accuracy_setting==1) then
         rtol = rtol * 1e3_dp
         atol = atol * 1e1_dp
-      else if (accuracy_setting==2) then
+      else if (tech_opt%accuracy_setting==2) then
         !DEBUG
         !print*, "setting accuracy in odeint_c by hand"
         !rtol = 1e-8_dp
         !atol = 1e-6_dp
       end if
 
-      !itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
-      itask = 2
+      itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      !itask = 2
       istate = 1 !Set =1 for 1st call to integrator
 
       if (itask /=2) then
         !Integrate until nefold_out
         !dN_step = sign(0.01e0_dp,x2-x1)
-        dN_step = sign(0.001e0_dp,x2-x1)
+        dN_step = sign(0.005e0_dp,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
         nefold_out = Nefold_max
       end if
 
-      ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
-        relerr=rtol, user_supplied_jacobian=.false., mxstep=1000, &
-        mxhnil=1)
+      if (tech_opt%use_analytical_jacobian) then
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
+          relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
+          mxhnil=1)
+      else
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
+          relerr=rtol, user_supplied_jacobian=.false., mxstep=1000, &
+          mxhnil=1)
+      end if
 
     end subroutine initialize_dvode_MODES
 
@@ -981,7 +992,7 @@ contains
           y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
             - y(index_tensor_y)
 
-          if (use_dvode_integrator) then
+          if (tech_opt%use_dvode_integrator) then
             !Reset istate to let integrator know it's a new variable
             istate=1
           end if

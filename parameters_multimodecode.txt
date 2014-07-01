@@ -22,7 +22,7 @@ sum-separable potentials.
 &analytical
   use_deltaN_SR = .false.
   use_horiz_cross_approx = .true.
-  evaluate_modes = .false.
+  evaluate_modes = .true.
 /
 
 ----------------
@@ -72,12 +72,12 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 1.0 1.0
+  phi_init0 = 20.0 20.0
 
   vparams(1,:) = -12.0       -6.0
   vparams(2,:) = 0.0       1.0
   vparams(3,:) =  18.0        1.00
-  vparams(4,:) = 15.0       -1.0
+  vparams(4,:) = 15.0       1.0
 
   vparams(5,:) = 0.0       .050
   vparams(6,:) = 0.0       0.416481652821956
@@ -108,7 +108,7 @@ For calculating the full power spectrum P(k).  Samples in
 uniform increments in log(k).
 
 &full_pk
-  calc_full_pk = .true.
+  calc_full_pk = .false.
   steps = 100
   kmin = 1.0e-3
   kmax = 1.0e-2
@@ -139,7 +139,7 @@ Recommended: accuracy_setting = 1.
 Use DVODE integrator for stiff problems.
 
 &technical
-  accuracy_setting = 2
-  use_dvode_integrator = .true.
-  use_analytical_jacobian = .true.
+  tech_opt%accuracy_setting = 2
+  tech_opt%use_dvode_integrator = .true.
+  tech_opt%use_analytical_jacobian = .true.
 /

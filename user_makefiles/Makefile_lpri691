@@ -2,7 +2,7 @@
 ifdef GFORTRAN
 
 F90C     = gfortran
-FFLAGS = -O3 -cpp -fopenmp -ffast-math -fdefault-real-8 # -fdefault-real-8
+FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8 # -fdefault-real-8
 
 ifdef DEBUG
 F90C     = gfortran
@@ -16,20 +16,21 @@ ifdef DEBUG
 F90C     = ifort
 FFLAGS = -fpp  -g -p -traceback -debug #-O0 -openmp  -fast # -DMPI
 
+
+else
+
+F90C     = ifort
+FFLAGS = -funroll-loops -fpp -O3 -openmp #  -fast # -DMPI
+
+endif
+
 ifdef QUAD
 FFLAGS+= -r16
 else
 FFLAGS+= -r8
 endif
 
-else
 
-F90C     = ifort
-FFLAGS = -r8 -fpp -O3 -openmp #  -fast # -DMPI
-
-
-
-endif
 endif
 
 include ./Makefile_main_modpk

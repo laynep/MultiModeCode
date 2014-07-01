@@ -225,10 +225,10 @@ CONTAINS
     h1=1e-5 !guessed start stepsize
 
     !Some fast-roll cases need high accuracy; activate conditionally in odeint_c
-    if (accuracy_setting==2) then
+    if (tech_opt%accuracy_setting==2) then
       !has a big impact on the speed of the code
       accuracy=1.0e-7_dp
-    else if (accuracy_setting==1) then
+    else if (tech_opt%accuracy_setting==1) then
       accuracy=1.0e-6_dp
     else
       accuracy=1.0e-4_dp
@@ -260,11 +260,8 @@ CONTAINS
 
         identityvector=0e0_dp
 
-        do i=1,num_inflaton; do j=1, num_inflaton
-          if (i==j) then
-            identityvector((i-1)*num_inflaton+j)=1e0_dp
-          end if
-        end do; end do
+        forall (i=1:num_inflaton)&
+          identityvector((i-1)*num_inflaton+i)=1e0_dp
 
       end subroutine make_identity
 
@@ -360,14 +357,11 @@ CONTAINS
           check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
           check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
 
-          do i=1, num_inflaton; do j=1, num_inflaton
+          forall (i=1:num_inflaton, j=1:num_inflaton)
             check3(i,j) = abs( (dp_ik(i)*dV(j) + &
               dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
-          end do; end do
-
-          do i=1, num_inflaton; do j=1, num_inflaton
             check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)
-          end do; end do
+          end forall
 
           tol = 1e-5_dp
           if   (check1 < tol  .and. &
