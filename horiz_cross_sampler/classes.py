@@ -1,19 +1,14 @@
 #!/usr/bin/python
 
-"""
-Module that defines all the classes, etc for inflationary calculations.
-"""
+"""Module that defines all the classes, etc for inflationary calculations."""
 
 import numpy as np
 import potential as pot
-
-import sys
+import processing as proc
 
 
 class inflation_model:
-    """
-Class for inflationary models, contains a potential with derivatives,  and methods to calculate observables.
-    """
+    """Class for inflationary models, contains a potential with derivatives,  and methods to calculate observables."""
 
     def __init__(self, model, nfields):
         self.model = model
@@ -73,9 +68,7 @@ Class for inflationary models, contains a potential with derivatives,  and metho
 
 
 class deltaN_model(inflation_model):
-    """
-    The \delta N formulation for observables from Vernizzi-Wands (astro-ph/0603799) and Battefeld-Easther (astro-ph/0610296).  Requires sum-separable potential and assumes massless, Gaussian random fields at horizon crossing.  If using the horizon crossing approximation (HCA), then ignores the final surface.
-    """
+    """The \delta N formulation for observables from Vernizzi-Wands (astro-ph/0603799) and Battefeld-Easther (astro-ph/0610296).  Requires sum-separable potential and assumes massless, Gaussian random fields at horizon crossing.  If using the horizon crossing approximation (HCA), then ignores the final surface."""
 
     phi_zero = None
 
@@ -219,15 +212,6 @@ class deltaN_model(inflation_model):
 
         ns += 1.0 - 2.0*eps - (2.0/sum(dN*dN))
 
-
-        #eta_i =self.eta_i(phi_hc)
-        #eps_i = self.eps_i(phi_hc)
-        #u_i = (self.V_i(phi_hc) + self.Z_i(phi_end))/self.V(phi_hc)
-        #eps = np.sum(eps_i)
-
-        #ns = 1.0 - 2.0*eps - (4.0/np.sum(u_i**2/eps_i))*\
-        #        (1.0 - np.sum(eta_i*u_i**2/2.0/eps_i))
-
         return ns
 
     def alpha_s(self, phi_hc, phi_end=phi_zero):
@@ -268,17 +252,19 @@ class deltaN_model(inflation_model):
         self.observ={}
 
         for key in obs_to_calc:
-            self.observ[key]=obs_dict[key](phi_hc,phi_end)
+            try:
+                self.observ[key]=obs_dict[key](phi_hc,phi_end)
+            except:
+                raise TypeError(key, "is not an observable that has \
+                        been implemented.")
 
 
-class universe(deltaN_model):
-    """
-Realization of a universe given an inflationary model.  Extends inflation_model to include methods to set parameters (priors) and resulting observables.
+class SR_universe(deltaN_model):
+    """Realization of a universe given a slow-roll inflationary model.  Extends inflation_model to include methods to set parameters (priors) and resulting observables.
 
 Samples the horizon crossing surface for N-quadratic inflation and uses the horizon crossing approximation (HCA) to calculate observables in the \delta N formalism.  Only works for N-quadratic at the moment.
 
-Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for the observables using a histogram estimator and can calculate the derivatives with respect to the "prior parameters" of the expected value of the log-likelihood.
-    """
+Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for the observables using a histogram estimator and can calculate the derivatives with respect to the "prior parameters" of the expected value of the log-likelihood."""
 
 
     def __init__(self, sampler=None, N_pivot=55.0, HC_approx=True, **infl_args):
@@ -332,11 +318,9 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
         return m2, phi
 
     def MP_and_uniformsphere(self,  nmoduli, radius, m_avg=1.5e-5):
-        """
-Samples the Marcenko-Pasteur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
+        """Samples the Marcenko-Pastur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
 
-Does a uniform sampling of a sphere with given radius for initial conditions.
-        """
+Does a uniform sampling of a sphere with given radius for initial conditions."""
 
         #Masses:
         #GR Matrix
@@ -353,3 +337,29 @@ Does a uniform sampling of a sphere with given radius for initial conditions.
         ICs = (radius/np.sqrt(np.sum(mat*mat)))*mat
 
         return m2, ICs
+
+
+    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg):
+        """Given an N-quadratic inflation model with the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc."""
+
+        if self.model != "Nquad":
+            raise TypeError("Trying to build an N-quadratic sample \
+                    in model that isn't N-quadratic.  Not implemented yet.")
+
+        sample=[]
+
+        for i in xrange(nsamples):
+
+            self.get_new_params( nmoduli=nmoduli, radius=radius, m_avg=m_avg)
+
+            self.calc_observs(self.phi_hc,obs_to_calc=obs_to_calc)
+
+            sample.append(self.observ)
+
+            #print self.observ
+            #print self.params["Nquad"]["m2"]
+            #print self.params/np.min(self.params["Nquad"]["m2"])
+            #print self.params["Nquad"]["m2"]/np.min(self.params["Nquad"]["m2"])
+            #print self.observ['n_t']/( -self.observ['r']/8.0)
+
+        return sample
