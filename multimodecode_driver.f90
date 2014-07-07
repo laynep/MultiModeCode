@@ -14,7 +14,6 @@ program multimodecode
 
   implicit none
 
-
   !Run-specific input params
   integer :: i, vparam_rows
 
@@ -163,7 +162,7 @@ program multimodecode
 
       !Make the arrays for k values to sample
       allocate(k_input(steps))
-      incr=(kmax/kmin)**(1/dble(steps-1))
+      incr=(kmax/kmin)**(1/real(steps-1,kind=dp))
       do i=1,steps
         k_input(i) = kmin*incr**(i-1)
       end do

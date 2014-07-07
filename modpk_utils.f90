@@ -193,7 +193,7 @@ CONTAINS
     real(dp), dimension(num_inflaton, num_inflaton) :: Cab, d2V
 
     complex(dp), dimension(num_inflaton*num_inflaton) :: psi, dpsi ! scalar ptb mode matrix
-    complex(dp) :: v, dv                                        ! tensor perturbations
+    complex(dp) :: v_tensor, dv_tensor                             ! tensor perturbations
     complex(dp) :: u_zeta, du_zeta
 
     integer :: i, j
@@ -253,8 +253,8 @@ CONTAINS
     psi = y(index_ptb_y:index_ptb_vel_y-1)
     dpsi = y(index_ptb_vel_y:index_tensor_y-1)
 
-    v  = y(index_tensor_y)
-    dv  = y(index_tensor_y+1)
+    v_tensor  = y(index_tensor_y)
+    dv_tensor  = y(index_tensor_y+1)
     u_zeta = y(index_uzeta_y)
     du_zeta = y(index_uzeta_y+1)
 
@@ -266,9 +266,9 @@ CONTAINS
     ! -----------------------------
 
     ! background
-    yprime(1:num_inflaton) = cmplx(delphi)
+    yprime(1:num_inflaton) = cmplx(delphi,kind=dp)
     yprime(num_inflaton+1:2*num_inflaton) =&
-      cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble))
+      cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble),kind=dp)
 
     ! ptb matrix
     yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
@@ -285,12 +285,13 @@ CONTAINS
 
 
     ! tensors
-    yprime(index_tensor_y) = dv
+    yprime(index_tensor_y) = dv_tensor
     if (using_q_superh) then
-      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv - (k/scale_factor/hubble)**2*v
+      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv_tensor - &
+        (k/scale_factor/hubble)**2*v_tensor
     else
-      yprime(index_tensor_y+1) = -(1.0e0_dp - epsilon)*dv - &
-        (k/scale_factor/hubble)**2*v + (2.0e0_dp - epsilon)*v
+      yprime(index_tensor_y+1) = -(1.0e0_dp - epsilon)*dv_tensor - &
+        (k/scale_factor/hubble)**2*v_tensor + (2.0e0_dp - epsilon)*v_tensor
     end if
 
     ! adiabatic ptb
@@ -308,8 +309,8 @@ CONTAINS
         real(dp), dimension(num_inflaton, num_inflaton), intent(out) :: mass_matrix
 
         if (potential_choice .eq. 7) then
-          ! for exponential potential 7, Cab is excatly zero
-          ! need to set this in order to prevent numerical error
+          ! for exponential potential 7, Cab is exactly zero
+          ! set this in order to prevent numerical error
           mass_matrix = 0e0_dp
         else
            forall (i=1:num_inflaton, j=1:num_inflaton) &
@@ -338,9 +339,6 @@ CONTAINS
 
         matrixB=convert_hacked_vector_to_matrix(hacked_vector)
 
-        !do i=1, n; do j=1,n; do k=1,n
-        !  matrixC(i,j) = matrixC(i,j) + matrixA(i,k)*matrixB(k,j)
-        !end do; end do; end do
         matrixC = matmul(matrixA, matrixB)
 
         outvect = convert_matrix_to_hacked_vector(matrixC)
@@ -821,7 +819,6 @@ CONTAINS
       print*, pd_back
       stop
     end if
-
 
 
   end subroutine jacobian_psi_modes_DVODE

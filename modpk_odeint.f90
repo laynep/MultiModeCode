@@ -203,7 +203,17 @@ contains
 
       !Set up next N-step
       if (tech_opt%use_dvode_integrator) then
-        if (itask/=2) nefold_out = x + dN_step
+        if (itask/=2) nefold_out = min(x + dN_step, x2)
+
+        !Increase accuracy requirements when not in SR
+        if (tech_opt%accuracy_setting>0) then
+          if (getEps(phi,dphi)>0.2e0_dp) then
+            rtol=1e-12_dp
+            atol=1e-12_dp
+            istate=3
+          end if
+        end if
+
       else
         h=hnext
       end if
@@ -261,14 +271,22 @@ contains
       !Relative tolerance
       !Absolute tolerance
       if (tech_opt%accuracy_setting==2) then
-        rtol = 1.e-12_dp
-        atol = 1.0e-12_dp
+        rtol = 1.e-10_dp
+        atol = 1.0e-14_dp
       else if (tech_opt%accuracy_setting==1) then
         rtol = 1.e-6_dp
         atol = 1.0e-6_dp
-      else
+      else if (tech_opt%accuracy_setting==0) then
         rtol = 1.e-5_dp
         atol = 1.0e-5_dp
+      else if (tech_opt%accuracy_setting==-1) then
+        rtol = tech_opt%dvode_rtol_back
+        atol = tech_opt%dvode_atol_back(1:neq)
+      else
+        print*, "ERROR: initialize_dvode"
+        print*, "ERROR: accuracy_setting =", tech_opt%accuracy_setting
+        print*, "ERROR: is not supported."
+        stop
       end if
 
       istate = 1 !Set =1 for 1st call to integrator
@@ -279,7 +297,8 @@ contains
       if (itask /=2) then
         !Integrate until nefold_out
         !dN_step = sign(0.001e0_dp,x2-x1)
-        dN_step = sign(0.01e0_dp,x2-x1)
+        !dN_step = sign(0.01e0_dp,x2-x1)
+        dN_step = sign(0.001e0_dp,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
@@ -324,7 +343,7 @@ contains
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
           PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING'
+          PRINT*,'MODPK: QUITTING in odeint_r'
           WRITE(*, *) 'x, x1, x2 :', x, x1, x2
           WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
@@ -582,13 +601,8 @@ contains
            call dvode_f90(qderivs_dvode,neq,yreal,x,nefold_out, &
              itask,istate,ode_integrator_opt)
          else
-           if (tech_opt%use_analytical_jacobian) then
-             call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
-               itask,istate,ode_integrator_opt,J_FCN=jacobian_psi_modes_DVODE)
-           else
-             call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
-               itask,istate,ode_integrator_opt)
-           end if
+           call dvode_f90(mode_derivs_dvode,neq,yreal,x,nefold_out, &
+             itask,istate,ode_integrator_opt)
          end if
          call get_stats(rstats,istats)
 
@@ -626,8 +640,6 @@ contains
          END IF
 
        end if
-
-       call check_for_eternal_inflation_MODES()
 
        !MULTIFIELD
        phi = real(y(1:num_inflaton),kind=dp)
@@ -670,6 +682,8 @@ contains
        END IF
 
        call check_inflation_ended_properly_MODES()
+
+       call check_for_eternal_inflation_MODES()
 
        IF(ode_infl_end) THEN
           IF (infl_ended) THEN
@@ -722,7 +736,7 @@ contains
 
        !Set up next N-step
        if (tech_opt%use_dvode_integrator) then
-         if (itask/=2) nefold_out = x + dN_step
+         if (itask/=2) nefold_out = min(x + dN_step, x2)
        else
          h=hnext
        end if
@@ -807,54 +821,44 @@ contains
       allocate(atol_real(neq/2))
       allocate(atol_compl(neq/2))
 
-      !Relative tolerance
-      rtol = 1.0e-10_dp
+      if (tech_opt%accuracy_setting==-1) then
 
-      !Absolute tolerance
+        rtol = tech_opt%dvode_rtol_modes
+        atol(1:neq/2) = tech_opt%dvode_atol_modes_real(1:neq/2)
+        atol(neq/2+1:neq) = tech_opt%dvode_atol_modes_imag(1:neq/2)
 
-      !Real
-      !atol_real(1:num_inflaton) = 1.0e-6_dp
-      !atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-7_dp
-      !atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-      !atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-      !atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
+      else
 
-      !atol_compl(1:num_inflaton) = 1.0e-9_dp
-      !atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-8_dp
-      !atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-9_dp
-      !atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
-      !atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
-
-      !DEBUG
-      print*, "playing around with accuracy in odeint_c"
-      tech_opt%accuracy_setting=2
-
-      atol_real(1:num_inflaton) = 1.0e-12_dp
-      atol_real(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
-      atol_real(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
-      atol_real(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-      atol_real(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
-
-      atol_compl(1:num_inflaton) = 1.0e-12_dp
-      atol_compl(num_inflaton+1:2*num_inflaton) = 1.0e-12_dp
-      atol_compl(index_ptb_y:index_tensor_y-1) = 1.0e-7_dp
-      atol_compl(index_tensor_y:index_tensor_y+1) = 1.0e-7_dp
-      atol_compl(index_uzeta_y:index_uzeta_y+1) = 1.0e-5_dp
-
-      atol(1:neq/2)=atol_real
-      atol((neq/2)+1:neq)=atol_compl
-
-      if (tech_opt%accuracy_setting==0) then
-        rtol = rtol * 1e5_dp
-        atol = atol * 1e2_dp
-      else if (tech_opt%accuracy_setting==1) then
-        rtol = rtol * 1e3_dp
-        atol = atol * 1e1_dp
-      else if (tech_opt%accuracy_setting==2) then
         !DEBUG
-        !print*, "setting accuracy in odeint_c by hand"
-        !rtol = 1e-8_dp
-        !atol = 1e-6_dp
+        !print*, "testing accuracy settings........................"
+
+        !Set rtol to 10^-(m+1) where m = # decimal places that are important
+        !rtol = 1e-5_dp
+
+        !Set atol_i where |y_i| is insignificant
+        !atol(1:num_inflaton) = 1e-8_dp
+        !atol(num_inflaton+1:2*num_inflaton) = 1e-6_dp
+        !atol(neq/2+1:neq/2+num_inflaton) = 1e2_dp !Set to zero exactly in derivs
+        !atol(neq/2+num_inflaton+1:neq/2+2*num_inflaton) = 1e2_dp !Set to zero exactly in derivs
+
+        !atol(index_ptb_y:index_ptb_vel_y-1) = 1e-5_dp
+        !atol(index_ptb_vel_y:index_tensor_y-1) = 1e-5_dp
+        !atol(neq/2+index_ptb_y:neq/2+index_ptb_vel_y-1) = 1e-5_dp
+        !atol(neq/2+index_ptb_vel_y:neq/2+index_tensor_y-1) = 1e-5_dp
+
+        !atol(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
+        !atol(index_uzeta_y:index_uzeta_y+1) = 1.0e-3_dp
+        !atol(neq/2+index_tensor_y:neq/2+index_tensor_y+1) = 1e0_dp
+        !atol(neq/2+index_uzeta_y:neq/2+index_uzeta_y+1) = 1e0_dp
+
+        !atol((neq/2)+1:neq)=atol(1:neq/2)
+
+        !DEBUG
+        rtol = 1e-6_dp
+        atol = 1e-14_dp
+
+
+
       end if
 
       itask = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
@@ -864,7 +868,8 @@ contains
       if (itask /=2) then
         !Integrate until nefold_out
         !dN_step = sign(0.01e0_dp,x2-x1)
-        dN_step = sign(0.005e0_dp,x2-x1)
+        !dN_step = sign(0.005e0_dp,x2-x1)
+        dN_step = sign(0.001e0_dp,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
@@ -877,7 +882,7 @@ contains
           mxhnil=1)
       else
         ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
-          relerr=rtol, user_supplied_jacobian=.false., mxstep=1000, &
+          relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
           mxhnil=1)
       end if
 
@@ -889,9 +894,12 @@ contains
           PRINT*,'MODPK: This could be a model for which inflation does not end.'
           PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
           PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING'
+          PRINT*,'MODPK: QUITTING in odeint_c'
           WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
-          WRITE(*, *) 'x1, x, x2 :', x, x1, x2
+          WRITE(*, *) 'x1, x, x2 :', x1, x, x2
+          WRITE(*, *) 'phi_back :', real(y(1:num_inflaton))
+          WRITE(*, *) 'epsilon :', geteps(real(y(1:num_inflaton)),&
+            real(y(num_inflaton+1:2*num_inflaton)))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
           STOP
        END IF
@@ -995,6 +1003,14 @@ contains
           if (tech_opt%use_dvode_integrator) then
             !Reset istate to let integrator know it's a new variable
             istate=1
+
+!DEBUG
+!print*, "Resetting absolute error tolerances"
+!atol(index_ptb_y:index_ptb_vel_y-1) = 1e-4_dp
+!atol(neq/2+index_ptb_y:neq/2+index_ptb_vel_y-1) = 1e-4_dp
+
+!atol = 1e-14_dp
+
           end if
 
 

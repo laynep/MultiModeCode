@@ -24,7 +24,6 @@ Class for inflationary models, contains a potential with derivatives,  and metho
         self.params = {}
         self.params[self.model] = params
 
-
     #Wrappers to potential.py
     def V(self,phi):
         """Potential energy density."""
@@ -333,9 +332,11 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
         return m2, phi
 
     def MP_and_uniformsphere(self,  nmoduli, radius, m_avg=1.5e-5):
-        """ Samples the Marcenko-Pasteur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
+        """
+Samples the Marcenko-Pasteur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
 
-Does a uniform sampling of a sphere with given radius for initial conditions."""
+Does a uniform sampling of a sphere with given radius for initial conditions.
+        """
 
         #Masses:
         #GR Matrix

@@ -178,6 +178,9 @@ CONTAINS
 
     x1=alpha_ik
 
+    !DEBUG
+    !print*, "this is a call to evolve; N_BD=", x1
+
     IF(x1.le.0.) THEN
        PRINT*,'MODPK: The phi_init you specified is too small to give'
        PRINT*,'MODPK: sufficient efolds of inflation. We cannot self-consistently'
@@ -230,8 +233,14 @@ CONTAINS
       accuracy=1.0e-7_dp
     else if (tech_opt%accuracy_setting==1) then
       accuracy=1.0e-6_dp
-    else
+    else if (tech_opt%accuracy_setting==0) then
       accuracy=1.0e-4_dp
+    else if (tech_opt%accuracy_setting==-1) then
+      accuracy=tech_opt%rk_accuracy_modes
+    else
+      print*, "ERROR: accuracy_setting ==", tech_opt%accuracy_setting
+      print*, "ERROR: is not supported."
+      stop
     end if
 
     hmin=1e-30_dp !minimum stepsize
@@ -276,20 +285,20 @@ CONTAINS
         call make_identity(identity)
 
         ! Background - from previous evolution
-        y(1:num_inflaton) = cmplx(p_ik)             !phi(x1)
-        y(num_inflaton+1:2*num_inflaton) = cmplx(dp_ik) !Not in exact SR
+        y(1:num_inflaton) = cmplx(p_ik,kind=dp)             !phi(x1)
+        y(num_inflaton+1:2*num_inflaton) = cmplx(dp_ik,kind=dp) !Not in exact SR
 
         ! mode matrix - diagonalize, Bunch-Davies
         y(index_ptb_y:index_ptb_vel_y-1) = (1.e0_dp, 0)*identity  !cmplx(1/sqrt(2*k))
-        y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah))*identity
+        y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah),kind=dp)*identity
 
         ! tensors
         y(index_tensor_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(index_tensor_y+1) = cmplx(0., -k/exp(ah))
+        y(index_tensor_y+1) = cmplx(0., -k/exp(ah),kind=dp)
 
         ! u_zeta
         y(index_uzeta_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(index_uzeta_y+1) = cmplx(0., -k/exp(ah))
+        y(index_uzeta_y+1) = cmplx(0., -k/exp(ah),kind=dp)
 
       end subroutine set_ic
 

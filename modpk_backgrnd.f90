@@ -380,7 +380,12 @@ CONTAINS
     else
       !print*, "H is STABLE"
       h1 = 1.0e-7_dp
-      accuracy=1.0e-8
+      if (tech_opt%accuracy_setting>0) then
+        accuracy=1.0e-8
+      else
+        accuracy=tech_opt%rk_accuracy_back
+      end if
+
       hmin=1.0e-20_dp
     end if
 

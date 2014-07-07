@@ -658,10 +658,10 @@ contains
       x_a = x_b
 
       !Check if have gone far enough
-      if (length(counter,1)>1.25*phi_start) exit
+      if (length(counter,1)>2.0e0_dp*phi_start) exit
 
       if (ii==maxsteps-1) then
-        print*, "QSF: Couldn't integrate until length of curve=", phi_start
+        print*, "QSF: Couldn't integrate until length of curve=", 2.0e0_dp*phi_start
         print*, "QSF: Either lower phi_start or make maxsteps or stepsize bigger."
         stop
       end if

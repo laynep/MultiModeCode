@@ -237,7 +237,8 @@ CONTAINS
       phi_light = qsf_runref%phi_light(param_closest)
 
       !DEBUG
-      if (param_closest < param0 .or. phi_light > 1.25*vparams(3,1)) then
+      if (param_closest < param0 .or. &
+        phi_light > qsf_runref%phi_light_vs_param(size(qsf_runref%phi_light_vs_param,1),1)) then
         print*, "param_closest = ", param_closest
         print*, "phi = ", phi
         print*, "phi_light = ", phi_light
@@ -249,7 +250,6 @@ CONTAINS
 
       !Reset param guess for next time through
       qsf_runref%param = param_closest
-
 
       V_potential = 0.5e0_dp*m_light2*phi_light**2 &
         + 0.5e0_dp*M_heavy2*dist**2
@@ -2045,7 +2045,7 @@ CONTAINS
         end do
 
         !Rescale
-        g_mu_nu = g_mu_nu/dble(size(dataset,1))
+        g_mu_nu = g_mu_nu/real(size(dataset,1),kind=dp)
 
 
         end subroutine int_dlogP_MCMC

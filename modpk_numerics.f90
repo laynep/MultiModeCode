@@ -530,7 +530,7 @@ module modpk_numerics
       integer :: ii
 
       xrange = xend - x0
-      dx = xrange/dble(nsteps)
+      dx = xrange/real(nsteps,kind=dp)
 
       area = 0e0_dp
       x_a = x0
@@ -587,7 +587,7 @@ module modpk_numerics
 
       !NB: Some binsize techn give estimates of binsize, not bin #
       !Minor rescale of binsize to make sure fits dataset perfectly
-      binsize = (data_max-data_min)/dble(numb_bins)
+      binsize = (data_max-data_min)/real(numb_bins,kind=dp)
 
 
       !Make the histogram array
@@ -615,11 +615,11 @@ module modpk_numerics
       if (present(norm)) then
         if (norm==1) then
           !Normalize to PDF (int P dx =1)
-          hist(:,ndimns+1) = dble(bincount) / dble(sum(bincount)) /&
+          hist(:,ndimns+1) = real(bincount,kind=dp) / real(sum(bincount),kind=dp) /&
             product(binsize)
         else if(norm==2) then
           !Normalize to PMF (sum P_i =1)
-          hist(:,ndimns+1) = dble(bincount) / dble(sum(bincount))
+          hist(:,ndimns+1) = real(bincount,kind=dp) / real(sum(bincount),kind=dp)
         else
           hist(:,ndimns+1) = bincount(:)
         end if
@@ -716,7 +716,7 @@ module modpk_numerics
 
       ndimns = size(numb_bins)
 
-      binsize = (data_max-data_min)/dble(numb_bins)
+      binsize = (data_max-data_min)/real(numb_bins,kind=dp)
 
 
       do ii=ndimns,1,-1
@@ -730,7 +730,7 @@ module modpk_numerics
         if (allocated(vect)) deallocate(vect)
         allocate(vect(numb_bins(ii)))
         do jj=0, numb_bins(ii)-1
-          vect(jj+1) = dble(jj)
+          vect(jj+1) = real(jj,kind=dp)
         end do
         nvects = product(numb_bins)/numb_bins(ii)/chunk
 

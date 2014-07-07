@@ -37,13 +37,13 @@ MODULE modpkparams
   LOGICAL :: slowroll_start=.false.
 
   !MULTIFIELD
-  INTEGER :: num_inflaton
-  real(dp), DIMENSION(:,:), ALLOCATABLE :: vparams
-  real(dp), ALLOCATABLE :: phi_init0(:), phi_init(:)
-  real(dp), ALLOCATABLE :: dphi_init0(:), dphi_init(:)
-  real(dp), ALLOCATABLE:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
+  integer :: num_inflaton
+  real(dp), dimension(:,:), allocatable :: vparams
+  real(dp), allocatable :: phi_init0(:), phi_init(:)
+  real(dp), allocatable :: dphi_init0(:), dphi_init(:)
+  real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
 
-  real(dp), ALLOCATABLE :: phiarr(:,:), dphiarr(:,:) !The first index is the multifield index
+  real(dp), allocatable :: phiarr(:,:), dphiarr(:,:) !The first index is the multifield index
   real(dp), allocatable :: param_arr(:)
   real(dp) :: sigma_arr(nsteps)
   real(dp) :: delsigma = M_Pl      !specify total field distance travelled before inflation ends
@@ -57,11 +57,14 @@ MODULE modpkparams
   logical :: use_deltaN_SR
   logical :: evaluate_modes
 
-  !Flags for technical options
+  !Technical options
   type :: tech_options
     integer :: accuracy_setting
     logical :: use_dvode_integrator
     logical :: use_analytical_jacobian
+    real(dp) :: rk_accuracy_modes, rk_accuracy_back
+    real(dp) :: dvode_rtol_modes, dvode_rtol_back
+    real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag, dvode_atol_back
   end type tech_options
 
   type(tech_options) :: tech_opt
