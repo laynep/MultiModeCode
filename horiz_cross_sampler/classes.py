@@ -255,8 +255,8 @@ class deltaN_model(inflation_model):
             try:
                 self.observ[key]=obs_dict[key](phi_hc,phi_end)
             except:
-                raise TypeError(key, "is not an observable that has \
-                        been implemented.")
+                raise TypeError(key, "is not an observable that has " \
+                        "been implemented.")
 
 
 class SR_universe(deltaN_model):
@@ -296,8 +296,8 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
         """Get a new set of parameters and horizon crossing field values."""
 
         if self.model != "Nquad":
-            raise TypeError("Trying to set horizon crossing field value \
-                    in model that isn't N-quadratic.  Not implemented.")
+            raise TypeError("Trying to set horizon crossing field value " \
+                    "in model that isn't N-quadratic.  Not implemented.")
 
         if self.sampler != None:
             params, self.phi_hc = self.sampler(**samp_params)
@@ -343,8 +343,8 @@ Does a uniform sampling of a sphere with given radius for initial conditions."""
         """Given an N-quadratic inflation model with the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc."""
 
         if self.model != "Nquad":
-            raise TypeError("Trying to build an N-quadratic sample \
-                    in model that isn't N-quadratic.  Not implemented yet.")
+            raise TypeError("Trying to build an N-quadratic sample " \
+                    "in model that isn't N-quadratic.  Not implemented yet.")
 
         sample=[]
 
@@ -355,11 +355,5 @@ Does a uniform sampling of a sphere with given radius for initial conditions."""
             self.calc_observs(self.phi_hc,obs_to_calc=obs_to_calc)
 
             sample.append(self.observ)
-
-            #print self.observ
-            #print self.params["Nquad"]["m2"]
-            #print self.params/np.min(self.params["Nquad"]["m2"])
-            #print self.params["Nquad"]["m2"]/np.min(self.params["Nquad"]["m2"])
-            #print self.observ['n_t']/( -self.observ['r']/8.0)
 
         return sample
