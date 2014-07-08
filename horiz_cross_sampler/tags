@@ -4,20 +4,21 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-HCA	classes.py	/^    HCA = False$/;"	v	class:deltaN_model
-N_piv	driver.py	/^N_piv=55.0$/;"	v
+MP_and_horizcross	classes.py	/^    def MP_and_horizcross(self,  nmoduli, radius, m_avg=1.5e-5, dimn_weight=None):$/;"	m	class:SR_universe
 PR	classes.py	/^    def PR(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+SR_universe	classes.py	/^class SR_universe(deltaN_model):$/;"	c
 V	classes.py	/^    def V(self,phi):$/;"	m	class:inflation_model
 V_i	classes.py	/^    def V_i(self, phi):$/;"	m	class:inflation_model
 V_i	potential.py	/^def V_i(phi, choice="Nquad",**params):$/;"	f
 Z_i	classes.py	/^    def Z_i(self, phi_end=phi_zero):$/;"	m	class:deltaN_model
 __init__	classes.py	/^    def __init__(self, HC_approx, **infl_args):$/;"	m	class:deltaN_model
 __init__	classes.py	/^    def __init__(self, model, nfields):$/;"	m	class:inflation_model
-__init__	classes.py	/^    def __init__(self, sampler, N_pivot=55.0, HC_approx=True, **infl_args):$/;"	m	class:universe
+__init__	classes.py	/^    def __init__(self, sampler=None, N_pivot=55.0, HC_approx=True, **infl_args):$/;"	m	class:SR_universe
 alpha_s	classes.py	/^    def alpha_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-calc_observs	classes.py	/^    def calc_observs(self, phi_hc,phi_end=phi_zero):$/;"	m	class:deltaN_model
+calc_observs	classes.py	/^    def calc_observs(self, phi_hc,phi_end=phi_zero, obs_to_calc=None):$/;"	m	class:deltaN_model
 check_choice	potential.py	/^def check_choice(choice):$/;"	f
-constant	classes.py	/^    def constant(self):$/;"	m	class:universe
+constant	classes.py	/^    def constant(self):$/;"	m	class:SR_universe
+constant_bins	processing.py	/^def constant_bins(sample):$/;"	f
 d2Ndphi2	classes.py	/^    def d2Ndphi2(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 d2V	classes.py	/^    def d2V(self,phi):$/;"	m	class:inflation_model
 d2Vdphi2	potential.py	/^def d2Vdphi2(phi,choice="Nquad",**params):$/;"	f
@@ -31,23 +32,19 @@ deltaN_model	classes.py	/^class deltaN_model(inflation_model):$/;"	c
 eps_i	classes.py	/^    def eps_i(self, phi):$/;"	m	class:inflation_model
 eta_i	classes.py	/^    def eta_i(self, phi):$/;"	m	class:inflation_model
 f_NL	classes.py	/^    def f_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-get_new_params	classes.py	/^    def get_new_params(self):$/;"	m	class:universe
+get_new_params	classes.py	/^    def get_new_params(self, **samp_params):$/;"	m	class:SR_universe
+hist_estimate_pdf	processing.py	/^def hist_estimate_pdf(sample, observables=None, normed=True, bin_method=scott_rule):$/;"	f
 inflation_model	classes.py	/^class inflation_model:$/;"	c
+load_hist_dictionary	driver.py	/^    def load_hist_dictionary():$/;"	f	function:main
 load_params	classes.py	/^    def load_params(self, **params):$/;"	m	class:inflation_model
-load_sampler	classes.py	/^    def load_sampler(self, sampler):$/;"	m	class:universe
-m2	driver.py	/^m2 = 10.0**np.array([-10.0, -8.0])$/;"	v
+load_sampler	classes.py	/^    def load_sampler(self, sampler):$/;"	m	class:SR_universe
+main	driver.py	/^def main():$/;"	f
 n_s	classes.py	/^    def n_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 n_t	classes.py	/^    def n_t(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-nfields	driver.py	/^        nfields=1)$/;"	v
-nfields	driver.py	/^        nfields=1, )$/;"	v
-nfields	driver.py	/^nfields = 2$/;"	v
-phi	driver.py	/^phi = np.array([phi for i in xrange(nfields)])$/;"	v
-phi	driver.py	/^phi = np.sqrt(4.0*N_piv\/nfields)$/;"	v
-phi_end	driver.py	/^phi_end = np.array([1.0e0, 2.0e-1])$/;"	v
 phi_zero	classes.py	/^    phi_zero = None$/;"	v	class:deltaN_model
 potential	potential.py	/^def potential(phi, choice="Nquad", **params):$/;"	f
 r	classes.py	/^    def r(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
+sample_Nquad	classes.py	/^    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight):$/;"	f
+scott_rule	processing.py	/^def scott_rule(sample):$/;"	f
 tau_NL	classes.py	/^    def tau_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-universe	classes.py	/^class universe(deltaN_model):$/;"	c
-x	driver.py	/^x=deltaN_model(HC_approx=False, model="Nquad",$/;"	v
-y	driver.py	/^y = universe(sampler="constant",HC_approx=True, model="Nquad",$/;"	v
+xi_i	classes.py	/^    def xi_i(self, phi):$/;"	m	class:inflation_model

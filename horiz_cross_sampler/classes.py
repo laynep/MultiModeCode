@@ -5,6 +5,7 @@
 import numpy as np
 import potential as pot
 import processing as proc
+import sys
 
 
 class inflation_model:
@@ -287,7 +288,7 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
         #Choices for sampling techniques
         sampling_techn = {
                 "constant":self.constant,
-                "MP_and_uniformsphere":self.MP_and_uniformsphere
+                "MP_and_horizcross":self.MP_and_horizcross
                 }
 
         self.sampler = sampling_techn[sampler]
@@ -317,10 +318,10 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
 
         return m2, phi
 
-    def MP_and_uniformsphere(self,  nmoduli, radius, m_avg=1.5e-5):
+    def MP_and_horizcross(self,  nmoduli, radius, m_avg=1.5e-5, dimn_weight=None):
         """Samples the Marcenko-Pastur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
 
-Does a uniform sampling of a sphere with given radius for initial conditions."""
+For initial conditions, samples a sphere with given radius, with "geometrical" weighting on the N-sphere controlled by the parameters dimn_weighta.  With dimn_weight=1.0, does a uniform sampling of the sphere; with dimn_weight=0.0, places all of the points exactly on the pole defined by pole_axis."""
 
         #Masses:
         #GR Matrix
@@ -333,14 +334,33 @@ Does a uniform sampling of a sphere with given radius for initial conditions."""
         m2, eigvect = np.linalg.eigh(mat) #m. faster than eigvals
 
         #ICs on sphere
+
+        #dimn_weight is a dimensional weighting factor
+        #Default to uniform weight/sampling
+        if dimn_weight==None:
+            dimn_weight=np.ones(self.nfields)
+        elif len(dimn_weight) != self.nfields:
+            raise TypeError("The IC weighting parameter dimn_weight must be "\
+                    "of the same dimension as the field vector.")
+
+        #Uniform sampling
         mat = np.random.normal(0.0, 1.0, self.nfields)
-        ICs = (radius/np.sqrt(np.sum(mat*mat)))*mat
+        norm = np.sqrt( np.sum( dimn_weight**2*mat**2))
+
+        ICs = (radius/norm)*dimn_weight*mat
+
+        #Check that all went well.
+        if np.abs(np.sum(ICs**2) - radius**2)>1e-12:
+            raise Exception("The initial condition is not on the ball. "\
+                    "The radius is %s, the expected radius is %s, and the "\
+                    "difference is %s, which is greater than the tolerance of %s."
+                    %(np.sum(ICs**2),radius**2,np.abs(np.sum(ICs**2)-radius**2), 1e-12))
 
         return m2, ICs
 
 
-    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg):
-        """Given an N-quadratic inflation model with the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc."""
+    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight):
+        """Given an N-quadratic inflation model with the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc. nmoduli and m_avg are used in the MP distribution and radius and dimn_weight are used for the ICs prior."""
 
         if self.model != "Nquad":
             raise TypeError("Trying to build an N-quadratic sample " \
@@ -350,7 +370,7 @@ Does a uniform sampling of a sphere with given radius for initial conditions."""
 
         for i in xrange(nsamples):
 
-            self.get_new_params( nmoduli=nmoduli, radius=radius, m_avg=m_avg)
+            self.get_new_params( nmoduli=nmoduli, radius=radius, m_avg=m_avg, dimn_weight=dimn_weight)
 
             self.calc_observs(self.phi_hc,obs_to_calc=obs_to_calc)
 

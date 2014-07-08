@@ -5,21 +5,33 @@
 import numpy as np
 import sys
 
-def bins_scott_rule(sample):
-    """Returns the bin counts per dimension when using a modified Scott binning technique.  Sample is an N-dimensional Numpy array."""
+def scott_rule(sample):
+    """Returns the bin positions per dimension when using a modified Scott binning technique.  The sample is an N-dimensional Numpy array."""
 
-    bins = np.ceil( [ (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
-            for colmn in sample.T])
+    if len(sample.shape) >1 :
+        bins = np.ceil( [ (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
+                for colmn in sample.T])
+    elif len(sample.shape) ==1 :
+        bins = np.ceil( [ (max(sample)-min(sample))/((3.5/len(sample)**(1.0/3.0))*np.std(sample)) ])
+    else:
+        raise TypeError("Something wrong with the sample, since sample.shape = %s." %sample.shape)
 
     return bins
 
+def constant_bins(sample):
+    """Returns the bin positions per dimension when they are fixed according to some minimum and maximum range."""
 
-def build_pdf_hist(sample, observables=None, equal_bins=False, normed=True):
+    raise Exception("testing constant_bins")
+
+
+
+
+def hist_estimate_pdf(sample, observables=None, normed=True, bin_method=scott_rule):
     """Estimates the probability density function (PDF) of an N-dimensional sample by using a histogram.  Returns the bin counts and edges of the histogram bins.
 
     The sample is expected to be in the form of a list of dictionaries, where each dictionary corresponds to one sample and has keys that are the observables' names and values that are their value.  This will probably not work if any two dictionaries in sample report different observables.
 
-    If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  To determine how many bins to give the histogram the default is (1) Bayesian Blocks and (2) the Scott rule, if there is no astroML module.  Bayesian Blocks only works in 1D.  If equal_bins=True, then will not use Bayesian Blocks, which in general gives a non-uniform bin size.  Defaults to PDF normalized bin counts."""
+    If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  Set bin_method to determine how many bins to give the histogram; the default is scott_rule. """
 
     #Name the dimensions
     if observables==None:
@@ -36,26 +48,20 @@ def build_pdf_hist(sample, observables=None, equal_bins=False, normed=True):
     except:
         raise TypeError("The observables %s have given an error." %observables)
 
-
     #Make the histogram
-    try:
-        #If the dependency exists, then use AstroML,
-        #which has a neat Bayesian Blocks implementation in 1D
+    #try:
+    #    #If the dependency exists, then use AstroML
+    #    if len(observables)==1:
+    #        import astroML.density_estimation as aML
 
-        if len(observables)==1:
-            import astroML.density_estimation as aML
+    #        counts, edges = aML.histogram(sample,bins=bin_method,normed=normed)
+    #    else:
+    #        raise TypeError()
 
-            if equal_bins:
-                counts, edges = aML.histogram(sample,bins='scotts',normed=normed)
-            else:
-                counts, edges = aML.histogram(sample,normed=normed)
-        else:
-            raise TypeError()
 
-    except:
-        #Otherwise, just use the Numpy histogram feature
 
-        bins = bins_scott_rule(sample)
-        counts, edges = np.histogramdd(sample, bins=bins, normed=normed)
+    #Just use the damn Numpy histogram feature
+    bins = bin_method(sample)
+    counts, edges = np.histogramdd(sample, bins=bins, normed=normed)
 
     return counts, edges
