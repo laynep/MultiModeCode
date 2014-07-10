@@ -40,6 +40,16 @@ def main():
     #<m_avg^2> = sigma^2 for GRM w/entries of std sigma
     m_avg = 5e-7
 
+    #Use to force the histogram to give same number of bins over some pre-defined
+    #region in observable space
+    fixed_bins=True
+    obs_range = {'n_s': [0.94, 0.965],
+            'alpha_s': [-1.0e-2,-1.0e-3]
+            }
+    fixed_range = [obs_range[obs] for obs in np.sort(obs_to_calc)] #Sort bc in alphab dict later
+    nbins = 10
+
+
     if not parallel or mpi_rank==0:
 
         nfields_max = 5
@@ -59,15 +69,14 @@ def main():
         loop_params = None
 
 
-    if parallel and mpi_rank==0 and mpi_size>1:
-        #Chunk the loop_params into pieces so each process can loop over a subset.
-        loop_params = par.chunk(np.array(loop_params),mpi_size,group=False)
-
-    #Halt processors until run parameters are chunked.
-    if parallel: mpi_comm.barrier()
-
-
     if parallel and mpi_size>1:
+        if mpi_rank==0:
+            #Chunk the loop_params into pieces so each process can loop over a subset.
+            loop_params = par.chunk(np.array(loop_params),mpi_size,group=False)
+
+        #Halt processors until run parameters are chunked.
+        mpi_comm.barrier()
+
         #Scatter loop_params to all processes
         loop_params = mpi_comm.scatter(loop_params,root=0)
 
@@ -99,7 +108,7 @@ def main():
             else:
                 nsamples = int(np.ceil(samp_ref/10**2))
 
-            #nsamples=1000
+            nsamples=50
 
             print "nsamples=", nsamples
 
@@ -113,18 +122,17 @@ def main():
 
             sample = run.sample_Nquad(obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight)
 
+            if fixed_bins:
+                hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+                        processing.hist_estimate_pdf(sample,normed=False,
+                                bin_method=processing.constant_bins,datarange=fixed_range, nbins=nbins)
+            else:
+                hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+                        processing.hist_estimate_pdf(sample,normed=False,
+                                bin_method=processing.scott_rule)
 
-            hist_total[-1]['counts'], hist_total[-1]['edges'] = \
-                    processing.hist_estimate_pdf(sample,normed=False, bin_method=processing.scott_rule)
-
-
-    #for item in hist_total:
-    #    print "nfields:"
-    #    print item['nfields']
-    #    print "these are the counts:"
-    #    print item['counts']
-    #    print "these are the edges:"
-    #    print item['edges']
+    for i in hist_total:
+        print "this is count:", i['counts']
 
     if parallel:
         myfile = open("outdata"+str(mpi_rank)+".dat","w")

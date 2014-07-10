@@ -9,29 +9,40 @@ def scott_rule(sample):
     """Returns the bin positions per dimension when using a modified Scott binning technique.  The sample is an N-dimensional Numpy array."""
 
     if len(sample.shape) >1 :
-        bins = np.ceil( [ (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
+        nbins = np.ceil( [ (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
                 for colmn in sample.T])
     elif len(sample.shape) ==1 :
-        bins = np.ceil( [ (max(sample)-min(sample))/((3.5/len(sample)**(1.0/3.0))*np.std(sample)) ])
+        nbins = np.ceil( [ (max(sample)-min(sample))/((3.5/len(sample)**(1.0/3.0))*np.std(sample)) ])
     else:
         raise TypeError("Something wrong with the sample, since sample.shape = %s." %sample.shape)
 
-    return bins
+    return nbins
 
-def constant_bins(sample):
+def constant_bins(sample,datarange,nbins):
     """Returns the bin positions per dimension when they are fixed according to some minimum and maximum range."""
+
+    if len(sample.shape) >1 :
+        #Multidimensional
+        bins = [(max(drange) - min(drange))/nbins for drange in datarange]
+    else:
+        bins = (max(drange) - min(drange))/nbins
+
+    print datarange
+    print nbins
+    print "bins:", bins
 
     raise Exception("testing constant_bins")
 
 
 
 
-def hist_estimate_pdf(sample, observables=None, normed=True, bin_method=scott_rule):
+def hist_estimate_pdf(sample, observables=None, normed=True,
+        nbins=None, bin_method=scott_rule, datarange=None):
     """Estimates the probability density function (PDF) of an N-dimensional sample by using a histogram.  Returns the bin counts and edges of the histogram bins.
 
     The sample is expected to be in the form of a list of dictionaries, where each dictionary corresponds to one sample and has keys that are the observables' names and values that are their value.  This will probably not work if any two dictionaries in sample report different observables.
 
-    If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  Set bin_method to determine how many bins to give the histogram; the default is scott_rule. """
+    If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  Use nbins to force the histogram to use this many bins; to use an automated "principled" approach, make sure nbins=None.  Set bin_method to determine how many bins to give the histogram; the default is scott_rule.  To give histogramdd a range, specify datarange for each dimension."""
 
     #Name the dimensions
     if observables==None:
@@ -59,9 +70,12 @@ def hist_estimate_pdf(sample, observables=None, normed=True, bin_method=scott_ru
     #        raise TypeError()
 
 
+    #Just use the damn Numpy histogram
+    if nbins==None: nbins = bin_method(sample)
 
-    #Just use the damn Numpy histogram feature
-    bins = bin_method(sample)
-    counts, edges = np.histogramdd(sample, bins=bins, normed=normed)
+    if datarange==None:
+        counts, edges = np.histogramdd(sample, bins=nbins, normed=normed)
+    else:
+        counts, edges = np.histogramdd(sample, bins=nbins, normed=normed, range=datarange)
 
     return counts, edges
