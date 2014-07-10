@@ -15,9 +15,9 @@ __init__	cosmology.py	/^    def __init__(self, HC_approx, **infl_args):$/;"	m	cl
 __init__	cosmology.py	/^    def __init__(self, model, nfields):$/;"	m	class:inflation_model
 __init__	cosmology.py	/^    def __init__(self, sampler=None, N_pivot=55.0, HC_approx=True, **infl_args):$/;"	m	class:SR_universe
 alpha_s	cosmology.py	/^    def alpha_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-beta_ratio_max	params_allthreads.py	/^beta_ratio_max = 0.6$/;"	v
-beta_ratio_min	params_allthreads.py	/^beta_ratio_min = 0.4$/;"	v
-beta_ratio_numb	params_allthreads.py	/^beta_ratio_numb = 3$/;"	v
+beta_ratio_max	parameters.py	/^beta_ratio_max = 0.6$/;"	v
+beta_ratio_min	parameters.py	/^beta_ratio_min = 0.4$/;"	v
+beta_ratio_numb	parameters.py	/^beta_ratio_numb = 10$/;"	v
 calc_observs	cosmology.py	/^    def calc_observs(self, phi_hc,phi_end=phi_zero, obs_to_calc=None):$/;"	m	class:deltaN_model
 check_choice	potential.py	/^def check_choice(choice):$/;"	f
 chunk	mpi_routines.py	/^def chunk(data,processes,group=True):$/;"	f
@@ -35,33 +35,36 @@ deltaN_model	cosmology.py	/^class deltaN_model(inflation_model):$/;"	c
 eps_i	cosmology.py	/^    def eps_i(self, phi):$/;"	m	class:inflation_model
 eta_i	cosmology.py	/^    def eta_i(self, phi):$/;"	m	class:inflation_model
 f_NL	cosmology.py	/^    def f_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-fileroot	params_allthreads.py	/^fileroot = "outdata"$/;"	v
-fixed_bins	params_allthreads.py	/^fixed_bins=False$/;"	v
-fixed_range	params_allthreads.py	/^fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab order later$/;"	v
+fileroot	parameters.py	/^fileroot = "outdata"$/;"	v
+fixed_bins	parameters.py	/^fixed_bins=True$/;"	v
+fixed_range	parameters.py	/^fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab order later$/;"	v
 get_new_params	cosmology.py	/^    def get_new_params(self, **samp_params):$/;"	m	class:SR_universe
 hist_estimate_pdf	processing.py	/^def hist_estimate_pdf(sample, observables=None, normed=True,$/;"	f
+hyperparams	parameters.py	/^hyperparams = ['nfields', 'beta',$/;"	v
 inflation_model	cosmology.py	/^class inflation_model:$/;"	c
 init_parallel	mpi_routines.py	/^def init_parallel():$/;"	f
 load_hist_dictionary	driver.py	/^    def load_hist_dictionary():$/;"	f	function:main
 load_params	cosmology.py	/^    def load_params(self, **params):$/;"	m	class:inflation_model
 load_sampler	cosmology.py	/^    def load_sampler(self, sampler):$/;"	m	class:SR_universe
-m_avg	params_allthreads.py	/^m_avg = 5e-7$/;"	v
+m_avg	parameters.py	/^m_avg = 5e-7$/;"	v
 main	driver.py	/^def main():$/;"	f
 n_s	cosmology.py	/^    def n_s(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 n_t	cosmology.py	/^    def n_t(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-nbins	params_allthreads.py	/^nbins = 10$/;"	v
-nfields_max	params_master.py	/^nfields_max = 5$/;"	v
-nfields_min	params_master.py	/^nfields_min = 2$/;"	v
-nfields_unit	params_master.py	/^nfields_unit = 1$/;"	v
-obs_range	params_allthreads.py	/^obs_range = {'n_s': [0.88, 0.965],$/;"	v
-obs_to_calc	params_allthreads.py	/^obs_to_calc = ['n_s']$/;"	v
+nbins	parameters.py	/^nbins = 20$/;"	v
+nfields_max	parameters.py	/^nfields_max = 100$/;"	v
+nfields_min	parameters.py	/^nfields_min = 50$/;"	v
+nfields_unit	parameters.py	/^nfields_unit = 10$/;"	v
+nsamples	parameters.py	/^nsamples=1e4$/;"	v
+obs_range	parameters.py	/^obs_range = {'n_s': [0.88, 0.965],$/;"	v
+obs_to_calc	parameters.py	/^obs_to_calc = ['n_s']$/;"	v
+parse_commandline	driver.py	/^def parse_commandline():$/;"	f
 phi_zero	cosmology.py	/^    phi_zero = None$/;"	v	class:deltaN_model
-poss_observables	params_allthreads.py	/^poss_observables = ['PR', 'n_s', 'alpha_s',$/;"	v
+poss_observables	parameters.py	/^poss_observables = ['PR', 'n_s', 'alpha_s',$/;"	v
 potential	potential.py	/^def potential(phi, choice="Nquad", **params):$/;"	f
 r	cosmology.py	/^    def r(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
-samp_ref	params_allthreads.py	/^samp_ref=2e2$/;"	v
+remv_last3	driver.py	/^        def remv_last3(string):$/;"	f	function:parse_commandline
 sample_Nquad	cosmology.py	/^    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight):$/;"	f
-scale_nsamples	params_allthreads.py	/^scale_nsamples = False$/;"	v
+scale_nsamples	parameters.py	/^scale_nsamples = False$/;"	v
 scott_rule	processing.py	/^def scott_rule(sample):$/;"	f
 tau_NL	cosmology.py	/^    def tau_NL(self, phi_hc, phi_end=phi_zero):$/;"	m	class:deltaN_model
 xi_i	cosmology.py	/^    def xi_i(self, phi):$/;"	m	class:inflation_model

@@ -19,16 +19,16 @@ hyperparams = ['nfields', 'beta',
 
 #Range of field number to iterate over
 #Will create an array between min-max with stepsize of nfields_unit
-nfields_max = 5
-nfields_min = 2
-nfields_unit = 1
+nfields_max = 100
+nfields_min = 50
+nfields_unit = 10
 
 
 #Range of betas from the Marcenko-Pastur distribution to iterate over
 #Will create an array between min-max with numb of grid points
 beta_ratio_max = 0.6
 beta_ratio_min = 0.4
-beta_ratio_numb = 3
+beta_ratio_numb = 10
 
 #<m_avg^2> = sigma^2 for GRM w/entries of std sigma
 m_avg = 5e-7
@@ -45,8 +45,8 @@ fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab
 nbins = 20
 
 #Number of sample points to get for each set of hyperparameters
-#samp_ref=2e7
-samp_ref=1000
+#nsamples=2e7
+nsamples=1e4
 
 #Should we get less samples with more fields?
 scale_nsamples = False

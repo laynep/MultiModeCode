@@ -27,8 +27,8 @@ def hist_estimate_pdf(sample, observables=None, normed=True,
 
     If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  Use nbins to force the histogram to use this many bins; to use an automated "principled" approach, make sure nbins=None.  Set bin_method to determine how many bins to give the histogram; the default is scott_rule.  To give histogramdd a range, specify datarange for each dimension."""
 
-    #Name the dimensions
     if observables==None:
+        #Name the dimensions.  Alphabetize to maintain some ordering.
         observables = sorted(sample[1].keys())
 
     #Focus on the dimensions that coincide with observables

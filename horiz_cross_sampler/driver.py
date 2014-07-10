@@ -53,7 +53,7 @@ def main():
         "beta_ratio_max", "beta_ratio_min", "beta_ratio_numb",
         "m_avg",
         "fixed_bins", "obs_range", "fixed_range", "nbins",
-        "samp_ref", "scale_nsamples",
+        "nsamples", "scale_nsamples",
         "fileroot",
         "nfields_max", "nfields_min", "nfields_unit"]
 
@@ -115,13 +115,13 @@ def main():
             #How many samples to build PDF from
             if p1.scale_nsamples:
                 if nfields>=10:
-                    nsamples = int(np.ceil(p1.samp_ref/nfields**2))
+                    this_nsamples = int(np.ceil(p1.nsamples/nfields**2))
                 else:
-                    nsamples = int(np.ceil(p1.samp_ref/10**2))
+                    this_nsamples = int(np.ceil(p1.nsamples/10**2))
             else:
-                nsamples = int(p1.samp_ref)
+                this_nsamples = int(p1.nsamples)
 
-            print "nsamples=", nsamples
+            print "nsamples=", this_nsamples
 
             #nmoduli = axions + dilaton + heavy moduli
             #nmoduli = nfields + 1 + 1.0*nfields
@@ -131,7 +131,8 @@ def main():
                     model="Nquad", nfields=nfields)
             radius = 2.0*np.sqrt(run.N_pivot)
 
-            sample = run.sample_Nquad(p1.obs_to_calc, nsamples, nmoduli, radius, p1.m_avg, dimn_weight)
+            sample = run.sample_Nquad(p1.obs_to_calc, this_nsamples,
+                    nmoduli, radius, p1.m_avg, dimn_weight)
 
             if p1.fixed_bins:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
