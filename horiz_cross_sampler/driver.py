@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import numpy as np
-from classes import *
+import cosmology as cosmo
 import sys
 import processing
 import cPickle
@@ -107,7 +107,7 @@ def main():
             #nmoduli = nfields + 1 + 1.0*nfields
             nmoduli = nfields/beta
 
-            run = SR_universe(sampler="MP_and_horizcross",HC_approx=True,
+            run = cosmo.SR_universe(sampler="MP_and_horizcross",HC_approx=True,
                     model="Nquad", nfields=nfields)
             radius = 2.0*np.sqrt(run.N_pivot)
 
