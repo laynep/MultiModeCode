@@ -12,43 +12,41 @@ import argparse
 
 
 def parse_commandline():
-    """Parse command line arguments to find the parameter files.  argv should be sys.argv[1:]."""
+    """Parse command line arguments to find the parameter files."""
 
-    param_files_threads = None
-    param_files_master = None
+    param_file = None
 
     if not sys.argv[1:]:
         #Empty list.  Use default parameter file names.
-        param_files_threads = "params_allthreads"
-        param_files_master = "params_master"
+        param_file = "parameters"
     else:
-        parser = argparse.ArgumentParser(description="Parameter files "\
-                "to find the all threads variables " \
-                "and the master-only variables.")
-        parser.add_argument("-p1", help="Parameter file "\
-                "that is seen by all the threads.")
-        parser.add_argument("-p2", help="Parameter file "\
-                "that is seen by only the master thread.")
+        parser = argparse.ArgumentParser(description="Sample the horizon crossing surface "\
+                "for an inflation model to build PDFs for given (hyper)parameters. "\
+                "Give the parameter files on the command line ")
+        parser.add_argument("-p", help="Parameter file "\
+                "that is seen by all the threads. "\
+                "Default = parameters.py")
 
         def remv_last3(string):
             #Take off the ".py" ending
             return string.replace(' ', '')[:-3]
 
-        param_files_threads= remv_last3(parser.parse_args().p1)
-        param_files_master = remv_last3(parser.parse_args().p2)
+        param_file= remv_last3(parser.parse_args().p)
 
-    return param_files_threads, param_files_master
+    return param_file
 
 
 def main():
     """Driver function for sampling N-quadratic inflation."""
 
-    #Find parameter files
-    param_files_threads, param_files_master = parse_commandline()
-
     #MPI parallelized
     mpi_comm, mpi_size, mpi_rank, mpi_name = par.init_parallel()
     parallel = not mpi_comm==None
+
+
+    #Find parameter files
+    param_file = parse_commandline()
+
 
     #Get the run parameters that all the threads see
     fromlist = [ "obs_to_calc", "hyperparams",
@@ -56,10 +54,10 @@ def main():
         "m_avg",
         "fixed_bins", "obs_range", "fixed_range", "nbins",
         "samp_ref", "scale_nsamples",
-        "fileroot"]
+        "fileroot",
+        "nfields_max", "nfields_min", "nfields_unit"]
 
-    p1 = __import__(param_files_threads, fromlist=fromlist)
-
+    p1 = __import__(param_file, fromlist=fromlist)
 
     #Set up grid of hyperparameters
 
@@ -68,14 +66,7 @@ def main():
 
     if not parallel or mpi_rank==0:
 
-        #Get the run parameters that only the master thread needs to see
-        fromlist = ["nfields_max", "nfields_min", "nfields_unit"]
-        try:
-            p2 = __import__(param_files_master, fromlist=fromlist)
-        except:
-            raise ImportError("TEST ERROR2")
-
-        nfields_list = np.arange(p2.nfields_min,p2.nfields_max+1,p2.nfields_unit)
+        nfields_list = np.arange(p1.nfields_min,p1.nfields_max+1,p1.nfields_unit)
 
         #For initial conditions:
         #Uniform weighting of dimensions for ICs
@@ -145,15 +136,15 @@ def main():
             if p1.fixed_bins:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
                         processing.hist_estimate_pdf(sample,normed=False,
-                                datarange=fixed_range, nbins=nbins)
+                                datarange=p1.fixed_range, nbins=p1.nbins)
             else:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
                         processing.hist_estimate_pdf(sample,normed=False,
                                 bin_method=processing.scott_rule)
 
-    for i in hist_total:
-        print "this is count:", i['counts']
-        print "this is edges:", i['edges']
+    #for i in hist_total:
+    #    print "this is count:", i['counts']
+    #    print "this is edges:", i['edges']
 
     #Write histogram output to file
     if parallel:

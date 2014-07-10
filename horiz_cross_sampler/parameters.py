@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-"""Parameters that would change between runs of the horizon crossing sampler.  Variables that should be available for all the threads."""
+"""Parameters that would change between runs of the horizon crossing sampler.  Variables that should be available for all the threads.  For serial runs or only one MPI process, all parameters are read by the same thread."""
 
 #List of possible observables
 poss_observables = ['PR', 'n_s', 'alpha_s',
@@ -17,6 +17,13 @@ hyperparams = ['nfields', 'beta',
         'm_avg', 'dimn_weight']
 
 
+#Range of field number to iterate over
+#Will create an array between min-max with stepsize of nfields_unit
+nfields_max = 5
+nfields_min = 2
+nfields_unit = 1
+
+
 #Range of betas from the Marcenko-Pastur distribution to iterate over
 #Will create an array between min-max with numb of grid points
 beta_ratio_max = 0.6
@@ -28,18 +35,18 @@ m_avg = 5e-7
 
 #Use to force the histogram to give same number of bins over some pre-defined
 #region in observable space
-fixed_bins=False
+fixed_bins=True
 obs_range = {'n_s': [0.88, 0.965],
         'alpha_s': [-1.0e-2,-1.0e-3],
         'f_NL': [-1.0e-2,-5.0e-3],
         'r': [0e0,0.5e0]
         }
 fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab order later
-nbins = 10
+nbins = 20
 
 #Number of sample points to get for each set of hyperparameters
 #samp_ref=2e7
-samp_ref=50
+samp_ref=1000
 
 #Should we get less samples with more fields?
 scale_nsamples = False
