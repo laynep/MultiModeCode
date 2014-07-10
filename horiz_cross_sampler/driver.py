@@ -59,7 +59,7 @@ def main():
         loop_params = None
 
 
-    if parallel and mpi_rank==0:
+    if parallel and mpi_rank==0 and mpi_size>1:
         #Chunk the loop_params into pieces so each process can loop over a subset.
         loop_params = par.chunk(np.array(loop_params),mpi_size,group=False)
 
@@ -99,7 +99,7 @@ def main():
             else:
                 nsamples = int(np.ceil(samp_ref/10**2))
 
-            nsamples=1000
+            #nsamples=1000
 
             print "nsamples=", nsamples
 
