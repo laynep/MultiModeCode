@@ -4,9 +4,15 @@ import numpy as np
 from classes import *
 import sys
 import processing
+import cPickle
+import mpi_routines as par
 
 def main():
     """Simple driver function."""
+
+    #MPI parallelized
+    mpi_comm, mpi_size, mpi_rank, mpi_name = par.init_parallel()
+    parallel = True if mpi_comm!=None else False
 
     #List of possible observables
     poss_observables = ['PR', 'n_s', 'alpha_s',
@@ -21,29 +27,53 @@ def main():
     hyperparams = ['nfields', 'beta',
             'm_avg', 'dimn_weight']
 
-    ######
-    #Cycle over grid of hyperparameters
-    ######
 
-
-    nfields_max = 10
-    nfields_min = 2
-    nfields_unit = 1
-    nfields_list = list(np.arange(nfields_min,nfields_max+1,nfields_unit))
+    #Set up grid of hyperparameters
 
     #For Marcenko-Pastur distribution
     #beta = naxions/nmoduli
     beta_ratio_max = 0.6
     beta_ratio_min = 0.4
-    beta_ratio_numb = 1
+    beta_ratio_numb = 3
     beta_list = np.linspace(beta_ratio_min,beta_ratio_max,beta_ratio_numb)
 
     #<m_avg^2> = sigma^2 for GRM w/entries of std sigma
     m_avg = 5e-7
 
-    #For initial conditions:
-    #Uniform weighting of dimensions for ICs
-    ic_weight = [np.ones(f_numb) for f_numb in nfields_list]
+    if not parallel or mpi_rank==0:
+
+        nfields_max = 6
+        nfields_min = 2
+        nfields_unit = 1
+        nfields_list = np.arange(nfields_min,nfields_max+1,nfields_unit)
+
+        #For initial conditions:
+        #Uniform weighting of dimensions for ICs
+        ic_weight = [np.ones(f_numb) for f_numb in nfields_list]
+
+        #Iterate over the rows in this list
+        loop_params = zip(ic_weight, nfields_list)
+
+    else:
+
+        loop_params = None
+        chunks = None
+
+    if parallel and mpi_rank==0:
+        #Chunk the loop_params into pieces so each process can loop over a subset.
+        print nfields_list
+        chunks = par.chunk(np.array(loop_params),mpi_size,group=False)
+        for i in chunks:
+            print "chunk:", i
+
+    if mpi_size>1:
+        #Scatter loop_params to all processes
+        loop_params = mpi_comm.scatter(chunks,root=0)
+        print "scattered?", loop_params
+
+
+    #Halt processors until run parameters are chunked and scattered.
+    if parallel: mpi_comm.barrier()
 
     def load_hist_dictionary():
         """Loads the hyper parameters into a dictionary for each run."""
@@ -57,9 +87,9 @@ def main():
 
     #Iterate over all desired combinations of hyperparameters
     hist_total = []
-    for dimn_weight, nfields in zip(ic_weight, nfields_list):
+    for dimn_weight, nfields in loop_params:
         for beta in beta_list:
-            print "New run:"
+            print "\nNew run:"
             print "beta=", beta
             print "nfields=", nfields
 
@@ -91,13 +121,21 @@ def main():
                     processing.hist_estimate_pdf(sample,normed=False, bin_method=processing.scott_rule)
 
 
-    for item in hist_total:
-        print "nfields:"
-        print item['nfields']
-        print "these are the counts:"
-        print item['counts']
-        print "these are the edges:"
-        print item['edges']
+    #for item in hist_total:
+    #    print "nfields:"
+    #    print item['nfields']
+    #    print "these are the counts:"
+    #    print item['counts']
+    #    print "these are the edges:"
+    #    print item['edges']
+
+    if parallel:
+        myfile = open("outdata"+str(mpi_rank)+".dat","w")
+    else:
+        myfile = open("outdata.dat","w")
+    cPickle.dump(hist_total, myfile)
+    myfile.close()
+
 
 
 

@@ -10,7 +10,7 @@ def init_parallel():
     try:
         from mpi4py import MPI
     except:
-        print "Couldn't find mpi4py.  Continuing without parallelization."
+        print "Error when importing mpi4py.  Continuing without parallelization."
         return None, None, None, None
 
     #Processor data
@@ -18,7 +18,7 @@ def init_parallel():
     size=comm.Get_size()
     rank=comm.Get_rank()
     name=MPI.Get_processor_name()
-    print "Process %d of %d on %s. \n" %(rank, size-1,name)
+    print "Process %d of %d on %s.\n" %(rank, size-1,name)
     return comm, size, rank, name
 
 
