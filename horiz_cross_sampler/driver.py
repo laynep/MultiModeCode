@@ -12,7 +12,7 @@ def main():
 
     #MPI parallelized
     mpi_comm, mpi_size, mpi_rank, mpi_name = par.init_parallel()
-    parallel = True if mpi_comm!=None else False
+    parallel = not mpi_comm==None
 
     #List of possible observables
     poss_observables = ['PR', 'n_s', 'alpha_s',
@@ -20,7 +20,7 @@ def main():
             'f_NL', 'tau_NL']
 
     #Which observables do we want?
-    obs_to_calc = ['n_s']
+    obs_to_calc = ['n_s', 'alpha_s', 'f_NL']
 
     #List of possible hyperparameters
     #[ LP: ] Should probably also include N_piv...
@@ -43,11 +43,14 @@ def main():
     #Use to force the histogram to give same number of bins over some pre-defined
     #region in observable space
     fixed_bins=True
-    obs_range = {'n_s': [0.94, 0.965],
-            'alpha_s': [-1.0e-2,-1.0e-3]
-            }
-    fixed_range = [obs_range[obs] for obs in np.sort(obs_to_calc)] #Sort bc in alphab dict later
-    nbins = 10
+    if fixed_bins:
+        obs_range = {'n_s': [0.88, 0.965],
+                'alpha_s': [-1.0e-2,-1.0e-3],
+                'f_NL': [-1.0e-2,-5.0e-3]
+                }
+        fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab order later
+        nbins = 10
+        print fixed_range
 
 
     if not parallel or mpi_rank==0:
@@ -108,7 +111,7 @@ def main():
             else:
                 nsamples = int(np.ceil(samp_ref/10**2))
 
-            nsamples=50
+            nsamples=5000
 
             print "nsamples=", nsamples
 
@@ -125,14 +128,15 @@ def main():
             if fixed_bins:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
                         processing.hist_estimate_pdf(sample,normed=False,
-                                bin_method=processing.constant_bins,datarange=fixed_range, nbins=nbins)
+                                datarange=fixed_range, nbins=nbins)
             else:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
                         processing.hist_estimate_pdf(sample,normed=False,
                                 bin_method=processing.scott_rule)
 
-    for i in hist_total:
-        print "this is count:", i['counts']
+    #for i in hist_total:
+    #    print "this is count:", i['counts']
+    #    print "this is edges:", i['edges']
 
     if parallel:
         myfile = open("outdata"+str(mpi_rank)+".dat","w")
@@ -140,7 +144,6 @@ def main():
         myfile = open("outdata.dat","w")
     cPickle.dump(hist_total, myfile)
     myfile.close()
-
 
 
 

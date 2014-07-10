@@ -18,23 +18,6 @@ def scott_rule(sample):
 
     return nbins
 
-def constant_bins(sample,datarange,nbins):
-    """Returns the bin positions per dimension when they are fixed according to some minimum and maximum range."""
-
-    if len(sample.shape) >1 :
-        #Multidimensional
-        bins = [(max(drange) - min(drange))/nbins for drange in datarange]
-    else:
-        bins = (max(drange) - min(drange))/nbins
-
-    print datarange
-    print nbins
-    print "bins:", bins
-
-    raise Exception("testing constant_bins")
-
-
-
 
 def hist_estimate_pdf(sample, observables=None, normed=True,
         nbins=None, bin_method=scott_rule, datarange=None):
@@ -46,7 +29,7 @@ def hist_estimate_pdf(sample, observables=None, normed=True,
 
     #Name the dimensions
     if observables==None:
-        observables = sample[1].keys()
+        observables = sorted(sample[1].keys())
 
     #Focus on the dimensions that coincide with observables
     #Matches ordering of observables

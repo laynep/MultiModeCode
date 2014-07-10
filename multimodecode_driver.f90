@@ -4,8 +4,7 @@ program multimodecode
   use background_evolution
   use modpk_utils
   use camb_interface
-  use ode_path
-  use access_modpk
+  use access_modpk, only : evolve, potinit
   use internals
   use modpk_icsampling
   use modpk_output, only : out_opt

@@ -205,7 +205,7 @@ CONTAINS
        STOP
     ENDIF
 
-    call set_ic(y)
+    call set_background_and_mode_ic(y)
 
     power_internal = powerspectrum_out
 
@@ -274,7 +274,7 @@ CONTAINS
 
       end subroutine make_identity
 
-      subroutine set_ic(y)
+      subroutine set_background_and_mode_ic(y)
 
         ! Note that ah=log(aH) and overall scaled by sqrt(2k)
 
@@ -300,7 +300,7 @@ CONTAINS
         y(index_uzeta_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
         y(index_uzeta_y+1) = cmplx(0., -k/exp(ah),kind=dp)
 
-      end subroutine set_ic
+      end subroutine set_background_and_mode_ic
 
       !Find the scale at which we can set the Bunch-Davies initial state
       !self-consistently

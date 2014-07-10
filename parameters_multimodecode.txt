@@ -109,7 +109,7 @@ uniform increments in log(k).
 
 &full_pk
   calc_full_pk = .true.
-  steps = 100
+  steps = 300
   kmin = 1.0e-3
   kmax = 1.0e-2
 /
