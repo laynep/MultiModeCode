@@ -2,63 +2,80 @@
 
 import numpy as np
 import cosmology as cosmo
-import sys
 import processing
-import cPickle
 import mpi_routines as par
 
+import cPickle
+import sys
+import getopt
+import argparse
+
+
+def parse_commandline():
+    """Parse command line arguments to find the parameter files.  argv should be sys.argv[1:]."""
+
+    param_files_threads = None
+    param_files_master = None
+
+    if not sys.argv[1:]:
+        #Empty list.  Use default parameter file names.
+        param_files_threads = "params_allthreads"
+        param_files_master = "params_master"
+    else:
+        parser = argparse.ArgumentParser(description="Parameter files "\
+                "to find the all threads variables " \
+                "and the master-only variables.")
+        parser.add_argument("-p1", help="Parameter file "\
+                "that is seen by all the threads.")
+        parser.add_argument("-p2", help="Parameter file "\
+                "that is seen by only the master thread.")
+
+        def remv_last3(string):
+            #Take off the ".py" ending
+            return string.replace(' ', '')[:-3]
+
+        param_files_threads= remv_last3(parser.parse_args().p1)
+        param_files_master = remv_last3(parser.parse_args().p2)
+
+    return param_files_threads, param_files_master
+
+
 def main():
-    """Simple driver function."""
+    """Driver function for sampling N-quadratic inflation."""
+
+    #Find parameter files
+    param_files_threads, param_files_master = parse_commandline()
 
     #MPI parallelized
     mpi_comm, mpi_size, mpi_rank, mpi_name = par.init_parallel()
     parallel = not mpi_comm==None
 
-    #List of possible observables
-    poss_observables = ['PR', 'n_s', 'alpha_s',
-            'r', 'n_t',
-            'f_NL', 'tau_NL']
+    #Get the run parameters that all the threads see
+    fromlist = [ "obs_to_calc", "hyperparams",
+        "beta_ratio_max", "beta_ratio_min", "beta_ratio_numb",
+        "m_avg",
+        "fixed_bins", "obs_range", "fixed_range", "nbins",
+        "samp_ref", "scale_nsamples",
+        "fileroot"]
 
-    #Which observables do we want?
-    obs_to_calc = ['n_s', 'alpha_s', 'f_NL']
-
-    #List of possible hyperparameters
-    #[ LP: ] Should probably also include N_piv...
-    hyperparams = ['nfields', 'beta',
-            'm_avg', 'dimn_weight']
+    p1 = __import__(param_files_threads, fromlist=fromlist)
 
 
     #Set up grid of hyperparameters
 
-    #For Marcenko-Pastur distribution
-    #beta = naxions/nmoduli
-    beta_ratio_max = 0.6
-    beta_ratio_min = 0.4
-    beta_ratio_numb = 3
-    beta_list = np.linspace(beta_ratio_min,beta_ratio_max,beta_ratio_numb)
-
-    #<m_avg^2> = sigma^2 for GRM w/entries of std sigma
-    m_avg = 5e-7
-
-    #Use to force the histogram to give same number of bins over some pre-defined
-    #region in observable space
-    fixed_bins=True
-    if fixed_bins:
-        obs_range = {'n_s': [0.88, 0.965],
-                'alpha_s': [-1.0e-2,-1.0e-3],
-                'f_NL': [-1.0e-2,-5.0e-3]
-                }
-        fixed_range = [obs_range[obs] for obs in sorted(obs_to_calc)] #Sort bc in alphab order later
-        nbins = 10
-        print fixed_range
+    beta_list = np.linspace(p1.beta_ratio_min, p1.beta_ratio_max, p1.beta_ratio_numb)
 
 
     if not parallel or mpi_rank==0:
 
-        nfields_max = 5
-        nfields_min = 2
-        nfields_unit = 1
-        nfields_list = np.arange(nfields_min,nfields_max+1,nfields_unit)
+        #Get the run parameters that only the master thread needs to see
+        fromlist = ["nfields_max", "nfields_min", "nfields_unit"]
+        try:
+            p2 = __import__(param_files_master, fromlist=fromlist)
+        except:
+            raise ImportError("TEST ERROR2")
+
+        nfields_list = np.arange(p2.nfields_min,p2.nfields_max+1,p2.nfields_unit)
 
         #For initial conditions:
         #Uniform weighting of dimensions for ICs
@@ -89,12 +106,12 @@ def main():
         hist_total.append({})
         hist_total[-1]['beta'] = beta
         hist_total[-1]['nfields'] = nfields
-        hist_total[-1]['m_avg'] = m_avg
+        hist_total[-1]['m_avg'] = p1.m_avg
         hist_total[-1]['dimn_weight'] = dimn_weight
-        hist_total[-1]['observs'] = obs_to_calc
+        hist_total[-1]['observs'] = p1.obs_to_calc
 
 
-    #Iterate over all desired combinations of hyperparameters
+    #(Parallelized) iteration over all desired combinations of hyperparameters
     hist_total = []
     for dimn_weight, nfields in loop_params:
         for beta in beta_list:
@@ -105,13 +122,13 @@ def main():
             load_hist_dictionary()
 
             #How many samples to build PDF from
-            samp_ref=2e7
-            if nfields>=10:
-                nsamples = int(np.ceil(samp_ref/nfields**2))
+            if p1.scale_nsamples:
+                if nfields>=10:
+                    nsamples = int(np.ceil(p1.samp_ref/nfields**2))
+                else:
+                    nsamples = int(np.ceil(p1.samp_ref/10**2))
             else:
-                nsamples = int(np.ceil(samp_ref/10**2))
-
-            nsamples=5000
+                nsamples = int(p1.samp_ref)
 
             print "nsamples=", nsamples
 
@@ -123,9 +140,9 @@ def main():
                     model="Nquad", nfields=nfields)
             radius = 2.0*np.sqrt(run.N_pivot)
 
-            sample = run.sample_Nquad(obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight)
+            sample = run.sample_Nquad(p1.obs_to_calc, nsamples, nmoduli, radius, p1.m_avg, dimn_weight)
 
-            if fixed_bins:
+            if p1.fixed_bins:
                 hist_total[-1]['counts'], hist_total[-1]['edges'] = \
                         processing.hist_estimate_pdf(sample,normed=False,
                                 datarange=fixed_range, nbins=nbins)
@@ -134,14 +151,15 @@ def main():
                         processing.hist_estimate_pdf(sample,normed=False,
                                 bin_method=processing.scott_rule)
 
-    #for i in hist_total:
-    #    print "this is count:", i['counts']
-    #    print "this is edges:", i['edges']
+    for i in hist_total:
+        print "this is count:", i['counts']
+        print "this is edges:", i['edges']
 
+    #Write histogram output to file
     if parallel:
-        myfile = open("outdata"+str(mpi_rank)+".dat","w")
+        myfile = open(p1.fileroot+str(mpi_rank)+".dat","w")
     else:
-        myfile = open("outdata.dat","w")
+        myfile = open(p1.fileroot+".dat","w")
     cPickle.dump(hist_total, myfile)
     myfile.close()
 
@@ -151,8 +169,8 @@ def main():
 if __name__=="__main__":
 
     profile=False
-    if profile:
+    if not profile:
+        main()
+    else:
         import cProfile
         cProfile.run('main()')
-    else:
-        main()
