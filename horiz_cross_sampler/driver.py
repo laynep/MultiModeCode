@@ -42,7 +42,7 @@ def main():
 
     if not parallel or mpi_rank==0:
 
-        nfields_max = 6
+        nfields_max = 5
         nfields_min = 2
         nfields_unit = 1
         nfields_list = np.arange(nfields_min,nfields_max+1,nfields_unit)
@@ -57,23 +57,20 @@ def main():
     else:
 
         loop_params = None
-        chunks = None
+
 
     if parallel and mpi_rank==0:
         #Chunk the loop_params into pieces so each process can loop over a subset.
-        print nfields_list
-        chunks = par.chunk(np.array(loop_params),mpi_size,group=False)
-        for i in chunks:
-            print "chunk:", i
+        loop_params = par.chunk(np.array(loop_params),mpi_size,group=False)
 
-    if mpi_size>1:
-        #Scatter loop_params to all processes
-        loop_params = mpi_comm.scatter(chunks,root=0)
-        print "scattered?", loop_params
-
-
-    #Halt processors until run parameters are chunked and scattered.
+    #Halt processors until run parameters are chunked.
     if parallel: mpi_comm.barrier()
+
+
+    if parallel and mpi_size>1:
+        #Scatter loop_params to all processes
+        loop_params = mpi_comm.scatter(loop_params,root=0)
+
 
     def load_hist_dictionary():
         """Loads the hyper parameters into a dictionary for each run."""
