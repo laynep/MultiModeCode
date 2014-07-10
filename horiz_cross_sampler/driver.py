@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+"""Program to sample the horizon crossing surface."""
+
 import numpy as np
 import cosmology as cosmo
 import processing
@@ -22,7 +24,7 @@ def parse_commandline():
     else:
         parser = argparse.ArgumentParser(description="Sample the horizon crossing surface "\
                 "for an inflation model to build PDFs for given (hyper)parameters. "\
-                "Give the parameter files on the command line ")
+                "Give the parameter files on the command line.")
         parser.add_argument("-p", help="Parameter file "\
                 "that is seen by all the threads. "\
                 "Default = parameters.py")
@@ -106,6 +108,7 @@ def main():
     hist_total = []
     for dimn_weight, nfields in loop_params:
         for beta in beta_list:
+
             print "\nNew run:"
             print "beta=", beta
             print "nfields=", nfields

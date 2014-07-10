@@ -8,7 +8,7 @@ poss_observables = ['PR', 'n_s', 'alpha_s',
         'f_NL', 'tau_NL']
 
 #Which observables do we want?
-obs_to_calc = ['n_s']
+obs_to_calc = ['n_s','alpha_s']
 
 
 #List of possible hyperparameters
@@ -46,7 +46,7 @@ nbins = 20
 
 #Number of sample points to get for each set of hyperparameters
 #nsamples=2e7
-nsamples=1e4
+nsamples=10
 
 #Should we get less samples with more fields?
 scale_nsamples = False
