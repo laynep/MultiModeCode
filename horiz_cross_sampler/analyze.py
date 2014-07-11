@@ -43,27 +43,41 @@ def main():
     #Load the histogram output and run data
     data = []
     print "Reading from data files..."
-    for files in data_files:
+    def readin(fname):
         #print "Reading from %s" %files
-        myfile = open(files,'r')
+        myfile = open(fname,'r')
         data.append(cPickle.load(myfile))
         myfile.close()
+
+    map(readin, data_files)
+
     #Combine data to one list
     #data = [inner for outer in data for inner in outer]
 
     #Find observables and parameters that were iterated over
     #Get default observable and (hyper)parameter names from parameters.py
+    #Which observables do we care about?
     aux_params = ['sample']
     fixed_params =['dimn_weight','m_avg']
+    observs_tostudy = ['n_s']
+
     observs = data[0]['observs']
     var_params = [key for key in data[0].keys()
             if key not in ['observs'] + aux_params + fixed_params]
 
 
-    print "Params %s are the observables that were calculated." %observs
-    print "Params %s are the parameters that were iterated over." %var_params
-    print "Params %s are fixed." %fixed_params
-    print "Params %s are auxiliary." %aux_params
+    print "%s are the observables that were calculated." %observs
+    print "%s are the observables that we will study here." %observs_tostudy
+    print "%s are the parameters that were iterated over." %var_params
+    print "%s are fixed." %fixed_params
+    #print "%s are auxiliary." %aux_params
+
+    for obs in observs_tostudy:
+        if obs not in observs:
+            #observs_tostudy doesn't match any of the computed observables
+            raise TypeError("The observable we are studying %s does not match "\
+                    "any of the observables in what were computed: %s." \
+                    %(obs,observs))
 
 
     #To marginalize or not to marginalize?
@@ -74,7 +88,9 @@ def main():
     #       make a new plot for each iteration of the other hyperparameters.
     #       Make one plot for each individual data run.
 
-    params_to_marginalize = ['beta']
+    params_to_marginalize = []
+    #params_to_marginalize = ['beta']
+    #params_to_marginalize = ['nfields']
 
     params_nomarg = [params for params in var_params
             if params not in params_to_marginalize]
@@ -82,21 +98,32 @@ def main():
     print "To marginalize:", params_to_marginalize
     print "To plot:", params_nomarg
 
+    if not params_nomarg:
+        raise Exception("You have asked to marginalize over all parameters, "\
+                "which isn't supported.")
+
     #Collapse the dimensions of fixed params or margin. params from each sample
     for sample in data:
-        map(sample.pop, fixed_params + params_to_marginalize)
+        map(sample.pop, fixed_params + params_to_marginalize + ['observs'])
 
     #Make combined datasets based off non-marg. and non-fixed params
-    for params in params_nomarg :
-        for sample in data:
-            #test = [sample['sample']
-            sys.exit()
+    #Results in dictionary with:
+    #    key=tuple(unique non-marg parameters), value=(total sample)
+    #but we remove the unwanted observables from the total sample
+    proc_data = {}
+    for sample in data:
+        key = tuple([sample[p] for p in params_nomarg])
+        temp_samp = sample.pop('sample')
+        temp_samp = [ {obs:x[obs]  for obs in observs_tostudy} for x in temp_samp]
+        if key in proc_data:
+            proc_data[key] += temp_samp
+        else:
+            proc_data[key] = temp_samp
+
+        map(sample.pop, sample.keys())
 
 
-
-    #Plot histograms for each observable's PDF versus each hyperparameter
-
-    #Make the histograms
+    #Make histograms for each observable's PDF versus each hyperparameter
 
     #Use to force the histogram to give same number of bins over some pre-defined
     #region in observable space
@@ -106,18 +133,16 @@ def main():
             'f_NL': [-1.0e-2,-5.0e-3],
             'r': [0e0,0.5e0]
             }
-    fixed_range = [obs_range[obs] for obs in sorted(observs)] #Sort bc in alphab order later
-    nbins = 20
+    fixed_range = [obs_range[obs] for obs in sorted(observs_tostudy)] #Sort bc in alphab order later
+    nbins = 5
 
-    #if p1.fixed_bins:
-    #    hist_total[-1]['counts'], hist_total[-1]['edges'] = \
-    #            processing.hist_estimate_pdf(sample,normed=False,
-    #                    datarange=p1.fixed_range, nbins=p1.nbins)
-    #else:
-    #    hist_total[-1]['counts'], hist_total[-1]['edges'] = \
-    #            processing.hist_estimate_pdf(sample,normed=False,
-    #                    bin_method=processing.scott_rule)
+    hist_total = processing.make_histograms(data=proc_data, params=params_nomarg,
+            fixed_bins=fixed_bins, normed=False,
+            fixed_range=fixed_range, nbins=nbins)
 
+    for i in hist_total:
+        print i['counts']
+        print i['edges']
 
 
 if __name__=="__main__":

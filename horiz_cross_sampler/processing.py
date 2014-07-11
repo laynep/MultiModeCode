@@ -62,3 +62,32 @@ def hist_estimate_pdf(sample, observables=None, normed=True,
         counts, edges = np.histogramdd(sample, bins=nbins, normed=normed, range=datarange)
 
     return counts, edges
+
+def make_histograms(data, params,
+        fixed_bins=False, normed=False, fixed_range=None, nbins=None):
+    """Routine to return histogram bin counts and edges from a dataset data that is expressed as a dictionary with unique keys that describe unique parameter choices and values corresponding to a sample made by driver.py."""
+
+    hist_total=[]
+    for key in data:
+        hist_total.append({})
+
+        for entry, value in zip(params,key):
+            hist_total[-1][entry]=value
+
+        if fixed_bins:
+            if nbins==None:
+                raise TypeError("Set nbins when calling make_histograms")
+            elif fixed_range==None:
+                raise TypeError("Set fixed_range when calling make_histograms")
+
+            hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+                    hist_estimate_pdf(data[key],
+                            normed=normed,
+                            datarange=fixed_range,
+                            nbins=nbins)
+        else:
+            hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+                    hist_estimate_pdf(data[key],
+                            normed=normed,
+                            bin_method=scott_rule)
+    return hist_total
