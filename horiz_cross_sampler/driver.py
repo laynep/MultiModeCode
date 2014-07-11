@@ -4,12 +4,10 @@
 
 import numpy as np
 import cosmology as cosmo
-import processing
 import mpi_routines as par
 
 import cPickle
 import sys
-import getopt
 import argparse
 
 
@@ -54,7 +52,6 @@ def main():
     fromlist = [ "obs_to_calc", "hyperparams",
         "beta_ratio_max", "beta_ratio_min", "beta_ratio_numb",
         "m_avg",
-        "fixed_bins", "obs_range", "fixed_range", "nbins",
         "nsamples", "scale_nsamples",
         "fileroot",
         "nfields_max", "nfields_min", "nfields_unit"]
@@ -94,18 +91,17 @@ def main():
         loop_params = mpi_comm.scatter(loop_params,root=0)
 
 
-    def load_hist_dictionary():
+    def load_sample_dictionary():
         """Loads the hyper parameters into a dictionary for each run."""
-        hist_total.append({})
-        hist_total[-1]['beta'] = beta
-        hist_total[-1]['nfields'] = nfields
-        hist_total[-1]['m_avg'] = p1.m_avg
-        hist_total[-1]['dimn_weight'] = dimn_weight
-        hist_total[-1]['observs'] = p1.obs_to_calc
+        sample_total['beta'] = beta
+        sample_total['nfields'] = nfields
+        sample_total['m_avg'] = p1.m_avg
+        sample_total['dimn_weight'] = dimn_weight
+        sample_total['observs'] = p1.obs_to_calc
 
 
     #(Parallelized) iteration over all desired combinations of hyperparameters
-    hist_total = []
+    counter=0
     for dimn_weight, nfields in loop_params:
         for beta in beta_list:
 
@@ -113,7 +109,9 @@ def main():
             print "beta=", beta
             print "nfields=", nfields
 
-            load_hist_dictionary()
+            sample_total = {}
+
+            load_sample_dictionary()
 
             #How many samples to build PDF from
             if p1.scale_nsamples:
@@ -134,29 +132,19 @@ def main():
                     model="Nquad", nfields=nfields)
             radius = 2.0*np.sqrt(run.N_pivot)
 
-            sample = run.sample_Nquad(p1.obs_to_calc, this_nsamples,
+            #Keep the sample
+            sample_total['sample'] = run.sample_Nquad(p1.obs_to_calc, this_nsamples,
                     nmoduli, radius, p1.m_avg, dimn_weight)
 
-            if p1.fixed_bins:
-                hist_total[-1]['counts'], hist_total[-1]['edges'] = \
-                        processing.hist_estimate_pdf(sample,normed=False,
-                                datarange=p1.fixed_range, nbins=p1.nbins)
+            counter += 1
+
+            #Write sample output to file
+            if parallel:
+                myfile = open(p1.fileroot+'_rank'+str(mpi_rank)+'_samp'+str(counter)+".dat","w")
             else:
-                hist_total[-1]['counts'], hist_total[-1]['edges'] = \
-                        processing.hist_estimate_pdf(sample,normed=False,
-                                bin_method=processing.scott_rule)
-
-    #for i in hist_total:
-    #    print "this is count:", i['counts']
-    #    print "this is edges:", i['edges']
-
-    #Write histogram output to file
-    if parallel:
-        myfile = open(p1.fileroot+str(mpi_rank)+".dat","w")
-    else:
-        myfile = open(p1.fileroot+".dat","w")
-    cPickle.dump(hist_total, myfile)
-    myfile.close()
+                myfile = open(p1.fileroot+'_samp'+str(counter)+".dat","w")
+            cPickle.dump(sample_total, myfile)
+            myfile.close()
 
 
 

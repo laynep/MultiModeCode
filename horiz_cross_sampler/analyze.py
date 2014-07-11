@@ -7,19 +7,17 @@ import cPickle
 import sys
 import argparse
 
+import processing
+
 def parse_commandline():
     """Parse command line arguments to find the data files."""
 
     data_files = None
 
     if not sys.argv[1:]:
-        #Empty list.  Use default parameter file names.
-        try:
-            params = __import__("parameters",fromlist=['fileroot'])
-            data_files = [params.fileroot+".dat"]
-        except:
-            raise ImportError("Couldn't find the default parameter file " \
-            "parameters.py or the fileroot parameter isn't defined.")
+        #Empty list.
+        raise TypeError("Please specify the parameter files at the command line " \
+                "with the -d flag")
     else:
         parser = argparse.ArgumentParser(description="Analyze data that was output "\
                 "from the horizon crossing sampler driver.py (cPickle dump). "\
@@ -44,28 +42,29 @@ def main():
 
     #Load the histogram output and run data
     data = []
+    print "Reading from data files..."
     for files in data_files:
-        print "Reading from %s" %files
+        #print "Reading from %s" %files
         myfile = open(files,'r')
         data.append(cPickle.load(myfile))
         myfile.close()
     #Combine data to one list
-    data = [inner for outer in data for inner in outer]
+    #data = [inner for outer in data for inner in outer]
 
     #Find observables and parameters that were iterated over
     #Get default observable and (hyper)parameter names from parameters.py
-    hist_params = ['counts','edges']
+    aux_params = ['sample']
+    fixed_params =['dimn_weight','m_avg']
     observs = data[0]['observs']
-    hyperparams = [key for key in data[0].keys()
-            if key not in hist_params + ['observs',
-                                            'dimn_weight','m_avg'] ] #Ad hoc
+    var_params = [key for key in data[0].keys()
+            if key not in ['observs'] + aux_params + fixed_params]
 
 
-    print "These %s are the observables that were calculated." %observs
-    print "These %s are the parameters that were iterated over." %hyperparams
+    print "Params %s are the observables that were calculated." %observs
+    print "Params %s are the parameters that were iterated over." %var_params
+    print "Params %s are fixed." %fixed_params
+    print "Params %s are auxiliary." %aux_params
 
-
-    #Plot histograms for each observable's PDF versus each hyperparameter
 
     #To marginalize or not to marginalize?
     #    marginalize=True ==> If there is more than one hyperparameter, then
@@ -76,12 +75,48 @@ def main():
     #       Make one plot for each individual data run.
 
     params_to_marginalize = ['beta']
-    marginalize = {}
-    for param in hyperparams:
-        marginalize[param] = param in params_to_marginalize
 
-    print marginalize
+    params_nomarg = [params for params in var_params
+            if params not in params_to_marginalize]
 
+    print "To marginalize:", params_to_marginalize
+    print "To plot:", params_nomarg
+
+    #Collapse the dimensions of fixed params or margin. params from each sample
+    for sample in data:
+        map(sample.pop, fixed_params + params_to_marginalize)
+
+    #Make combined datasets based off non-marg. and non-fixed params
+    for params in params_nomarg :
+        for sample in data:
+            #test = [sample['sample']
+            sys.exit()
+
+
+
+    #Plot histograms for each observable's PDF versus each hyperparameter
+
+    #Make the histograms
+
+    #Use to force the histogram to give same number of bins over some pre-defined
+    #region in observable space
+    fixed_bins=True
+    obs_range = {'n_s': [0.88, 0.965],
+            'alpha_s': [-1.0e-2,-1.0e-3],
+            'f_NL': [-1.0e-2,-5.0e-3],
+            'r': [0e0,0.5e0]
+            }
+    fixed_range = [obs_range[obs] for obs in sorted(observs)] #Sort bc in alphab order later
+    nbins = 20
+
+    #if p1.fixed_bins:
+    #    hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+    #            processing.hist_estimate_pdf(sample,normed=False,
+    #                    datarange=p1.fixed_range, nbins=p1.nbins)
+    #else:
+    #    hist_total[-1]['counts'], hist_total[-1]['edges'] = \
+    #            processing.hist_estimate_pdf(sample,normed=False,
+    #                    bin_method=processing.scott_rule)
 
 
 
