@@ -36,7 +36,7 @@ m_avg = 5e-7
 
 #Number of sample points to get for each set of hyperparameters
 #nsamples=2e7
-nsamples=100
+nsamples=10
 
 #Should we get less samples with more fields?
 scale_nsamples = False
