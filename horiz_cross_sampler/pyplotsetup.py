@@ -3,7 +3,7 @@ Set pyplot parameters for nice plots
 """
 
 import matplotlib as mpl
-from scipy import sqrt
+from numpy import sqrt
 
 #fig_width_pt = 235.0  # Get this from LaTeX using \showthe\columnwidth
 #fig_width_pt = 246.0  # Get this from LaTeX using \showthe\columnwidth

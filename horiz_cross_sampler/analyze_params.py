@@ -1,11 +1,11 @@
 """Parameters that would change between runs of analysis program analyze.py"""
 
 #Which observable do we care about?
-observs_tostudy = ['alpha_s']
+observs_tostudy = ['n_s']
 
 #Which parameters didn't vary
-#fixed_params =['dimn_weight','m_avg']
-fixed_params =['dimn_weight','m_avg','beta']
+fixed_params =['dimn_weight','m_avg']
+#fixed_params =['dimn_weight','m_avg','beta']
 
 #Things that aren't parameters or observables
 #You probably don't need to change this.
@@ -19,8 +19,8 @@ aux_params = ['sample']
 #       make a new plot for each iteration of the other hyperparameters.
 #       Make one plot for each individual data run.
 
-params_to_marginalize = []
-#params_to_marginalize = ['beta']
+#params_to_marginalize = []
+params_to_marginalize = ['beta']
 #params_to_marginalize = ['nfields']
 
 #Use to force the histogram to give same number of bins over some pre-defined

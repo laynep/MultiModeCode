@@ -21,7 +21,7 @@ hyperparams = ['nfields', 'beta',
 #Will create an array between min-max with stepsize of nfields_unit
 nfields_max = 200
 nfields_min = 2
-nfields_unit = 1
+nfields_unit = 2
 
 
 #Range of betas from the Marcenko-Pastur distribution to iterate over
@@ -39,7 +39,7 @@ m_avg = 5e-7
 
 #Number of sample points to get for each set of hyperparameters
 #nsamples=2e7
-nsamples=200
+nsamples=2000
 
 #Should we get less samples with more fields?
 scale_nsamples = False
