@@ -1,12 +1,14 @@
 """Parameters that would change between runs of analysis program analyze.py"""
 
-#Which observables do we care about?
-observs_tostudy = ['n_s']
+#Which observable do we care about?
+observs_tostudy = ['alpha_s']
 
 #Which parameters didn't vary
-fixed_params =['dimn_weight','m_avg']
+#fixed_params =['dimn_weight','m_avg']
+fixed_params =['dimn_weight','m_avg','beta']
 
 #Things that aren't parameters or observables
+#You probably don't need to change this.
 aux_params = ['sample']
 
 #To marginalize or not to marginalize?
@@ -17,16 +19,32 @@ aux_params = ['sample']
 #       make a new plot for each iteration of the other hyperparameters.
 #       Make one plot for each individual data run.
 
-#params_to_marginalize = []
-params_to_marginalize = ['beta']
+params_to_marginalize = []
+#params_to_marginalize = ['beta']
 #params_to_marginalize = ['nfields']
 
 #Use to force the histogram to give same number of bins over some pre-defined
 #region in observable space
 fixed_bins=True
-obs_range = {'n_s': [0.88, 0.965],
-        'alpha_s': [-1.0e-2,-1.0e-3],
+norm_PDF=False
+obs_range = {'n_s': [0.94, 0.965],
+        'alpha_s': [-0.005,-0.0015],
         'f_NL': [-1.0e-2,-5.0e-3],
         'r': [0e0,0.5e0]
         }
-nbins = 5
+nbins = 20
+
+#Names of observables
+obs_name = {'PR':r'$\mathcal{P}_\mathcal{R}$',
+        'n_s':r'$n_s$',
+        'alpha_s':r'$\alpha_s$',
+        'r':r'$r$',
+        'n_t':r'$n_T$',
+        'f_NL':r'$f_\mathrm{NL}$',
+        'tau_NL':r'$\tau_\mathrm{NL}$'}
+
+#Names of parameters in plots
+param_name = {'nfields':r'$N_f$',
+        'beta':r'$\beta$',
+        'dimn_weight':r'$\lambda$',
+        'm_avg':r'$\bar{m}_\mathrm{avg}$'}

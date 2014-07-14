@@ -9,10 +9,10 @@ def scott_rule(sample):
     """Returns the bin positions per dimension when using a modified Scott binning technique.  The sample is an N-dimensional Numpy array."""
 
     if len(sample.shape) >1 :
-        nbins = np.ceil( [ (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
-                for colmn in sample.T])
+        nbins = np.ceil(  (max(colmn)-min(colmn))/((3.5/len(colmn)**(1.0/3.0))*np.std(colmn))
+                for colmn in sample.T)
     elif len(sample.shape) ==1 :
-        nbins = np.ceil( [ (max(sample)-min(sample))/((3.5/len(sample)**(1.0/3.0))*np.std(sample)) ])
+        nbins = np.ceil(  (max(sample)-min(sample))/((3.5/len(sample)**(1.0/3.0))*np.std(sample)) )
     else:
         raise TypeError("Something wrong with the sample, since sample.shape = %s." %sample.shape)
 
@@ -91,3 +91,37 @@ def make_histograms(data, params,
                             normed=normed,
                             bin_method=scott_rule)
     return hist_total
+
+def arrange_for_imshow(hist_total):
+    """Routine to arrange the histogram data into 2D histograms based off the bin count and edge results from make_histograms().  Plots the observable vs each hyperparameter for the range over which both are defined.  Needs fixed bin sizes in both dimensions (observs and params).  Expects a list of dictionaries hist_total that have keys that correspond to unique values of hyperparameter combinations and 'counts' and 'edges'."""
+
+
+    #Check the bin counts are in the correct form
+    hist_params = ['edges', 'counts']
+    params = [keys for keys in hist_total[0].keys() if keys not in hist_params]
+
+    if len(hist_total[0]['counts'].shape) > 1:
+        raise TypeError("To use plot_histogram, the bin counts need to be "\
+                "one-dimensional for each set of unique parameters.")
+    elif len(params)>1:
+        raise TypeError("Plotting more than one non-marginalized parameter is" \
+                "not currently implemented in plot_histogram.")
+
+
+    #Plotting range and parameter lists
+    obs_range = [hist_total[0]['edges'][0][0],hist_total[0]['edges'][-1][-1]]
+    extent = [min( hist[p] for p in params for hist in hist_total),
+                max( hist[p] for p in params for hist in hist_total),
+                obs_range[0], obs_range[1]]
+
+    #Make sure this is in numerical order for the parameter
+    #params_data = np.array([[counts for counts in elts['counts']] for elts in hist_total])
+
+    for p in params:
+        params_data = np.array([counts for name, counts in
+            sorted([elts[p],elts['counts']] for elts in hist_total)])
+
+
+    return params_data, extent
+
+

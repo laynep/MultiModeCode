@@ -19,7 +19,7 @@ hyperparams = ['nfields', 'beta',
 
 #Range of field number to iterate over
 #Will create an array between min-max with stepsize of nfields_unit
-nfields_max = 12
+nfields_max = 200
 nfields_min = 2
 nfields_unit = 1
 
@@ -28,7 +28,10 @@ nfields_unit = 1
 #Will create an array between min-max with numb of grid points
 beta_ratio_max = 0.6
 beta_ratio_min = 0.4
-beta_ratio_numb = 3
+beta_ratio_numb = 10
+#beta_ratio_max = 0.5
+#beta_ratio_min = 0.5
+#beta_ratio_numb = 1
 
 #<m_avg^2> = sigma^2 for GRM w/entries of std sigma
 m_avg = 5e-7
@@ -36,11 +39,11 @@ m_avg = 5e-7
 
 #Number of sample points to get for each set of hyperparameters
 #nsamples=2e7
-nsamples=10
+nsamples=200
 
 #Should we get less samples with more fields?
 scale_nsamples = False
 
 #Output file name "root"
 #Will create file called root#.dat where #=mpi_rank
-fileroot = "outdata"
+fileroot = "data/outdata"
