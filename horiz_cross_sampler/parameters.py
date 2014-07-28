@@ -8,38 +8,46 @@ poss_observables = ['PR', 'n_s', 'alpha_s',
         'f_NL', 'tau_NL']
 
 #Which observables do we want?
-obs_to_calc = ['n_s', 'alpha_s']
+obs_to_calc = ['PR','n_s', 'r','n_t']
+
+#How to sample the couplings?
+
 
 
 #List of possible hyperparameters
+#List in order of [min, max, unit]
+#If real number, will create an array between min-max with "unit" of grid points
+#If integer, will create an array between min-max with stepsize of unit
 #[ LP: ] Should probably also include N_piv...
-hyperparams = ['nfields', 'beta',
-        'm_avg', 'dimn_weight']
 
+sampler = "MP"
+hyperparams = {
+        'nfields':[2,100,1],
+        'beta':[0.5,0.5,1],
+        'm_avg':[5e-7,5e-7,1],
+        'p':[2,2,1]
+        }
 
-#Range of field number to iterate over
-#Will create an array between min-max with stepsize of nfields_unit
-nfields_max = 200
-nfields_min = 2
-nfields_unit = 2
+#sampler = "uniform"
+#hyperparams = {
+#        'nfields':[2,5,1],
+#        'low':[1e-9,1e-9,1],
+#        'high':[1e-8,1e-8,1],
+#        'p':[2./3.,2./3.,1]
+#        }
 
-
-#Range of betas from the Marcenko-Pastur distribution to iterate over
-#Will create an array between min-max with numb of grid points
-beta_ratio_max = 0.6
-beta_ratio_min = 0.4
-beta_ratio_numb = 10
-#beta_ratio_max = 0.5
-#beta_ratio_min = 0.5
-#beta_ratio_numb = 1
-
-#<m_avg^2> = sigma^2 for GRM w/entries of std sigma
-m_avg = 5e-7
+#sampler = "log"
+#hyperparams = {
+#        'nfields':[2,20,1],
+#        'low':[-9,-9,1],
+#        'high':[-6,-6,1],
+#        'p':[2,2,1]
+#        }
 
 
 #Number of sample points to get for each set of hyperparameters
 #nsamples=2e7
-nsamples=2000
+nsamples=1000
 
 #Should we get less samples with more fields?
 scale_nsamples = False

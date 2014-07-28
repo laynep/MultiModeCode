@@ -4,7 +4,6 @@
 
 import numpy as np
 import potential as pot
-import processing as proc
 import sys
 
 
@@ -235,6 +234,9 @@ class deltaN_model(inflation_model):
 
         return alpha_s
 
+    def background(self, phi_hc):
+        """Solves the SR equations of motion for the background to map initial conditions on the horizon crossing surface to the end-of-inflation surface, defined by epsilon=1."""
+
 
     def calc_observs(self, phi_hc,phi_end=phi_zero, obs_to_calc=None):
         """Calculate the slow-roll observables for a given value of the fields at horizon crossing and the end of inflation (ignored if using horizon crossing approximation)."""
@@ -253,19 +255,16 @@ class deltaN_model(inflation_model):
         self.observ={}
 
         for key in obs_to_calc:
-            try:
-                self.observ[key]=obs_dict[key](phi_hc,phi_end)
-            except:
-                raise TypeError(key, "is not an observable that has " \
-                        "been implemented.")
+            self.observ[key]=obs_dict[key](phi_hc,phi_end)
+            #try:
+            #    self.observ[key]=obs_dict[key](phi_hc,phi_end)
+            #except:
+            #    raise TypeError(key, "is not an observable that has " \
+            #            "been implemented.")
 
 
-class SR_universe(deltaN_model):
-    """Realization of a universe given a slow-roll inflationary model.  Extends inflation_model to include methods to set parameters (priors) and resulting observables.
-
-Samples the horizon crossing surface for N-quadratic inflation and uses the horizon crossing approximation (HCA) to calculate observables in the \delta N formalism.  Only works for N-quadratic at the moment.
-
-Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for the observables using a histogram estimator and can calculate the derivatives with respect to the "prior parameters" of the expected value of the log-likelihood."""
+class Nmono_universe(deltaN_model):
+    """Realization of a universe given a slow-roll inflationary model.  Extends inflation_model to include methods to set parameters (priors) and resulting observables.  Samples the horizon crossing surface for N-monomial inflation and uses the horizon crossing approximation (HCA) to calculate observables in the \delta N formalism."""
 
 
     def __init__(self, sampler=None, N_pivot=55.0, HC_approx=True, **infl_args):
@@ -282,28 +281,33 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
             self.sampler=None
             return
 
-        if self.model != "Nquad":
+        if self.model != "Nmono":
             raise TypeError("Model not implemented in sampler.")
 
         #Choices for sampling techniques
         sampling_techn = {
                 "constant":self.constant,
-                "MP_and_horizcross":self.MP_and_horizcross
+                "MP_and_horizcross":self.MP_and_horizcross,
+                "uniform":self.uniform,
+                "log":self.log
                 }
 
-        self.sampler = sampling_techn[sampler]
+        try:
+            self.sampler = sampling_techn[sampler]
+        except:
+            raise TypeError("The sampler %s doesn't work." %sampler)
 
-    def get_new_params(self, **samp_params):
+    def get_new_params(self, p, **samp_params):
         """Get a new set of parameters and horizon crossing field values."""
 
-        if self.model != "Nquad":
+        if self.model != "Nmono":
             raise TypeError("Trying to set horizon crossing field value " \
-                    "in model that isn't N-quadratic.  Not implemented.")
+                    "in model that isn't N-monomial.  Not implemented.")
 
         if self.sampler != None:
             params, self.phi_hc = self.sampler(**samp_params)
 
-        self.load_params(m2=params)
+        self.load_params(lambd=params, p=p)
 
 
     def constant(self):
@@ -318,23 +322,8 @@ Can put arbitrary prior on the initial conditions or masses.  Builds PDFs for th
 
         return m2, phi
 
-    def MP_and_horizcross(self,  nmoduli, radius, m_avg=1.5e-5, dimn_weight=None):
-        """Samples the Marcenko-Pastur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.
-
-For initial conditions, samples a sphere with given radius, with "geometrical" weighting on the N-sphere controlled by the parameters dimn_weighta.  With dimn_weight=1.0, does a uniform sampling of the sphere; with dimn_weight=0.0, places all of the points exactly on the pole defined by pole_axis."""
-
-        #Masses:
-        #GR Matrix
-        #sigma^2 = <m^2> ~ (1.5e-5 Mpl)^2
-        sigma = m_avg
-
-        mat=np.random.normal(0.0, sigma,
-                (nmoduli, self.nfields))
-        mat=np.dot(mat.T,mat)
-        m2, eigvect = np.linalg.eigh(mat) #m. faster than eigvals
-
-        #ICs on sphere
-
+    def unif_horizon_cross(self, radius, dimn_weight=None):
+        """For initial conditions, samples a sphere with given radius, with "geometrical" weighting on the N-sphere controlled by the parameters dimn_weighta.  With dimn_weight=1.0, does a uniform sampling of the sphere; with dimn_weight=0.0, places all of the points exactly on the pole defined by pole_axis."""
         #dimn_weight is a dimensional weighting factor
         #Default to uniform weight/sampling
         if dimn_weight==None:
@@ -355,22 +344,87 @@ For initial conditions, samples a sphere with given radius, with "geometrical" w
                     "The radius is %s, the expected radius is %s, and the "\
                     "difference is %s, which is greater than the tolerance of %s."
                     %(np.sum(ICs**2),radius**2,np.abs(np.sum(ICs**2)-radius**2), 1e-12))
+        return ICs
+
+    def MP_and_horizcross(self,  nmoduli, radius, m_avg=1.5e-5, dimn_weight=None):
+        """Samples the Marcenko-Pastur distribution with parameter beta=#fields/(#fields+#moduli) by building an (N+P)xN random matrix, for N=#axions (fields) and P=#moduli, with entries drawn from a Gaussian with zero mean and variance sigma^2, which is fixed by requiring COBE normalization and noting sigma^2=<m^2>.  For initial conditions, uses unif_horizon_cross."""
+
+        #Masses:
+        #GR Matrix
+        #sigma^2 = <m^2> ~ (1.5e-5 Mpl)^2
+        sigma = m_avg
+
+        mat=np.random.normal(0.0, sigma,
+                (nmoduli, self.nfields))
+        mat=np.dot(mat.T,mat)
+        m2, eigvect = np.linalg.eigh(mat) #m. faster than eigvals
+
+        #ICs on sphere
+        ICs = self.unif_horizon_cross(radius, dimn_weight)
+
+
+        return m2, ICs
+
+    def uniform(self,  low, high, radius, dimn_weight=None):
+        """Samples the uniform distribution with between the low and high value.  For initial conditions, uses unif_horizon_cross."""
+
+        #Masses:
+
+        m2 = (high-low)* np.random.random(self.nfields) + low
+
+        #ICs on sphere
+        ICs = self.unif_horizon_cross(radius, dimn_weight)
+
+
+        return m2, ICs
+
+    def log(self,  low, high, radius, dimn_weight=None):
+        """Samples the logarithm of the couplings from a uniform distribution with between the low and high value.  For initial conditions, uses unif_horizon_cross."""
+
+        #Masses:
+
+        m2 = 10.0**((high-low)* np.random.random(self.nfields) + low)
+
+        #ICs on sphere
+        ICs = self.unif_horizon_cross(radius, dimn_weight)
+
 
         return m2, ICs
 
 
-    def sample_Nquad(self, obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight):
-        """Given an N-quadratic inflation model with the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc. nmoduli and m_avg are used in the MP distribution and radius and dimn_weight are used for the ICs prior."""
+    def sample_Nmono_MP(self, obs_to_calc, nsamples, nmoduli, radius, m_avg, dimn_weight, p):
+        """Given an N-monomial inflation model with V~phi^p the Marcenko-Pastur prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc. nmoduli and m_avg are used in the MP distribution and radius and dimn_weight are used for the ICs prior."""
 
-        if self.model != "Nquad":
-            raise TypeError("Trying to build an N-quadratic sample " \
-                    "in model that isn't N-quadratic.  Not implemented yet.")
+        if self.model != "Nmono":
+            raise TypeError("Trying to build an N-monomial sample " \
+                    "in model that isn't N-monomial.  Not implemented yet.")
 
         sample=[]
 
         for i in xrange(nsamples):
 
-            self.get_new_params( nmoduli=nmoduli, radius=radius, m_avg=m_avg, dimn_weight=dimn_weight)
+            self.get_new_params(p, nmoduli=nmoduli, radius=radius,
+                    m_avg=m_avg, dimn_weight=dimn_weight)
+
+            self.calc_observs(self.phi_hc,obs_to_calc=obs_to_calc)
+
+            sample.append(self.observ)
+
+        return sample
+
+    def sample_Nmono_uniform(self, obs_to_calc, nsamples, low, high, radius, dimn_weight, p):
+        """Given an N-monomial inflation model with V~phi^p the uniform prior on the masses and a uniform prior over the horizon crossing surface, this function will return a sample with nsamples draws from these priors with the observables obs_to_calc. low and high are used in the uniform distribution and radius and dimn_weight are used for the ICs prior."""
+
+        if self.model != "Nmono":
+            raise TypeError("Trying to build an N-monomial sample " \
+                    "in model that isn't N-monomial.  Not implemented yet.")
+
+        sample=[]
+
+        for i in xrange(nsamples):
+
+            self.get_new_params(p, low=low, radius=radius,
+                    high=high, dimn_weight=dimn_weight)
 
             self.calc_observs(self.phi_hc,obs_to_calc=obs_to_calc)
 

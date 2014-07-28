@@ -99,6 +99,7 @@ def main():
     for sample in data:
         map(sample.pop, p1.fixed_params + p1.params_to_marginalize + ['observs'])
 
+
     #Make combined datasets based off non-marg. and non-fixed params
     #Results in dictionary with:
     #    key=tuple(unique non-marg parameters), value=(total sample)
@@ -138,8 +139,23 @@ def main():
 
     ax1 = fig.add_subplot('111')
 
+
+    x = np.linspace(2,200,100)
+    y= (-1.0/8.0)*np.ones(100)*0.14545
+    y2= (-1.0/8.0)*(1.0+0.5)*np.ones(100)*0.14545
+    sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
+    mf_pred, = plt.plot(x,y2, 'k--', linewidth=3.0, alpha=0.95)
+
+    plt.rc('legend',**{'fontsize':8})
+    plt.legend([sf_pred,mf_pred],[r'$N_f=1$', r'$N_f \to \infty$'],
+            loc='lower right')
+
+
     plt.imshow(plot_data.T, origin='lower', extent=extent, aspect='auto',
             cmap=color_map, interpolation='nearest')
+
+
+
 
     plt.show()
 
