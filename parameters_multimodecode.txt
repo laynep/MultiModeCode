@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 2
+  num_inflaton = 100
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.
@@ -75,19 +75,24 @@ vparams in namelist &params.
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 2
+  param_sampling = 3
 
   use_first_priorval = .true.
 
+  vp_prior_min(1,:) = -14
+  vp_prior_min(2,:) = 0.20103
+
+  vp_prior_max(1,:) = -13
+  vp_prior_max(2,:) = 0.20103
+
+  varying_N_pivot = .false.
+
+/
   vp_prior_min(1,:) = 1.0e-14
   vp_prior_min(2,:) = 1.66666
 
   vp_prior_max(1,:) = 1.0e-13
   vp_prior_max(2,:) = 1.66666
-
-  varying_N_pivot = .false.
-
-/
 
 ----------------
 Parameters to be passed to the potential
@@ -150,12 +155,12 @@ Options for output from the code.
 &print_out
 
   out_opt%modpkoutput = .true.
-  out_opt%output_reduced = .false.
+  out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .true.
-  out_opt%fields_horiz = .false.
-  out_opt%fields_end_infl = .false.
+  out_opt%save_traj = .false.
+  out_opt%fields_horiz = .true.
+  out_opt%fields_end_infl = .true.
   out_opt%spectra = .false.
   out_opt%modes = .false.
 
@@ -172,12 +177,12 @@ Set rtol to 10^-(m+1) where m = # decimal places that are important.
 Set atol_i where |y_i| is insignificant.
 
 &technical
-  tech_opt%accuracy_setting = 2
+  tech_opt%accuracy_setting = 1
   tech_opt%use_dvode_integrator = .false.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7
-  tech_opt%rk_accuracy_back = 1.0e-8
+  tech_opt%rk_accuracy_back = 1.0e-6
 
   tech_opt%dvode_rtol_back = 1.0e-10
   tech_opt%dvode_rtol_modes = 1.0e-6

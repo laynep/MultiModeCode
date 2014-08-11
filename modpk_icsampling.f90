@@ -1591,6 +1591,21 @@ print*, new_measure
       end if
 
 
+      !DEBUG
+      !print*, "this is a call to get_vparams"
+      !print*, param_sampling
+      !print*, "vparams=",vparams
+      !print*, "min=",vp_prior_min
+      !print*, "max=",vp_prior_max
+
+      !do ii=1,2;do jj=1,2
+      !print*, ii, jj
+      !print*, vparams(ii,jj)
+      !end do; end do
+
+
+      !stop
+
     end subroutine get_vparams
 
 

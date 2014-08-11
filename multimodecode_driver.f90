@@ -36,6 +36,7 @@ program multimodecode
   logical :: use_horiz_cross_approx
 
   integer :: pfile
+  character(len=32) :: pfile_name
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -63,7 +64,6 @@ program multimodecode
   namelist /technical/ tech_opt
 
   !------------------------------------------------
-
 
   !Read initializing params from file
 	open(newunit=pfile, file="parameters_multimodecode.txt", &
