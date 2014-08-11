@@ -1,6 +1,6 @@
 MODULE modpk_utils
   use modpkparams
-  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic, parameter_loop_samp
+  use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -137,7 +137,7 @@ CONTAINS
           yprime(2)=0.0e0_dp
           RETURN
        ENDIF
-       !if (sampling_techn==reg_samp .or. sampling_techn==parameter_loop_samp) then
+       !if (ic_sampling==ic_flags%reg_samp .or. ic_sampling==ic_flags%parameter_loop_samp) then
          WRITE(*,*) 'MODPK: QUITTING'
          write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
          if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
@@ -232,7 +232,7 @@ CONTAINS
        !close to the point where V=0, since H^2=V/(3-eps)
 
        !Can override this error
-       if (sampling_techn/=reg_samp) then
+       if (ic_sampling/=ic_flags%reg_samp) then
          !Override this error and return
          pk_bad=bad_ic
          !return

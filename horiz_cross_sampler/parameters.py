@@ -8,7 +8,8 @@ poss_observables = ['PR', 'n_s', 'alpha_s',
         'f_NL', 'tau_NL']
 
 #Which observables do we want?
-obs_to_calc = ['PR','n_s', 'r','n_t']
+#obs_to_calc = ['PR','n_s', 'r','n_t']
+obs_to_calc = ['n_t']
 
 #How to sample the couplings?
 
@@ -20,27 +21,28 @@ obs_to_calc = ['PR','n_s', 'r','n_t']
 #If integer, will create an array between min-max with stepsize of unit
 #[ LP: ] Should probably also include N_piv...
 
-sampler = "MP"
+#sampler = "MP"
+#hyperparams = {
+#        'nfields':[2,100,1],
+#        'beta':[0.5,0.5,1],
+#        'm_avg':[5e-7,5e-7,1],
+#        'p':[2,2,1]
+#        }
+
+sampler = "uniform"
 hyperparams = {
-        'nfields':[2,100,1],
-        'beta':[0.5,0.5,1],
-        'm_avg':[5e-7,5e-7,1],
+        'nfields':[2,10000,10],
+        #'low':[1e-14,1e-14,1],
+        'low':[1e-16,1e-14,1],
+        'high':[1e-13,1e-13,1],
         'p':[2,2,1]
         }
 
-#sampler = "uniform"
-#hyperparams = {
-#        'nfields':[2,5,1],
-#        'low':[1e-9,1e-9,1],
-#        'high':[1e-8,1e-8,1],
-#        'p':[2./3.,2./3.,1]
-#        }
-
 #sampler = "log"
 #hyperparams = {
-#        'nfields':[2,20,1],
-#        'low':[-9,-9,1],
-#        'high':[-6,-6,1],
+#        'nfields':[2,100,1],
+#        'low':[-14,-14,1],
+#        'high':[-10,-10,1],
 #        'p':[2,2,1]
 #        }
 
@@ -54,4 +56,4 @@ scale_nsamples = False
 
 #Output file name "root"
 #Will create file called root#.dat where #=mpi_rank
-fileroot = "data/outdata"
+fileroot = "data/unif_2/outdata"

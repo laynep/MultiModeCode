@@ -22,7 +22,7 @@ CONTAINS
     USE modpk_observables
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
-    use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
+    use modpk_icsampling, only : bad_ic, ic_flags, ic_sampling
     IMPLICIT NONE
     real(dp) :: k,klo,khi
 
@@ -37,7 +37,7 @@ CONTAINS
     CALL backgrnd
 
     !When scanning ICs, let some backgrnd errors be overridden
-    if (sampling_techn/=reg_samp .and. pk_bad == bad_ic) then
+    if (ic_sampling/=ic_flags%reg_samp .and. pk_bad == bad_ic) then
       if (out_opt%modpkoutput) then
         print*, "--------------- BAD IC; RESTARTING -------------------"
       end if
@@ -68,7 +68,7 @@ CONTAINS
       pot, d2Vdphi2
     USE modpk_utils, ONLY : derivs, qderivs, rkqs_c
     use modpk_numerics, only : locate, polint, array_polint
-    use modpk_icsampling, only : bad_ic, sampling_techn, reg_samp
+    use modpk_icsampling, only : bad_ic, ic_sampling, ic_flags
     use modpk_qsf
     IMPLICIT NONE
 
@@ -149,7 +149,7 @@ CONTAINS
        PRINT*,'MODPK: your phi_init and N_pivot combo.'
 
        !Override the stop.
-       if (sampling_techn/=reg_samp) then
+       if (ic_sampling/=ic_flags%reg_samp) then
          pk_bad=bad_ic
          return
        end if
@@ -171,7 +171,7 @@ CONTAINS
     CALL polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
     CALL polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
-    if (sampling_techn == qsf_parametric) &
+    if (ic_sampling == ic_flags%qsf_parametric) &
       call get_param_guess(ah)
 
     a_ik=exp(alpha_ik)*a_init
@@ -349,7 +349,7 @@ CONTAINS
           call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
           call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
 
-          if (sampling_techn == qsf_parametric) &
+          if (ic_sampling == ic_flags%qsf_parametric) &
             call get_param_guess(ah)
 
           a_ik = exp(alpha_ik)*a_init

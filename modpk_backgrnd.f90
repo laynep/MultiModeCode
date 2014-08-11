@@ -18,8 +18,7 @@ CONTAINS
 
   SUBROUTINE backgrnd
     use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
-      dphi_iso_N, sampling_techn, eqen_samp, bad_ic, slowroll_samp, reg_samp,&
-      iso_N, param_unif_prior, qsf_random
+      dphi_iso_N, ic_sampling, ic_flags, bad_ic
 
     INTEGER*4 :: i,j, rescl_count
 
@@ -120,7 +119,7 @@ CONTAINS
 
       if (pk_bad .ne. 0) then
         !Override specific errors when doing IC sampling
-        if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+        if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
 
         print*, 'MODPK: pk_bad = ', pk_bad
         stop
@@ -131,7 +130,7 @@ CONTAINS
     IF(pk_bad==0) THEN
 
        !Matching condition
-       if (sampling_techn == qsf_parametric) then
+       if (ic_sampling == ic_flags%qsf_parametric) then
          !Reset the hunt_guess for determing vv below
          call qsf_runref%get_param(phi_light=vparams(3,1))
        end if
@@ -214,7 +213,7 @@ CONTAINS
             print*, "MODPK: N_efold=", alpha_pivot
             print*, "MODPK: likely too many efolds before"
             print*, "MODPK: pivot scale leaves horizon"
-            if (sampling_techn/=reg_samp) then
+            if (ic_sampling/=ic_flags%reg_samp) then
               pk_bad = bad_ic
             else
               stop
@@ -224,7 +223,7 @@ CONTAINS
 
           IF (a_end .GT. a_end_inst) THEN
              PRINT*,'MODPK: inflation ends too late with this N_pivot', N_pivot
-             if (sampling_techn/=reg_samp) then
+             if (ic_sampling/=ic_flags%reg_samp) then
                pk_bad = bad_ic
              else
               pk_bad=3
@@ -255,8 +254,7 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
-    use modpk_icsampling, only : sampling_techn, eqen_samp, bad_ic,&
-      slowroll_samp, iso_N, param_unif_prior, qsf_random, qsf_parametric
+    use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -298,18 +296,18 @@ CONTAINS
 
     vv = 0e0_dp
 
-    if (sampling_techn==slowroll_samp .or. sampling_techn==iso_N .or.&
-      sampling_techn==reg_samp .or. &
-      sampling_techn==qsf_random .or. &
-      sampling_techn==qsf_parametric .or. &
-      (sampling_techn==param_unif_prior .and. num_inflaton==1)) then
+    if (ic_sampling==ic_flags%slowroll_samp .or. ic_sampling==ic_flags%iso_N .or.&
+      ic_sampling==ic_flags%reg_samp .or. &
+      ic_sampling==ic_flags%qsf_random .or. &
+      ic_sampling==ic_flags%qsf_parametric .or. &
+      (ic_sampling==ic_flags%param_unif_prior .and. num_inflaton==1)) then
 
-      if( sampling_techn == reg_samp .and. &
+      if( ic_sampling == ic_flags%reg_samp .and. &
         out_opt%modpkoutput) print*, "Setting velocity in slow-roll"
 
       !dphi/dalpha(x1) slowroll approx
       !MULTIFIELD
-      if (sampling_techn == qsf_parametric) then
+      if (ic_sampling == ic_flags%qsf_parametric) then
         !Reset the hunt_guess for determing vv below
         call qsf_runref%get_param(phi_light=vparams(3,1))
       end if
@@ -399,7 +397,7 @@ CONTAINS
 !
 !      !Integrate in t until H is stable for integration with N
 !      call odeint_with_t(z_int_with_t,0e0_dp, 1e15_dp, accuracy, h1, hmin, bderivs, rkqs_r)
-!      if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+!      if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
 !
 !      call stability_check_on_H(H_stable,z_int_with_t(1:num_inflaton), &
 !        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
@@ -422,7 +420,7 @@ CONTAINS
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
-    if (sampling_techn/=reg_samp .and. pk_bad==bad_ic) return
+    if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
 
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
@@ -434,10 +432,10 @@ CONTAINS
        lna(1:kount)=xp(1:kount)
        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
-       if (sampling_techn == qsf_parametric) param_arr(1:kount) = param_p(1:kount)
+       if (ic_sampling == ic_flags%qsf_parametric) param_arr(1:kount) = param_p(1:kount)
 
        !MULTIFIELD
-       if (sampling_techn == qsf_parametric) then
+       if (ic_sampling == ic_flags%qsf_parametric) then
          !Reset the hunt_guess for determing vv below
          call qsf_runref%get_param(phi_light=vparams(3,1))
        end if

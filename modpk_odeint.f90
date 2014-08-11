@@ -1,8 +1,7 @@
 MODULE modpk_odeint
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
-  use modpk_icsampling, only : sampling_techn, reg_samp, bad_ic, &
-    slowroll_samp, iso_N, qsf_random, qsf_parametric
+  use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
   use modpk_output, only : out_opt
@@ -98,7 +97,7 @@ contains
     IF (save_steps) THEN
        xsav=x-2.0e0_dp*dxsav
        ALLOCATE(xp(256))
-       if (sampling_techn == qsf_parametric) ALLOCATE(param_p(256))
+       if (ic_sampling == ic_flags%qsf_parametric) ALLOCATE(param_p(256))
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
@@ -246,7 +245,7 @@ contains
       kount=kount+1
       IF (kount > SIZE(xp)) THEN
          xp=>reallocate_rv(xp,2*SIZE(xp))
-         if (sampling_techn==qsf_parametric) &
+         if (ic_sampling==ic_flags%qsf_parametric) &
            param_p=>reallocate_rv(param_p,2*SIZE(xp))
          yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
       END IF
@@ -255,7 +254,7 @@ contains
       xsav=x
 
       !For numerical QSF trajs
-      if (sampling_techn==qsf_parametric) then
+      if (ic_sampling==ic_flags%qsf_parametric) then
         param_p(kount) = qsf_runref%param
       end if
 
@@ -356,11 +355,11 @@ contains
 
        IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
 
-         if (sampling_techn==slowroll_samp .or. &
-           sampling_techn==iso_N .or.&
-           sampling_techn==reg_samp .or. &
-           sampling_techn==qsf_random .or. &
-           sampling_techn==qsf_parametric) then
+         if (ic_sampling==ic_flags%slowroll_samp .or. &
+           ic_sampling==ic_flags%iso_N .or.&
+           ic_sampling==ic_flags%reg_samp .or. &
+           ic_sampling==ic_flags%qsf_random .or. &
+           ic_sampling==ic_flags%qsf_parametric) then
 
            slowroll_start=.true.
          else
@@ -857,6 +856,8 @@ contains
         rtol = 1e-6_dp
         atol = 1e-14_dp
 
+        print*, "testing accuracy..."
+
 
 
       end if
@@ -1201,7 +1202,7 @@ contains
 
 
        IF(getEps_with_t(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
-         if (sampling_techn==reg_samp) then
+         if (ic_sampling==ic_flags%reg_samp) then
            slowroll_start=.true.
          else
            !If scan ICs, say inflating iff eps<1 for "extended" period,

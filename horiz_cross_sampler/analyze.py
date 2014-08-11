@@ -135,24 +135,70 @@ def main():
     fig = plt.figure(**pyplotsetup.figprops)
     fig.subplots_adjust(**pyplotsetup.adjustprops)
 
-    color_map = plt.get_cmap('RdYlBu_r')
+    #color_map = plt.get_cmap('RdYlBu_r')
+    color_map = plt.get_cmap('Blues')
 
     ax1 = fig.add_subplot('111')
 
+    #Prediction
+    N_piv=55.0
+    r=8.0/N_piv
 
-    x = np.linspace(2,200,100)
-    y= (-1.0/8.0)*np.ones(100)*0.14545
-    y2= (-1.0/8.0)*(1.0+0.5)*np.ones(100)*0.14545
+    #MP
+    #x = np.linspace(2,200,100)
+    #y= (-1.0/8.0)*np.ones(100)*0.14545
+    #y2= (-1.0/8.0)*(1.0+0.5)*np.ones(100)*0.14545
+    #sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
+    #mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
+
+    #Log
+    #x = np.linspace(2,200,100)
+    #y= (-1.0/8.0)*np.ones(100)*0.14545
+    #b = -10.0
+    #a = -14.0
+    #c = (b-a)/np.log(10.0)
+    #y2= (-1.0*c/16.0)*((10.0**b + 10.0**a)/(10.0**b-10.0**a))*np.ones(100)*0.14545
+    #sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
+    #mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
+
+    #Unif
+    x = np.linspace(2,10000,100)
+    y= (-1.0/8.0)*np.ones(100)*r
+    b = 1.0e-13
+    #a = 1.0e-14
+    a = 1.0e-16
+    y2= (-1.0/6.0)*((b**3-a**3)/(b-a)/(b+a)**2)*np.ones(100)*r
     sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
-    mf_pred, = plt.plot(x,y2, 'k--', linewidth=3.0, alpha=0.95)
+    mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
+
+    import scipy.special as sp
+    #sig = r*0.148/np.sqrt(x)
+    sig = r*0.11/np.sqrt(x)
+
+    #pval = 1.0 - 0.0455 #2 sig
+    pval = 1.0 - 0.0027 #3 sig
+    #pval = 1.0 - 6e-5 #4 sig
+    a = np.sqrt(2.0)*sig*sp.erfinv(pval)
+    y3= y2+a
+    y4= y2-a
+    siglow_pred, = plt.plot(x,y3, 'k--', linewidth=1.0, alpha=0.75)
+    sighigh_pred, = plt.plot(x,y4,'k--', linewidth=1.0, alpha=0.75)
+
+
 
     plt.rc('legend',**{'fontsize':8})
-    plt.legend([sf_pred,mf_pred],[r'$N_f=1$', r'$N_f \to \infty$'],
-            loc='lower right')
+
+    #plt.legend([sf_pred,mf_pred],[r'$N_f=1$', r'$N_f \to \infty$'],
+    #        loc='upper right')
+    plt.legend([mf_pred],[r'$N_f \to \infty$'],
+            loc='upper right')
 
 
     plt.imshow(plot_data.T, origin='lower', extent=extent, aspect='auto',
             cmap=color_map, interpolation='nearest')
+
+    ax1.set_xlabel(r'$N_f$')
+    ax1.set_ylabel(r'$n_t$')
 
 
 

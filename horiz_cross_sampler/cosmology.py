@@ -174,8 +174,8 @@ class deltaN_model(inflation_model):
         """Tensor spectral tilt."""
 
         eps = np.sum(self.eps_i(phi_hc))
-        return -2.0*eps/(1.0 - eps)
-        #return -2.0*eps
+        #return -2.0*eps/(1.0 - eps)
+        return -2.0*eps
 
     def f_NL(self, phi_hc, phi_end=phi_zero):
         """Local non-Gaussianity parameter f_NL for the bispectrum with phi ~ f_NL[ phi^2 - <phi^2>]."""
@@ -339,11 +339,11 @@ class Nmono_universe(deltaN_model):
         ICs = (radius/norm)*dimn_weight*mat
 
         #Check that all went well.
-        if np.abs(np.sum(ICs**2) - radius**2)>1e-12:
+        if np.abs(np.sum(ICs**2) - radius**2)>1e-10:
             raise Exception("The initial condition is not on the ball. "\
                     "The radius is %s, the expected radius is %s, and the "\
                     "difference is %s, which is greater than the tolerance of %s."
-                    %(np.sum(ICs**2),radius**2,np.abs(np.sum(ICs**2)-radius**2), 1e-12))
+                    %(np.sum(ICs**2),radius**2,np.abs(np.sum(ICs**2)-radius**2), 1e-10))
         return ICs
 
     def MP_and_horizcross(self,  nmoduli, radius, m_avg=1.5e-5, dimn_weight=None):
@@ -374,6 +374,12 @@ class Nmono_universe(deltaN_model):
 
         #ICs on sphere
         ICs = self.unif_horizon_cross(radius, dimn_weight)
+
+        #OVERRIDE
+        #print "Overriding IC settings with phi_0"
+        #phi_0 = np.sqrt(radius**2/self.nfields)
+
+        #ICs = phi_0*np.ones(self.nfields)
 
 
         return m2, ICs

@@ -2,12 +2,13 @@
 
 #Which observable do we care about?
 observs_tostudy = ['n_t']
+#observs_tostudy = ['PR']
 
 #Which parameters didn't vary
 #fixed_params =['dimn_weight','m_avg', 'p']
-fixed_params =['dimn_weight','m_avg','beta','p']
+#fixed_params =['dimn_weight','m_avg','beta','p']
 
-#fixed_params =['dimn_weight','low', 'high', 'p']
+fixed_params =['dimn_weight','low', 'high', 'p']
 
 #Things that aren't parameters or observables
 #You probably don't need to change this.
@@ -30,14 +31,18 @@ params_to_marginalize = []
 fixed_bins=True
 norm_PDF=False
 obs_range = {
+        'PR': [1e-10, 1e-9],
         #'n_s': [0.94, 0.965],
         'n_s': [0.93, 0.95],
         'alpha_s': [-0.005,-0.0015],
         'f_NL': [-1.0e-2,-5.0e-3],
         'r': [0e0,0.5e0],
-        'n_t': [-0.05, -0.015],
+        #'n_t': [-0.04, -0.015],
+        #'n_t': [-0.15, -0.015],
+        #'n_t': [-0.027, -0.017],
+        'n_t': [-0.027, -0.022],
         }
-nbins = 40
+nbins = 30
 
 #Names of observables
 obs_name = {'PR':r'$\mathcal{P}_\mathcal{R}$',

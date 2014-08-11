@@ -56,7 +56,10 @@ CONTAINS
     real(dp) :: m_light2, M_heavy2, param0, param_closest, dist,&
       phi_light, phi_light0
 
+    real(dp) :: p_exp
+
     select case(potential_choice)
+
     case(1)
       ! m_i^2 phi_i^2 --- N-quadratic
        m2_V = 10.e0_dp**(vparams(1,:))
@@ -254,6 +257,15 @@ CONTAINS
       V_potential = 0.5e0_dp*m_light2*phi_light**2 &
         + 0.5e0_dp*M_heavy2*dist**2
 
+    case(16)
+      ! (1/p) lambda_i |phi_i|^p --- N-monomial
+
+
+      p_exp = vparams(2,1)
+      m2_V = 10.e0_dp**(vparams(1,:))
+      V_potential = (1.0e0_dp/p_exp)*sum(m2_V*abs(phi)**p_exp)
+
+
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
        STOP
@@ -295,6 +307,9 @@ CONTAINS
     real(dp) :: phi_light, dphi_light
     real(dp), dimension(num_inflaton) :: turnfunct, dturnfunct, &
       dparam_dphi
+
+    real(dp) :: p_exp
+    integer :: ii
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -476,6 +491,19 @@ CONTAINS
 
          end select
 
+       case(16)
+         ! (1/p) lambda_i |phi_i|^p --- N-monomial
+
+         p_exp = vparams(2,1)
+         m2_V = 10.e0_dp**(vparams(1,:))
+         first_deriv = m2_V*abs(phi)**(p_exp-1.0e0_dp)*sign(1.0e0_dp,phi)
+
+         !Regularize around phi=0
+         do ii=1,size(phi)
+           if (abs(phi(ii))<1e-5_dp) &
+             first_deriv(ii)=0e0_dp
+         end do
+
 
        !END MULTIFIELD
        case default
@@ -524,6 +552,8 @@ CONTAINS
       dparam_dphi
     real(dp), dimension(num_inflaton, num_inflaton) :: d2param_dphi2, delta
     integer :: ii, jj, ll
+
+    real(dp) :: p_exp
 
     if (vnderivs) then
        !MULTIFIELD
@@ -781,6 +811,22 @@ CONTAINS
 
          end select
 
+       case(16)
+         ! (1/p) lambda_i |phi_i|^p --- N-monomial
+
+         p_exp = vparams(2,1)
+         m2_V = 10.e0_dp**(vparams(1,:))
+         second_deriv = 0e0_dp
+         do ii=1,size(phi)
+           second_deriv(ii,ii) =(p_exp-1.0e0_dp)*m2_V(ii)*abs(phi(ii))**(p_exp-2.0e0_dp)
+         end do
+
+         !Regularize around phi=0
+         do ii=1,size(phi)
+           if (abs(phi(ii))<1e-10_dp) &
+             second_deriv(ii,ii)=0e0_dp
+         end do
+
        case default
           write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
           STOP
@@ -804,11 +850,14 @@ CONTAINS
     real(dp) :: m2_V(size(phi))
     integer :: ii
 
+    real(dp) :: p_exp
+
     third_deriv = 0e0_dp
 
     select case(potential_choice)
     case(1)
       m2_V = 10.e0_dp**(vparams(1,:))
+      third_deriv=0e0_dp
       do ii=1,size(phi)
         third_deriv(ii,ii,ii)=m2_V(ii)
       end do
@@ -816,6 +865,19 @@ CONTAINS
       !DEBUG
       print*, "testing --- fake d3Vdphi3 for numerical qsf..."
       third_deriv = 0e0_dp
+
+    case (16)
+      ! (1/p) lambda_i |phi_i|^p --- N-monomial
+
+      p_exp = vparams(2,1)
+      m2_V = 10.e0_dp**(vparams(1,:))
+
+      third_deriv = 0e0_dp
+      do ii=1,size(phi)
+        third_deriv(ii,ii,ii) = (p_exp-2.0e0_dp)*(p_exp-1.0e0_dp)*&
+          m2_V(ii)*abs(phi(ii))**(p_exp-3.0e0_dp)
+      end do
+
     case default
       print*, "ERROR: d3Vdphi3 not defined for potential_choice =", &
         potential_choice
@@ -2167,8 +2229,8 @@ module modpk_deltaN_SR
 
       eps = eps_SR(phi_pivot)
 
-      !nt = -2.0e0_dp*sum(eps)
-      nt = -2.0e0_dp*sum(eps)/(1.0e0_dp - sum(eps))
+      nt = -2.0e0_dp*sum(eps)
+      !nt = -2.0e0_dp*sum(eps)/(1.0e0_dp - sum(eps))
 
     end function nt_SR
 

@@ -1,4 +1,5 @@
 #NAMELISTS
+Passes parameters to MultiModeCode without the need for recompiling.
 
 ----------------
 Parameters to control the major functionality of ModeCode
@@ -6,9 +7,9 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 2
-  potential_choice = 15
-  vparam_rows = 6
-  more_potential_params = .true.
+  potential_choice = 16
+  vparam_rows = 2
+  more_potential_params = .false.
 
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -20,9 +21,9 @@ comparison.  The deltaN calculation is only valid for
 sum-separable potentials.
 
 &analytical
-  use_deltaN_SR = .false.
-  use_horiz_cross_approx = .true.
-  evaluate_modes = .true.
+  use_deltaN_SR = .true.
+  use_horiz_cross_approx = .false.
+  evaluate_modes = .false.
 /
 
 ----------------
@@ -46,25 +47,36 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 ----------------
 Parameters to control how the ICs are sampled
-NB: sampling_techn = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
-    4=fromfile_samp,5=parameter_loop_samp,6=isoN,
-    7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
+  ic_sampling = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
+  4=fromfile_samp,5=parameter_loop_samp,6=isoN,
+  7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
-&ic_sampling
-  sampling_techn = 9
-  numb_samples = 1
+&ic_sampling_params
+  ic_sampling = 6
+  numb_samples = 10
 
   energy_scale = .1
 
   save_iso_N = .false.
-  N_iso_ref = 100
+  N_iso_ref = 55
 
   varying_N_pivot = .false.
 /
 
 ----------------
+Parameters to control how the ICs are sampled
+  param_sampling = {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
+  NB: Not all combinations of param_sampling and ic_sampling work together.
+  NB: To use numerical QSF, set param
+
+&param_sampling
+  param_sampling = 
+
+/
+
+----------------
 Parameters to be passed to the potential
-NB: If sampling_techn=parameter_loop_samp, then the smallest vparams equals
+NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
@@ -74,6 +86,12 @@ the smallest mass; others are discarded.
 
   phi_init0 = 20.0 20.0
 
+  vparams(1,:) = -12.0       -12.5
+  vparams(2,:) = 1.66666 1.66666
+
+
+/
+
   vparams(1,:) = -12.0       -6.0
   vparams(2,:) = 0.0       1.0
   vparams(3,:) =  18.0        1.00
@@ -81,9 +99,6 @@ the smallest mass; others are discarded.
 
   vparams(5,:) = 0.0       .050
   vparams(6,:) = 0.0       0.416481652821956
-
-
-/
 
 ----------------
 Priors on the IC and N_pivot ranges
@@ -108,7 +123,7 @@ For calculating the full power spectrum P(k).  Samples in
 uniform increments in log(k).
 
 &full_pk
-  calc_full_pk = .true.
+  calc_full_pk = .false.
   steps = 300
   kmin = 1.0e-3
   kmax = 1.0e-2
@@ -120,7 +135,7 @@ Options for output from the code.
 &print_out
 
   out_opt%modpkoutput = .true.
-  out_opt%output_reduced = .false.
+  out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
   out_opt%save_traj = .true.
@@ -142,8 +157,8 @@ Set rtol to 10^-(m+1) where m = # decimal places that are important.
 Set atol_i where |y_i| is insignificant.
 
 &technical
-  tech_opt%accuracy_setting = -1
-  tech_opt%use_dvode_integrator = .true.
+  tech_opt%accuracy_setting = 2
+  tech_opt%use_dvode_integrator = .false.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7

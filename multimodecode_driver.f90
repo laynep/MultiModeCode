@@ -45,7 +45,7 @@ program multimodecode
   namelist /analytical/ use_deltaN_SR, evaluate_modes, &
     use_horiz_cross_approx
 
-  namelist /ic_sampling/ sampling_techn, energy_scale, numb_samples, &
+  namelist /ic_sampling_params/ ic_sampling, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref, varying_N_pivot
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
@@ -71,7 +71,7 @@ program multimodecode
   call allocate_vars()
 
   !Read other params from file
-	read(unit=pfile, nml=ic_sampling)
+	read(unit=pfile, nml=ic_sampling_params)
 	read(unit=pfile, nml=params)
 	read(unit=pfile, nml=print_out)
 	read(unit=pfile, nml=technical)
@@ -79,7 +79,7 @@ program multimodecode
 
   call output_initial_data()
 
-  if (sampling_techn==reg_samp) then
+  if (ic_sampling==ic_flags%reg_samp) then
 
     call out_opt%open_files(SR=use_deltaN_SR)
 
@@ -87,19 +87,19 @@ program multimodecode
 
   else if &
     !Eqen sampling
-    (sampling_techn == eqen_samp .or. &
+    (ic_sampling == ic_flags%eqen_samp .or. &
     !Set vels in SR and fields on iso-N surface for N-quad
-    sampling_techn == iso_N .or.&
+    ic_sampling == ic_flags%iso_N .or.&
     !Set vels in SR
-    sampling_techn == slowroll_samp .or.&
+    ic_sampling == ic_flags%slowroll_samp .or.&
     !Grab IC from file
-    sampling_techn == fromfile_samp .or. &
+    ic_sampling == ic_flags%fromfile_samp .or. &
     !Loop over different vparams for given num_inflaton
-    sampling_techn == parameter_loop_samp .or. &
-    sampling_techn == param_unif_prior .or. &
+    ic_sampling == ic_flags%parameter_loop_samp .or. &
+    ic_sampling == ic_flags%param_unif_prior .or. &
     !QSF trajectories
-    sampling_techn == qsf_random .or.  &
-    sampling_techn == qsf_parametric &
+    ic_sampling == ic_flags%qsf_random .or.  &
+    ic_sampling == ic_flags%qsf_parametric &
     ) then
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
@@ -121,7 +121,7 @@ program multimodecode
     end do
 
   else
-    print*, "ERROR: sampling technique",sampling_techn,"not implemented."
+    print*, "ERROR: sampling technique",ic_sampling,"not implemented."
     stop
   end if
 
@@ -217,7 +217,7 @@ program multimodecode
         calc_full_pk, &
         observ_modes, observ_SR)
 
-      type(observables), intent(in) :: observ_modes
+      type(observables), intent(in), optional :: observ_modes
       type(observables), intent(in), optional :: observ_SR
       real(dp), dimension(:,:), intent(in) :: pk_arr
       real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
@@ -266,7 +266,32 @@ program multimodecode
 
       !Mode stats
 
-      if (.not. evaluate_modes) return
+      if (.not. evaluate_modes) then
+        write(*, out_opt%e2_fmt)&
+          "Ps =", SR_pred%As
+        if (potential_choice==1) then
+          write(*, out_opt%e2_fmt)&
+            "r = Pt/Ps =", SR_pred%r, '(', 8.0/N_pivot, ')'
+        else if (potential_choice==16) then
+          write(*, out_opt%e2_fmt)&
+            "r = Pt/Ps =", SR_pred%r, '(', 4.0*vparams(2,1)/N_pivot, ')'
+        end if
+        write(*, out_opt%e2_fmt)&
+          "n_s =", SR_pred%ns
+        write(*, out_opt%e2_fmt)&
+          "n_t =", SR_pred%nt
+        write(*, out_opt%e2_fmt)&
+          "r/n_t =", -(8.0-SR_pred%r/2.0)
+        write(*, out_opt%e2_fmt)&
+          "alpha_s =", SR_pred%alpha_s
+        write(*, out_opt%e2_fmt)&
+          "f_NL =", SR_pred%f_NL
+        write(*, out_opt%e2_fmt)&
+          "tau_NL =", SR_pred%tau_NL, &
+          '(>', ((6.0/5.0)*SR_pred%f_NL)**2, ')'
+
+        return
+      end if
 
       write(*, out_opt%e2_fmt)&
         "Ps =", observ_modes%As, '(', SR_pred%As , ')'
@@ -358,8 +383,13 @@ program multimodecode
       pk_bad=0
       leave = .false.
 
-      if (sampling_techn/=reg_samp) then
-        call get_ic(phi_init0, dphi_init0, sampling_techn, &
+      !DEBUG
+      !Get vparams
+      !if (
+
+      !Get ICs
+      if (ic_sampling/=ic_flags%reg_samp) then
+        call get_ic(phi_init0, dphi_init0, ic_sampling, &
           priors_min, priors_max, &
           numb_samples,energy_scale)
 
@@ -450,7 +480,7 @@ program multimodecode
             calc_full_pk, observs, observs_SR)
         else
           call output_observables(pk_arr,pk_iso_arr, &
-            calc_full_pk, observs_SR)
+            calc_full_pk, observ_SR = observs_SR)
         end if
       end if
 

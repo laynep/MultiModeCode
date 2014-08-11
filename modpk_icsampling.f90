@@ -12,12 +12,24 @@ module modpk_icsampling
   use internals, only : pi
   implicit none
 
-  integer, parameter :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-    fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
-    qsf_random=8, qsf_parametric=9, fisher_inf=10
+  integer :: ic_sampling
+  type :: ic_samp_flags
+    integer :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
+      fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
+      qsf_random=8, qsf_parametric=9, fisher_inf=10
+  end type
+  type(ic_samp_flags) :: ic_flags
+
+  integer :: param_sampling
+  type :: param_samp_flags
+    integer :: reg_constant=1, vparam_unif_prior=2, &
+      vparam_log_prior=3, vparam_num_QSF=4
+  end type
+  type(param_samp_flags) :: param_flags
+
 
   integer, parameter :: bad_ic=6
-  integer :: sampling_techn
+
   real(dp) :: penalty_fact
   logical :: save_iso_N=.false.
   real(dp) :: N_iso_ref
@@ -33,15 +45,15 @@ module modpk_icsampling
   contains
 
 
-    !Grab a new IC according to the sampling_techn variable
-    subroutine get_ic(phi0, dphi0,sampling_techn, &
+    !Grab a new IC according to the ic_sampling variable
+    subroutine get_ic(phi0, dphi0,ic_sampling, &
         priors_min, priors_max, &
          numb_samples,energy_scale)
 
       use modpk_rng, only : normal
       use modpk_numerics, only : heapsort
 
-      integer, intent(in) :: sampling_techn, numb_samples
+      integer, intent(in) :: ic_sampling, numb_samples
       real(dp), intent(in), optional :: energy_scale
       real(dp), dimension(num_inflaton), intent(out) :: phi0, dphi0
       real(dp), dimension(2,num_inflaton), intent(in) :: priors_min, &
@@ -67,6 +79,8 @@ module modpk_icsampling
 
       real(dp) :: param0, phi_light0
 
+      real(dp) :: ic_radius, p_exp
+
 
       phi0_priors_max=priors_max(1,:)
       phi0_priors_min=priors_min(1,:)
@@ -74,7 +88,7 @@ module modpk_icsampling
       dphi0_priors_min=priors_min(2,:)
 
       !-----------------------------------------
-      if (sampling_techn == eqen_samp) then
+      if (ic_sampling == ic_flags%eqen_samp) then
 
         !Tell solver starting out of SR, even if in SR
         !in case it's only transient, e.g., starting with dphi=0
@@ -88,12 +102,12 @@ module modpk_icsampling
           velconst=.true.)
 
       !-----------------------------------------
-      else if (sampling_techn == iso_N) then
+      else if (ic_sampling == ic_flags%iso_N) then
 
         !Start in SR with ICs sampled N_iso_ref before inflation ends
         !Only works for N-quadratic
 
-        if (potential_choice /= 1) then
+        if (potential_choice /= 1 .and. potential_choice /= 16) then
           print*, "Can't implicitly define iso_N surface for potential_choice=",&
             potential_choice
           stop
@@ -104,11 +118,19 @@ module modpk_icsampling
 
         y_background = 0e0_dp
 
-        call sample_nsphere(y_background(1:num_inflaton),2e0_dp*sqrt(N_iso_ref))
+        if (potential_choice ==16) then
+          p_exp = vparams(2,1)
+        else
+          p_exp = 2.0e0_dp
+        end if
+
+        ic_radius = sqrt(2.0e0_dp * N_iso_ref * p_exp)
+
+        call sample_nsphere(y_background(1:num_inflaton),ic_radius)
 
 
       !-----------------------------------------
-      else if (sampling_techn == slowroll_samp) then
+      else if (ic_sampling == ic_flags%slowroll_samp) then
 
         !Force solver to start in SR
         slowroll_start = .true.
@@ -118,13 +140,11 @@ module modpk_icsampling
           phi0_priors_min, phi0_priors_max, &
           dphi0_priors_min, dphi0_priors_max)
 
-
-
       !-----------------------------------------
-      else if (sampling_techn==parameter_loop_samp) then
+      else if (ic_sampling==ic_flags%parameter_loop_samp) then
 
         if (potential_choice>2 .and. potential_choice/=11 .and. &
-          potential_choice/=12) then
+          potential_choice/=12 .and. potential_choice /=16) then
           print*, "parameter_loop_samp doesn't work for potential_choice=", potential_choice
           stop
         end if
@@ -192,11 +212,11 @@ module modpk_icsampling
 
 
       !-----------------------------------------
-      else if (sampling_techn==param_unif_prior) then
+      else if (ic_sampling==ic_flags%param_unif_prior) then
 
         if (potential_choice /= 11) then
           print*, "potential_choice", potential_choice, "not supported"
-          print*, "for sampling_techn = param_unif_prior"
+          print*, "for ic_sampling = param_unif_prior"
           stop
         end if
 
@@ -237,7 +257,7 @@ module modpk_icsampling
         end if
 
       !-----------------------------------------
-      else if (sampling_techn==qsf_random) then
+      else if (ic_sampling==ic_flags%qsf_random) then
 
         turning_choice = 4
 
@@ -303,7 +323,7 @@ module modpk_icsampling
         end do
 
       !-----------------------------------------
-      else if (sampling_techn == qsf_parametric) then
+      else if (ic_sampling == ic_flags%qsf_parametric) then
         !"Numerical" QSF trajectory, needs to set initial position based off the
         !parametric curve.
 
