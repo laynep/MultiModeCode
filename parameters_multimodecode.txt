@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 100
+  num_inflaton = 10
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.
@@ -69,30 +69,30 @@ The vparams get marginalized --- detailed output is not saved.
 IMPORTANT: If param_sampling/=reg_constant, then this overrides the specific choices of
 vparams in namelist &params.
 
-  param_sampling = {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
+  param_sampling = 2
   NB: Not all combinations of param_sampling and ic_sampling work together.
   NB: To use numerical QSF, set here
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 3
+  param_sampling = 2
 
   use_first_priorval = .true.
 
-  vp_prior_min(1,:) = -14
-  vp_prior_min(2,:) = 0.20103
+  vp_prior_min(1,:) = 1.0e-14
+  vp_prior_min(2,:) = 2.0
 
-  vp_prior_max(1,:) = -13
-  vp_prior_max(2,:) = 0.20103
+  vp_prior_max(1,:) = 1.0e-13
+  vp_prior_max(2,:) = 2.0
 
   varying_N_pivot = .false.
 
 /
   vp_prior_min(1,:) = 1.0e-14
-  vp_prior_min(2,:) = 1.66666
+  vp_prior_min(2,:) = 2.0
 
   vp_prior_max(1,:) = 1.0e-13
-  vp_prior_max(2,:) = 1.66666
+  vp_prior_max(2,:) = 2.0
 
 ----------------
 Parameters to be passed to the potential
