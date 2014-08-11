@@ -47,11 +47,12 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 ----------------
 Parameters to control how the ICs are sampled
+
   ic_sampling = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
   4=fromfile_samp,5=parameter_loop_samp,6=isoN,
   7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
-&ic_sampling_params
+&ic_sampling_nml
   ic_sampling = 6
   numb_samples = 10
 
@@ -60,17 +61,31 @@ Parameters to control how the ICs are sampled
   save_iso_N = .false.
   N_iso_ref = 55
 
-  varying_N_pivot = .false.
 /
 
 ----------------
-Parameters to control how the ICs are sampled
+Parameters to control how the vparams are sampled.
+The vparams get marginalized --- detailed output is not saved.
+IMPORTANT: If param_sampling/=reg_constant, then this overrides the specific choices of
+vparams in namelist &params.
+
   param_sampling = {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   NB: Not all combinations of param_sampling and ic_sampling work together.
-  NB: To use numerical QSF, set param
+  NB: To use numerical QSF, set here
+  NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
-&param_sampling
-  param_sampling = 
+&param_sampling_nml
+  param_sampling = 2
+
+  use_first_priorval = .true.
+
+  vp_prior_min(1,:) = 1.0e-14
+  vp_prior_min(2,:) = 1.66666
+
+  vp_prior_max(1,:) = 1.0e-13
+  vp_prior_max(2,:) = 1.66666
+
+  varying_N_pivot = .false.
 
 /
 
@@ -135,14 +150,14 @@ Options for output from the code.
 &print_out
 
   out_opt%modpkoutput = .true.
-  out_opt%output_reduced = .true.
+  out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
   out_opt%save_traj = .true.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.
-  out_opt%modes = .true.
+  out_opt%modes = .false.
 
   get_runningofrunning = .false.
 /

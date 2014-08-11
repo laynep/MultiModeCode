@@ -262,7 +262,7 @@ CONTAINS
 
 
       p_exp = vparams(2,1)
-      m2_V = 10.e0_dp**(vparams(1,:))
+      m2_V = vparams(1,:)
       V_potential = (1.0e0_dp/p_exp)*sum(m2_V*abs(phi)**p_exp)
 
 
@@ -495,7 +495,7 @@ CONTAINS
          ! (1/p) lambda_i |phi_i|^p --- N-monomial
 
          p_exp = vparams(2,1)
-         m2_V = 10.e0_dp**(vparams(1,:))
+         m2_V = vparams(1,:)
          first_deriv = m2_V*abs(phi)**(p_exp-1.0e0_dp)*sign(1.0e0_dp,phi)
 
          !Regularize around phi=0
@@ -815,7 +815,7 @@ CONTAINS
          ! (1/p) lambda_i |phi_i|^p --- N-monomial
 
          p_exp = vparams(2,1)
-         m2_V = 10.e0_dp**(vparams(1,:))
+         m2_V = vparams(1,:)
          second_deriv = 0e0_dp
          do ii=1,size(phi)
            second_deriv(ii,ii) =(p_exp-1.0e0_dp)*m2_V(ii)*abs(phi(ii))**(p_exp-2.0e0_dp)

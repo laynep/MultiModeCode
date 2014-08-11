@@ -26,7 +26,7 @@ program multimodecode
   integer :: numb_samples
   integer :: out_adiab, out_isoc
   real(dp) :: energy_scale
-  real(dp), dimension(:,:), allocatable :: priors_min, priors_max
+  real(dp), dimension(:,:), allocatable :: icpriors_min, icpriors_max
 
   !Other sampling params
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
@@ -45,8 +45,11 @@ program multimodecode
   namelist /analytical/ use_deltaN_SR, evaluate_modes, &
     use_horiz_cross_approx
 
-  namelist /ic_sampling_params/ ic_sampling, energy_scale, numb_samples, &
-    save_iso_N, N_iso_ref, varying_N_pivot
+  namelist /ic_sampling_nml/ ic_sampling, energy_scale, numb_samples, &
+    save_iso_N, N_iso_ref
+
+  namelist /param_sampling_nml/ param_sampling, vp_prior_min, vp_prior_max, &
+    varying_N_pivot, use_first_priorval
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -71,7 +74,8 @@ program multimodecode
   call allocate_vars()
 
   !Read other params from file
-	read(unit=pfile, nml=ic_sampling_params)
+	read(unit=pfile, nml=ic_sampling_nml)
+	read(unit=pfile, nml=param_sampling_nml)
 	read(unit=pfile, nml=params)
 	read(unit=pfile, nml=print_out)
 	read(unit=pfile, nml=technical)
@@ -105,7 +109,7 @@ program multimodecode
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
 
     !Initialize the sampler
-    call init_sampler(priors_min, priors_max)
+    call init_sampler(icpriors_min, icpriors_max)
 
     do i=1,numb_samples
 
@@ -196,8 +200,11 @@ program multimodecode
       else
         allocate(vparams(vparam_rows,num_inflaton))
       end if
-      allocate(priors_max(2,num_inflaton))
-      allocate(priors_min(2,num_inflaton))
+      allocate(icpriors_max(2,num_inflaton))
+      allocate(icpriors_min(2,num_inflaton))
+
+      allocate(vp_prior_max(vparam_rows,num_inflaton))
+      allocate(vp_prior_min(vparam_rows,num_inflaton))
 
       allocate(phi_init0(num_inflaton))
       allocate(phi_init(num_inflaton))
@@ -383,22 +390,22 @@ program multimodecode
       pk_bad=0
       leave = .false.
 
-      !DEBUG
       !Get vparams
-      !if (
+      if (param_sampling /= param_flags%reg_constant) then
+        call get_vparams()
+      end if
 
       !Get ICs
       if (ic_sampling/=ic_flags%reg_samp) then
-        call get_ic(phi_init0, dphi_init0, ic_sampling, &
-          priors_min, priors_max, &
+        call get_ic(phi_init0, dphi_init0, &
+          icpriors_min, icpriors_max, &
           numb_samples,energy_scale)
+      end if
 
-        if (varying_N_pivot) then
-          save_iso_N = .false.
-          call get_new_N_pivot(N_pivot,&
-            N_pivot_prior_min, N_pivot_prior_max)
-        end if
-
+      if (varying_N_pivot) then
+        save_iso_N = .false.
+        call get_new_N_pivot(N_pivot,&
+          N_pivot_prior_min, N_pivot_prior_max)
       end if
 
       !Load ics
@@ -573,11 +580,11 @@ program multimodecode
 
     end subroutine test_bad
 
-    subroutine init_sampler(priors_min, priors_max)
+    subroutine init_sampler(icpriors_min, icpriors_max)
       use modpk_rng, only : init_random_seed
 
-      real(dp), dimension(:,:), intent(out) :: priors_min, &
-        priors_max
+      real(dp), dimension(:,:), intent(out) :: icpriors_min, &
+        icpriors_max
 
       real(dp), dimension(:), allocatable :: phi0_priors_min, &
         dphi0_priors_min, phi0_priors_max, dphi0_priors_max
@@ -616,10 +623,10 @@ program multimodecode
       read(unit=u, nml=priors)
       close(u)
 
-      priors_max(1,:) = phi0_priors_max
-      priors_max(2,:) = dphi0_priors_max
-      priors_min(1,:) = phi0_priors_min
-      priors_min(2,:) = dphi0_priors_min
+      icpriors_max(1,:) = phi0_priors_max
+      icpriors_max(2,:) = dphi0_priors_max
+      icpriors_min(1,:) = phi0_priors_min
+      icpriors_min(2,:) = dphi0_priors_min
 
     end subroutine init_sampler
 

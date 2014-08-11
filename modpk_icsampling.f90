@@ -22,10 +22,11 @@ module modpk_icsampling
 
   integer :: param_sampling
   type :: param_samp_flags
-    integer :: reg_constant=1, vparam_unif_prior=2, &
-      vparam_log_prior=3, vparam_num_QSF=4
+    integer :: reg_constant=1, unif_prior=2, log_prior=3, num_QSF=4
   end type
   type(param_samp_flags) :: param_flags
+  real(dp), dimension(:,:), allocatable :: vp_prior_max, vp_prior_min
+  logical :: use_first_priorval
 
 
   integer, parameter :: bad_ic=6
@@ -46,14 +47,14 @@ module modpk_icsampling
 
 
     !Grab a new IC according to the ic_sampling variable
-    subroutine get_ic(phi0, dphi0,ic_sampling, &
+    subroutine get_ic(phi0, dphi0, &
         priors_min, priors_max, &
          numb_samples,energy_scale)
 
       use modpk_rng, only : normal
       use modpk_numerics, only : heapsort
 
-      integer, intent(in) :: ic_sampling, numb_samples
+      integer, intent(in) :: numb_samples
       real(dp), intent(in), optional :: energy_scale
       real(dp), dimension(num_inflaton), intent(out) :: phi0, dphi0
       real(dp), dimension(2,num_inflaton), intent(in) :: priors_min, &
@@ -1544,6 +1545,53 @@ print*, new_measure
       Npiv = (prior_max - prior_min)*rand + prior_min
 
     end subroutine get_new_N_pivot
+
+    !Subroutine to setup the vparams based off the chosen sampling technique.
+    subroutine get_vparams()
+
+      real(dp) :: rand
+      integer :: ii, jj
+
+      !Don't need to marginalize over vparams
+      if (param_sampling == param_flags%num_QSF .or. &
+          param_sampling == param_flags%reg_constant) then
+        return
+      end if
+
+      !Set up prior; if use_first_priorval, then only have to specify the first
+      !column in each prior array.
+      if (use_first_priorval) then
+        do ii=1,size(vparams,2)
+          vp_prior_min(:,ii) = vp_prior_min(:,1)
+          vp_prior_max(:,ii) = vp_prior_max(:,1)
+        end do
+      end if
+
+      !Uniform prior
+      if (param_sampling == param_flags%unif_prior) then
+
+        do ii=1,size(vparams,1); do jj=1,size(vparams,2)
+          call random_number(rand)
+          vparams(ii,jj) = (vp_prior_max(ii,jj)-vp_prior_min(ii,jj))*rand &
+            +vp_prior_min(ii,jj)
+        end do; end do
+
+      !"Log" prior => Uniform prior on x for vparams= 10^x
+      else if (param_sampling == param_flags%log_prior) then
+
+        do ii=1,size(vparams,1); do jj=1,size(vparams,2)
+          call random_number(rand)
+          vparams(ii,jj) = 10.0e0_dp**&
+            ((vp_prior_max(ii,jj)-vp_prior_min(ii,jj))*rand+vp_prior_min(ii,jj))
+        end do; end do
+
+      else
+        print*, "ERROR: param_sampling=", param_sampling, "is not supported."
+        stop
+      end if
+
+
+    end subroutine get_vparams
 
 
 end module modpk_icsampling
