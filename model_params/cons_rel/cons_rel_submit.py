@@ -5,9 +5,11 @@ import sys
 import numpy as np
 
 p_list = [2.0, 1.0, 1.5]
-prior_list = ["unif", "log"]
+#prior_list = ["unif", "log"]
+#prior_list = ["unif"]
+prior_list = ["log"]
 first_nf_list = [20, 60, 100]
-second_nf_list = [100, 250, 500, 750, 1000]
+second_nf_list = [200, 600, 1000]
 #approx_list = ["deltaN", "HCA"]
 approx_list = ["deltaN"]
 
@@ -17,9 +19,10 @@ range_log = ["-14", "-12"]
 njobs = 2
 
 def run_cmd(cmd):
-    proc = subprocess.Popen(cmd,
-            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
-    proc.wait()
+    #proc = subprocess.Popen(cmd,
+    #        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+    #proc.wait()
+    subprocess.call(cmd,shell=True)
 
 def modify_pfile(nf, prior, approx, p):
     #Modify the parameter file
@@ -31,7 +34,7 @@ def modify_pfile(nf, prior, approx, p):
     run_cmd(sed_cmd)
 
     #Approximation scheme
-    if approx is "HCA":
+    if approx == "HCA":
         sed_cmd = "sed -i \"s/use_horizon_cross_approx =.*/" \
             "use_horizon_cross_approx = %s/g\" " %(".true.") +pfile
     else:
@@ -40,7 +43,7 @@ def modify_pfile(nf, prior, approx, p):
     #print sed_cmd
     run_cmd(sed_cmd)
 
-    if prior is "unif":
+    if prior == "unif":
         #Unif sampling
 
         sed_cmd = "sed -i \"s/param_sampling =.*/"\
@@ -76,7 +79,7 @@ def modify_pfile(nf, prior, approx, p):
         run_cmd(sed_cmd)
 
 
-    elif prior is "log":
+    elif prior == "log":
         #Log sampling
 
         sed_cmd = "sed -i \"s/param_sampling =.*/"\
@@ -111,35 +114,35 @@ def modify_pfile(nf, prior, approx, p):
         #print sed_cmd
         run_cmd(sed_cmd)
 
-for nf in first_nf_list:
-    for prior in prior_list:
-        for approx in approx_list:
-
-	    newdir = "newrun_p%s_Nf%s_%s_%s" %(2.0,nf,prior,approx)
-	    sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_SMALL\/%s/g\" "%newdir + "slurm_job.sh"
-            run_cmd(sedcmd)
-
-            modify_pfile(nf, prior, approx, p=2.0)
-
-            #Submit the jobs
-            submitcmd = ". ./submit.sh " + str(njobs)
-
-            #print submitcmd
-            run_cmd(submitcmd)
-
-#for nf in second_nf_list:
+#for nf in first_nf_list:
 #    for prior in prior_list:
 #        for approx in approx_list:
-#            for p in p_list:
 #
-#                newdir = "newrun_p%s_Nf%s_%s_%s" %(p,nf,prior,approx)
-#                sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_BIG\/%s/g\" "%newdir + "slurm_job.sh"
-#                run_cmd(sedcmd)
+#            newdir = "newrun_p%s_Nf%s_%s_%s" %(2.0,nf,prior,approx)
+#            sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_SMALL\/%s/g\" "%newdir + "slurm_job.sh"
+#            run_cmd(sedcmd)
 #
-#                modify_pfile(nf, prior, approx, p)
+#            modify_pfile(nf, prior, approx, p=2.0)
 #
-#                #Submit the jobs
-#                submitcmd = ". ./submit.sh " + str(njobs)
+#            #Submit the jobs
+#            submitcmd = ". ./submit.sh " + str(njobs)
 #
-#                #print submitcmd
-#                run_cmd(submitcmd)
+#            #print submitcmd
+#            run_cmd(submitcmd)
+
+for nf in second_nf_list:
+    for prior in prior_list:
+        for approx in approx_list:
+            for p in p_list:
+
+                newdir = "newrun_p%s_Nf%s_%s_%s" %(p,nf,prior,approx)
+                sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_BIG\/%s/g\" "%newdir + "slurm_job.sh"
+                run_cmd(sedcmd)
+
+                modify_pfile(nf, prior, approx, p)
+
+                #Submit the jobs
+                submitcmd = ". ./submit.sh " + str(njobs)
+
+                #print submitcmd
+                run_cmd(submitcmd)
