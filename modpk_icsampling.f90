@@ -128,10 +128,10 @@ module modpk_icsampling
         ic_radius = sqrt(2.0e0_dp * N_iso_ref * p_exp)
 
         !DEBUG
-        print*, "overriding ICs!!!!!!!"
-        y_background(1:num_inflaton) = ic_radius/sqrt(50.0)
+        !print*, "overriding ICs!!!!!!!"
+        !y_background(1:num_inflaton) = ic_radius/sqrt(50.0)
 
-        !call sample_nsphere(y_background(1:num_inflaton),ic_radius)
+        call sample_nsphere(y_background(1:num_inflaton),ic_radius)
 
 
       !-----------------------------------------

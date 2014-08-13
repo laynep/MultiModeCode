@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 100
+  num_inflaton = 10
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.

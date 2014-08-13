@@ -545,8 +545,8 @@ program multimodecode
         Npiv_renorm, phi_pivot, del_phi)
 
       !DEBUG
-      print*, guess_EOI_field(phi_pivot, phi_end)
-      stop
+      !print*, guess_EOI_field(phi_pivot, phi_end)
+      !stop
 
 
       if (use_horiz_cross_approx) then
