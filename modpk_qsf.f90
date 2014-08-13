@@ -321,7 +321,7 @@ contains
         exit
 
       !elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
-      !  print*, "ERROR: In turning_function, exactly at knot-point."
+      !  print*, "MODPK: In turning_function, exactly at knot-point."
         !DEBUG
       !  stop
       end if
@@ -367,8 +367,8 @@ contains
       end if
 
     case default
-      print*, "ERROR: turning_function_parametric not implemented for"
-      print*, "ERROR: turning_choice = ", turning_choice
+      print*, "MODPK: turning_function_parametric not implemented for"
+      print*, "MODPK: turning_choice = ", turning_choice
       stop
     end select
 
@@ -408,8 +408,8 @@ contains
         funct(2) = 1e0_dp
       end if
     case default
-      print*, "ERROR: dturndparam not implemented for"
-      print*, "ERROR: turning_choice = ", turning_choice
+      print*, "MODPK: dturndparam not implemented for"
+      print*, "MODPK: turning_choice = ", turning_choice
       stop
     end select
 
@@ -447,8 +447,8 @@ contains
         funct(2) = 0e0_dp
       end if
     case default
-      print*, "ERROR: d2turndparam2 not implemented for"
-      print*, "ERROR: turning_choice = ", turning_choice
+      print*, "MODPK: d2turndparam2 not implemented for"
+      print*, "MODPK: turning_choice = ", turning_choice
       stop
     end select
 

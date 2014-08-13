@@ -127,7 +127,11 @@ module modpk_icsampling
 
         ic_radius = sqrt(2.0e0_dp * N_iso_ref * p_exp)
 
-        call sample_nsphere(y_background(1:num_inflaton),ic_radius)
+        !DEBUG
+        print*, "overriding ICs!!!!!!!"
+        y_background(1:num_inflaton) = ic_radius/sqrt(50.0)
+
+        !call sample_nsphere(y_background(1:num_inflaton),ic_radius)
 
 
       !-----------------------------------------
@@ -273,7 +277,7 @@ module modpk_icsampling
         if (num_inflaton>1 .and. maxval(number_knots_qsfrandom)>0) then
           allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
         else
-          print*, "ERROR: Incorrect specifications for knot_positions:"
+          print*, "MODPK: Incorrect specifications for knot_positions:"
           print*, "Num_inflaton=", num_inflaton
           print*, "number_knots_qsfrandom=", number_knots_qsfrandom
           stop
@@ -293,7 +297,7 @@ module modpk_icsampling
               !DEBUG
               if (custom_knot_range) then
                 if (knot_range_min(i) .ge. knot_range_max(i)) then
-                  print*, "ERROR: set knot_range_min < knot_range_max"
+                  print*, "MODPK: set knot_range_min < knot_range_max"
                   print*, "knot_range_min =", knot_range_min
                   print*, "knot_range_max =", knot_range_max
                   stop
@@ -344,7 +348,7 @@ module modpk_icsampling
 
       !-----------------------------------------
       else
-        print*, "ERROR: Sampling technique hasn't been implemented."
+        print*, "MODPK: Sampling technique hasn't been implemented."
         stop
       end if
 
@@ -1073,7 +1077,7 @@ print*, new_measure
 
         y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
         if (any(isnan(y))) then
-          print*, "ERROR: y has a NaN in equal_displacement_ic."
+          print*, "MODPK: y has a NaN in equal_displacement_ic."
           stop
         end if
 
@@ -1586,7 +1590,7 @@ print*, new_measure
         end do; end do
 
       else
-        print*, "ERROR: param_sampling=", param_sampling, "is not supported."
+        print*, "MODPK: param_sampling=", param_sampling, "is not supported."
         stop
       end if
 

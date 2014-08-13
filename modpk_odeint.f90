@@ -109,8 +109,8 @@ contains
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
-         print*, "ERROR in odeint_r"
-         print*, "ERROR: y has a NaN value."
+         print*, "MODPK in odeint_r"
+         print*, "MODPK: y has a NaN value."
          print*, "E-fold",x
          print*, "nstp",nstp
          print*, "y", y
@@ -147,7 +147,7 @@ contains
         call get_stats(rstats,istats)
 
         if (istate<0) then
-          print*, "ERROR in dvode_f90 istate=", istate
+          print*, "MODPK in dvode_f90 istate=", istate
           stop
         end if
 
@@ -282,9 +282,9 @@ contains
         rtol = tech_opt%dvode_rtol_back
         atol = tech_opt%dvode_atol_back(1:neq)
       else
-        print*, "ERROR: initialize_dvode"
-        print*, "ERROR: accuracy_setting =", tech_opt%accuracy_setting
-        print*, "ERROR: is not supported."
+        print*, "MODPK: initialize_dvode"
+        print*, "MODPK: accuracy_setting =", tech_opt%accuracy_setting
+        print*, "MODPK: is not supported."
         stop
       end if
 
@@ -571,8 +571,8 @@ contains
    DO nstp=1,MAXSTP
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
-         print*, "ERROR in odeint_c"
-         print*, "ERROR: y has a NaN value."
+         print*, "MODPK in odeint_c"
+         print*, "MODPK: y has a NaN value."
          print*, "E-fold",x
          print*, "nstp",nstp
          print*, "y", y
@@ -606,7 +606,7 @@ contains
          call get_stats(rstats,istats)
 
          if (istate<0) then
-           print*, "ERROR in dvode_f90 istate=", istate
+           print*, "MODPK in dvode_f90 istate=", istate
            stop
          end if
 
@@ -1163,8 +1163,8 @@ contains
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
-         print*, "ERROR in odeint_r"
-         print*, "ERROR: y has a NaN value."
+         print*, "MODPK in odeint_r"
+         print*, "MODPK: y has a NaN value."
          print*, "E-fold",x
          print*, "nstp",nstp
          print*, "y", y

@@ -6,8 +6,9 @@ MODULE potential
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, getEps_with_t, d3Vdphi3, &
-       logP_of_observ, fisher_rao_metric
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, &
+       getEps_with_t, d3Vdphi3, &
+       logP_of_observ, fisher_rao_metric, guess_EOI_field
 
   public :: norm
   public :: bundle, field_bundle
@@ -105,7 +106,7 @@ CONTAINS
        c1_V = vparams(2,:)
        V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
      case(10)
-       print*, "ERROR: Potential_choice=", &
+       print*, "MODPK: Potential_choice=", &
          Potential_choice, "is broken."
        stop
     case(11)
@@ -179,7 +180,7 @@ CONTAINS
 
       !Check for /0 error
       if (any(abs(step_slope) < 1e-15)) then
-        print*, "ERROR: Set the slope in tanh(phi/step_slope) greater than 1e-15"
+        print*, "MODPK: Set the slope in tanh(phi/step_slope) greater than 1e-15"
         print*, "step_slope=", step_slope
         stop
       end if
@@ -366,7 +367,7 @@ CONTAINS
           m2_V = (vparams(1,:))
           first_deriv = m2_V*phi
        case(10)
-         print*, "ERROR: Potential_choice=", &
+         print*, "MODPK: Potential_choice=", &
            Potential_choice, "is broken."
          stop
 
@@ -613,7 +614,7 @@ CONTAINS
           m2_V = vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
-         print*, "ERROR: Potential_choice=", &
+         print*, "MODPK: Potential_choice=", &
            Potential_choice, "is broken."
          stop
 
@@ -879,7 +880,7 @@ CONTAINS
       end do
 
     case default
-      print*, "ERROR: d3Vdphi3 not defined for potential_choice =", &
+      print*, "MODPK: d3Vdphi3 not defined for potential_choice =", &
         potential_choice
       stop
     end select
@@ -952,8 +953,8 @@ CONTAINS
     getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
 
     if (getEps >=3.0e0_dp) then
-      print*, "ERROR: epsilon =", getEps, ">=3.0"
-      print*, "ERROR: in getEps"
+      print*, "MODPK: epsilon =", getEps, ">=3.0"
+      print*, "MODPK: in getEps"
     end if
 
     !END MULTIFIELD
@@ -1002,8 +1003,8 @@ CONTAINS
       dot_product(dphi,dphi)/hubble**2
 
     if (getEps_with_t >3.0e0_dp) then
-      print*, "ERROR: epsilon =", getEps_with_t, ">3.0"
-      print*, "ERROR: in getEps_with_t"
+      print*, "MODPK: epsilon =", getEps_with_t, ">3.0"
+      print*, "MODPK: in getEps_with_t"
       stop
     end if
     !END MULTIFIELD
@@ -2139,6 +2140,86 @@ dataset=dataset
 
 
   end subroutine inflation_sample
+
+  !Guess the end of inflation point of phi based off of the value of phi at
+  !the point where the pivot scale leaves the horizon and the heaviest field's
+  !EOI value.  Based off N-1 constants of motion in the SR limit.
+  function guess_EOI_field(phi_horizon, phi_end) result(guess)
+
+    real(dp), dimension(:) :: phi_horizon, phi_end
+    integer, dimension(1) :: heavy_index
+    real(dp) :: m2_V(size(phi_horizon)), p_exp
+    real(dp), dimension(size(phi_horizon)) :: guess
+    real(dp) :: phi_end_heavy, phi_piv_heavy
+    real(dp), dimension(1) :: temp_end, temp_piv, temp_hvy
+    integer :: ii
+    real(dp) :: expon, m_hvy
+
+    select case(potential_choice)
+
+    case(16)
+      ! (1/p) lambda_i |phi_i|^p --- N-monomial
+
+      p_exp = vparams(2,1)
+      m2_V = vparams(1,:)
+
+      !DEBUG
+      !phi_end = 0e0_dp
+
+
+      !Find heaviest field index
+      heavy_index = maxloc(m2_V)
+      temp_end = phi_end(heavy_index)
+      temp_piv = phi_horizon(heavy_index)
+      temp_hvy = m2_V(heavy_index)
+      phi_end_heavy = abs(temp_end(1))
+      phi_piv_heavy = abs(temp_piv(1))
+      m_hvy = temp_hvy(1)
+
+      print*, p_exp
+
+      !Find guess
+      if (abs(p_exp-2.0e0_dp) < 1.0e-6_dp) then
+        guess = 0e0_dp
+        do ii=1, size(phi_horizon)
+          guess(ii) = abs(phi_horizon(ii))*(phi_end_heavy/phi_piv_heavy)&
+            **(m2_V(ii)/m_hvy)
+        end do
+
+      else
+
+        expon = 2.0e0_dp - p_exp
+        do ii=1, size(phi_horizon)
+          guess(ii) = (abs(phi_horizon(ii))**expon - &
+            (m2_V(ii)/m_hvy)*(phi_piv_heavy**expon + phi_end_heavy**expon)) &
+            **(1.0e0_dp/expon)
+        end do
+
+      end if
+
+      !print*, "guess:"
+      !print*, guess
+
+      !print*, "real:"
+      !print*, phi_end
+
+
+      print*, "ratio:"
+      do ii=1, size(phi_end)
+        write(400,'(4e12.3)'), m2_V(ii)/m_hvy, abs(phi_end(ii)), abs(guess(ii)), abs(phi_horizon(ii))
+        write(*,'(4e12.3)'), m2_V(ii)/m_hvy, abs(phi_end(ii)), abs(guess(ii)), abs(phi_horizon(ii))
+      end do
+
+      stop
+
+    case default
+      print*, "MODPK: potential choice =", potential_choice, &
+        "not implemented in guess_EOI_field"
+      stop
+    end select
+
+  end function guess_EOI_field
+
 
 
 

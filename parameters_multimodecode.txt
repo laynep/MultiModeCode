@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
+  num_inflaton = 100
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.
@@ -23,7 +23,7 @@ sum-separable potentials.
 &analytical
   use_deltaN_SR = .true.
   use_horiz_cross_approx = .false.
-  evaluate_modes = .false.
+  evaluate_modes = .true.
 /
 
 ----------------
@@ -80,10 +80,10 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   use_first_priorval = .true.
 
   vp_prior_min(1,:) = 1.0e-14
-  vp_prior_min(2,:) = 2.0
+  vp_prior_min(2,:) = 1.5
 
   vp_prior_max(1,:) = 1.0e-13
-  vp_prior_max(2,:) = 2.0
+  vp_prior_max(2,:) = 1.5
 
   varying_N_pivot = .false.
 

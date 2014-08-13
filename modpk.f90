@@ -238,8 +238,8 @@ CONTAINS
     else if (tech_opt%accuracy_setting==-1) then
       accuracy=tech_opt%rk_accuracy_modes
     else
-      print*, "ERROR: accuracy_setting ==", tech_opt%accuracy_setting
-      print*, "ERROR: is not supported."
+      print*, "MODPK: accuracy_setting ==", tech_opt%accuracy_setting
+      print*, "MODPK: is not supported."
       stop
     end if
 

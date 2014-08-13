@@ -36,7 +36,6 @@ program multimodecode
   logical :: use_horiz_cross_approx
 
   integer :: pfile
-  character(len=32) :: pfile_name
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
@@ -125,7 +124,7 @@ program multimodecode
     end do
 
   else
-    print*, "ERROR: sampling technique",ic_sampling,"not implemented."
+    print*, "MODPK: sampling technique",ic_sampling,"not implemented."
     stop
   end if
 
@@ -545,6 +544,11 @@ program multimodecode
       call array_polint(lna(j:j+4), phiarr(:,j:j+4),&
         Npiv_renorm, phi_pivot, del_phi)
 
+      !DEBUG
+      print*, guess_EOI_field(phi_pivot, phi_end)
+      stop
+
+
       if (use_horiz_cross_approx) then
         HC_approx=.true.
       else
@@ -599,7 +603,7 @@ program multimodecode
 	    call init_random_seed()
 
       if (allocated(phi0_priors_max)) then
-        print*, "ERROR: Priors allocated before initialization."
+        print*, "MODPK: Priors allocated before initialization."
         stop
       else
         allocate(phi0_priors_max(num_inflaton))
@@ -613,8 +617,13 @@ program multimodecode
       end if
 
       if (save_iso_N) then
-        allocate(phi_iso_N(num_inflaton))
-        allocate(dphi_iso_N(num_inflaton))
+        if (allocated(phi_iso_N) .or. allocated(dphi_iso_N)) then
+          print*, "MODPK: Iso-N arrays already allocated."
+          stop
+        else
+          allocate(phi_iso_N(num_inflaton))
+          allocate(dphi_iso_N(num_inflaton))
+        endif
       end if
 
       !Read phi0 priors from file

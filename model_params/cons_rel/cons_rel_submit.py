@@ -6,9 +6,10 @@ import numpy as np
 
 p_list = [2.0, 1.0, 1.5]
 prior_list = ["unif", "log"]
-first_nf_list = [10, 25, 50, 75, 100]
+first_nf_list = [20, 60, 100]
 second_nf_list = [100, 250, 500, 750, 1000]
-approx_list = ["deltaN", "HCA"]
+#approx_list = ["deltaN", "HCA"]
+approx_list = ["deltaN"]
 
 range_unif = ["1.0e-14", "1.0e-13"]
 range_log = ["-14", "-12"]
@@ -115,7 +116,7 @@ for nf in first_nf_list:
         for approx in approx_list:
 
 	    newdir = "newrun_p%s_Nf%s_%s_%s" %(2.0,nf,prior,approx)
-	    sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL\/%s/g\" "%newdir + "slurm_job.sh"
+	    sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_SMALL\/%s/g\" "%newdir + "slurm_job.sh"
             run_cmd(sedcmd)
 
             modify_pfile(nf, prior, approx, p=2.0)
@@ -126,19 +127,19 @@ for nf in first_nf_list:
             #print submitcmd
             run_cmd(submitcmd)
 
-for nf in second_nf_list:
-    for prior in prior_list:
-        for approx in approx_list:
-            for p in p_list:
-
-	    	newdir = "newrun_p%s_Nf%s_%s_%s" %(p,nf,prior,approx)
-	    	sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL\/%s/g\" "%newdir + "slurm_job.sh"
-            	run_cmd(sedcmd)
-
-                modify_pfile(nf, prior, approx, p)
-
-                #Submit the jobs
-                submitcmd = ". ./submit.sh " + str(njobs)
-
-                #print submitcmd
-                run_cmd(submitcmd)
+#for nf in second_nf_list:
+#    for prior in prior_list:
+#        for approx in approx_list:
+#            for p in p_list:
+#
+#                newdir = "newrun_p%s_Nf%s_%s_%s" %(p,nf,prior,approx)
+#                sedcmd = "sed -i \"s/multifield.*/multifield\/NEWRUN_CONSREL_BIG\/%s/g\" "%newdir + "slurm_job.sh"
+#                run_cmd(sedcmd)
+#
+#                modify_pfile(nf, prior, approx, p)
+#
+#                #Submit the jobs
+#                submitcmd = ". ./submit.sh " + str(njobs)
+#
+#                #print submitcmd
+#                run_cmd(submitcmd)
