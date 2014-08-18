@@ -19,7 +19,7 @@ def scott_rule(sample):
     return nbins
 
 
-def hist_estimate_pdf(sample, observables=None, normed=True,
+def hist_estimate_pdf(sample, preproccess=False, observables=None, normed=True,
         nbins=None, bin_method=scott_rule, datarange=None):
     """Estimates the probability density function (PDF) of an N-dimensional sample by using a histogram.  Returns the bin counts and edges of the histogram bins.
 
@@ -27,20 +27,22 @@ def hist_estimate_pdf(sample, observables=None, normed=True,
 
     If observables is present, then it is a list of length N that describes which keys in the dictionaries of the sample are to be used in the estimation.  Use nbins to force the histogram to use this many bins; to use an automated "principled" approach, make sure nbins=None.  Set bin_method to determine how many bins to give the histogram; the default is scott_rule.  To give histogramdd a range, specify datarange for each dimension."""
 
-    if observables==None:
-        #Name the dimensions.  Alphabetize to maintain some ordering.
-        observables = sorted(sample[1].keys())
+    if preproccess==False:
 
-    #Focus on the dimensions that coincide with observables
-    #Matches ordering of observables
-    try:
-        if len(observables)==1:
-            sample = np.array([entries[key] for key in observables for entries in sample])
-        else:
-            sample = np.array([[entries[key] for key in observables] for entries in sample])
+        if observables==None:
+            #Name the dimensions.  Alphabetize to maintain some ordering.
+            observables = sorted(sample[1].keys())
 
-    except:
-        raise TypeError("The observables %s have given an error." %observables)
+        #Focus on the dimensions that coincide with observables
+        #Matches ordering of observables
+        try:
+            if len(observables)==1:
+                sample = np.array([entries[key] for key in observables for entries in sample])
+            else:
+                sample = np.array([[entries[key] for key in observables] for entries in sample])
+
+        except:
+            raise TypeError("The observables %s have given an error." %observables)
 
     #Make the histogram
     #try:

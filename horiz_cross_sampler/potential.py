@@ -16,7 +16,8 @@ def potential(phi, choice, **params):
         return 0.5*np.sum(params["m2"]*phi**2)
     elif choice == "Nmono":
         p = params["p"]
-        return (1.0/p)*np.sum(params["lambd"]*np.abs(phi)**p)
+        lambd = params["lambd"]
+        return (1.0/p)*np.sum(lambd*np.abs(phi)**p)
     else:
         check_choice(choice)
 
@@ -26,7 +27,8 @@ def dVdphi(phi,choice,**params):
         return params["m2"]*phi
     elif choice == "Nmono":
         p = params["p"]
-        return params["lambd"]*np.abs(phi)**(p-1)*np.sign(phi)
+        lambd = params["lambd"]
+        return lambd*np.abs(phi)**(p-1.0)*np.sign(phi)
     else:
         check_choice(choice)
 
@@ -37,7 +39,7 @@ def d2Vdphi2(phi,choice,**params):
     elif choice == "Nmono":
         p = params["p"]
         d2V = np.zeros((phi.size,phi.size))
-        d2V[np.diag_indices_from(d2V)] = (p-1.0)*params["lambd"]*np.abs(phi)**(p-2)
+        d2V[np.diag_indices_from(d2V)] = (p-1.0)*params["lambd"]*np.abs(phi)**(p-2.0)
         return d2V
     else:
         check_choice(choice)
@@ -49,7 +51,7 @@ def d3Vdphi3(phi,choice,**params):
     elif choice == "Nmono":
         p = params["p"]
         d3V = np.zeros((phi.size,phi.size,phi.size))
-        d3V[np.diag_indices_from(d3V)] = (p-1.0)*(p-2.0)*params["lambd"]*np.abs(phi)**(p-3)
+        d3V[np.diag_indices_from(d3V)] = (p-1.0)*(p-2.0)*params["lambd"]*np.abs(phi)**(p-3.0)
 
         return d3V
     else:
@@ -63,6 +65,6 @@ def V_i(phi, choice,**params):
         return 0.5*params["m2"]*phi**2
     elif choice == "Nmono":
         p = params["p"]
-        return (1.0/p)*params["lambd"]*phi**p
+        return (1.0/p)*params["lambd"]*np.abs(phi)**p
     else:
         check_choice(choice)

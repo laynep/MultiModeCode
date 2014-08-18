@@ -9,8 +9,12 @@ import mpi_routines as par
 import sys
 
 
-nfields= np.arange(2.0, 60.0, 1.0)
-p=1.5
+nfields= np.arange(100.0, 1000.0, 100.0)
+p=2.0/3.0
+
+sampler='log'
+#sampler='unif'
+#sampler='MP'
 
 low=-14
 high=-12
@@ -57,7 +61,7 @@ if mpi_size>1:
 output = {val:[] for val in obs_to_calc+other_params}
 for weight, f_numb in loop_params:
 
-    run = cosmo.Nmono_universe(sampler="log",HC_approx=True,
+    run = cosmo.Nmono_universe(sampler=sampler,HC_approx=True,
             model="Nmono", nfields=f_numb)
     radius = np.sqrt(2.0*p*run.N_pivot)
 
