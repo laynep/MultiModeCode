@@ -10,7 +10,7 @@ def init_parallel():
     try:
         from mpi4py import MPI
     except:
-        print "Error when importing mpi4py.  Continuing without parallelization."
+        raise Exception("Error when importing mpi4py.")
         return None, None, None, None
 
     #Processor data

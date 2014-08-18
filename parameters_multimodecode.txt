@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
+  num_inflaton = 100
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.
@@ -22,8 +22,8 @@ sum-separable potentials.
 
 &analytical
   use_deltaN_SR = .true.
-  use_horiz_cross_approx = .false.
-  evaluate_modes = .true.
+  use_horiz_cross_approx = .true.
+  evaluate_modes = .false.
 /
 
 ----------------
@@ -54,7 +54,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 6
-  numb_samples = 10
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -75,15 +75,15 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 2
+  param_sampling = 3
 
   use_first_priorval = .true.
 
-  vp_prior_min(1,:) = 1.0e-14
-  vp_prior_min(2,:) = 1.5
+  vp_prior_min(1,:) = -14
+  vp_prior_min(2,:) = 0.0
 
-  vp_prior_max(1,:) = 1.0e-13
-  vp_prior_max(2,:) = 1.5
+  vp_prior_max(1,:) = -12
+  vp_prior_max(2,:) = 0.0
 
   varying_N_pivot = .false.
 
@@ -184,7 +184,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%rk_accuracy_modes = 1.0e-7
   tech_opt%rk_accuracy_back = 1.0e-6
 
-  tech_opt%dvode_rtol_back = 1.0e-10
+  tech_opt%dvode_rtol_back = 1.0e-6
   tech_opt%dvode_rtol_modes = 1.0e-6
 
   tech_opt%dvode_atol_back = 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14
@@ -203,3 +203,4 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%dvode_atol_modes_imag(13:14) = 1e-8 1e-8
   tech_opt%dvode_atol_modes_imag(15:16) = 1e-3 1e-3
 /
+  tech_opt%dvode_rtol_back = 1.0e-10

@@ -652,7 +652,7 @@ contains
        !Increase accuracy requirements when not in SR
        if (tech_opt%accuracy_setting>0) then
          if (getEps(phi,delphi)>0.2e0_dp) then
-           eps_adjust=1e-12_dp
+           eps_adjust=1e-10_dp
            if (tech_opt%accuracy_setting==2) then
              if (getEps(phi,delphi)>0.9e0_dp) then
                eps_adjust=1e-16_dp

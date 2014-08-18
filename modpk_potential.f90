@@ -824,7 +824,7 @@ CONTAINS
 
          !Regularize around phi=0
          do ii=1,size(phi)
-           if (abs(phi(ii))<1e-10_dp) &
+           if (abs(phi(ii))<1e-5) &
              second_deriv(ii,ii)=0e0_dp
          end do
 

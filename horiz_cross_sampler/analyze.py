@@ -11,6 +11,8 @@ import processing
 import matplotlib.pyplot as plt
 import pyplotsetup
 
+import pandas as pd
+
 
 def parse_commandline():
     """Parse command line arguments to find the data files."""
@@ -34,7 +36,7 @@ def parse_commandline():
     return data_files
 
 
-def main():
+def process():
     """Program that loads the data, which was output from the horizon crossing sampler driver.py, from a file and analyzes it."""
 
     #Get the data file names from the command line (or default).
@@ -51,6 +53,37 @@ def main():
         myfile = open(fname,'r')
         data.append(cPickle.load(myfile))
         myfile.close()
+
+
+    output = {val:[] for val in data[0].keys()}
+    for row in data:
+        for val in output:
+            output[val].append(row[val])
+
+
+    for obs in output['observs'][0]:
+        output[obs]=[]
+
+
+    print output['observs'][0]
+    print output.keys()
+    for samp in output['sample']:
+        for item in samp:
+            for obs in output['observs'][0]:
+                #print item[obs]
+                #print obs
+                output[obs].append(item[obs])
+    #print output['sample'][0][0]
+    #print output['n_t']
+
+    #output = pd.DataFrame(output, columns=output.keys())
+
+    #output.save('simple_output'+str(nfields)+'.pkl')
+
+
+
+    sys.exit()
+
 
     #Find observables and parameters that were iterated over
     #Get default observable and (hyper)parameter names from analyze_params.py
@@ -100,6 +133,7 @@ def main():
         map(sample.pop, p1.fixed_params + p1.params_to_marginalize + ['observs'])
 
 
+
     #Make combined datasets based off non-marg. and non-fixed params
     #Results in dictionary with:
     #    key=tuple(unique non-marg parameters), value=(total sample)
@@ -117,7 +151,10 @@ def main():
         map(sample.pop, sample.keys())
 
 
+
+
     #Make histograms for each observable's PDF versus each hyperparameter
+
 
     #Sort bc in alphab order later
     fixed_range = [p1.obs_range[obs] for obs in sorted(p1.observs_tostudy)]
@@ -135,8 +172,8 @@ def main():
     fig = plt.figure(**pyplotsetup.figprops)
     fig.subplots_adjust(**pyplotsetup.adjustprops)
 
-    #color_map = plt.get_cmap('RdYlBu_r')
-    color_map = plt.get_cmap('Blues')
+    color_map = plt.get_cmap('RdYlBu_r')
+    #color_map = plt.get_cmap('Blues')
 
     ax1 = fig.add_subplot('111')
 
@@ -152,24 +189,24 @@ def main():
     #mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
 
     #Log
-    #x = np.linspace(2,200,100)
-    #y= (-1.0/8.0)*np.ones(100)*0.14545
-    #b = -10.0
-    #a = -14.0
-    #c = (b-a)/np.log(10.0)
-    #y2= (-1.0*c/16.0)*((10.0**b + 10.0**a)/(10.0**b-10.0**a))*np.ones(100)*0.14545
-    #sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
-    #mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
-
-    #Unif
-    x = np.linspace(2,10000,100)
-    y= (-1.0/8.0)*np.ones(100)*r
-    b = 1.0e-13
-    #a = 1.0e-14
-    a = 1.0e-16
-    y2= (-1.0/6.0)*((b**3-a**3)/(b-a)/(b+a)**2)*np.ones(100)*r
+    x = np.linspace(2,200,100)
+    y= (-1.0/8.0)*np.ones(100)*0.14545
+    b = -12.0
+    a = -14.0
+    c = (b-a)/np.log(10.0)
+    y2= (-1.0*c/16.0)*((10.0**b + 10.0**a)/(10.0**b-10.0**a))*np.ones(100)*0.14545
     sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
     mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
+
+    #Unif
+    #x = np.linspace(2,10000,100)
+    #y= (-1.0/8.0)*np.ones(100)*r
+    #b = 1.0e-13
+    ##a = 1.0e-14
+    #a = 1.0e-16
+    #y2= (-1.0/6.0)*((b**3-a**3)/(b-a)/(b+a)**2)*np.ones(100)*r
+    #sf_pred, = plt.plot(x,y, 'g--', linewidth=3.0, alpha=0.75)
+    #mf_pred, = plt.plot(x,y2, 'k-', linewidth=3.0, alpha=0.95)
 
     import scipy.special as sp
     #sig = r*0.148/np.sqrt(x)
@@ -184,6 +221,10 @@ def main():
     siglow_pred, = plt.plot(x,y3, 'k--', linewidth=1.0, alpha=0.75)
     sighigh_pred, = plt.plot(x,y4,'k--', linewidth=1.0, alpha=0.75)
 
+    import seaborn as sns
+
+    sns.set_style('darkgrid')
+
 
 
     plt.rc('legend',**{'fontsize':8})
@@ -194,12 +235,22 @@ def main():
             loc='upper right')
 
 
-    plt.imshow(plot_data.T, origin='lower', extent=extent, aspect='auto',
-            cmap=color_map, interpolation='nearest')
+    #plt.imshow(plot_data.T, origin='lower', extent=extent, aspect='auto',
+    #        cmap=color_map, interpolation='nearest')
+
+    plt.imshow(plot_data.T, origin='lower', extent=extent, aspect='auto')
 
     ax1.set_xlabel(r'$N_f$')
     ax1.set_ylabel(r'$n_t$')
 
+    plt.xlim(2,1100)
+
+
+    save=True
+    if save:
+        name = 'manyfield_log'
+        direct='/home/lpri691/LaTex/multifield_modecode/consistency_rel/plots/'
+        plt.savefig(direct+name+'.pdf')
 
 
 
@@ -207,4 +258,4 @@ def main():
 
 
 if __name__=="__main__":
-    main()
+    process()
