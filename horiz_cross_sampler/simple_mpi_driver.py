@@ -9,17 +9,30 @@ import mpi_routines as par
 import sys
 
 
-nfields= np.arange(100.0, 1000.0, 100.0)
-p=2.0/3.0
+#nfields= np.arange(2.0, 502.0, 100.0)
+nfields= np.arange(2.0, 3.0, 1.0)
 
-sampler='log'
-#sampler='unif'
-#sampler='MP'
+p=2.0
+#p=2.0/3.0
+#p=1.5
+#p=1.0
+#p=4.0
+#p=8.0
 
-low=-14
-high=-12
+#sampler='log'
+#sampler='uniform'
+sampler='MP'
 
-nsamples=2
+#low=-14
+#high=-12
+
+low=1e-14
+high=1e-13
+
+beta = 0.5
+m_avg=5e-7
+
+nsamples=1000
 
 obs_to_calc = ['n_t','r']
 
@@ -65,8 +78,13 @@ for weight, f_numb in loop_params:
             model="Nmono", nfields=f_numb)
     radius = np.sqrt(2.0*p*run.N_pivot)
 
-    sample_total = run.sample_Nmono_uniform(obs_to_calc, nsamples,
-            low, high, radius, weight, p)
+    if sampler=="MP":
+	nmoduli = nfields/beta
+    	sample_total = run.sample_Nmono_uniform(obs_to_calc, nsamples,
+    	        nmoduli, radius, m_avg, weight, p)
+    else:
+    	sample_total = run.sample_Nmono_uniform(obs_to_calc, nsamples,
+    	        low, high, radius, weight, p)
 
 
 
