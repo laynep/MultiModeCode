@@ -10,23 +10,24 @@ import scipy.special as sp
 import myplotting as my
 import sys
 
-def build_big_dataframe():
+def build_big_dataframe(fileroot):
 
     files = np.arange(0,100,1)
 
     data=[]
     for numb in files:
-        data_file = pd.load('./data/pandas/log_p0.66/output'+str(numb)+'.pkl')
-        data_file['n_t/r'] = pd.Series(data_file['n_t']/(data_file['p'][0]*4.0/55.0))
+        data_file = pd.load(fileroot+'output'+str(numb)+'.pkl')
+        #data_file['n_t/r'] = pd.Series(data_file['n_t']/(data_file['p'][0]*4.0/55.0))
+        data_file['n_t/r'] = pd.Series(data_file['n_t']/data_file['r'])
         data.append(data_file)
     data = pd.concat(data)
-    data.save('./data/pandas/log_p0.66/full_output.pkl')
+    data.save(fileroot+'full_output.pkl')
     print data
 
 
-def load_data():
+def load_data(fileroot):
 
-    data = pd.load('./data/pandas/log_p0.66/full_output.pkl')
+    data = pd.load(fileroot+'full_output.pkl')
 
     #print data['nfields']
     #data.sort('nfields')
@@ -85,8 +86,9 @@ def make_kde(data):
 
     kernel = stats.gaussian_kde(new_data)
 
-    #datarange = [[0,1100], [-0.45, -0.2] ]
-    datarange = [[0,1100], [-5, 5] ]
+    datarange = [[0,1100], [-0.45, -0.2] ]
+    #datarange = [[0,1100], [-5, 5] ]
+    #datarange = [[0,1100], [-2, -0.2] ]
 
     x, y = np.mgrid[
             datarange[0][0]:datarange[0][1]:20j,
@@ -204,12 +206,22 @@ def make_pred():
 
 def master():
 
-    #build_big_dataframe()
-    data = load_data()
+    #fileroot='./data/pandas/log_p1.5/'
+    #fileroot='./data/pandas/log_p0.66/'
+    #fileroot='./data/pandas/log_p2/'
+    #fileroot='./data/pandas/log_p1.0/'
+    #fileroot='./data/pandas/log_p4.0/'
+    #fileroot='./data/pandas/log_p8.0/'
+
+    fileroot='./data/pandas/unif_p0.66/'
+
+    build_big_dataframe(fileroot)
+    data = load_data(fileroot)
     fig, ax1 = make_plot()
 
     make_kde(data)
-    make_pred()
+    #make_hist(data)
+    #make_pred()
 
     plt.xlim(0,1100)
     plt.show()

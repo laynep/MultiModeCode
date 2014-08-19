@@ -46,7 +46,7 @@ class inflation_model:
 
         dV = self.dV(phi)
         V = self.V(phi)
-        return 0.5e0*(dV**2)/V**2
+        return 0.5*(dV**2)/V**2
 
     def eta_i(self, phi):
         """For sum-separable potentials, returns eta_i = d2V_ii**2/V"""
@@ -323,7 +323,7 @@ class Nmono_universe(deltaN_model):
         return m2, phi
 
     def unif_horizon_cross(self, radius, dimn_weight=None):
-        """For initial conditions, samples a sphere with given radius, with "geometrical" weighting on the N-sphere controlled by the parameters dimn_weighta.  With dimn_weight=1.0, does a uniform sampling of the sphere; with dimn_weight=0.0, places all of the points exactly on the pole defined by pole_axis."""
+        """For initial conditions, samples a sphere with given radius, with "geometrical" weighting on the N-sphere controlled by the parameters dimn_weight.  With dimn_weight=1.0, does a uniform sampling of the sphere; with dimn_weight=0.0, places all of the points exactly on the pole defined by pole_axis."""
         #dimn_weight is a dimensional weighting factor
         #Default to uniform weight/sampling
         if dimn_weight==None:

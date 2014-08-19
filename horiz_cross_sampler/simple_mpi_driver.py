@@ -21,7 +21,7 @@ p=2.0
 
 #sampler='log'
 #sampler='uniform'
-sampler='MP'
+sampler='MP_and_horizcross'
 
 #low=-14
 #high=-12
@@ -78,10 +78,10 @@ for weight, f_numb in loop_params:
             model="Nmono", nfields=f_numb)
     radius = np.sqrt(2.0*p*run.N_pivot)
 
-    if sampler=="MP":
-	nmoduli = nfields/beta
-    	sample_total = run.sample_Nmono_uniform(obs_to_calc, nsamples,
-    	        nmoduli, radius, m_avg, weight, p)
+    if sampler=='MP_and_horizcross':
+        nmoduli = nfields/beta
+        sample_total = run.sample_Nmono_MP(obs_to_calc, nsamples,
+            nmoduli, radius, m_avg, weight, p)
     else:
     	sample_total = run.sample_Nmono_uniform(obs_to_calc, nsamples,
     	        low, high, radius, weight, p)
