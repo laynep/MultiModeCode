@@ -9,8 +9,8 @@ import mpi_routines as par
 import sys
 
 
-#nfields= np.arange(2.0, 502.0, 100.0)
-nfields= np.arange(2.0, 3.0, 1.0)
+nfields= np.arange(2.0, 502.0, 100.0)
+#nfields= np.arange(2.0, 3.0, 1.0)
 
 p=2.0
 #p=2.0/3.0
@@ -34,7 +34,8 @@ m_avg=5e-7
 
 nsamples=1000
 
-obs_to_calc = ['n_t','r']
+#obs_to_calc = ['n_t','r']
+obs_to_calc = ['PR','ns','n_t']
 
 
 other_params = ['nfields', 'p', 'low', 'high']
