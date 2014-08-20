@@ -60,7 +60,7 @@ class inflation_model:
         dV = self.dV(phi)
         V = self.V(phi)
 
-        d3V = [d3V[i,i,i] for i in xrange(self.nfields)]
+        d3V = [d3V[i,i,i] for i in np.arange(self.nfields)]
 
         return dV*d3V/V**2
 

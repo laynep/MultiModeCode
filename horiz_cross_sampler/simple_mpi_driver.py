@@ -42,10 +42,11 @@ m_avg=5e-7
 nsamples=1000
 
 #obs_to_calc = ['n_t','r']
-obs_to_calc = ['PR','n_s','n_t']
+obs_to_calc = ['PR','alpha_s','n_s','n_t','r']
 
 
-other_params = ['nfields', 'p', 'low', 'high']
+#other_params = ['nfields', 'p', 'low', 'high']
+other_params = ['nfields', 'beta', 'm_avg']
 
 
 
@@ -99,9 +100,11 @@ for weight, f_numb in loop_params:
         for val in obs_to_calc:
             output[val].append(row[val])
         output['nfields'].append(int(f_numb))
-        output['p'].append(p)
-        output['low'].append(low)
-        output['high'].append(high)
+        #output['p'].append(p)
+        #output['low'].append(low)
+        #output['high'].append(high)
+        output['beta'].append(beta)
+        output['m_avg'].append(m_avg)
 
 
 output = pd.DataFrame(output, columns=obs_to_calc+other_params)
