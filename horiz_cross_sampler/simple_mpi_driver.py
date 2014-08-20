@@ -9,8 +9,15 @@ import mpi_routines as par
 import sys
 
 
-nfields= np.arange(2.0, 502.0, 100.0)
+#nfields= np.arange(2.0, 502.0, 100.0)
+nfields= np.arange(5.0, 500.0, 5.0)
 #nfields= np.arange(2.0, 3.0, 1.0)
+
+
+nfields = list(nfields)
+nfields.append(2.0)
+nfields = np.sort(np.array(nfields))
+
 
 p=2.0
 #p=2.0/3.0
@@ -35,7 +42,7 @@ m_avg=5e-7
 nsamples=1000
 
 #obs_to_calc = ['n_t','r']
-obs_to_calc = ['PR','ns','n_t']
+obs_to_calc = ['PR','n_s','n_t']
 
 
 other_params = ['nfields', 'p', 'low', 'high']
@@ -71,7 +78,6 @@ if mpi_size>1:
     #Scatter loop_params to all processes
     loop_params = mpi_comm.scatter(loop_params,root=0)
 
-
 output = {val:[] for val in obs_to_calc+other_params}
 for weight, f_numb in loop_params:
 
@@ -80,7 +86,7 @@ for weight, f_numb in loop_params:
     radius = np.sqrt(2.0*p*run.N_pivot)
 
     if sampler=='MP_and_horizcross':
-        nmoduli = nfields/beta
+        nmoduli = f_numb/beta
         sample_total = run.sample_Nmono_MP(obs_to_calc, nsamples,
             nmoduli, radius, m_avg, weight, p)
     else:
