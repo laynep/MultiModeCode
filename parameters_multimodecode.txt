@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
+  num_inflaton = 2
   potential_choice = 16
   vparam_rows = 2
   more_potential_params = .false.
@@ -54,7 +54,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 6
-  numb_samples = 1
+  numb_samples = 2
 
   energy_scale = .1
 

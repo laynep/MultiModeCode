@@ -30,6 +30,10 @@ module modpk_io
     logical :: first_spectraout = .true.
     logical :: first_fields_h_out = .true.
     logical :: first_fields_end_out = .true.
+    logical :: first_outsamp = .true.
+    logical :: first_outsamp_SR = .true.
+    logical :: first_outsamp_N_iso = .true.
+    logical :: first_outsamp_N_iso_SR = .true.
     logical :: first_modeout = .true.
 
     !Writing fmts

@@ -356,9 +356,11 @@ program multimodecode
           write(out_adiab,*) pk_arr(i,:)
           if(present(pk_iso_arr)) write(out_isoc,*) pk_iso_arr(i,:)
         end do
+
         write(*,*) "Adiab P(k) written to out_pk_adiab.txt"
         if (present(pk_iso_arr))&
           write(*,*) "Iso-P(k) written to out_pk_isocurv.txt"
+
       end if
 
     end subroutine output_observables
@@ -460,6 +462,7 @@ program multimodecode
       call test_bad(pk_bad, observs, leave)
       if (leave) return
 
+      !Calculate SR approximation for sum-separable potentials
       if (use_deltaN_SR) then
 
         call calculate_SR_observables(observs_SR)
@@ -514,6 +517,7 @@ program multimodecode
 
       end if
 
+      !Write output to stdout
       if (out_opt%modpkoutput) then
         if (evaluate_modes) then
           call output_observables(pk_arr,pk_iso_arr, &
@@ -528,16 +532,23 @@ program multimodecode
       !Only get the SR arrays if use_deltaN_SR
       !Only print observs if evaluated modes
       if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+
         if (evaluate_modes) then
-          if (sample_looper==1) &
+          if (out_opt%first_outsamp) then
             call observs%print_header(out_opt%outsamp)
+            out_opt%first_outsamp = .false.
+          end if
           call observs%printout(out_opt%outsamp)
         end if
+
         if (use_deltaN_SR) then
-          if (sample_looper==1) &
+          if (out_opt%first_outsamp_SR) then
             call observs%print_header(out_opt%outsamp_SR)
+            out_opt%first_outsamp_SR=.false.
+          end if
           call observs_SR%printout(out_opt%outsamp_SR)
         end if
+
       end if
 
       if (save_iso_N) then
@@ -549,16 +560,23 @@ program multimodecode
           observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
 
         if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+
           if (evaluate_modes) then
-            if (sample_looper==1) &
+            if (out_opt%outsamp_N_iso) then
               call observs%print_header(out_opt%outsamp_N_iso)
+              out_opt%outsamp_N_iso=.false.
+            end if
             call observs%printout(out_opt%outsamp_N_iso)
           end if
+
           if (use_deltaN_SR) then
-            if (sample_looper==1) &
+            if (out_opt%outsamp_N_iso_SR) then
               call observs%print_header(out_opt%outsamp_N_iso_SR)
+              out_opt%outsamp_N_iso_SR=.false.
+            end if
             call observs_SR%printout(out_opt%outsamp_N_iso_SR)
           end if
+
         end if
       end if
 
