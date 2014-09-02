@@ -71,106 +71,6 @@ MODULE modpkparams
 
 END MODULE modpkparams
 
-!Behold the beauty that is Fortran IO.
-module modpk_output
-  implicit none
-
-  type :: print_options
-
-    !Things to print
-    logical :: modpkoutput
-    logical :: output_reduced
-    logical :: save_traj
-    logical :: output_badic
-    logical :: fields_horiz
-    logical :: fields_end_infl
-    logical :: spectra
-    logical :: modes
-
-    !File unit numbers for output
-    integer :: trajout
-    integer :: spectraout
-    integer :: fields_h_out
-    integer :: fields_end_out
-    integer :: outsamp
-    integer :: outsamp_SR
-    integer :: outsamp_N_iso
-    integer :: outsamp_N_iso_SR
-    integer, dimension(4) :: modeout
-
-    !Writing fmts
-    character(16) :: e_fmt = '(a25, 900es12.4)'
-    character(36) :: e2_fmt = '(a25, es17.9, a3, es16.9, a1)'
-    character(16) :: i_fmt = '(a25,I3)'
-    character(16) :: array_fmt
-    character(len=2) :: ci
-
-    contains
-      procedure :: open_files => output_file_open
-      procedure :: formatting => make_formatting
-
-  end type
-
-  type(print_options) :: out_opt
-
-  contains
-
-    !Open output files
-    subroutine output_file_open(this,ICs,SR)
-      class(print_options) :: this
-      logical, intent(in), optional :: ICs, SR
-
-      if (this%save_traj) &
-        open(newunit=this%trajout, &
-          file="out_trajectory.txt")
-      if (this%spectra) &
-        open(newunit=this%spectraout, &
-          file="out_powerspectra.txt")
-      if (this%fields_horiz) &
-        open(newunit=this%fields_h_out, &
-          file="out_fields_horizon_cross.txt")
-      if (this%fields_end_infl) &
-        open(newunit=this%fields_end_out, &
-          file="out_fields_infl_end.txt")
-      if (this%modes) then
-        open(newunit=this%modeout(1), &
-          file="out_modes_1.txt")
-        open(newunit=this%modeout(2), &
-          file="out_modes_2.txt")
-        open(newunit=this%modeout(3), &
-          file="out_modes_3.txt")
-        open(newunit=this%modeout(4), &
-          file="out_modes_4.txt")
-      end if
-
-      if (present(ICs) .and. ICs) then
-        open(newunit=this%outsamp,&
-          file="out_ic_eqen.txt")
-        open(newunit=this%outsamp_N_iso,&
-          file="out_ic_isoN.txt")
-      end if
-
-      if (present(SR) .and. SR) then
-        open(newunit=this%outsamp_SR,&
-          file="out_ic_eqen_SR.txt")
-        open(newunit=this%outsamp_N_iso_SR,&
-          file="out_ic_isoN_SR.txt")
-      end if
-
-    end subroutine output_file_open
-
-    subroutine make_formatting(this, num_inflaton)
-      class(print_options) :: this
-      integer, intent(in) :: num_inflaton
-
-      write(this%ci, '(I2)'), num_inflaton
-      this%ci = adjustl(this%ci)
-      this%array_fmt = '(a25,'//trim(this%ci)//'es10.3)'
-
-    end subroutine make_formatting
-
-
-end module modpk_output
 
 MODULE ode_path
   use modpkparams, only : dp
@@ -206,6 +106,8 @@ END MODULE internals
 !Module that holds objects for observables, power spectra, etc
 module modpk_observables
   use modpkparams, only : dp, num_inflaton
+  use modpk_io, only : out_opt
+  use csv_file, only : csv_write
   implicit none
 
   integer*4 :: ik
@@ -279,6 +181,7 @@ module modpk_observables
     real(dp) :: tau_NL
     contains
       procedure :: printout => ic_print_observables
+      procedure :: print_header => ic_print_headers
       procedure :: set_zero => set_observs_to_zero
       procedure :: set_finite_diff => calculate_observs_finitediff
   end type observables
@@ -313,6 +216,33 @@ module modpk_observables
 
     end subroutine kahan_clear_mem
 
+    !Write the cosmo observables headers to file
+    subroutine ic_print_headers(this, outunit)
+      class(observables) :: this
+      integer, intent(in) :: outunit
+
+      character(1024) :: cname
+      integer :: ii
+
+      !First columns for IC
+      do ii=1,size(this%ic)
+        write(cname, "(A3,I4.4)") "phi_piv", ii
+        call csv_write(&
+          outunit,&
+          trim(cname), &
+          advance=.false.)
+      end do
+
+      !Remaining columns
+      call csv_write(outunit,&
+        (/'As', 'ns', 'r', 'nt', 'alpha_s', &
+          'A_iso', 'A_pnad', 'A_ent', 'A_bundle', &
+          'n_iso', 'n_pnad', 'n_ent', &
+          'A_cross', 'f_NL', 'tau_NL'/),&
+        advance=.true.)
+
+    end subroutine ic_print_headers
+
 
     !Print the cosmo observables to file
     subroutine ic_print_observables(this, outunit)
@@ -320,15 +250,9 @@ module modpk_observables
       class(observables) :: this
       integer, intent(in) :: outunit
 
-      if (num_inflaton*2 +12 > 120000) then
-        print*, "Don't be silly."
-        print*, "Too many fields to print out properly."
-        print*, "Fix formatting."
-        stop
-      end if
 
-      write(outunit, '(120000E18.10)') &
-        this%ic(:), &
+      call csv_write(outunit,&
+        (/ this%ic(:), &
         this%As, &
         this%ns,&
         this%r, &
@@ -343,7 +267,8 @@ module modpk_observables
         this%n_ent, &
         this%A_cross_ad_iso, &
         this%f_NL, &
-        this%tau_NL
+        this%tau_NL /), &
+        advance=.true.)
 
     end subroutine ic_print_observables
 

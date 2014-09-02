@@ -1,90 +1,42 @@
-
-#Files containing evolution equations initial power spectrum module
-EQUATIONS     = equations
-POWERSPECTRUM = power_tilt
-REIONIZATION = reionization
-RECOMBINATION = recfast
-MODULES = modules
-CMBMAIN = cmbmain
-CAMBFILE = camb
-
-#Module doing non-linear scaling
-NONLINEAR     = halofit
-
-#Driver program
-DRIVER        = inidriver.F90
-#DRIVER        = sigma8.f90
-#DRIVER        = tester.f90
-
 #Driver for standalone P(k) code
 #PKDRIVER	= driver_modpk.f90
 PKDRIVER	= multimodecode_driver.f90
 
-CAMBLIB       = libcamb.a
-
-#Shouldn't need to change anything else...
 
 F90FLAGS      = $(FFLAGS)
-HEALPIXLD     = -L$(HEALPIXDIR)/lib -lhealpix -L$(FITSDIR) -l$(FITSLIB)
 
-CAMBOBJ       = constants.o utils.o subroutines.o inifile.o \
-	$(POWERSPECTRUM).o $(RECOMBINATION).o $(REIONIZATION).o $(MODULES).o \
-	bessels.o $(EQUATIONS).o $(NONLINEAR).o lensing.o $(CMBMAIN).o $(CAMBFILE).o
-
-MODPKOBJ = dvode_f90_m.o modpk_modules.o modpk_numerics.o \
+MODPKOBJ = dvode_f90_m.o \
+					 csv_file.o \
+					 modpk_io.o \
+					 modpk_modules.o modpk_numerics.o \
 					 modpk_qsf.o modpk_rng.o \
   				 modpk_potential.o modpk_icsampling.o \
 					 modpk_utils.o  modpk_odeint.o \
 					 modpk_backgrnd.o modpk.o # modpk_postprocessing.o
 
+
 default: powspec
-#default: camb
 
-all: camb $(CAMBLIB) powspec
-
-subroutines.o: constants.o utils.o
-$(POWERSPECTRUM).o: subroutines.o  inifile.o
-$(RECOMBINATION).o: subroutines.o inifile.o
-$(REIONIZATION).o: constants.o inifile.o
-$(MODULES).o: $(REIONIZATION).o $(RECOMBINATION).o $(POWERSPECTRUM).o
-bessels.o: $(MODULES).o
-$(EQUATIONS).o: bessels.o
-$(NONLINEAR).o:  $(MODULES).o
-lensing.o: bessels.o
-$(CMBMAIN).o: lensing.o $(NONLINEAR).o $(EQUATIONS).o
-$(CAMBFILE).o: $(CMBMAIN).o
-
-
-modpk_modules.o: modpk_modules.f90
+csv_file.o: csv_file.f90 csv_file_1d.f90 csv_file_2d.f90
+modpk_io.o: modpk_io.f90 csv_file.o
+modpk_modules.o: modpk_modules.f90 csv_file.o modpk_io.o
 modpk_numerics.o: modpk_numerics.f90 modpk_modules.o
 modpk_qsf.o: modpk_qsf.f90 modpk_modules.o modpk_numerics.o
 modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o
 modpk_rng.o: modpk_modules.o modpk_rng.f90
 modpk_icsampling.o: modpk_modules.o modpk_potential.o modpk_rng.o modpk_icsampling.f90
 modpk_utils.o: modpk_modules.o modpk_potential.o modpk_icsampling.o modpk_utils.f90
-modpk_odeint.o:  modpk_modules.o modpk_potential.o modpk_icsampling.o \
- 	modpk_utils.o dvode_f90_m.o modpk_odeint.f90 
+modpk_odeint.o:  modpk_modules.o modpk_io.o modpk_io.o modpk_potential.o modpk_icsampling.o \
+ 	modpk_utils.o dvode_f90_m.o modpk_odeint.f90
 modpk_backgrnd.o: modpk_odeint.o modpk_backgrnd.f90
 modpk.o: modpk_backgrnd.o modpk.f90
 dvode_f90_m.o: dvode_f90_m.f90
-
-camb: $(MODPKOBJ) $(CAMBOBJ) $(DRIVER)
-	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(CAMBOBJ) $(DRIVER) -o $@
-
-$(CAMBLIB): $(MODPKOBJ) $(CAMBOBJ)
-	ar -r $@ $?
-
-camb_fits: writefits.f90 $(CAMBOBJ) $(DRIVER)
-	$(F90C) $(F90FLAGS) -I$(HEALPIXDIR)/include $(CAMBOBJ) writefits.f90 $(DRIVER) $(HEALPIXLD) -DWRITE_FITS -o $@
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
 	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER) -o $@
 
 %.o %.mod: %.f90
 	$(F90C) $(F90FLAGS) -c $*.f90
-
-utils.o:
-	$(F90C) $(F90FLAGS) -c utils.F90	
 
 clean: cleanoutput
 	-rm -f *.o *.a *.d core *.mod
@@ -104,5 +56,3 @@ cleanoutput:
 	-rm out_ic_eqen_SR.txt
 	-rm out_ic_isoN.txt
 	-rm out_ic_isoN_SR.txt
-
-

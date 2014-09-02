@@ -7,14 +7,15 @@ program multimodecode
   use access_modpk, only : evolve, potinit
   use internals
   use modpk_icsampling
-  use modpk_output, only : out_opt
+  use modpk_io, only : out_opt
   use modpk_deltaN_SR
   use modpk_observables, only : observables
+  use csv_file, only : csv_write
 
   implicit none
 
   !Run-specific input params
-  integer :: i, vparam_rows
+  integer :: sample_looper, vparam_rows
 
   !Parallel variables
   integer :: numtasks, rank
@@ -110,12 +111,12 @@ program multimodecode
     !Initialize the sampler
     call init_sampler(icpriors_min, icpriors_max)
 
-    do i=1,numb_samples
+    do sample_looper=1,numb_samples
 
       if (out_opt%modpkoutput) write(*,*) &
         "---------------------------------------------"
       if (out_opt%modpkoutput) write(*,*) &
-        "Sample numb", i, "of", numb_samples
+        "Sample numb", sample_looper, "of", numb_samples
       if (out_opt%modpkoutput) write(*,*) &
         "---------------------------------------------"
 
@@ -386,6 +387,9 @@ program multimodecode
       type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
       type(observables) :: observs, observs_SR
 
+      character(1024) :: cname
+      integer :: ii
+
       pk_bad=0
       leave = .false.
 
@@ -420,8 +424,38 @@ program multimodecode
       call potinit
 
       !For outputting field values at horiz crossing
-      if (out_opt%fields_horiz) &
-        write(out_opt%fields_h_out,'(1000E28.20)') k, phi_pivot
+      if (out_opt%fields_horiz) then
+
+        if (out_opt%first_fields_h_out) then
+
+          !First column
+          call csv_write(out_opt%fields_h_out,&
+            'k',&
+            advance=.false.)
+
+          !Next num_inflaton columns
+          do ii=1,num_inflaton
+            write(cname, "(A3,I4.4)") "phi_piv", ii
+            if (ii==num_inflaton) then
+              call csv_write(&
+                out_opt%fields_h_out,&
+                trim(cname), &
+                advance=.true.)
+            else
+              call csv_write(&
+                out_opt%fields_h_out,&
+                trim(cname), &
+                advance=.false.)
+            end if
+          end do
+
+          out_opt%first_fields_h_out = .false.
+        end if
+
+        call csv_write(out_opt%fields_h_out,&
+          (/k, phi_pivot/),&
+          advance=.true.)
+      end if
 
       call test_bad(pk_bad, observs, leave)
       if (leave) return
@@ -494,10 +528,16 @@ program multimodecode
       !Only get the SR arrays if use_deltaN_SR
       !Only print observs if evaluated modes
       if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-        if (evaluate_modes) &
+        if (evaluate_modes) then
+          if (sample_looper==1) &
+            call observs%print_header(out_opt%outsamp)
           call observs%printout(out_opt%outsamp)
-        if (use_deltaN_SR) &
+        end if
+        if (use_deltaN_SR) then
+          if (sample_looper==1) &
+            call observs%print_header(out_opt%outsamp_SR)
           call observs_SR%printout(out_opt%outsamp_SR)
+        end if
       end if
 
       if (save_iso_N) then
@@ -509,10 +549,16 @@ program multimodecode
           observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
 
         if (out_opt%output_badic .or. pk_bad/=bad_ic) then
-          if (evaluate_modes) &
+          if (evaluate_modes) then
+            if (sample_looper==1) &
+              call observs%print_header(out_opt%outsamp_N_iso)
             call observs%printout(out_opt%outsamp_N_iso)
-          if (use_deltaN_SR) &
+          end if
+          if (use_deltaN_SR) then
+            if (sample_looper==1) &
+              call observs%print_header(out_opt%outsamp_N_iso_SR)
             call observs_SR%printout(out_opt%outsamp_N_iso_SR)
+          end if
         end if
       end if
 

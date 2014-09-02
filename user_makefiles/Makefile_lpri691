@@ -2,7 +2,7 @@
 ifdef GFORTRAN
 
 F90C     = gfortran
-FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8 # -fdefault-real-8
+FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8
 
 ifdef DEBUG
 F90C     = gfortran

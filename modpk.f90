@@ -1,7 +1,7 @@
 MODULE access_modpk
   use modpkparams, only : dp
   USE camb_interface
-  use modpk_output, only : out_opt
+  use modpk_io, only : out_opt
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: potinit, evolve, total_efold

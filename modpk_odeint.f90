@@ -4,7 +4,8 @@ MODULE modpk_odeint
   use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
-  use modpk_output, only : out_opt
+  use modpk_io, only : out_opt
+  use csv_file, only : csv_write
   implicit none
 
   interface odeint
@@ -324,15 +325,76 @@ contains
     end subroutine initialize_dvode
 
     subroutine print_traj()
-       write(out_opt%trajout,'(100E18.10)'),&
-         x, &
-         y(:), &
-         pot(y(1:num_inflaton)),&
-         getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-         dVdphi(y(1:num_inflaton)), &
-         d2Vdphi2(y(1:num_inflaton))
+      integer :: ii
+      character(1024) :: cname
+      logical :: adv
+
+      !Write the column header
+      if (out_opt%first_trajout) then
+
+        !First column
+        call csv_write(&
+          out_opt%trajout,&
+          'N', &
+          advance=.false.)
+
+        !Next num_inflaton columns
+        do ii=1,num_inflaton
+          write(cname, "(A3,I4.4)") "phi", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=.false.)
+        end do
+
+        do ii=1,num_inflaton
+          write(cname, "(A4,I4.4)") "dphi", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=.false.)
+        end do
+
+        call csv_write(&
+          out_opt%trajout,&
+          (/'V', 'eps','H','eta'/), &
+          advance=.false.)
+
+        do ii=1,num_inflaton
+          write(cname, "(A2,I4.4)") "dV", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=.false.)
+        end do
+
+        !Advance here
+        do ii=1,2*num_inflaton
+          if (ii==2*num_inflaton) then
+            adv=.true.
+          else
+            adv=.false.
+          end if
+          write(cname, "(A3,I4.4)") "d2V", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=adv)
+        end do
+
+        out_opt%first_trajout = .false.
+      end if
+
+      !Write the trajectory
+      write(out_opt%trajout,'(100E18.10)'),&
+        x, &
+        y(:), &
+        pot(y(1:num_inflaton)),&
+        getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        dVdphi(y(1:num_inflaton)), &
+        d2Vdphi2(y(1:num_inflaton))
     end subroutine print_traj
 
     subroutine check_for_eternal_inflation
@@ -529,6 +591,9 @@ contains
     real(dp), dimension(:), allocatable :: atol, atol_real, atol_compl
     type (vode_opts) :: ode_integrator_opt
 
+    character(1024) :: cname
+
+
     !DEBUG
     !for two-knot QSF trajectory
     real(dp) :: a_turn1, N_turn1, H_turn1, phi_test
@@ -710,8 +775,45 @@ contains
             IF (save_steps) CALL save_a_step
 
             !For outputting field values
-            if (out_opt%fields_end_infl) &
-              write(out_opt%fields_end_out,'(500E28.20)') k, phi
+            if (out_opt%fields_end_infl) then
+              !Make header column
+
+              if (out_opt%first_fields_end_out) then
+
+                !First column
+                call csv_write(out_opt%fields_end_out,&
+                  'k',&
+                  advance=.false.)
+
+                !Next num_inflaton columns
+                do ii=1,num_inflaton
+                  write(cname, "(A3,I4.4)") "phi_piv", ii
+                  if (ii==num_inflaton) then
+                    call csv_write(&
+                      out_opt%fields_end_out,&
+                      trim(cname), &
+                      advance=.true.)
+                  else
+                    call csv_write(&
+                      out_opt%fields_end_out,&
+                      trim(cname), &
+                      advance=.false.)
+                  end if
+                end do
+
+                out_opt%first_fields_end_out = .false.
+
+              end if
+
+              !Write data
+              call csv_write(out_opt%fields_end_out,&
+                (/k, phi/),&
+                advance=.true.)
+            end if
+
+            !!For outputting field values
+            !if (out_opt%fields_end_infl) &
+            !  write(out_opt%fields_end_out,'(500E28.20)') k, phi
 
             RETURN
           END IF
@@ -756,21 +858,104 @@ contains
 
     subroutine print_modes()
 
-         if (.not. use_q) then
-           write(out_opt%modeout(1),'(100E30.22)') &
-             x - (n_tot - N_pivot), &
-             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-           write(out_opt%modeout(2),'(100E30.22)') &
-             x - (n_tot - N_pivot),&
-             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-         else
-           write(out_opt%modeout(3),'(100E30.22)') &
-             x - (n_tot - N_pivot), &
-             real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-           write(out_opt%modeout(4),'(100E30.22)') &
-             x - (n_tot - N_pivot),&
-             aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
-         end if
+      character(1024) :: cname
+      integer :: ii
+
+      !Make column headers
+      if (out_opt%first_modeout) then
+        out_opt%first_modeout = .false.
+
+        !First column --- reals
+        call csv_write(out_opt%modeout(1),&
+          'N',&
+          advance=.false.)
+        call csv_write(out_opt%modeout(3),&
+          'N',&
+          advance=.false.)
+
+        !Next num_inflaton columns
+        do ii=index_ptb_y,index_ptb_vel_y-1
+          write(cname, "(A8,I4.4)") "Re[mode]", ii
+          if (ii==index_ptb_vel_y-1) then
+            call csv_write(&
+              out_opt%modeout(1),&
+              trim(cname), &
+              advance=.true.)
+          else
+            call csv_write(&
+              out_opt%modeout(1),&
+              trim(cname), &
+              advance=.false.)
+          end if
+
+          write(cname, "(A9,I4.4)") "Re[qmode]", ii
+          if (ii==index_ptb_vel_y-1) then
+            call csv_write(&
+              out_opt%modeout(3),&
+              trim(cname), &
+              advance=.true.)
+          else
+            call csv_write(&
+              out_opt%modeout(3),&
+              trim(cname), &
+              advance=.false.)
+          end if
+        end do
+
+        !First column --- imags
+        call csv_write(out_opt%modeout(2),&
+          'N',&
+          advance=.false.)
+        call csv_write(out_opt%modeout(4),&
+          'N',&
+          advance=.false.)
+
+        !Next num_inflaton columns
+        do ii=index_ptb_y,index_ptb_vel_y-1
+          write(cname, "(A8,I4.4)") "Im[mode]", ii
+          if (ii==index_ptb_vel_y-1) then
+            call csv_write(&
+              out_opt%modeout(2),&
+              trim(cname), &
+              advance=.true.)
+          else
+            call csv_write(&
+              out_opt%modeout(2),&
+              trim(cname), &
+              advance=.false.)
+          end if
+
+          write(cname, "(A9,I4.4)") "Im[qmode]", ii
+          if (ii==index_ptb_vel_y-1) then
+            call csv_write(&
+              out_opt%modeout(4),&
+              trim(cname), &
+              advance=.true.)
+          else
+            call csv_write(&
+              out_opt%modeout(4),&
+              trim(cname), &
+              advance=.false.)
+          end if
+        end do
+
+      end if
+
+      if (.not. use_q) then
+        write(out_opt%modeout(1),'(100E30.22)') &
+          x - (n_tot - N_pivot), &
+          real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+        write(out_opt%modeout(2),'(100E30.22)') &
+          x - (n_tot - N_pivot),&
+          aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+      else
+        write(out_opt%modeout(3),'(100E30.22)') &
+          x - (n_tot - N_pivot), &
+          real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+        write(out_opt%modeout(4),'(100E30.22)') &
+          x - (n_tot - N_pivot),&
+          aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+      end if
 
     end subroutine print_modes
 
@@ -936,13 +1121,7 @@ contains
 
       !Record spectrum
       if (out_opt%spectra) then
-        write(out_opt%spectraout,'(100E27.20)') &
-          x - (n_tot - N_pivot), &
-          power_internal%adiab, &
-          power_internal%isocurv,&
-          power_internal%entropy, &
-          power_internal%pnad, &
-          power_internal%tensor
+        call write_spectra()
       end if
 
       if (compute_zpower) then  !! compute only once upon horizon exit
@@ -957,6 +1136,30 @@ contains
       !END MULTIFIELD
 
     end subroutine evaluate_powerspectra
+
+    subroutine write_spectra()
+
+      !Write the column header
+      if (out_opt%first_spectraout) then
+
+        call csv_write(&
+          out_opt%spectraout,&
+          (/'N', 'P_ad', 'P_iso', 'P_ent', 'P_nad', 'P_tens'/), &
+          advance=.true.)
+
+        out_opt%first_spectraout = .false.
+      end if
+
+      call csv_write(out_opt%spectraout,&
+        (/ x - (n_tot - N_pivot), &
+          power_internal%adiab, &
+          power_internal%isocurv,&
+          power_internal%entropy, &
+          power_internal%pnad, &
+          power_internal%tensor/),&
+        advance=.true.)
+
+    end subroutine write_spectra
 
     subroutine check_inflation_ended_properly_MODES()
 
@@ -1132,6 +1335,7 @@ contains
     real(dp) :: infl_efolds, infl_efolds_start
     logical :: infl_checking, stability
     real(dp) :: Nefolds
+
 
     !Don't save_steps, bc interfere with N-integrator
     !DEBUG
