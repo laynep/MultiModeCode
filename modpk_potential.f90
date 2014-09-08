@@ -102,8 +102,8 @@ CONTAINS
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
-         print*, "Potential_choice =", Potential_choice
-         print*, "Number of fields =", size(phi)
+         print*, "MODPK: Potential_choice =", Potential_choice
+         print*, "MODPK: Number of fields =", size(phi)
          call raise%fatal_cosmo(&
              "This potential requires two fields.  &
              Set num_inflaton=2.", &
@@ -200,7 +200,7 @@ CONTAINS
 
       !Check for /0 error
       if (any(abs(step_slope) < 1e-15)) then
-        print*, "step_slope=", step_slope
+        print*, "MODPK: step_slope=", step_slope
         call raise%fatal_code(&
           "This is a division by zero error.  &
           Set the slope in tanh(phi/step_slope) greater than about 1e-15.",&
@@ -247,10 +247,10 @@ CONTAINS
       !Check not getting too far off line
       if (dist >5e-1_dp) then
       !if (dist >1e0_dp) then
-        print*, "QSF: dist =", dist
-        print*, "QSF: param_closest =", param_closest
-        print*, "QSF: phi =", phi
-        print*, "QSF: turning_function_parametric =", &
+        print*, "MODPK: dist =", dist
+        print*, "MODPK: param_closest =", param_closest
+        print*, "MODPK: phi =", phi
+        print*, "MODPK: turning_function_parametric =", &
           turning_function_parametric(param_closest)
 
         call raise%fatal_cosmo(&
@@ -268,12 +268,12 @@ CONTAINS
       !DEBUG
       if (param_closest < param0 .or. &
         phi_light > qsf_runref%phi_light_vs_param(size(qsf_runref%phi_light_vs_param,1),1)) then
-        print*, "param_closest = ", param_closest
-        print*, "phi = ", phi
-        print*, "phi_light = ", phi_light
-        print*, "qsf_runref%param = ", qsf_runref%param
-        print*, "dist = ", dist
-        print*, "dist2 = ", distance(4.0e0_dp)
+        print*, "MODPK: param_closest = ", param_closest
+        print*, "MODPK: phi = ", phi
+        print*, "MODPK: phi_light = ", phi_light
+        print*, "MODPK: qsf_runref%param = ", qsf_runref%param
+        print*, "MODPK: dist = ", dist
+        print*, "MODPK: dist2 = ", distance(4.0e0_dp)
         stop
       end if
 
@@ -310,7 +310,7 @@ CONTAINS
 
 
     case default
-      print*, "potential_choice =", potential_choice
+      print*, "MODPK: potential_choice =", potential_choice
       call raise%fatal_code(&
           "Need to set the potential V(phi) for this potential choice.",&
           __FILE__, __LINE__)
@@ -583,7 +583,7 @@ CONTAINS
        !END MULTIFIELD
        case default
 
-         print*, "potential_choice =", potential_choice
+         print*, "MODPK: potential_choice =", potential_choice
          call raise%fatal_code(&
            "Need to set first derivative for this potential choice &
            or use numerical derivatives (vnderivs=.true.)",&
@@ -951,7 +951,7 @@ CONTAINS
 
        case default
 
-         print*, "potential_choice =", potential_choice
+         print*, "MODPK: potential_choice =", potential_choice
          call raise%fatal_code(&
            "Need to set second_deriv for this potential choice.",&
             __FILE__, __LINE__)
@@ -1006,7 +1006,7 @@ CONTAINS
 
     case default
 
-      print*, "potential_choice =", potential_choice
+      print*, "MODPK: potential_choice =", potential_choice
       call raise%fatal_code(&
         "Need to set third derivative for this potential choice.",&
         __FILE__, __LINE__)

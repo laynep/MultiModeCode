@@ -309,8 +309,8 @@ module modpk_icsampling
               !DEBUG
               if (custom_knot_range) then
                 if (knot_range_min(i) .ge. knot_range_max(i)) then
-                  print*, "knot_range_min =", knot_range_min
-                  print*, "knot_range_max =", knot_range_max
+                  print*, "MODPK: knot_range_min =", knot_range_min
+                  print*, "MODPK: knot_range_max =", knot_range_max
 
                   call raise%fatal_code(&
                     "The knot_range_min > knot_range_max.",&
@@ -660,10 +660,13 @@ print*, new_measure
                 if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
               end if
               if (ll==maxtry) then
-                print*, "    Energy overrun =", rho_not_alloc
-                print*, "    E**4 =", energy_scale**4
-                print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "    PE =", pot(phi)
+                print*, "MODPK: Energy overrun =", rho_not_alloc
+                print*, "MODPK: E**4 =", energy_scale**4
+                print*, "MODPK: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODPK: PE =", pot(phi)
+                call raise%warning(&
+                  "Energy overrun when setting initial conditions with equal &
+                  energy prior", __FILE__, __LINE__)
                 exit
               end if
               cycle
@@ -688,10 +691,13 @@ print*, new_measure
 	      	  if (rho_not_alloc<1e-25_dp) then
               print*, "IC off shell ------------- cycling", ll
               if (ll==maxtry) then
-                print*, "    Energy overrun =", rho_not_alloc
-                print*, "    E**4 =", energy_scale**4
-                print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "    PE =", pot(phi)
+                print*, "MODPK: Energy overrun =", rho_not_alloc
+                print*, "MODPK: E**4 =", energy_scale**4
+                print*, "MODPK: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODPK: PE =", pot(phi)
+                call raise%warning(&
+                  "Energy overrun when setting initial conditions with equal &
+                  energy prior", __FILE__, __LINE__)
                 exit
               end if
               cycle

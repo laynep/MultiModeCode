@@ -411,7 +411,8 @@ CONTAINS
        !Errors if use xnew==x, as one might expect
        !if (xnew == x) then
        if (abs(h)<1e-30_dp) then
-          print*, 'stepsize underflow in rkqs_r'
+         call raise%warning('Stepsize underflow in rkqs_r',&
+           __FILE__, __LINE__)
           ode_underflow = .true.
           return
        endif
@@ -482,7 +483,8 @@ CONTAINS
        !Errors if use xnew==x, as one might suspect
        !if (xnew == x) then
        if (abs(h)<1e-30_dp) then
-          print*, 'stepsize underflow in rkqs_c'
+         call raise%warning('Stepsize underflow in rkqs_c',&
+           __FILE__, __LINE__)
           ode_underflow = .true.
           return
        endif

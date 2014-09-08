@@ -148,14 +148,22 @@ CONTAINS
 
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
-          if (out_opt%modpkoutput) write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
-          if (out_opt%modpkoutput) write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
+          if (out_opt%modpkoutput) then
+            write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
+            call raise%warning(&
+              'Not enough efolds obtained. Please adjust your initial value.',&
+              __FILE__, __LINE__)
+          end if
           pk_bad = 6
           return
 
        else if ((alpha_e - lna(1)) .gt. Nefold_max) then
 
-          if (out_opt%modpkoutput) write(*, *) 'MODPK: Too many efolds obtained. Please rescale your initial value'
+          if (out_opt%modpkoutput) then
+            call raise%warning(&
+              'Too many efolds obtained. Please rescale your initial value.',&
+              __FILE__, __LINE__)
+          end if
           pk_bad = 6
           !return
        end if
@@ -183,7 +191,9 @@ CONTAINS
           if (save_iso_N) then
             alpha_iso_N = alpha_e - N_iso_ref
             if (alpha_iso_N<0e0_dp) then
-              print*, "alpha_iso_N=",alpha_iso_N,"<0"
+              if (out_opt%modpkoutput) then
+                print*, "MODPK: alpha_iso_N=",alpha_iso_N,"<0"
+              end if
               pk_bad=bad_ic
               return
             end if
@@ -491,11 +501,12 @@ CONTAINS
 
              !Check if didn't get enough e-folds
              if (lna(kount) < N_pivot) then
-               print*
-               if (out_opt%modpkoutput)&
-                 write(*, *) 'MODPK: Not enough efolds obtained. Please adjust your initial value'
-               if (out_opt%modpkoutput)&
+               if (out_opt%modpkoutput) then
                  write(*, *), "MODPK: lna(kount) - lna(1) =", lna(kount) - lna(1),"< ",N_pivot
+                 call raise%warning(&
+                    'Not enough efolds obtained. Please adjust your initial value.',&
+                    __FILE__, __LINE__)
+               end if
                pk_bad = 6
                return
              else

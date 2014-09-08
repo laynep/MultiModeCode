@@ -242,19 +242,25 @@ contains
     !"slowroll_start"
     if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
       pk_bad = bad_ic
-      print*, "MODPK: N-integration finished with eps>1.0 and"
-      print*, "MODPK: without inflating or only transient periods of inflation."
+
+      call raise%warning(&
+        "N-integration finished with eps>1.0 and &
+        without inflating or only transient periods of inflation.", &
+        __FILE__, __LINE__)
       return
 
     else
 
-      PRINT*, 'too many steps in odeint_r', nstp, MAXSTP
-      PRINT*, "E-fold", x
-      print*, "Step size", h
-      print*, "epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-      print*, "V=", pot(y(1:num_inflaton))
-      PRINT*, "y=", y
+      PRINT*, 'MODPK: nsteps', nstp, MAXSTP
+      PRINT*, "MODPK: E-fold", x
+      print*, "MODPK: Step size", h
+      print*, "MODPK: epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+      print*, "MODPK: V=", pot(y(1:num_inflaton))
+      PRINT*, "MODPK: y=", y
       ode_underflow=.TRUE.
+
+      call raise%warning(&
+        'Too many steps in odeint_r.', __FILE__, __LINE__)
     end if
 
   CONTAINS
@@ -425,7 +431,7 @@ contains
 
           WRITE(*, *) 'MODPK: x, x1, x2 :', x, x1, x2
           WRITE(*,*) 'MODPK: vparams: ', (vparams(i,:),i=1,size(vparams,1))
-          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
+          IF (.NOT.instreheat) WRITE(*,*) 'MODPK:  N_pivot: ', N_pivot
 
           call raise%fatal_cosmo(&
             "This could be a model for which inflation does not end.  &
@@ -882,11 +888,11 @@ contains
 
     ode_underflow=.TRUE.
 
-    print*,'N =', x
-    print*, 'stepsize, h =', h
-    print*, 'background, y =', y(1:num_inflaton)
-    print*, 'accuracy =', eps_adjust, eps
-    print*, "epsilon", getEps(phi,delphi)
+    print*, 'MODPK: N =', x
+    print*, 'MODPK: stepsize, h =', h
+    print*, 'MODPK: background, y =', y(1:num_inflaton)
+    print*, 'MODPK: accuracy =', eps_adjust, eps
+    print*, "MODPK: epsilon", getEps(phi,delphi)
 
     call raise%fatal_code(&
          'Too many steps in odeint_c.  Probably due to numerical accuracy or &
@@ -1412,9 +1418,9 @@ contains
 
        if (any(isnan(y))) then
 
-         print*, "E-fold",x
-         print*, "nstp",nstp
-         print*, "y", y
+         print*, "MODPK: E-fold",x
+         print*, "MODPK: nstp",nstp
+         print*, "MODPK: y", y
 
          call raise%fatal_code(&
            "y has a NaN value in odeint_with_t.",&
@@ -1492,16 +1498,19 @@ contains
 
       if (abs(x2-x)<1e-10) then
         use_t=.false.
-        print*, "reached end of t-integration...."
 
-    !DEBUG
-    print*, "N", Nefolds
-    print*, "eps", getEps_with_t(p, delp)
-    print*, "t", x
-    print*, "t_end", x2
-    print*, "nstp", nstp
-    print*, "N last", y(2*num_inflaton+1)
-    ystart = y
+        call raise%warning(&
+          "Reached end of t-integration.", &
+          __FILE__, __LINE__)
+
+        !DEBUG
+        print*, "MODPK: N", Nefolds
+        print*, "MODPK: eps", getEps_with_t(p, delp)
+        print*, "MODPK: t", x
+        print*, "MODPK: t_end", x2
+        print*, "MODPK: nstp", nstp
+        print*, "MODPK: N last", y(2*num_inflaton+1)
+        ystart = y
         return
       end if
 
@@ -1529,19 +1538,21 @@ contains
 
        IF (ode_underflow) RETURN
        IF (ABS(hnext) < hmin) THEN
-          write(*,*) 'stepsize smaller than minimum in odeint'
-          STOP
+         call raise%fatal_code(&
+          'Stepsize smaller than minimum in odeint.',&
+          __FILE__, __LINE__)
        END IF
        h=hnext
     END DO
 
-    PRINT*,'too many steps in odeint_with_t', nstp
-    PRINT*,"t=", x, "Step size", h
-    print*, "N", Nefolds
-    print*, "eps", getEps_with_t(p, delp)
-    print*, "t", x
-    print*, "t_end", x2
-    print*, "nstp", nstp
+    PRINT*, "MODPK: t=", x, "Step size", h
+    print*, "MODPK: N", Nefolds
+    print*, "MODPK: eps", getEps_with_t(p, delp)
+    print*, "MODPK: t", x
+    print*, "MODPK: t_end", x2
+    print*, "MODPK: nstp", nstp
+
+    call raise%warning('Too many steps in odeint_with_t', __FILE__, __LINE__)
 
     ode_underflow=.TRUE.
 

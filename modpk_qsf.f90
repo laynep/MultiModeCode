@@ -742,7 +742,7 @@ contains
     end if
 
     if(abs(del_phi) > 0.1) then
-      print*,"MODECODE: del_phi", del_phi
+      print*,"MODPK: del_phi", del_phi
       call raise%fatal_code(&
         'The interpolation in get_phi_light/locator has &
         suspiciously large errors',&
@@ -750,10 +750,10 @@ contains
 
     else if (phi_light > self%phi_light_vs_param(INTLEN,1) .or. &
       phi_light < self%phi_light_vs_param(1,1)) then
-      print*, "MODECODE: phi_light =", phi_light
-      print*, "MODECODE: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
-      print*, "MODECODE: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
-      print*, "MODECODE: param_guess =", param_guess
+      print*, "MODPK: phi_light =", phi_light
+      print*, "MODPK: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
+      print*, "MODPK: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
+      print*, "MODPK: param_guess =", param_guess
 
       call raise%fatal_code(&
         "phi_light is out of bounds.  &

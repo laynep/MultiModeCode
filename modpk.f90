@@ -184,8 +184,8 @@ CONTAINS
 
     IF(x1.le.0.) THEN
 
-      print*, "alpha=",x1
-      print*, "dalpha", dalpha
+      print*, "MODPK: alpha=",x1
+      print*, "MODPK: dalpha", dalpha
 
       call raise%fatal_cosmo(&
          'The phi_init you specified is too small to give &

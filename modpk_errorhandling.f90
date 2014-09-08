@@ -24,7 +24,7 @@ module modpk_errorhandling
     !Code-related warnings handled here.
     subroutine raise_warning(self, msg, fname, line)
       class(error) :: self
-      character(100), dimension(:), intent(in) :: msg
+      character(*), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -34,10 +34,9 @@ module modpk_errorhandling
         print*, "WARNING: Occured in file ", fname
       if (present(fname)) &
         print*, "WARNING: At line number ", line
+      print*, "**********************************************"
 
-      do ii=1, size(msg)
-        print*, "WARNING: ", trim(msg(ii))
-      end do
+      print*, "WARNING: ", trim(msg)
 
     end subroutine raise_warning
 
