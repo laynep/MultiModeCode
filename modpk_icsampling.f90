@@ -665,8 +665,9 @@ print*, new_measure
                 print*, "MODPK: KE =", 0.5e0_dp*sum(dphi*dphi)
                 print*, "MODPK: PE =", pot(phi)
                 call raise%warning(&
-                  "Energy overrun when setting initial conditions with equal &
-                  energy prior", __FILE__, __LINE__)
+                  'Energy overrun when setting initial conditions &
+                  with equal energy prior',&
+                  __FILE__, __LINE__)
                 exit
               end if
               cycle
@@ -697,7 +698,8 @@ print*, new_measure
                 print*, "MODPK: PE =", pot(phi)
                 call raise%warning(&
                   "Energy overrun when setting initial conditions with equal &
-                  energy prior", __FILE__, __LINE__)
+                  energy prior",&
+                  __FILE__, __LINE__)
                 exit
               end if
               cycle
