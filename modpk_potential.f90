@@ -105,9 +105,8 @@ CONTAINS
          print*, "Potential_choice =", Potential_choice
          print*, "Number of fields =", size(phi)
          call raise%fatal_cosmo(&
-           (/character(len=100) ::&
-             "This potential requires two fields.", &
-             "Set num_inflaton=2."/), &
+             "This potential requires two fields."// &
+             "Set num_inflaton=2.", &
              __FILE__, __LINE__)
        end if
 
@@ -127,8 +126,7 @@ CONTAINS
     case(10)
       print*, "MODPK: Potential_choice=", Potential_choice
       call raise%fatal_code(&
-        (/character(len=100) ::&
-        "This potential choice is broken for some reason."/),&
+        "This potential choice is broken for some reason.",&
         __FILE__, __LINE__)
 
     case(11)
@@ -204,9 +202,8 @@ CONTAINS
       if (any(abs(step_slope) < 1e-15)) then
         print*, "step_slope=", step_slope
         call raise%fatal_code(&
-          (/character(len=100) ::&
-          "This is a division by zero error.",&
-          "Set the slope in tanh(phi/step_slope) greater than about 1e-15."/),&
+          "This is a division by zero error."//&
+          "Set the slope in tanh(phi/step_slope) greater than about 1e-15.",&
           __FILE__, __LINE__)
       end if
 
@@ -257,11 +254,10 @@ CONTAINS
           turning_function_parametric(param_closest)
 
         call raise%fatal_cosmo(&
-        (/character(len=100) ::&
           "The trajectory is significantly deviating &
-            from the parametric curve.", &
-          "Check that you have actually found the closest parameter", &
-          "or that you're not taking steps that are too large."/), &
+           from the parametric curve. &
+           Check that you have actually found the closest parameter &
+           or that you're not taking steps that are too large.", &
         __FILE__, __LINE__)
 
       end if
@@ -316,8 +312,7 @@ CONTAINS
     case default
       print*, "potential_choice =", potential_choice
       call raise%fatal_code(&
-        (/character(len=100) ::&
-          "Need to set the potential V(phi) for this potential choice."/),&
+          "Need to set the potential V(phi) for this potential choice.",&
           __FILE__, __LINE__)
 
     end select
@@ -377,10 +372,9 @@ CONTAINS
           if (first_deriv(i).eq.0.e0_dp) then
 
             call raise%fatal_code(&
-            (/character(len=100) ::&
-             'first_deriv(i)=0, possibly signaling a problem with',&
-             'accuracy of numerical derivatives.',&
-             'Try using vnderivs=F if possible.' /),&
+             'first_deriv(i)=0, possibly signaling a problem with &
+             accuracy of numerical derivatives. &
+             Try using vnderivs=F if possible.',&
              __FILE__, __LINE__)
           end if
        end do
@@ -428,8 +422,7 @@ CONTAINS
        case(10)
          print*, "MODPK: Potential_choice=", Potential_choice
          call raise%fatal_code(&
-           (/character(len=100) ::&
-           "This potential choice is broken for some reason."/),&
+           "This potential choice is broken for some reason.",&
            __FILE__, __LINE__)
 
        case(11)
@@ -592,9 +585,8 @@ CONTAINS
 
          print*, "potential_choice =", potential_choice
          call raise%fatal_code(&
-         (/character(len=100) ::&
-           "Need to set first derivative for this potential choice",&
-           "or use numerical derivatives (vnderivs=.true.)"/),&
+           "Need to set first derivative for this potential choice &
+           or use numerical derivatives (vnderivs=.true.)",&
            __FILE__, __LINE__)
 
        end select
@@ -652,9 +644,8 @@ CONTAINS
        !MULTIFIELD
        if (size(phi) .ne. 1) then
          call raise%fatal_code(&
-          (/character(len=100) ::&
-          'The 2nd order numerical derivative has not',&
-          'been implemented for more than one field.'/),&
+          'The 2nd order numerical derivative has not &
+          been implemented for more than one field.',&
           __FILE__, __LINE__)
        end if
        phiplus = phi(1) + 0.2e0_dp*phi(1)*findiffdphi**(1.e0_dp/4.e0_dp)
@@ -710,8 +701,7 @@ CONTAINS
        case(10)
          print*, "MODPK: Potential_choice=", Potential_choice
          call raise%fatal_code(&
-           (/character(len=100) ::&
-           "This potential choice is broken for some reason."/),&
+           "This potential choice is broken for some reason.",&
            __FILE__, __LINE__)
 
        case(11)
@@ -963,8 +953,7 @@ CONTAINS
 
          print*, "potential_choice =", potential_choice
          call raise%fatal_code(&
-           (/character(len=100) ::&
-           "Need to set second_deriv for this potential choice."/),&
+           "Need to set second_deriv for this potential choice.",&
             __FILE__, __LINE__)
 
        end select
@@ -1019,8 +1008,7 @@ CONTAINS
 
       print*, "potential_choice =", potential_choice
       call raise%fatal_code(&
-        (/character(len=100) ::&
-        "Need to set third derivative for this potential choice."/),&
+        "Need to set third derivative for this potential choice.",&
         __FILE__, __LINE__)
 
     end select
@@ -1096,14 +1084,13 @@ CONTAINS
       print*, "MODPK: epsilon =", getEps
 
       call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-        "Epsilon is >3.0 in SUBROUTINE getEps.", &
-        "This means H is complex.",&
-        "(This is not universe I'd like to live in.)" , &
-        "This error might arise if there is a large separation" , &
-        "in scales (stiff problem) and the integrator walks" , &
-        "to a bad position in parameter space." , &
-        "Try reducing the integration stepsize."/) , &
+        "Epsilon is >3.0 in SUBROUTINE getEps. &
+         This means H is complex.&
+         (This is not universe I'd like to live in.) &
+         This error might arise if there is a large separation &
+         in scales (stiff problem) and the integrator walks &
+         to a bad position in parameter space. &
+         Try reducing the integration stepsize.", &
         __FILE__, __LINE__)
 
     end if
@@ -1125,9 +1112,8 @@ CONTAINS
 
     if (getH < 0.0e0_dp) then
       call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-        "H is complex.",&
-        "Try smaller stepsize in integrator."/),&
+        "H is complex. &
+        Try smaller stepsize in integrator.",&
         __FILE__,__LINE__)
     else
       getH = sqrt(getH)
@@ -1149,9 +1135,8 @@ CONTAINS
 
     if (getH_with_t < 0.0e0_dp) then
       call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-        "H is complex.",&
-        "Try smaller stepsize in integrator."/),&
+        "H is complex.&
+        Try smaller stepsize in integrator.",&
         __FILE__,__LINE__)
     else
       getH_with_t = sqrt(getH_with_t)
@@ -1177,14 +1162,13 @@ CONTAINS
       print*, "MODPK: epsilon =", getEps_with_t
 
       call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-        "Epsilon is >3.0 in SUBROUTINE getEps_with_t.", &
-        "This means H is complex.",&
-        "(This is not universe I'd like to live in.)" , &
-        "This error might arise if there is a large separation" , &
-        "in scales (stiff problem) and the integrator walks" , &
-        "to a bad position in parameter space." , &
-        "Try reducing the integration stepsize."/) , &
+        "Epsilon is >3.0 in SUBROUTINE getEps_with_t. &
+        This means H is complex.&
+        (This is not universe I'd like to live in.) &
+        This error might arise if there is a large separation &
+        in scales (stiff problem) and the integrator walks &
+        to a bad position in parameter space. &
+        Try reducing the integration stepsize.", &
         __FILE__, __LINE__)
     end if
     !END MULTIFIELD
@@ -1638,9 +1622,8 @@ CONTAINS
 
       if (adiab_index ==0) then
         call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-        "It appears that no field space directions have projection",&
-        "along the adiab direction."/),&
+        "It appears that no field space directions have projection&
+        along the adiab direction.",&
         __FILE__, __LINE__)
       end if
 
@@ -1669,8 +1652,7 @@ CONTAINS
         else
           print*, "MODPK: i=",i
           call raise%fatal_cosmo(&
-            (/character(len=100) ::&
-            "The component spanning(i,:) has zero norm."/),&
+            "The component spanning(i,:) has zero norm.",&
             __FILE__, __LINE__)
         end if
 
@@ -1688,8 +1670,7 @@ CONTAINS
 
           write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
           call raise%fatal_cosmo(&
-            (/character(len=100) ::&
-            "The isocurvature projection has a large adiabatic component."/),&
+            "The isocurvature projection has a large adiabatic component.",&
             __FILE__, __LINE__)
 
         end if

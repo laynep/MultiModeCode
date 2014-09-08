@@ -1,6 +1,7 @@
 !Some numerical routines
 module modpk_numerics
   use modpkparams, only : dp, num_inflaton
+  use modpk_errorhandling, only : raise
   implicit none
 
   interface num_first_deriv
@@ -463,8 +464,11 @@ module modpk_numerics
       if (size(xa)==size(ya)) then
          n=size(xa)
       else
-         write(*,*) 'Wrong array sizes in polint'
-         stop
+
+        call raise%fatal_code(&
+          'Wrong array sizes in polint',&
+          __FILE__, __LINE__)
+
       end if
 
       c=ya
@@ -478,8 +482,9 @@ module modpk_numerics
       do m=1,n-1
          den(1:n-m)=ho(1:n-m)-ho(1+m:n)
          if (any(den(1:n-m) == 0.0)) then
-            write(*,*) 'polint: calculation failure'
-            stop
+           call raise%fatal_code(&
+             'Calculation failure in polint.',&
+             __FILE__, __LINE__)
          end if
          den(1:n-m)=(c(2:n-m+1)-d(1:n-m))/den(1:n-m)
          d(1:n-m)=ho(1+m:n)*den(1:n-m)

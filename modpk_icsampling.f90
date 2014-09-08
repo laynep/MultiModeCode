@@ -112,8 +112,7 @@ module modpk_icsampling
         if (potential_choice /= 1 .and. potential_choice /= 16) then
           print*, "MODPK: potential_choice=", potential_choice
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "Can't implicitly define the iso_N surface for this potential choice."/),&
+            "Can't implicitly define the iso_N surface for this potential choice.",&
             __FILE__, __LINE__)
         end if
 
@@ -156,9 +155,8 @@ module modpk_icsampling
 
           print*, "MODPK: potential_choice=", potential_choice
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The sampling technique parameter_loop_samp",&
-            "doesn't work for this potential choice"/),&
+            "The sampling technique parameter_loop_samp&
+            doesn't work for this potential choice",&
             __FILE__,__LINE__)
 
         end if
@@ -231,9 +229,8 @@ module modpk_icsampling
         if (potential_choice /= 11) then
           print*, "MODPK: potential_choice=", potential_choice
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The sampling technique param_unif_prior",&
-            "doesn't work for this potential choice"/),&
+            "The sampling technique param_unif_prior&
+            doesn't work for this potential choice",&
             __FILE__,__LINE__)
         end if
 
@@ -293,8 +290,7 @@ module modpk_icsampling
           print*, "MODPK: number_knots_qsfrandom=", number_knots_qsfrandom
 
           call raise%fatal_cosmo(&
-            (/character(len=100) ::&
-            "Incorrect specifications for knot_positions."/),&
+            "Incorrect specifications for knot_positions.",&
             __FILE__, __LINE__)
 
         end if
@@ -317,8 +313,7 @@ module modpk_icsampling
                   print*, "knot_range_max =", knot_range_max
 
                   call raise%fatal_code(&
-                    (/character(len=100) ::&
-                    "The knot_range_min > knot_range_max."/),&
+                    "The knot_range_min > knot_range_max.",&
                     __FILE__, __LINE__)
                 end if
 
@@ -368,8 +363,7 @@ module modpk_icsampling
       !-----------------------------------------
       else
         call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The sampling technique hasn't been implemented."/),&
+            "The sampling technique hasn't been implemented.",&
             __FILE__, __LINE__)
       end if
 
@@ -800,16 +794,14 @@ print*, new_measure
         print*, "MODPK: eqen_prior = ", eqen_prior
 
         call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The prior for the equal energy sampler is not recognized."/),&
+            "The prior for the equal energy sampler is not recognized.",&
             __FILE__, __LINE__)
 
       end if
 
       call raise%fatal_code(&
-          (/character(len=100) ::&
-          "Couldn't find an IC with energy=energy_scale", &
-          "in the max number of tries."/),&
+          "Couldn't find an IC with energy=energy_scale &
+          in the max number of tries.",&
           __FILE__, __LINE__)
 
     end subroutine eqen_ic
@@ -929,10 +921,9 @@ print*, new_measure
         else
           !DEBUG
           call raise%fatal_code(&
-            (/character(len=100) ::&
-          "Specify the degree of the polynomial that makes", &
-          "the energy constraint equation or put the", &
-          "algebraic constraint in by-hand."/), &
+          "Specify the degree of the polynomial that makes &
+          the energy constraint equation or put the &
+          algebraic constraint in by-hand.", &
           __FILE__, __LINE__)
         end if
 
@@ -1106,8 +1097,7 @@ print*, new_measure
         y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
         if (any(isnan(y))) then
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The variable y has a NaN in equal_displacement_ic."/),&
+            "The variable y has a NaN in equal_displacement_ic.",&
             __FILE__, __LINE__)
         end if
 
@@ -1122,8 +1112,7 @@ print*, new_measure
         write(*,*) "MODPK: potential_choice=",potential_choice
 
         call raise%fatal_code(&
-            (/character(len=100) ::&
-            "This potential choice isn't supported."/),&
+            "This potential choice isn't supported.",&
             __FILE__, __LINE__)
       end if
 
@@ -1192,8 +1181,7 @@ print*, new_measure
 
           write(*,*) "MODPK: prior=", prior
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "This prior is not supported."/),&
+            "This prior is not supported.",&
             __FILE__, __LINE__)
 
         end if
@@ -1245,8 +1233,7 @@ print*, new_measure
 
           write(*,*) "MODPK: prior=", prior
           call raise%fatal_code(&
-              (/character(len=100) ::&
-              "The prior is not recognized."/),&
+              "The prior is not recognized.",&
               __FILE__, __LINE__)
 
           stop
@@ -1271,10 +1258,9 @@ print*, new_measure
 
       if (size(vparams,1) /=2 .or. size(vparams,2) /= num_inflaton) then
         call raise%fatal_code(&
-            (/character(len=100) ::&
-            "The vparams are of the wrong order.", &
-            "size(vparams,2) /= num_inflaton or", &
-            "size(vparams,1) /= 2."/), &
+            "The vparams are of the wrong order. &
+            size(vparams,2) /= num_inflaton or &
+            size(vparams,1) /= 2.", &
             __FILE__, __LINE__)
       end if
 
@@ -1306,8 +1292,7 @@ print*, new_measure
 
           write(*,*) "MODPK: prior=", prior
           call raise%fatal_code(&
-            (/character(len=100) ::&
-            "This prior is not supported."/),&
+            "This prior is not supported.",&
             __FILE__, __LINE__)
         end if
       end do
@@ -1638,8 +1623,7 @@ print*, new_measure
         print*, "MODPK: param_sampling=", param_sampling
 
         call raise%fatal_code(&
-            (/character(len=100) ::&
-            "This choice of param_sampling is not supported."/),&
+            "This choice of param_sampling is not supported.",&
             __FILE__, __LINE__)
 
       end if

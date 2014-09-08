@@ -49,8 +49,7 @@ CONTAINS
 
     if (.not. allocated(phi_init)) then
       call raise%fatal_code(&
-        (/character(len=100) ::&
-        "Please initialize phi_init as an array!"/),&
+        "Please initialize phi_init as an array!",&
         __FILE__, __LINE__)
     end if
 
@@ -78,18 +77,16 @@ CONTAINS
           IF (phidot_sign(1) .GT.0 .AND. phi_init(1) .gt. phi_infl_end(1)) THEN
 
             call raise%fatal_cosmo(&
-             (/character(len=100) ::&
-             "Initial phi is smaller than final phi.", &
-             "Please check your initial conditions."/), &
+             "Initial phi is smaller than final phi. &
+             Please check your initial conditions.", &
              __FILE__, __LINE__)
 
           ENDIF
           IF (phidot_sign(1) .LT.0 .AND. phi_init(1) .lt. phi_infl_end(1)) THEN
 
             call raise%fatal_cosmo(&
-             (/character(len=100) ::&
-             "Initial phi is larger than final phi.", &
-             "Please check your initial conditions."/), &
+             "Initial phi is larger than final phi. &
+             Please check your initial conditions.", &
              __FILE__, __LINE__)
 
           ENDIF
@@ -133,8 +130,7 @@ CONTAINS
           return
         else
           call raise%fatal_cosmo(&
-           (/character(len=100) ::&
-           "Bad set of parameters." /), &
+           "Bad set of parameters." , &
            __FILE__, __LINE__)
         end if
       end if
@@ -204,8 +200,7 @@ CONTAINS
           if (save_iso_N) then
             if (.not. allocated(phi_iso_N)) then
               call raise%fatal_code(&
-                (/character(len=100) ::&
-                "The array phi_iso_N is not allocated."/),&
+                "The array phi_iso_N is not allocated.",&
                 __FILE__, __LINE__)
             endif
 
@@ -234,9 +229,8 @@ CONTAINS
               pk_bad = bad_ic
             else
               call raise%fatal_cosmo(&
-                (/character(len=100) ::&
-                "See above.",&
-                "Try setting your IC closer to horizon crossing."/),&
+                "See above.&
+                Try setting your IC closer to horizon crossing.",&
                 __FILE__,__LINE__)
             end if
 
@@ -446,10 +440,9 @@ CONTAINS
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
         call raise%fatal_code(&
-        (/character(len=100) ::&
-         "kount is too big.",&
-         "Giving this error instead of", &
-        "a segmentation fault."/), &
+         "kount is too big.&
+         Giving this error instead of &
+         a segmentation fault.", &
         __FILE__, __LINE__)
       end if
 
@@ -514,10 +507,9 @@ CONTAINS
                print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
 
                call raise%fatal_code(&
-               (/character(len=100) ::&
-               'The interpolation in SUBROUTINE trial_background',&
-               'has suspiciously large errors.',&
-               'Your model smells fishy.' /), &
+               'The interpolation in SUBROUTINE trial_background&
+               has suspiciously large errors.&
+               Your model smells fishy.' , &
                __FILE__, __LINE__)
 
              end if

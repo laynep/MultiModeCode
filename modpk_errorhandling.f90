@@ -4,8 +4,6 @@
 module modpk_errorhandling
   implicit none
 
-#define MESSAGE(x) (/character(len=100) :: x /), __FILE__, __LINE__
-
   private
   public :: raise
 
@@ -43,10 +41,9 @@ module modpk_errorhandling
 
     end subroutine raise_warning
 
-
     subroutine raise_exception_code(self, msg, fname, line)
       class(error) :: self
-      character(100), dimension(:), intent(in) :: msg
+      character(*), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -60,18 +57,17 @@ module modpk_errorhandling
       print*, "MODECODE: Error is code-related."
       print*, "**********************************************"
 
-      do ii=1, size(msg)
-        print*, "MODECODE: ", trim(msg(ii))
-      end do
+      print*, "MODECODE: ", trim(msg)
 
       !Fatal
       stop
 
     end subroutine raise_exception_code
 
+
     subroutine raise_exception_cosmo(self, msg, fname, line)
       class(error) :: self
-      character(100), dimension(:), intent(in) :: msg
+      character(*), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -85,9 +81,7 @@ module modpk_errorhandling
       print*, "MODECODE: Error is cosmology-related."
       print*, "**********************************************"
 
-      do ii=1, size(msg)
-        print*, "MODECODE: ", trim(msg(ii))
-      end do
+      print*, "MODECODE: ", trim(msg)
 
       !Fatal
       stop

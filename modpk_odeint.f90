@@ -6,6 +6,7 @@ MODULE modpk_odeint
     set_intermediate_opts
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
+  use modpk_errorhandling, only : raise
   implicit none
 
   interface odeint
@@ -110,12 +111,14 @@ contains
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
-         print*, "MODPK in odeint_r"
-         print*, "MODPK: y has a NaN value."
-         print*, "E-fold",x
-         print*, "nstp",nstp
-         print*, "y", y
-         stop
+         print*, "MODPK: E-fold",x
+         print*, "MODPK: nstp",nstp
+         print*, "MODPK: y", y
+
+         call raise%fatal_code(&
+           "y has a NaN value in odeint_r.",&
+           __FILE__, __LINE__)
+
        end if
 
        !Calc bundle exp_scalar by integrating tr(d2Vdphi2)

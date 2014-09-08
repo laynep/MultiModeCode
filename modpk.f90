@@ -159,8 +159,7 @@ CONTAINS
        write(*,e2_fmt) "log_aharr(1):", log_aharr(1)
 
        call raise%fatal_cosmo(&
-         (/character(len=100) ::&
-         'Reconsider your phi_init and N_pivot combo.'/), &
+         'Reconsider your phi_init and N_pivot combo.', &
          __FILE__, __LINE__)
 
     END IF
@@ -189,10 +188,9 @@ CONTAINS
       print*, "dalpha", dalpha
 
       call raise%fatal_cosmo(&
-        (/character(len=100) ::&
-         'The phi_init you specified is too small to give', &
-         'sufficient efolds of inflation. We cannot self-consistently', &
-         'solve this for you. Please adjust phi_init and try again.'/), &
+         'The phi_init you specified is too small to give &
+         sufficient efolds of inflation. We cannot self-consistently &
+         solve this for you. Please adjust phi_init and try again.', &
          __FILE__, __LINE__)
 
     END IF
@@ -205,10 +203,9 @@ CONTAINS
        if (dh > 0.1) print*, "MODPK: Error in Hubble interpolation", dh
 
        call raise%fatal_code(&
-         (/character(len=100) ::&
-          'The interpolation in SUBROUTINE evolve',&
-          'has suspiciously large errors.',&
-          'Your model smells fishy.'/),&
+          'The interpolation in SUBROUTINE evolve&
+          has suspiciously large errors.&
+          Your model smells fishy.',&
           __FILE__, __LINE__)
 
     ENDIF
@@ -249,8 +246,7 @@ CONTAINS
       print*, "MODPK: accuracy_setting ==", tech_opt%accuracy_setting
 
       call raise%fatal_code(&
-        (/character(len=100) ::&
-        "This accuracy_setting is not supported."/),&
+        "This accuracy_setting is not supported.",&
         __FILE__, __LINE__)
 
     end if
