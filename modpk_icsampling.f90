@@ -11,6 +11,7 @@ module modpk_icsampling
     potential_choice, vparams
   use internals, only : pi
   use modpk_errorhandling, only : raise
+  use modpk_io, only : out_opt
   implicit none
 
   integer :: ic_sampling
@@ -203,7 +204,7 @@ module modpk_icsampling
 
         else if (with_eqen) then
           !Set IC with equal energy over pre-defined field range
-          print*, "Setting IC with equal energy over range"
+          if(out_opt%modpkoutput) print*, "Setting IC with equal energy over range"
 
           call eqen_ic(y_background, energy_scale, &
             phi0_priors_min, phi0_priors_max, &
@@ -212,11 +213,11 @@ module modpk_icsampling
 
         else if (with_velocity) then
           !Set IC with zero potential
-          print*, "Setting IC with zero potential"
+          if(out_opt%modpkoutput) print*, "Setting IC with zero potential"
           call zero_potential_ic(y_background, energy_scale)
         else
           !Set IC with zero velocity
-          print*, "Setting IC with zero velocity"
+          if(out_opt%modpkoutput) print*, "Setting IC with zero velocity"
           call equal_displacement_ic(y_background, energy_scale)
         end if
 
@@ -232,7 +233,7 @@ module modpk_icsampling
             __FILE__,__LINE__)
         end if
 
-        print*, "BAD MODECODE: Parameter priors hard-coded in..."
+        if(out_opt%modpkoutput) print*, "BAD MODECODE: Parameter priors hard-coded in..."
 
         !Some inspiration for these priors from 1112.0326
 
@@ -260,7 +261,7 @@ module modpk_icsampling
 
         else
           !Set IC with equal energy over pre-defined field range
-          print*, "Setting IC with equal energy over range"
+          if(out_opt%modpkoutput) print*, "Setting IC with equal energy over range"
 
           call eqen_ic(y_background, energy_scale, &
             phi0_priors_min, phi0_priors_max, &
@@ -617,7 +618,7 @@ print*, new_measure
       real(dp), dimension(num_inflaton) :: phi0_min, &
         phi0_max, dphi0_min, dphi0_max
 
-      print*, "MODECODE: IC with equal energy and eqen_prior=", eqen_prior
+      if(out_opt%modpkoutput) print*, "MODECODE: IC with equal energy and eqen_prior=", eqen_prior
 
       if (eqen_prior==equal_area_prior) then
         !Use the pseudo--"equal-area" prior of Easther-Price (1304.4244)
@@ -655,17 +656,20 @@ print*, new_measure
 
 	      	  if (abs(rho_not_alloc)<1e-25 .or. isnan(rho_not_alloc)) then
               if(mod(maxtry,ll)==20) then
-                if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
+                if (mod(ll,200)==0 .and. out_opt%modpkoutput)&
+                  print*, "IC off shell ------------- cycling", ll
               end if
               if (ll==maxtry) then
-                print*, "MODECODE: Energy overrun =", rho_not_alloc
-                print*, "MODECODE: E**4 =", energy_scale**4
-                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "MODECODE: PE =", pot(phi)
-                call raise%warning(&
-                  'Energy overrun when setting initial conditions &
-                  with equal energy prior',&
-                  __FILE__, __LINE__)
+                if (out_opt%modpkoutput) then
+                  print*, "MODECODE: Energy overrun =", rho_not_alloc
+                  print*, "MODECODE: E**4 =", energy_scale**4
+                  print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                  print*, "MODECODE: PE =", pot(phi)
+                  call raise%warning(&
+                    'Energy overrun when setting initial conditions &
+                    with equal energy prior',&
+                    __FILE__, __LINE__)
+                end if
                 exit
               end if
               cycle
@@ -688,16 +692,18 @@ print*, new_measure
               0.5e0_dp*sum(dphi*dphi)
 
 	      	  if (rho_not_alloc<1e-25_dp) then
-              print*, "IC off shell ------------- cycling", ll
+              if(out_opt%modpkoutput) print*, "IC off shell ------------- cycling", ll
               if (ll==maxtry) then
-                print*, "MODECODE: Energy overrun =", rho_not_alloc
-                print*, "MODECODE: E**4 =", energy_scale**4
-                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "MODECODE: PE =", pot(phi)
-                call raise%warning(&
-                  "Energy overrun when setting initial conditions with equal &
-                  energy prior",&
-                  __FILE__, __LINE__)
+                if (out_opt%modpkoutput) then
+                  print*, "MODECODE: Energy overrun =", rho_not_alloc
+                  print*, "MODECODE: E**4 =", energy_scale**4
+                  print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                  print*, "MODECODE: PE =", pot(phi)
+                  call raise%warning(&
+                    "Energy overrun when setting initial conditions with equal &
+                    energy prior",&
+                    __FILE__, __LINE__)
+                end if
                 exit
               end if
               cycle
@@ -774,12 +780,21 @@ print*, new_measure
             0.5e0_dp*sum(dphi*dphi)
 
 	      	if (rho_not_alloc<1e-25_dp) then
-            if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
+            if(mod(ll,200)==0) then
+              if (mod(ll,200)==0 .and. out_opt%modpkoutput)&
+                print*, "IC off shell ------------- cycling", ll
+            end if
             if (ll==maxtry) then
-              print*, "    Energy overrun =", rho_not_alloc
-              print*, "    E**4 =", energy_scale**4
-              print*, "    KE =", 0.5e0_dp*sum(dphi*dphi)
-              print*, "    PE =", pot(phi)
+              if (out_opt%modpkoutput) then
+                print*, "MODECODE: Energy overrun =", rho_not_alloc
+                print*, "MODECODE: E**4 =", energy_scale**4
+                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODECODE: PE =", pot(phi)
+                call raise%warning(&
+                  'Energy overrun when setting initial conditions &
+                  with equal energy prior',&
+                  __FILE__, __LINE__)
+              end if
               exit
             end if
             cycle

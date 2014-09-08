@@ -7,9 +7,11 @@ module modpk_io
 
   type :: print_options
 
-    !Things to print
+    !Verbosity
     logical :: modpkoutput
     logical :: output_reduced
+
+    !Things to print
     logical :: save_traj
     logical :: output_badic
     logical :: fields_horiz

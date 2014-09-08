@@ -1,6 +1,7 @@
 !Module for handling exceptions and warnings.
 !More info is sometimes printed to screen where these occur.
 module modpk_errorhandling
+  use modpk_io, only : out_opt
   implicit none
 
   private
@@ -43,13 +44,19 @@ module modpk_errorhandling
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
+      if (out_opt%modpkoutput) then
+        if (.not. out_opt%output_reduced) then
 
-      if (present(fname)) &
-        print*, "WARNING: Occured in file ", fname
-      if (present(fname)) &
-        print*, "WARNING: At line number ", line
+          if (present(fname)) &
+            print*, "WARNING: Occured in file ", fname
+          if (present(fname)) &
+            print*, "WARNING: At line number ", line
 
-      print*, "MODECODE: ", trim(msg)
+        end if
+
+        print*, "MODECODE: ", trim(msg)
+
+      end if
 
     end subroutine raise_warning
 
@@ -60,6 +67,7 @@ module modpk_errorhandling
       integer, intent(in), optional :: line
 
 
+      !Print out even if asking for no output (modpkoutput=.false.)
       print*, "**********************************************"
       print*, "ERROR: Encountered a fatal exception."
       if (present(fname)) &
@@ -83,6 +91,7 @@ module modpk_errorhandling
       integer, intent(in), optional :: line
 
 
+      !Print out even if asking for no output (modpkoutput=.false.)
       print*, "**********************************************"
       print*, "ERROR: Encountered a fatal exception."
       if (present(fname)) &
@@ -128,28 +137,37 @@ module modpk_errorhandling
       logical :: is_fatal
 
       if (outcome == self%success) then
-        print*, "MODECODE: Successful set of parameters.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Successful set of parameters.", outcome
 
       else if (outcome == self%infl_didnt_start) then
-        print*, "MODECODE: Inflation didn't start.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Inflation didn't start.", outcome
 
       else if (outcome == self%pivot_didnt_leaveH) then
-        print*, "MODECODE: The pivot scale didn't leave the horizon.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: The pivot scale didn't leave the horizon.", outcome
 
       else if (outcome == self%cant_set_modeIC) then
-        print*, "MODECODE: A modes' IC couldn't be consistently set.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: A modes' IC couldn't be consistently set.", outcome
 
       else if (outcome == self%cant_init_scalefact) then
-        print*, "MODECODE: Too many e-folds; can't initialize the scale factor.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Too many e-folds; can't initialize the scale factor.", outcome
 
       else if (outcome == self%ref_efold_didnt_leaveH) then
-        print*, "MODECODE: Trying to save some reference N, but got less evolution.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Trying to save some reference N, &
+          but got less evolution than that.", outcome
 
       else if (outcome == self%bad_reheat) then
-        print*, "MODECODE: Didn't satisfy reheating bounds.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Didn't satisfy reheating bounds.", outcome
 
       else if (outcome == self%underflow) then
-        print*, "MODECODE: Numerical underflow error in odeint.", outcome
+        if (out_opt%modpkoutput) &
+          print*, "MODECODE: Numerical underflow error in odeint.", outcome
 
       else
 

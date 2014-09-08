@@ -160,7 +160,7 @@ Options for output from the code.
 
 &print_out
 
-  out_opt%modpkoutput = .true.
+  out_opt%modpkoutput = .false.
   out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
