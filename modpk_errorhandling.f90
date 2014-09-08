@@ -4,6 +4,8 @@
 module modpk_errorhandling
   implicit none
 
+#define MESSAGE(x) (/character(len=100) :: x /), __FILE__, __LINE__
+
   private
   public :: raise
 
@@ -24,7 +26,7 @@ module modpk_errorhandling
     !Code-related warnings handled here.
     subroutine raise_warning(self, msg, fname, line)
       class(error) :: self
-      character(*), dimension(:), intent(in) :: msg
+      character(100), dimension(:), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -36,7 +38,7 @@ module modpk_errorhandling
         print*, "WARNING: At line number ", line
 
       do ii=1, size(msg)
-        print*, "WARNING: ", msg(ii)
+        print*, "WARNING: ", trim(msg(ii))
       end do
 
     end subroutine raise_warning
@@ -44,7 +46,7 @@ module modpk_errorhandling
 
     subroutine raise_exception_code(self, msg, fname, line)
       class(error) :: self
-      character(*), dimension(:), intent(in) :: msg
+      character(100), dimension(:), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -59,7 +61,7 @@ module modpk_errorhandling
       print*, "**********************************************"
 
       do ii=1, size(msg)
-        print*, "MODECODE: ", msg(ii)
+        print*, "MODECODE: ", trim(msg(ii))
       end do
 
       !Fatal
@@ -69,7 +71,7 @@ module modpk_errorhandling
 
     subroutine raise_exception_cosmo(self, msg, fname, line)
       class(error) :: self
-      character(*), dimension(:), intent(in) :: msg
+      character(100), dimension(:), intent(in) :: msg
       character(*), intent(in), optional :: fname
       integer, intent(in), optional :: line
 
@@ -84,7 +86,7 @@ module modpk_errorhandling
       print*, "**********************************************"
 
       do ii=1, size(msg)
-        print*, "MODECODE: ", msg(ii)
+        print*, "MODECODE: ", trim(msg(ii))
       end do
 
       !Fatal

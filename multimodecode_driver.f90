@@ -562,17 +562,17 @@ program multimodecode
         if (out_opt%output_badic .or. pk_bad/=bad_ic) then
 
           if (evaluate_modes) then
-            if (out_opt%outsamp_N_iso) then
+            if (out_opt%first_outsamp_N_iso) then
               call observs%print_header(out_opt%outsamp_N_iso)
-              out_opt%outsamp_N_iso=.false.
+              out_opt%first_outsamp_N_iso=.false.
             end if
             call observs%printout(out_opt%outsamp_N_iso)
           end if
 
           if (use_deltaN_SR) then
-            if (out_opt%outsamp_N_iso_SR) then
+            if (out_opt%first_outsamp_N_iso_SR) then
               call observs%print_header(out_opt%outsamp_N_iso_SR)
-              out_opt%outsamp_N_iso_SR=.false.
+              out_opt%first_outsamp_N_iso_SR=.false.
             end if
             call observs_SR%printout(out_opt%outsamp_N_iso_SR)
           end if

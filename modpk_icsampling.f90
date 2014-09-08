@@ -10,6 +10,7 @@ module modpk_icsampling
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
   use internals, only : pi
+  use modpk_errorhandling, only : raise
   implicit none
 
   integer :: ic_sampling
@@ -109,9 +110,11 @@ module modpk_icsampling
         !Only works for N-quadratic
 
         if (potential_choice /= 1 .and. potential_choice /= 16) then
-          print*, "Can't implicitly define iso_N surface for potential_choice=",&
-            potential_choice
-          stop
+          print*, "MODPK: potential_choice=", potential_choice
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "Can't implicitly define the iso_N surface for this potential choice."/),&
+            __FILE__, __LINE__)
         end if
 
         !Can't also record iso-N, since using N_iso_ref as override
@@ -150,8 +153,14 @@ module modpk_icsampling
 
         if (potential_choice>2 .and. potential_choice/=11 .and. &
           potential_choice/=12 .and. potential_choice /=16) then
-          print*, "parameter_loop_samp doesn't work for potential_choice=", potential_choice
-          stop
+
+          print*, "MODPK: potential_choice=", potential_choice
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The sampling technique parameter_loop_samp",&
+            "doesn't work for this potential choice"/),&
+            __FILE__,__LINE__)
+
         end if
 
         !Get new vparams
@@ -220,12 +229,15 @@ module modpk_icsampling
       else if (ic_sampling==ic_flags%param_unif_prior) then
 
         if (potential_choice /= 11) then
-          print*, "potential_choice", potential_choice, "not supported"
-          print*, "for ic_sampling = param_unif_prior"
-          stop
+          print*, "MODPK: potential_choice=", potential_choice
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The sampling technique param_unif_prior",&
+            "doesn't work for this potential choice"/),&
+            __FILE__,__LINE__)
         end if
 
-        print*, "Naughty! Parameter priors hard-coded in..."
+        print*, "BAD MODECODE: Parameter priors hard-coded in..."
 
         !Some inspiration for these priors from 1112.0326
 
@@ -277,10 +289,14 @@ module modpk_icsampling
         if (num_inflaton>1 .and. maxval(number_knots_qsfrandom)>0) then
           allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
         else
-          print*, "MODPK: Incorrect specifications for knot_positions:"
-          print*, "Num_inflaton=", num_inflaton
-          print*, "number_knots_qsfrandom=", number_knots_qsfrandom
-          stop
+          print*, "MODPK: Num_inflaton=", num_inflaton
+          print*, "MODPK: number_knots_qsfrandom=", number_knots_qsfrandom
+
+          call raise%fatal_cosmo(&
+            (/character(len=100) ::&
+            "Incorrect specifications for knot_positions."/),&
+            __FILE__, __LINE__)
+
         end if
         knot_positions = 0e0_dp
 
@@ -297,10 +313,13 @@ module modpk_icsampling
               !DEBUG
               if (custom_knot_range) then
                 if (knot_range_min(i) .ge. knot_range_max(i)) then
-                  print*, "MODPK: set knot_range_min < knot_range_max"
                   print*, "knot_range_min =", knot_range_min
                   print*, "knot_range_max =", knot_range_max
-                  stop
+
+                  call raise%fatal_code(&
+                    (/character(len=100) ::&
+                    "The knot_range_min > knot_range_max."/),&
+                    __FILE__, __LINE__)
                 end if
 
                 knot_positions(i,j,1) = (knot_range_max(i)-knot_range_min(i))*rand &
@@ -348,8 +367,10 @@ module modpk_icsampling
 
       !-----------------------------------------
       else
-        print*, "MODPK: Sampling technique hasn't been implemented."
-        stop
+        call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The sampling technique hasn't been implemented."/),&
+            __FILE__, __LINE__)
       end if
 
       !Load initial vals from sample
@@ -604,7 +625,7 @@ print*, new_measure
       real(dp), dimension(num_inflaton) :: phi0_min, &
         phi0_max, dphi0_min, dphi0_max
 
-      print*, "IC with equal energy and eqen_prior=", eqen_prior
+      print*, "MODPK: IC with equal energy and eqen_prior=", eqen_prior
 
       if (eqen_prior==equal_area_prior) then
         !Use the pseudo--"equal-area" prior of Easther-Price (1304.4244)
@@ -776,15 +797,20 @@ print*, new_measure
 
 
       else
-        print*, "The prior for the equal energy sampler is not recognized."
-        print*, "eqen_prior = ", eqen_prior
-        stop
+        print*, "MODPK: eqen_prior = ", eqen_prior
+
+        call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The prior for the equal energy sampler is not recognized."/),&
+            __FILE__, __LINE__)
 
       end if
 
-      print*, "Couldn't find an IC with energy=energy_scale in the max"
-      print*, "number of tries."
-      stop
+      call raise%fatal_code(&
+          (/character(len=100) ::&
+          "Couldn't find an IC with energy=energy_scale", &
+          "in the max number of tries."/),&
+          __FILE__, __LINE__)
 
     end subroutine eqen_ic
 
@@ -902,10 +928,12 @@ print*, new_measure
 
         else
           !DEBUG
-          print*, "Specify the degree of the polynomial that makes"
-          print*, "the energy constraint equation or put the"
-          print*, "algebraic constraint in by-hand."
-          stop
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+          "Specify the degree of the polynomial that makes", &
+          "the energy constraint equation or put the", &
+          "algebraic constraint in by-hand."/), &
+          __FILE__, __LINE__)
         end if
 
       end if
@@ -1077,8 +1105,10 @@ print*, new_measure
 
         y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
         if (any(isnan(y))) then
-          print*, "MODPK: y has a NaN in equal_displacement_ic."
-          stop
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The variable y has a NaN in equal_displacement_ic."/),&
+            __FILE__, __LINE__)
         end if
 
       !N-quadratic with intxn w/lightest field, m^2*phi^2+phi_light^2 phi_i^2
@@ -1089,9 +1119,12 @@ print*, new_measure
 
         y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
       else
-        write(*,*) "Error in equal_displacement_ic:"
-        write(*,*) "potential_choice=",potential_choice,"not supported."
-        stop
+        write(*,*) "MODPK: potential_choice=",potential_choice
+
+        call raise%fatal_code(&
+            (/character(len=100) ::&
+            "This potential choice isn't supported."/),&
+            __FILE__, __LINE__)
       end if
 
       y(num_inflaton+1:2*num_inflaton) = 0e0_dp
@@ -1156,8 +1189,13 @@ print*, new_measure
           rand = rand*2.0e0_dp*log10(ratio_max)
           vpnew(1,i) = vpnew(1,1)+rand
         else
-          write(*,*) "Prior not supported. prior=", prior
-          stop
+
+          write(*,*) "MODPK: prior=", prior
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "This prior is not supported."/),&
+            __FILE__, __LINE__)
+
         end if
       end do
 
@@ -1204,7 +1242,13 @@ print*, new_measure
           vpnew(2,i) = rand*(log_intxn_max-log_intxn_min)+log_intxn_min
 
         else
-          write(*,*) "Prior not supported. prior=", prior
+
+          write(*,*) "MODPK: prior=", prior
+          call raise%fatal_code(&
+              (/character(len=100) ::&
+              "The prior is not recognized."/),&
+              __FILE__, __LINE__)
+
           stop
         end if
       end do
@@ -1226,10 +1270,12 @@ print*, new_measure
       integer, parameter :: unif_param=0, log_param=1
 
       if (size(vparams,1) /=2 .or. size(vparams,2) /= num_inflaton) then
-        write(*,*), "Error: vparams of wrong order."
-        write(*,*), "size(vparams,2) /= num_inflaton or"
-        write(*,*), "size(vparams,1) /= 2."
-        stop
+        call raise%fatal_code(&
+            (/character(len=100) ::&
+            "The vparams are of the wrong order.", &
+            "size(vparams,2) /= num_inflaton or", &
+            "size(vparams,1) /= 2."/), &
+            __FILE__, __LINE__)
       end if
 
       !m2 set at random (unif on m^2) w/max prior range set by max mass
@@ -1257,8 +1303,12 @@ print*, new_measure
           rand = rand*2.0e0_dp*log10(ratio_max)
           logmasses2(i) = logmasses2(1)+rand
         else
-          write(*,*) "Prior not supported. prior=", prior
-          stop
+
+          write(*,*) "MODPK: prior=", prior
+          call raise%fatal_code(&
+            (/character(len=100) ::&
+            "This prior is not supported."/),&
+            __FILE__, __LINE__)
         end if
       end do
       masses2 = 10.0e0_dp**logmasses2
@@ -1395,12 +1445,6 @@ print*, new_measure
 
     contains
 
-
-      !----------------------------------------------------------------------------------------------
-      !
-      !
-      !
-      !
       pure real(dp) function partial(x,y)
         implicit none
 
@@ -1413,9 +1457,9 @@ print*, new_measure
 
       end function
 
-      !---------------------------------------------------------------------------------------------
-      !     marchenko-pastur distribution, with modification to exclude delta
-      !     -fn at origin. (Multiplied by beta)
+      !--------------------------------------------------------------------
+      !   marchenko-pastur distribution, with modification to exclude delta
+      !   -fn at origin. (Multiplied by beta)
 
       pure function pdf(x)
         implicit none
@@ -1442,7 +1486,7 @@ print*, new_measure
         return
       end function
 
-      !----------------------------------------------------------------------------------------------
+      !---------------------------------------------------------
       !
       !     a quick and dirty bisection rountine.
       !
@@ -1590,25 +1634,15 @@ print*, new_measure
         end do; end do
 
       else
-        print*, "MODPK: param_sampling=", param_sampling, "is not supported."
-        stop
+
+        print*, "MODPK: param_sampling=", param_sampling
+
+        call raise%fatal_code(&
+            (/character(len=100) ::&
+            "This choice of param_sampling is not supported."/),&
+            __FILE__, __LINE__)
+
       end if
-
-
-      !DEBUG
-      !print*, "this is a call to get_vparams"
-      !print*, param_sampling
-      !print*, "vparams=",vparams
-      !print*, "min=",vp_prior_min
-      !print*, "max=",vp_prior_max
-
-      !do ii=1,2;do jj=1,2
-      !print*, ii, jj
-      !print*, vparams(ii,jj)
-      !end do; end do
-
-
-      !stop
 
     end subroutine get_vparams
 

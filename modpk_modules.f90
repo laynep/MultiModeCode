@@ -235,7 +235,8 @@ module modpk_observables
 
       !Remaining columns
       call csv_write(outunit,&
-        (/'As', 'ns', 'r', 'nt', 'alpha_s', &
+        (/character(len=10) ::&
+          'As', 'ns', 'r', 'nt', 'alpha_s', &
           'A_iso', 'A_pnad', 'A_ent', 'A_bundle', &
           'n_iso', 'n_pnad', 'n_ent', &
           'A_cross', 'f_NL', 'tau_NL'/),&

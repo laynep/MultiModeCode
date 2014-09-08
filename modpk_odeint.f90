@@ -357,7 +357,8 @@ contains
 
         call csv_write(&
           out_opt%trajout,&
-          (/'V', 'eps','H','eta'/), &
+          (/character(len=10) ::&
+          'V', 'eps','H','eta'/), &
           advance=.false.)
 
         do ii=1,num_inflaton
@@ -1144,7 +1145,8 @@ contains
 
         call csv_write(&
           out_opt%spectraout,&
-          (/'N', 'P_ad', 'P_iso', 'P_ent', 'P_nad', 'P_tens'/), &
+          (/character(len=10) ::&
+          'N', 'P_ad', 'P_iso', 'P_ent', 'P_nad', 'P_tens'/), &
           advance=.true.)
 
         out_opt%first_spectraout = .false.

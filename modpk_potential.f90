@@ -102,10 +102,15 @@ CONTAINS
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
-         print*, "Potential_choice", Potential_choice, "requires two fields."
+         print*, "Potential_choice =", Potential_choice
          print*, "Number of fields =", size(phi)
-         stop
+         call raise%fatal_cosmo(&
+           (/character(len=100) ::&
+             "This potential requires two fields.", &
+             "Set num_inflaton=2."/), &
+             __FILE__, __LINE__)
        end if
+
        lambda_hybrid = vparams(1,1)
        mass_hybrid = vparams(1,2)
        mu_hybrid =vparams(1,3)
@@ -120,9 +125,11 @@ CONTAINS
       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
 
     case(10)
-      print*, "MODPK: Potential_choice=", &
-        Potential_choice, "is broken."
-      stop
+      print*, "MODPK: Potential_choice=", Potential_choice
+      call raise%fatal_code(&
+        (/character(len=100) ::&
+        "This potential choice is broken for some reason."/),&
+        __FILE__, __LINE__)
 
     case(11)
       !N-quadratic w/one quartic intxn term
@@ -195,9 +202,12 @@ CONTAINS
 
       !Check for /0 error
       if (any(abs(step_slope) < 1e-15)) then
-        print*, "MODPK: Set the slope in tanh(phi/step_slope) greater than 1e-15"
         print*, "step_slope=", step_slope
-        stop
+        call raise%fatal_code(&
+          (/character(len=100) ::&
+          "This is a division by zero error.",&
+          "Set the slope in tanh(phi/step_slope) greater than about 1e-15."/),&
+          __FILE__, __LINE__)
       end if
 
       V_potential=0e0_dp
@@ -240,16 +250,20 @@ CONTAINS
       !Check not getting too far off line
       if (dist >5e-1_dp) then
       !if (dist >1e0_dp) then
-        print*, "QSF: The trajectory is significantly deviating from the &
-          parametric curve."
         print*, "QSF: dist =", dist
-        print*, "QSF: Check that you have actually found the closest parameter"
-        print*, "QSF: or that you're not taking steps that are too large."
         print*, "QSF: param_closest =", param_closest
         print*, "QSF: phi =", phi
         print*, "QSF: turning_function_parametric =", &
           turning_function_parametric(param_closest)
-        stop
+
+        call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+          "The trajectory is significantly deviating &
+            from the parametric curve.", &
+          "Check that you have actually found the closest parameter", &
+          "or that you're not taking steps that are too large."/), &
+        __FILE__, __LINE__)
+
       end if
 
       !Get the integrated distance this closest point is up the curve
@@ -300,8 +314,12 @@ CONTAINS
 
 
     case default
-       write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
-       STOP
+      print*, "potential_choice =", potential_choice
+      call raise%fatal_code(&
+        (/character(len=100) ::&
+          "Need to set the potential V(phi) for this potential choice."/),&
+          __FILE__, __LINE__)
+
     end select
 
   END FUNCTION pot
@@ -357,10 +375,13 @@ CONTAINS
           dphi = phiplus - phi
           first_deriv(i) = (pot(phi+dphi)-pot(phi-dphi))/(2.0e0_dp*dphi(i))
           if (first_deriv(i).eq.0.e0_dp) then
-             write(*,*) 'MODPK: For i=', i
-             write(*,*) 'MODPK: first_deriv(i)=0, possibly signaling a problem with accuracy of numerical derivatives.'
-             write(*,*) 'MODPK: Try using vnderivs=F if possible.'
-             STOP
+
+            call raise%fatal_code(&
+            (/character(len=100) ::&
+             'first_deriv(i)=0, possibly signaling a problem with',&
+             'accuracy of numerical derivatives.',&
+             'Try using vnderivs=F if possible.' /),&
+             __FILE__, __LINE__)
           end if
        end do
        ! END MULTIFIELD
@@ -396,7 +417,8 @@ CONTAINS
           mu_hybrid =vparams(1,3)
           nu_hybrid =vparams(1,4)
 
-          first_deriv(1) = (lambda_hybrid**4)*(4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)*phi(1)/mass_hybrid**2 +&
+          first_deriv(1) = (lambda_hybrid**4)*(4.0_dp*(phi(1)**2/mass_hybrid**2 - 1.0_dp)&
+            *phi(1)/mass_hybrid**2 +&
             2.0_dp*phi(1)*phi(2)**2/nu_hybrid**4)
           first_deriv(2) = (lambda_hybrid**4)*(2.0_dp*phi(2)/mu_hybrid**2 +&
             2.0_dp*phi(1)**2*phi(2)/nu_hybrid**4)
@@ -404,9 +426,11 @@ CONTAINS
           m2_V = (vparams(1,:))
           first_deriv = m2_V*phi
        case(10)
-         print*, "MODPK: Potential_choice=", &
-           Potential_choice, "is broken."
-         stop
+         print*, "MODPK: Potential_choice=", Potential_choice
+         call raise%fatal_code(&
+           (/character(len=100) ::&
+           "This potential choice is broken for some reason."/),&
+           __FILE__, __LINE__)
 
        case(11)
          m2_V = 10.e0_dp**(vparams(1,:))
@@ -565,8 +589,14 @@ CONTAINS
 
        !END MULTIFIELD
        case default
-          write(*,*) 'MODPK: Need to set first_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
-          STOP
+
+         print*, "potential_choice =", potential_choice
+         call raise%fatal_code(&
+         (/character(len=100) ::&
+           "Need to set first derivative for this potential choice",&
+           "or use numerical derivatives (vnderivs=.true.)"/),&
+           __FILE__, __LINE__)
+
        end select
 
     end if
@@ -621,9 +651,11 @@ CONTAINS
     if (vnderivs) then
        !MULTIFIELD
        if (size(phi) .ne. 1) then
-          write(*,*), 'MODPK: num_inflaton =', num_inflaton
-          write(*,*), 'MODPK: 2nd order numerical derivative for multifield not implemented !'
-          STOP
+         call raise%fatal_code(&
+          (/character(len=100) ::&
+          'The 2nd order numerical derivative has not',&
+          'been implemented for more than one field.'/),&
+          __FILE__, __LINE__)
        end if
        phiplus = phi(1) + 0.2e0_dp*phi(1)*findiffdphi**(1.e0_dp/4.e0_dp)
        dphi = phiplus - phi(1)
@@ -676,9 +708,11 @@ CONTAINS
           m2_V = vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
-         print*, "MODPK: Potential_choice=", &
-           Potential_choice, "is broken."
-         stop
+         print*, "MODPK: Potential_choice=", Potential_choice
+         call raise%fatal_code(&
+           (/character(len=100) ::&
+           "This potential choice is broken for some reason."/),&
+           __FILE__, __LINE__)
 
        case(11)
          M2_V = 10.e0_dp**(vparams(1,:))
@@ -926,8 +960,13 @@ CONTAINS
          end do
 
        case default
-          write(*,*) 'MODPK: Need to set second_deriv in modpk_potential.f90 or use numerical derivatives (vnderivs=T)'
-          STOP
+
+         print*, "potential_choice =", potential_choice
+         call raise%fatal_code(&
+           (/character(len=100) ::&
+           "Need to set second_deriv for this potential choice."/),&
+            __FILE__, __LINE__)
+
        end select
        !END MULTIFIELD
     end if
@@ -977,9 +1016,13 @@ CONTAINS
       end do
 
     case default
-      print*, "MODPK: d3Vdphi3 not defined for potential_choice =", &
-        potential_choice
-      stop
+
+      print*, "potential_choice =", potential_choice
+      call raise%fatal_code(&
+        (/character(len=100) ::&
+        "Need to set third derivative for this potential choice."/),&
+        __FILE__, __LINE__)
+
     end select
 
   end function d3Vdphi3
@@ -1050,8 +1093,19 @@ CONTAINS
     getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
 
     if (getEps >=3.0e0_dp) then
-      print*, "MODPK: epsilon =", getEps, ">=3.0"
-      print*, "MODPK: in getEps"
+      print*, "MODPK: epsilon =", getEps
+
+      call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+        "Epsilon is >3.0 in SUBROUTINE getEps.", &
+        "This means H is complex.",&
+        "(This is not universe I'd like to live in.)" , &
+        "This error might arise if there is a large separation" , &
+        "in scales (stiff problem) and the integrator walks" , &
+        "to a bad position in parameter space." , &
+        "Try reducing the integration stepsize."/) , &
+        __FILE__, __LINE__)
+
     end if
 
     !END MULTIFIELD
@@ -1066,10 +1120,19 @@ CONTAINS
     real(dp) :: getH
     real(dp), INTENT(IN) :: phi(:), dphi(:)
 
-    ! MULTIFIELD
-    getH=SQRT(pot(phi)/3.0e0_dp/M_Pl**2 / &
-      (1.0e0_dp - dot_product(dphi, dphi)/6.0e0_dp/M_Pl**2))
-    ! MULTIFIELD
+    getH=pot(phi)/3.0e0_dp/M_Pl**2 / &
+      (1.0e0_dp - dot_product(dphi, dphi)/6.0e0_dp/M_Pl**2)
+
+    if (getH < 0.0e0_dp) then
+      call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+        "H is complex.",&
+        "Try smaller stepsize in integrator."/),&
+        __FILE__,__LINE__)
+    else
+      getH = sqrt(getH)
+    end if
+
   END FUNCTION getH
 
   !For when using t-integrator
@@ -1081,8 +1144,19 @@ CONTAINS
     real(dp), INTENT(IN) :: phi(:), dphidt(:)
 
     ! MULTIFIELD
-    getH_with_t= sqrt((pot(phi) + 0.5e0_dp*dot_product(dphidt, dphidt))/ &
-      3.0e0_dp/M_pl**2)
+    getH_with_t= (pot(phi) + 0.5e0_dp*dot_product(dphidt, dphidt))/ &
+      3.0e0_dp/M_pl**2
+
+    if (getH_with_t < 0.0e0_dp) then
+      call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+        "H is complex.",&
+        "Try smaller stepsize in integrator."/),&
+        __FILE__,__LINE__)
+    else
+      getH_with_t = sqrt(getH_with_t)
+    end if
+
     ! MULTIFIELD
 
   END FUNCTION getH_with_t
@@ -1100,9 +1174,18 @@ CONTAINS
       dot_product(dphi,dphi)/hubble**2
 
     if (getEps_with_t >3.0e0_dp) then
-      print*, "MODPK: epsilon =", getEps_with_t, ">3.0"
-      print*, "MODPK: in getEps_with_t"
-      stop
+      print*, "MODPK: epsilon =", getEps_with_t
+
+      call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+        "Epsilon is >3.0 in SUBROUTINE getEps_with_t.", &
+        "This means H is complex.",&
+        "(This is not universe I'd like to live in.)" , &
+        "This error might arise if there is a large separation" , &
+        "in scales (stiff problem) and the integrator walks" , &
+        "to a bad position in parameter space." , &
+        "Try reducing the integration stepsize."/) , &
+        __FILE__, __LINE__)
     end if
     !END MULTIFIELD
 
@@ -1350,10 +1433,12 @@ CONTAINS
       ABprod = 0e0_dp
       BAprod = 0e0_dp
       BBprod = 0e0_dp
-      call pnad_sumAA%clear()
-      call pnad_sumAB%clear()
-      call pnad_sumBA%clear()
-      call pnad_sumBB%clear()
+
+      !DEBUG
+      !call pnad_sumAA%clear()
+      !call pnad_sumAB%clear()
+      !call pnad_sumBA%clear()
+      !call pnad_sumBB%clear()
 
       do i=1,numb_infl; do j=1,numb_infl
 
@@ -1363,10 +1448,10 @@ CONTAINS
         BBprod = BBprod +B_vect(i)*B_vect(j)*d_power_matrix(i,j)
 
         !DEBUG
-        call pnad_sumAA%add(real(A_vect(i)*A_vect(j)*power_matrix(i,j)))
-        call pnad_sumAB%add(real(A_vect(i)*B_vect(j)*cross_matrix(i,j)))
-        call pnad_sumBA%add(real(B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))))
-        call pnad_sumBB%add(real(B_vect(i)*B_vect(j)*d_power_matrix(i,j)))
+        !call pnad_sumAA%add(real(A_vect(i)*A_vect(j)*power_matrix(i,j)))
+        !call pnad_sumAB%add(real(A_vect(i)*B_vect(j)*cross_matrix(i,j)))
+        !call pnad_sumBA%add(real(B_vect(i)*A_vect(j)*conjg(cross_matrix(j,i))))
+        !call pnad_sumBB%add(real(B_vect(i)*B_vect(j)*d_power_matrix(i,j)))
 
       end do; end do
       power_pnad = (AAprod + BBprod) + (ABprod + BAprod)
@@ -1550,10 +1635,13 @@ CONTAINS
           adiab_index=i
         end if
       end do
+
       if (adiab_index ==0) then
-        print*, "It appears no field space directions have projection"
-        print*, "along the adiab direction."
-        stop
+        call raise%fatal_cosmo(&
+        (/character(len=100) ::&
+        "It appears that no field space directions have projection",&
+        "along the adiab direction."/),&
+        __FILE__, __LINE__)
       end if
 
       !Set the "most adiab" dir to 1
@@ -1579,8 +1667,11 @@ CONTAINS
         if (norm(spanning(i,:)) > div_zero_tol) then
           s_iso(i-1,:) = spanning(i,:)/norm(spanning(i,:))
         else
-          print*, "spanning(",i,",:) has zero norm."
-          stop
+          print*, "MODPK: i=",i
+          call raise%fatal_cosmo(&
+            (/character(len=100) ::&
+            "The component spanning(i,:) has zero norm."/),&
+            __FILE__, __LINE__)
         end if
 
         !If there's a major hierarchy in scales for the vector components, then
@@ -1595,9 +1686,12 @@ CONTAINS
         if (abs(dot_product(omega_z,s_iso(i-1,:)))>1e-12 .or.&
           isnan(abs(dot_product(omega_z,s_iso(i-1,:))))) then
 
-          print*, "Isocurv projection has large adiab component."
           write(*,*), "omega_z.s_iso =",dot_product(omega_z,s_iso(i-1,:))," for i=",i-1
-          stop
+          call raise%fatal_cosmo(&
+            (/character(len=100) ::&
+            "The isocurvature projection has a large adiabatic component."/),&
+            __FILE__, __LINE__)
+
         end if
 
       end do
