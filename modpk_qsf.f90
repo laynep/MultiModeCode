@@ -25,12 +25,12 @@ module modpk_qsf
     logical :: traj_init = .false.
     real(dp), dimension(:,:), allocatable :: phi_light_vs_param
     contains
-      procedure :: get_param => choose_parameter
-      procedure :: initialize_traj => integrate_through_trajectory
-      procedure :: phi_light => get_phi_light
-      procedure :: dphi_light_dparam => dphi_light_dparam
-      procedure :: d2phi_light_dparam2 => d2phi_light_dparam2
-      procedure :: min_dist => distance_minimizer
+      procedure, public :: get_param => choose_parameter
+      procedure, public :: initialize_traj => integrate_through_trajectory
+      procedure, public :: phi_light => get_phi_light
+      procedure, public :: dphi_light_dparam => dphi_light_dparam
+      procedure, public :: d2phi_light_dparam2 => d2phi_light_dparam2
+      procedure, public :: min_dist => distance_minimizer
   end type
 
   type(qsf_reference) :: qsf_runref
@@ -572,15 +572,15 @@ contains
   !When initializing the integration around the parametrized curve,
   !this function will get the first guess for the parameter that puts
   !phi closest to the line
-  subroutine choose_parameter(this, phi_light, param)
+  subroutine choose_parameter(self, phi_light, param)
     implicit none
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     integer :: ii
     real(dp), intent(in), optional :: phi_light, param
 
     !Check for functionality
-    if (.not. allocated(this%phi_light_vs_param)) then
+    if (.not. allocated(self%phi_light_vs_param)) then
       print*, "QSF: Trying to set initial parameter guess,"
       print*, "QSF: but haven't integrated trajectory yet."
       stop
@@ -591,15 +591,15 @@ contains
 
     if (present(phi_light)) then
 
-#define LIGHT (this%phi_light_vs_param(:,1))
+#define LIGHT (self%phi_light_vs_param(:,1))
       ii= locate(LIGHT, phi_light)
-      this%hunt_guess = ii
-      this%param = this%phi_light_vs_param(ii,2)
+      self%hunt_guess = ii
+      self%param = self%phi_light_vs_param(ii,2)
 #undef LIGHT
     else if (present(param)) then
-#define PK_ARR (this%phi_light_vs_param(:,2))
+#define PK_ARR (self%phi_light_vs_param(:,2))
       ii= locate(PK_ARR, param)
-      this%hunt_guess = ii
+      self%hunt_guess = ii
 #undef PK_ARR
 
     else
@@ -613,11 +613,11 @@ contains
   !Since the valley is defined parametrically in field-space,
   !we need to find how far up the valley we are for any
   !given parameter.  This integrates the path until length>phi_start
-  subroutine integrate_through_trajectory(this, phi_start, &
+  subroutine integrate_through_trajectory(self, phi_start, &
       param0, stepsize)
     implicit none
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     real(dp), intent(in) :: param0, phi_start
     real(dp), intent(in), optional :: stepsize
 
@@ -629,10 +629,10 @@ contains
     real(dp) :: x_a, x_b
 
     !If already initialized, then reset everything
-    if (this%traj_init) then
-      this%traj_init = .false.
-      if (allocated(this%phi_light_vs_param)) then
-        deallocate(this%phi_light_vs_param)
+    if (self%traj_init) then
+      self%traj_init = .false.
+      if (allocated(self%phi_light_vs_param)) then
+        deallocate(self%phi_light_vs_param)
       end if
     end if
 
@@ -668,20 +668,20 @@ contains
 
     end do
 
-    allocate(this%phi_light_vs_param(counter,2))
-    this%phi_light_vs_param = length(1:counter,:)
+    allocate(self%phi_light_vs_param(counter,2))
+    self%phi_light_vs_param = length(1:counter,:)
     deallocate(length)
 
-    this%traj_init = .true.
+    self%traj_init = .true.
 
   end subroutine integrate_through_trajectory
 
   !After the trajectory has been integrated, this will give the
   !distance along the trajectory (from param0) to a reference param
-  function get_phi_light(this, param, use_locate) result(phi_light)
+  function get_phi_light(self, param, use_locate) result(phi_light)
     implicit none
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     real(dp), intent(in) :: param
     integer :: param_guess
     real(dp) :: phi_light
@@ -691,12 +691,12 @@ contains
 
     integer :: ii, jj
 
-    if (.not. this%traj_init) then
+    if (.not. self%traj_init) then
       print*, "QSF: Trying to get phi_light before integrating traj."
       stop
     end if
 
-    param_guess = this%hunt_guess
+    param_guess = self%hunt_guess
 
     if (present(use_locate) .and. use_locate) then
       call locator()
@@ -705,12 +705,12 @@ contains
     end if
     call interpolator()
 
-#define INTLEN size(this%phi_light_vs_param,1)
+#define INTLEN size(self%phi_light_vs_param,1)
 
     !Check for interpolation errors
     if(abs(del_phi) > 0.1 .or. &
-      phi_light<this%phi_light_vs_param(1,1) .or. &
-      phi_light > this%phi_light_vs_param(INTLEN,1)) then
+      phi_light<self%phi_light_vs_param(1,1) .or. &
+      phi_light > self%phi_light_vs_param(INTLEN,1)) then
 
       if (.not. present(use_locate) .or. .not. use_locate) then
         !Try locate, instead of hunt
@@ -725,18 +725,18 @@ contains
       print*,'QSF: QUITTING'
       print*,"QSF: del_phi", del_phi
       stop
-    else if (phi_light > this%phi_light_vs_param(INTLEN,1) .or. &
-      phi_light < this%phi_light_vs_param(1,1)) then
+    else if (phi_light > self%phi_light_vs_param(INTLEN,1) .or. &
+      phi_light < self%phi_light_vs_param(1,1)) then
       print*, "QSF: phi_light is out of bounds"
       print*, "QSF: phi_light > LIGHT(MAX) or < LIGHT(MIN)"
       print*, "QSF: phi_light =", phi_light
-      print*, "QSF: LIGHT(MAX) =", this%phi_light_vs_param(INTLEN,1)
-      print*, "QSF: LIGHT(MIN) =", this%phi_light_vs_param(1,1)
+      print*, "QSF: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
+      print*, "QSF: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
       print*, "QSF: param_guess =", param_guess
       stop
     end if
 
-    this%hunt_guess = param_guess
+    self%hunt_guess = param_guess
 
 
     contains
@@ -744,8 +744,8 @@ contains
       subroutine locator()
 
 
-#define LIGHT (this%phi_light_vs_param(:,1))
-#define P_ARR (this%phi_light_vs_param(:,2))
+#define LIGHT (self%phi_light_vs_param(:,1))
+#define P_ARR (self%phi_light_vs_param(:,2))
 
         !P_ARR is monotonic
         ii= locate(P_ARR, param)
@@ -764,8 +764,8 @@ contains
         low = max(1, param_guess-50)
         high = min(INTLEN, param_guess+50)
 
-#define LIGHT (this%phi_light_vs_param(low:high,1))
-#define P_ARR (this%phi_light_vs_param(low:high,2))
+#define LIGHT (self%phi_light_vs_param(low:high,1))
+#define P_ARR (self%phi_light_vs_param(low:high,2))
 
         !P_ARR is monotonic
         param_guess = param_guess - low
@@ -781,8 +781,8 @@ contains
       end subroutine hunter
 
       subroutine interpolator()
-#define LIGHT (this%phi_light_vs_param(jj:jj+4,1))
-#define P_ARR (this%phi_light_vs_param(jj:jj+4,2))
+#define LIGHT (self%phi_light_vs_param(jj:jj+4,1))
+#define P_ARR (self%phi_light_vs_param(jj:jj+4,2))
 
         call polint(&
           P_ARR, &
@@ -801,9 +801,9 @@ contains
   !a field space point and the parametric curve
   !that is used to define the minimum of the QSF valley.  For some parametrized
   !curves this can be done analytically, else we use Newtonian optimization.
-  function distance_minimizer(this) result(param_closest)
+  function distance_minimizer(self) result(param_closest)
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     real(dp) :: param_closest
 
     real(dp) :: phi_turn, slope
@@ -816,28 +816,28 @@ contains
       !Parabola
     !case(2)
     !  !Helix
-    !  if (abs(this%phi(1)) < 1e-5_dp) then
+    !  if (abs(self%phi(1)) < 1e-5_dp) then
     !    !Protect against divide by zero
-    !    if (this%phi(2) > 0e0_dp) then
+    !    if (self%phi(2) > 0e0_dp) then
     !      param_closest = pi/2.0e0_dp
     !    else
     !      param_closest = 3.0e0_dp*pi/2.0e0_dp
     !    end if
     !  else
-    !    param_closest = atan(this%phi(2)/this%phi(1))
+    !    param_closest = atan(self%phi(2)/self%phi(1))
     !  end if
 
     !  !Use the param guess to guess the winding number
     !  param_closest = (3.0e0_dp/2.0e0_dp)*pi &
     !    -param_closest &
-    !    + (2.0e0_dp*pi)*floor(this%param/2.0e0_dp/pi)
+    !    + (2.0e0_dp*pi)*floor(self%param/2.0e0_dp/pi)
 
-    !  if (abs(param_closest-this%param)>1e0_dp) then
+    !  if (abs(param_closest-self%param)>1e0_dp) then
 
     !    !Try fixing winding number
     !    param_closest = param_closest + pi
 
-    !    if (abs(param_closest-this%param)>1e0_dp) then
+    !    if (abs(param_closest-self%param)>1e0_dp) then
     !      param_closest = param_closest - 2.0e0_dp*pi
     !    end if
 
@@ -848,12 +848,12 @@ contains
       phi_turn = vparams(4,1)
       slope = vparams(4,2)
 
-      t_less = this%phi(1)
+      t_less = self%phi(1)
       t_great = (1.0e0_dp + slope**2)**(-1)*&
-        (slope*this%phi(1) +&
+        (slope*self%phi(1) +&
         slope**2*phi_turn - &
         slope*phi_turn + &
-        this%phi(2) + phi_turn)
+        self%phi(2) + phi_turn)
 
       !Try different distances
       d_less = distance(t_less)
@@ -871,17 +871,17 @@ contains
     case default
       !Use Newtonian optimization
       param_closest = zero_finder(distance_deriv, &
-        distance_2deriv, this%param)
+        distance_2deriv, self%param)
     end select
 
   end function distance_minimizer
 
   !Derivative of the light field with respect to the parameter at which we
   !perform the interpolation of the pre-integrated trajectory.
-  function dphi_light_dparam(this,param) result(dot_phi)
+  function dphi_light_dparam(self,param) result(dot_phi)
     implicit none
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     real(dp) :: dot_phi
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: dfunct
@@ -895,10 +895,10 @@ contains
 
   !Second derivative of the light field with respect to the parameter at which we
   !perform the interpolation of the pre-integrated trajectory.
-  function d2phi_light_dparam2(this,param) result(ddot_phi)
+  function d2phi_light_dparam2(self,param) result(ddot_phi)
     implicit none
 
-    class(qsf_reference) :: this
+    class(qsf_reference) :: self
     real(dp) :: ddot_phi
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: dfunct
@@ -909,7 +909,7 @@ contains
 
     dfunct = dturndparam(param)
     d2funct = d2turndparam2(param)
-    dot_phi = this%dphi_light_dparam(param)
+    dot_phi = self%dphi_light_dparam(param)
 
     ddot_phi = (1.0e0_dp/dot_phi)* sum( dfunct*d2funct)
 

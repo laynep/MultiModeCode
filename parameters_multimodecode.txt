@@ -7,8 +7,8 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 2
-  potential_choice = 16
-  vparam_rows = 2
+  potential_choice = 1
+  vparam_rows = 1
   more_potential_params = .false.
 
   slowroll_infl_end = .true.
@@ -23,7 +23,7 @@ sum-separable potentials.
 &analytical
   use_deltaN_SR = .true.
   use_horiz_cross_approx = .true.
-  evaluate_modes = .false.
+  evaluate_modes = .true.
 /
 
 ----------------
@@ -53,8 +53,8 @@ Parameters to control how the ICs are sampled
   7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
 &ic_sampling_nml
-  ic_sampling = 6
-  numb_samples = 2
+  ic_sampling = 1
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -75,15 +75,13 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 3
+  param_sampling = 1
 
   use_first_priorval = .true.
 
   vp_prior_min(1,:) = -14
-  vp_prior_min(2,:) = 0.0
 
   vp_prior_max(1,:) = -12
-  vp_prior_max(2,:) = 0.0
 
   varying_N_pivot = .false.
 
@@ -93,6 +91,12 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
 
   vp_prior_max(1,:) = 1.0e-13
   vp_prior_max(2,:) = 2.0
+
+  vp_prior_min(1,:) = -14
+  vp_prior_min(2,:) = 0.0
+
+  vp_prior_max(1,:) = -12
+  vp_prior_max(2,:) = 0.0
 
 ----------------
 Parameters to be passed to the potential
@@ -107,7 +111,6 @@ the smallest mass; others are discarded.
   phi_init0 = 20.0 20.0
 
   vparams(1,:) = -12.0       -12.5
-  vparams(2,:) = 1.66666 1.66666
 
 
 /
@@ -119,6 +122,9 @@ the smallest mass; others are discarded.
 
   vparams(5,:) = 0.0       .050
   vparams(6,:) = 0.0       0.416481652821956
+
+  vparams(1,:) = -12.0       -12.5
+  vparams(2,:) = 1.66666 1.66666
 
 ----------------
 Priors on the IC and N_pivot ranges

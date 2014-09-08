@@ -3,6 +3,7 @@ MODULE potential
   use internals, only : pi
   use modpk_qsf
   use modpk_numerics
+  use modpk_errorhandling, only : raise
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
@@ -18,7 +19,7 @@ MODULE potential
     real(dp) :: exp_scalar=0e0_dp
     real(dp) :: dlogThetadN=0e0_dp
     contains
-      procedure :: calc_exp_scalar =>bundle_exp_scalar
+      procedure, public :: calc_exp_scalar =>bundle_exp_scalar
   end type bundle
 
   type(bundle) :: field_bundle
@@ -59,6 +60,11 @@ CONTAINS
 
     real(dp) :: p_exp
 
+    real(dp) :: V0
+    real(dp), dimension(size(phi)) :: A_i
+    real(dp), dimension(size(phi),size(phi)) :: B_ij
+    integer :: ii, jj
+
     select case(potential_choice)
 
     case(1)
@@ -71,22 +77,28 @@ CONTAINS
        lambda = 10.e0_dp**vparams(1,:)
        finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
        V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
+
     case(3)
        lambda = 10.e0_dp**vparams(1,:)
        V_potential = sum(0.25e0_dp*lambda*phi**4)
+
     case(4)
        lambda = 10.e0_dp**vparams(1,:)
        V_potential = sum(lambda*phi)
+
     case(5)
        lambda = 10.e0_dp**vparams(1,:)
        V_potential = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
+
     case(6)
        lambda = 10.e0_dp**vparams(1,:)
        mu = 10.e0_dp**vparams(2,:)
        V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
+
     case(7) !product of exponentials
        lambda = vparams(2, :)
        V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl))
+
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
@@ -101,14 +113,17 @@ CONTAINS
        V_potential = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
          phi(2)**2/mu_hybrid**2 +&
          phi(1)**2*phi(2)**2/nu_hybrid**4)
-     case(9)
-       m2_V = vparams(1,:)
-       c1_V = vparams(2,:)
-       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
-     case(10)
-       print*, "MODPK: Potential_choice=", &
-         Potential_choice, "is broken."
-       stop
+
+    case(9)
+      m2_V = vparams(1,:)
+      c1_V = vparams(2,:)
+      V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
+
+    case(10)
+      print*, "MODPK: Potential_choice=", &
+        Potential_choice, "is broken."
+      stop
+
     case(11)
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
@@ -266,6 +281,23 @@ CONTAINS
       m2_V = vparams(1,:)
       V_potential = (1.0e0_dp/p_exp)*sum(m2_V*abs(phi)**p_exp)
 
+    case(17)
+      ! Generalized axions
+
+      V0 = vparams(1,1)
+      A_i = vparams(2,:)
+      B_ij = vparams(3:num_inflaton+2,:)
+
+      V_potential = V0
+      do ii=1,size(A_i)
+        V_potential = V_potential + A_i(ii)*cos(2.0e0_dp*pi*phi(ii))
+      end do
+
+      do ii=1,size(A_i); do jj=1, size(A_i)
+        V_potential = V_potential + B_ij(ii,jj)*&
+          cos(2.0e0_dp*pi*phi(ii) - 2.0e0_dp*pi*phi(jj))
+      end do; end do
+
 
     case default
        write(*,*) 'MODPK: Need to set pot(phi) in modpk_potential.f90 for potential_choice =',potential_choice
@@ -311,6 +343,11 @@ CONTAINS
 
     real(dp) :: p_exp
     integer :: ii
+
+    real(dp) :: V0, twopi
+    real(dp), dimension(size(phi)) :: A_i
+    real(dp), dimension(size(phi),size(phi)) :: B_ij
+    integer :: alpha, beta
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -505,6 +542,26 @@ CONTAINS
              first_deriv(ii)=0e0_dp
          end do
 
+       case(17)
+         ! Generalized axions
+
+         V0 = vparams(1,1)
+         A_i = vparams(2,:)
+         B_ij = vparams(3:num_inflaton+2,:)
+
+         twopi = 2.0e0_dp*pi
+
+         first_deriv = -twopi*sin(twopi*phi)
+
+         do alpha=1, size(first_deriv)
+           do beta=1, size(first_deriv)
+             if (alpha==beta) cycle
+             first_deriv(alpha) = first_deriv(alpha) + &
+               twopi*(B_ij(alpha,beta)+B_ij(beta,alpha))* &
+               sin(twopi*phi(beta) - twopi*phi(alpha))
+           end do
+         end do
+
 
        !END MULTIFIELD
        case default
@@ -555,6 +612,11 @@ CONTAINS
     integer :: ii, jj, ll
 
     real(dp) :: p_exp
+
+    real(dp) :: V0, twopi, fourpi_sq
+    real(dp), dimension(size(phi)) :: A_i
+    real(dp), dimension(size(phi),size(phi)) :: B_ij
+    integer :: alpha, beta
 
     if (vnderivs) then
        !MULTIFIELD
@@ -826,6 +888,41 @@ CONTAINS
          do ii=1,size(phi)
            if (abs(phi(ii))<1e-5) &
              second_deriv(ii,ii)=0e0_dp
+         end do
+
+       case(17)
+         ! Generalized axions
+
+         V0 = vparams(1,1)
+         A_i = vparams(2,:)
+         B_ij = vparams(3:num_inflaton+2,:)
+
+         twopi = 2.0e0_dp*pi
+         fourpi_sq = 4.0e0_dp*pi**2
+
+         !Identity matrix
+         delta=0e0_dp
+         do ii=1, num_inflaton
+           delta(ii,ii) = 1.0e0_dp
+         end do
+
+         !Optimize me...
+         do alpha=1, size(A_i)
+           do beta=1, size(A_i)
+             second_deriv(alpha,beta) = fourpi_sq*(B_ij(alpha,beta)+B_ij(beta,alpha))*&
+               cos(twopi*phi(beta) - twopi*phi(alpha)) -&
+               fourpi_sq*delta(alpha,beta)*A_i(alpha)*&
+               cos(twopi*phi(alpha))
+
+             if (alpha==beta) then
+               do ii=1, size(A_i)
+                 second_deriv(alpha,beta) = second_deriv(alpha,beta) + &
+                   fourpi_sq*(B_ij(alpha,ii) + B_ij(ii,alpha))*&
+                   cos(twopi*phi(ii) - twopi*phi(alpha))
+               end do
+             end if
+
+           end do
          end do
 
        case default
@@ -1755,20 +1852,20 @@ CONTAINS
   end function trace_d2logVdphi2
 
   !Calc bundle exp_scalar by integrating tr(d2Vdphi2) to efold by Riemann sum
-  subroutine bundle_exp_scalar(this,phi, efold)
+  subroutine bundle_exp_scalar(self,phi, efold)
 
-    class(bundle) :: this
+    class(bundle) :: self
     real(dp), intent(in) :: phi(:), efold
     real(dp) :: dN
 
-    dN = efold - this%N
+    dN = efold - self%N
 
-    this%dlogThetadN= this%dlogThetadN - &
+    self%dlogThetadN= self%dlogThetadN - &
       dN*trace_d2logVdphi2(phi)
 
-    this%exp_scalar=exp(this%dlogThetadN)
+    self%exp_scalar=exp(self%dlogThetadN)
 
-    this%N=efold
+    self%N=efold
 
   end subroutine bundle_exp_scalar
 

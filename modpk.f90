@@ -2,6 +2,7 @@ MODULE access_modpk
   use modpkparams, only : dp
   USE camb_interface
   use modpk_io, only : out_opt
+  use modpk_errorhandling, only : raise
   IMPLICIT NONE
   PRIVATE
   PUBLIC :: potinit, evolve, total_efold
@@ -144,9 +145,9 @@ CONTAINS
     i= locate(log_aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
-       PRINT*,'MODPK: The background solution worked, but the k you requested', k,' is outside'
-       PRINT*,'MODPK: the bounds of the background you solved for. Please reconsider'
-       PRINT*,'MODPK: your phi_init and N_pivot combo.'
+       PRINT*,'MODPK: The background solution worked,'
+       PRINT*,'MODPK: but the k you requested', k,' is outside'
+       PRINT*,'MODPK: the bounds of the background you solved for.'
 
        !Override the stop.
        if (ic_sampling/=ic_flags%reg_samp) then
@@ -154,10 +155,13 @@ CONTAINS
          return
        end if
 
-       PRINT*,'MODPK: QUITTING'
        write(*,e2_fmt) "log(k/k_start):", ah
        write(*,e2_fmt) "log_aharr(1):", log_aharr(1)
-       STOP
+
+       call raise%fatal_cosmo(&
+         (/'Reconsider your phi_init and N_pivot combo.'/), &
+         __FILE__, __LINE__)
+
     END IF
 
     ! nactual_bg here is set by the background evolution
@@ -178,31 +182,30 @@ CONTAINS
 
     x1=alpha_ik
 
-    !DEBUG
-    !print*, "this is a call to evolve; N_BD=", x1
-
     IF(x1.le.0.) THEN
-       PRINT*,'MODPK: The phi_init you specified is too small to give'
-       PRINT*,'MODPK: sufficient efolds of inflation. We cannot self-consistently'
-       PRINT*,'MODPK: solve this for you. Please adjust phi_init and try again.'
-       print*, "alpha=",x1
 
-       print*, "dalpha", dalpha
+      print*, "alpha=",x1
+      print*, "dalpha", dalpha
 
-       PRINT*,'MODPK: QUITTING'
-       STOP
+      call raise%fatal_cosmo((/ 'The phi_init you specified is too small to give', &
+       'sufficient efolds of inflation. We cannot self-consistently', &
+       'solve this for you. Please adjust phi_init and try again.'/), &
+       __FILE__, __LINE__)
+
     END IF
+
     IF((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1 .OR. dalpha .GT. 0.1 .OR. dh .GT. 0.1) THEN
-       PRINT*,'MODPK: The interpolation in SUBROUTINE EVOLVE has suspiciously large'
-       PRINT*,'MODPK: errors. Your model smells fishy.'
-       PRINT*,'MODPK: QUITTING'
        if ((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1)&
          print*, "MODPK: Error in dphi interpolation.",&
          (sqrt(dot_product(delphi,delphi))/num_inflaton)
        if (dalpha .GT. 0.1) print*, "MODPK: Error in alpha interpolation.", dalpha
        if (dh > 0.1) print*, "MODPK: Error in Hubble interpolation", dh
 
-       STOP
+       call raise%fatal_code( (/ 'The interpolation in SUBROUTINE evolve',&
+        'has suspiciously large errors.',&
+        'Your model smells fishy.'/),&
+        __FILE__, __LINE__)
+
     ENDIF
 
     call set_background_and_mode_ic(y)
@@ -239,8 +242,10 @@ CONTAINS
       accuracy=tech_opt%rk_accuracy_modes
     else
       print*, "MODPK: accuracy_setting ==", tech_opt%accuracy_setting
-      print*, "MODPK: is not supported."
-      stop
+
+      call raise%fatal_code((/"This accuracy_setting is not supported."/),&
+        __FILE__, __LINE__)
+
     end if
 
     hmin=1e-30_dp !minimum stepsize

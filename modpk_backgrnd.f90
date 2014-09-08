@@ -10,6 +10,7 @@ MODULE background_evolution
   use modpk_numerics, only : locate, polint, array_polint
   use modpk_io, only : out_opt
   use modpk_qsf
+  use modpk_errorhandling, only : raise
 
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -47,8 +48,9 @@ CONTAINS
     !     y(2)=dphi/dx          dydx(1)=d^2phi/dx^2
 
     if (.not. allocated(phi_init)) then
-      PRINT*, 'MODPK: Please initialize phi_init as an array!'
-      stop
+      call raise%fatal_code(&
+        (/"Please initialize phi_init as an array!"/),&
+        __FILE__, __LINE__)
     end if
 
     if (out_opt%modpkoutput .and. &
@@ -73,16 +75,20 @@ CONTAINS
        !Check whether phi_infl_end is in the correct direction from phi_init
        IF(.NOT.(slowroll_infl_end)) THEN
           IF (phidot_sign(1) .GT.0 .AND. phi_init(1) .gt. phi_infl_end(1)) THEN
-             PRINT*, 'MODPK: Initial phi is smaller than final phi.'
-             PRINT*, 'MODPK: Please check your initial conditions'
-             PRINT*, 'MODPK: QUITTING'
-             STOP
+
+            call raise%fatal_cosmo(&
+             (/"Initial phi is smaller than final phi.", &
+             "Please check your initial conditions."/), &
+             __FILE__, __LINE__)
+
           ENDIF
           IF (phidot_sign(1) .LT.0 .AND. phi_init(1) .lt. phi_infl_end(1)) THEN
-             PRINT*, 'MODPK: Initial phi is larger than final phi.'
-             PRINT*, 'MODPK: Please check your initial conditions'
-             PRINT*, 'MODPK: QUITTING'
-             STOP
+
+            call raise%fatal_cosmo(&
+             (/"Initial phi is larger than final phi.", &
+             "Please check your initial conditions."/), &
+             __FILE__, __LINE__)
+
           ENDIF
 
        ENDIF
@@ -117,12 +123,16 @@ CONTAINS
 
       CALL trial_background(phi_init, alpha_e, V_end)
 
+
       if (pk_bad .ne. 0) then
         !Override specific errors when doing IC sampling
-        if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
-
-        print*, 'MODPK: pk_bad = ', pk_bad
-        stop
+        if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) then
+          return
+        else
+          call raise%fatal_cosmo(&
+           (/"Bad set of parameters." /), &
+           __FILE__, __LINE__)
+        end if
       end if
     end if
     !END MULTIFIELD
@@ -189,8 +199,9 @@ CONTAINS
 
           if (save_iso_N) then
             if (.not. allocated(phi_iso_N)) then
-              print*, "phi_iso_N not allocated..."
-              stop
+              call raise%fatal_code(&
+                (/"The array phi_iso_N is not allocated."/),&
+                __FILE__, __LINE__)
             endif
 
             i=locate(lna(1:nactual_bg),alpha_iso_N)
@@ -208,6 +219,7 @@ CONTAINS
 
           a_end_inst=EXP(-71.1e0_dp+LOG(V_i/V_end)/4.e0_dp+LOG((M_Pl**4)/V_i)/4.e0_dp)
 
+
           if (isnan(a_end) .or. a_end<1.0e-100_dp) then
             print*, "MODPK: a_end=", a_end
             print*, "MODPK: N_efold=", alpha_pivot
@@ -216,7 +228,10 @@ CONTAINS
             if (ic_sampling/=ic_flags%reg_samp) then
               pk_bad = bad_ic
             else
-              stop
+              call raise%fatal_cosmo(&
+                (/"See above.",&
+                "Try setting your IC closer to horizon crossing."/),&
+                __FILE__,__LINE__)
             end if
 
           end if
@@ -424,9 +439,10 @@ CONTAINS
 
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
-        print*, "kount is too big. Giving this error instead of"
-        print*, "a segmentation fault."
-        stop
+        call raise%fatal_code((/ "kount is too big.",&
+         "Giving this error instead of", &
+        "a segmentation fault."/), &
+        __FILE__, __LINE__)
       end if
 
        lna(1:kount)=xp(1:kount)
@@ -483,15 +499,18 @@ CONTAINS
                return
              else
 
-               print*,'MODPK: The interpolation in SUBROUTINE trial_background has suspiciously large'
-               print*,'MODPK: errors. Your model smells fishy.'
-               print*,'MODPK: QUITTING'
                print*,"MODPK: dalpha", dalpha
                print*,"MODPK: dv", dv
                print*,"MODPK: bb", bb
                print*,"MODPK: lna", lna(kount-5:kount), "alpha_e", alpha_e
                print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
-               stop
+
+               call raise%fatal_code(&
+               (/ 'The interpolation in SUBROUTINE trial_background',&
+               'has suspiciously large errors.',&
+               'Your model smells fishy.' /), &
+               __FILE__, __LINE__)
+
              end if
            endif
 

@@ -56,56 +56,56 @@ module modpk_io
   contains
 
     !Open output files
-    subroutine output_file_open(this,ICs,SR)
-      class(print_options) :: this
+    subroutine output_file_open(self,ICs,SR)
+      class(print_options) :: self
       logical, intent(in), optional :: ICs, SR
 
-      if (this%save_traj) &
-        open(newunit=this%trajout, &
+      if (self%save_traj) &
+        open(newunit=self%trajout, &
           file="out_trajectory.txt")
-      if (this%spectra) &
-        open(newunit=this%spectraout, &
+      if (self%spectra) &
+        open(newunit=self%spectraout, &
           file="out_powerspectra.txt")
-      if (this%fields_horiz) &
-        open(newunit=this%fields_h_out, &
+      if (self%fields_horiz) &
+        open(newunit=self%fields_h_out, &
           file="out_fields_horizon_cross.txt")
-      if (this%fields_end_infl) &
-        open(newunit=this%fields_end_out, &
+      if (self%fields_end_infl) &
+        open(newunit=self%fields_end_out, &
           file="out_fields_infl_end.txt")
-      if (this%modes) then
-        open(newunit=this%modeout(1), &
+      if (self%modes) then
+        open(newunit=self%modeout(1), &
           file="out_modes_1.txt")
-        open(newunit=this%modeout(2), &
+        open(newunit=self%modeout(2), &
           file="out_modes_2.txt")
-        open(newunit=this%modeout(3), &
+        open(newunit=self%modeout(3), &
           file="out_modes_3.txt")
-        open(newunit=this%modeout(4), &
+        open(newunit=self%modeout(4), &
           file="out_modes_4.txt")
       end if
 
       if (present(ICs) .and. ICs) then
-        open(newunit=this%outsamp,&
+        open(newunit=self%outsamp,&
           file="out_ic_eqen.txt")
-        open(newunit=this%outsamp_N_iso,&
+        open(newunit=self%outsamp_N_iso,&
           file="out_ic_isoN.txt")
       end if
 
       if (present(SR) .and. SR) then
-        open(newunit=this%outsamp_SR,&
+        open(newunit=self%outsamp_SR,&
           file="out_ic_eqen_SR.txt")
-        open(newunit=this%outsamp_N_iso_SR,&
+        open(newunit=self%outsamp_N_iso_SR,&
           file="out_ic_isoN_SR.txt")
       end if
 
     end subroutine output_file_open
 
-    subroutine make_formatting(this, num_inflaton)
-      class(print_options) :: this
+    subroutine make_formatting(self, num_inflaton)
+      class(print_options) :: self
       integer, intent(in) :: num_inflaton
 
-      write(this%ci, '(I2)'), num_inflaton
-      this%ci = adjustl(this%ci)
-      this%array_fmt = '(a25,'//trim(this%ci)//'es10.3)'
+      write(self%ci, '(I2)'), num_inflaton
+      self%ci = adjustl(self%ci)
+      self%array_fmt = '(a25,'//trim(self%ci)//'es10.3)'
 
     end subroutine make_formatting
 

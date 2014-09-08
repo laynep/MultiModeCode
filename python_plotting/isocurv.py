@@ -107,7 +107,7 @@ plt.ylim(10**-50,10**-28)
 #ax2.set_yticks([ 10**-36, 10**-48, 10**-60])
 ax2.set_yticks([ 10**-36, 10**-48])
 
-save=True
+save=False
 name = 'isocurv_compare'
 if save:
     direct='/home/lpri691/LaTex/multifield_modecode/multimodecode/plots/'

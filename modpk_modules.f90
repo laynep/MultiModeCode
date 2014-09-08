@@ -150,8 +150,8 @@ module modpk_observables
     real(dp) :: summand = 0e0_dp
     real(dp) :: remainder = 0e0_dp
     contains
-      procedure :: add => kahan_summation
-      procedure :: clear => kahan_clear_mem
+      procedure, public :: add => kahan_summation
+      procedure, public :: clear => kahan_clear_mem
   end type
 
   !Type to save the ICs and observs. Add new observables here
@@ -180,10 +180,10 @@ module modpk_observables
     real(dp) :: f_NL
     real(dp) :: tau_NL
     contains
-      procedure :: printout => ic_print_observables
-      procedure :: print_header => ic_print_headers
-      procedure :: set_zero => set_observs_to_zero
-      procedure :: set_finite_diff => calculate_observs_finitediff
+      procedure, public :: printout => ic_print_observables
+      procedure, public :: print_header => ic_print_headers
+      procedure, public :: set_zero => set_observs_to_zero
+      procedure, public :: set_finite_diff => calculate_observs_finitediff
   end type observables
 
   private :: ic_print_observables, set_observs_to_zero, &
@@ -194,38 +194,38 @@ module modpk_observables
     !Procedures for Kahan summation objects
 
     !Algorithm for Kahan summation
-    subroutine kahan_summation(this,val)
+    subroutine kahan_summation(self,val)
 
-      class(KahanSum) :: this
+      class(KahanSum) :: self
       real(dp), intent(in) :: val
       real(dp) :: ytemp, ttemp
 
-      ytemp = val - this%remainder
-      ttemp = this%summand + ytemp
-      this%remainder = (ttemp - this%summand) - ytemp
-      this%summand = ttemp
+      ytemp = val - self%remainder
+      ttemp = self%summand + ytemp
+      self%remainder = (ttemp - self%summand) - ytemp
+      self%summand = ttemp
 
     end subroutine kahan_summation
 
-    subroutine kahan_clear_mem(this)
+    subroutine kahan_clear_mem(self)
 
-      class(KahanSum) :: this
+      class(KahanSum) :: self
 
-      this%remainder=0e0_dp
-      this%summand=0e0_dp
+      self%remainder=0e0_dp
+      self%summand=0e0_dp
 
     end subroutine kahan_clear_mem
 
     !Write the cosmo observables headers to file
-    subroutine ic_print_headers(this, outunit)
-      class(observables) :: this
+    subroutine ic_print_headers(self, outunit)
+      class(observables) :: self
       integer, intent(in) :: outunit
 
       character(1024) :: cname
       integer :: ii
 
       !First columns for IC
-      do ii=1,size(this%ic)
+      do ii=1,size(self%ic)
         write(cname, "(A3,I4.4)") "phi_piv", ii
         call csv_write(&
           outunit,&
@@ -245,60 +245,60 @@ module modpk_observables
 
 
     !Print the cosmo observables to file
-    subroutine ic_print_observables(this, outunit)
+    subroutine ic_print_observables(self, outunit)
 
-      class(observables) :: this
+      class(observables) :: self
       integer, intent(in) :: outunit
 
 
       call csv_write(outunit,&
-        (/ this%ic(:), &
-        this%As, &
-        this%ns,&
-        this%r, &
-        this%nt, &
-        this%alpha_s, &
-        this%A_iso, &
-        this%A_pnad,&
-        this%A_ent, &
-        this%A_bundle, &
-        this%n_iso, &
-        this%n_pnad, &
-        this%n_ent, &
-        this%A_cross_ad_iso, &
-        this%f_NL, &
-        this%tau_NL /), &
+        (/ self%ic(:), &
+        self%As, &
+        self%ns,&
+        self%r, &
+        self%nt, &
+        self%alpha_s, &
+        self%A_iso, &
+        self%A_pnad,&
+        self%A_ent, &
+        self%A_bundle, &
+        self%n_iso, &
+        self%n_pnad, &
+        self%n_ent, &
+        self%A_cross_ad_iso, &
+        self%f_NL, &
+        self%tau_NL /), &
         advance=.true.)
 
     end subroutine ic_print_observables
 
-    subroutine set_observs_to_zero(this)
-      class(observables) :: this
+    subroutine set_observs_to_zero(self)
+      class(observables) :: self
 
-        this%As = 0e0_dp
-        this%A_iso = 0e0_dp
-        this%A_pnad = 0e0_dp
-        this%A_ent = 0e0_dp
-        this%A_cross_ad_iso = 0e0_dp
-        this%A_bundle = 0e0_dp
-        this%ns = 0e0_dp
-        this%nt = 0e0_dp
-        this%n_iso = 0e0_dp
-        this%n_pnad = 0e0_dp
-        this%n_ent = 0e0_dp
-        this%r = 0e0_dp
-        this%alpha_s = 0e0_dp
-        this%runofrun = 0e0_dp
-        this%f_NL = 0e0_dp
-        this%tau_NL = 0e0_dp
+        self%As = 0e0_dp
+        self%A_iso = 0e0_dp
+        self%A_pnad = 0e0_dp
+        self%A_ent = 0e0_dp
+        self%A_cross_ad_iso = 0e0_dp
+        self%A_bundle = 0e0_dp
+        self%ns = 0e0_dp
+        self%nt = 0e0_dp
+        self%n_iso = 0e0_dp
+        self%n_pnad = 0e0_dp
+        self%n_ent = 0e0_dp
+        self%r = 0e0_dp
+        self%alpha_s = 0e0_dp
+        self%runofrun = 0e0_dp
+        self%f_NL = 0e0_dp
+        self%tau_NL = 0e0_dp
 
     end subroutine set_observs_to_zero
 
-    subroutine calculate_observs_finitediff(this, dlnk, &
+    subroutine calculate_observs_finitediff(self, dlnk, &
         pk0, pklow1, pkhigh1, &
         pklow2, pkhigh2, &
         bundle_width)
-      class(observables) :: this
+      class(observables) :: self
       type(power_spectra), intent(in) :: pk0, pklow1, pkhigh1
       type(power_spectra), intent(in), optional :: pklow2, pkhigh2
       real(dp), intent(in) :: dlnk
@@ -312,43 +312,43 @@ module modpk_observables
       endif
 
       !Amplitudes
-      this%As = pk0%adiab
-      this%A_iso=pk0%isocurv
-      this%A_pnad=pk0%pnad
-      this%A_ent=pk0%entropy
-      this%A_cross_ad_iso = pk0%cross_ad_iso
+      self%As = pk0%adiab
+      self%A_iso=pk0%isocurv
+      self%A_pnad=pk0%pnad
+      self%A_ent=pk0%entropy
+      self%A_cross_ad_iso = pk0%cross_ad_iso
 
       !Bundle width
-      this%A_bundle=bundle_width
+      self%A_bundle=bundle_width
 
       !Finite difference evaluation of spectral indices
-      this%ns = 1.e0_dp+log(pkhigh1%adiab/pklow1%adiab)/dlnk/2.e0_dp
-      this%nt = log(pkhigh1%tensor/pklow1%tensor)/dlnk/2.e0_dp
-      this%n_iso=log(pkhigh1%isocurv/pklow1%isocurv)/dlnk/2.e0_dp
-      this%n_pnad=log(pkhigh1%pnad/pklow1%pnad)/dlnk/2.e0_dp
-      this%n_ent=log(pkhigh1%entropy/pklow1%entropy)/dlnk/2.e0_dp
+      self%ns = 1.e0_dp+log(pkhigh1%adiab/pklow1%adiab)/dlnk/2.e0_dp
+      self%nt = log(pkhigh1%tensor/pklow1%tensor)/dlnk/2.e0_dp
+      self%n_iso=log(pkhigh1%isocurv/pklow1%isocurv)/dlnk/2.e0_dp
+      self%n_pnad=log(pkhigh1%pnad/pklow1%pnad)/dlnk/2.e0_dp
+      self%n_ent=log(pkhigh1%entropy/pklow1%entropy)/dlnk/2.e0_dp
 
       !Tensor-to-scalar
-      this%r = pk0%tensor/pk0%adiab
+      self%r = pk0%tensor/pk0%adiab
 
       if (runofrun) then
 
         !alpha_s from 5-pt stencil
-        this%alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
+        self%alpha_s = (1.0e0_dp/12.0e0_dp/dlnk**2)*&
           (-log(pkhigh2%adiab) + 16.0e0_dp*log(pkhigh1%adiab) - &
           30.0e0_dp*log(pk0%adiab) + 16.0e0_dp*log(pklow1%adiab) - &
           log(pklow2%adiab))
 
-        this%runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
+        self%runofrun = (1.0e0_dp/2.0e0_dp/dlnk**3)*&
           (log(pkhigh2%adiab) -2.0e0_dp* log(pkhigh1%adiab) &
           + 2.0e0_dp*log(pklow1%adiab) -log(pklow2%adiab))
 
       else
 
-        this%alpha_s = log(pkhigh1%adiab*pklow1%adiab/pk0%adiab**2)/dlnk**2
+        self%alpha_s = log(pkhigh1%adiab*pklow1%adiab/pk0%adiab**2)/dlnk**2
 
         !Default
-        this%runofrun = 0e0_dp
+        self%runofrun = 0e0_dp
 
       end if
 
