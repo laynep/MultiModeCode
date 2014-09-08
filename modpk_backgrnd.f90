@@ -229,7 +229,7 @@ CONTAINS
               pk_bad = bad_ic
             else
               call raise%fatal_cosmo(&
-                "See above.&
+                "See above.  &
                 Try setting your IC closer to horizon crossing.",&
                 __FILE__,__LINE__)
             end if
@@ -440,7 +440,7 @@ CONTAINS
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
         call raise%fatal_code(&
-         "kount is too big.&
+         "kount is too big.  &
          Giving this error instead of &
          a segmentation fault.", &
         __FILE__, __LINE__)
@@ -507,8 +507,8 @@ CONTAINS
                print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
 
                call raise%fatal_code(&
-               'The interpolation in SUBROUTINE trial_background&
-               has suspiciously large errors.&
+               'The interpolation in SUBROUTINE trial_background &
+               has suspiciously large errors.  &
                Your model smells fishy.' , &
                __FILE__, __LINE__)
 

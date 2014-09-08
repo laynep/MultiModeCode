@@ -151,8 +151,14 @@ contains
         call get_stats(rstats,istats)
 
         if (istate<0) then
-          print*, "MODPK in dvode_f90 istate=", istate
-          stop
+
+          print*, "MODPK istate=", istate
+
+          call raise%fatal_code(&
+            "The dvode_f90 integrator threw an error. &
+            Check the documentation there.",&
+            __FILE__, __LINE__)
+
         end if
 
       else

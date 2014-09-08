@@ -155,8 +155,8 @@ module modpk_icsampling
 
           print*, "MODPK: potential_choice=", potential_choice
           call raise%fatal_code(&
-            "The sampling technique parameter_loop_samp&
-            doesn't work for this potential choice",&
+            "The sampling technique parameter_loop_samp &
+            doesn't work for this potential choice.",&
             __FILE__,__LINE__)
 
         end if
@@ -229,8 +229,8 @@ module modpk_icsampling
         if (potential_choice /= 11) then
           print*, "MODPK: potential_choice=", potential_choice
           call raise%fatal_code(&
-            "The sampling technique param_unif_prior&
-            doesn't work for this potential choice",&
+            "The sampling technique param_unif_prior &
+            doesn't work for this potential choice.",&
             __FILE__,__LINE__)
         end if
 

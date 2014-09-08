@@ -105,8 +105,8 @@ CONTAINS
          print*, "Potential_choice =", Potential_choice
          print*, "Number of fields =", size(phi)
          call raise%fatal_cosmo(&
-             "This potential requires two fields."// &
-             "Set num_inflaton=2.", &
+             "This potential requires two fields.  &
+             Set num_inflaton=2.", &
              __FILE__, __LINE__)
        end if
 
@@ -202,8 +202,8 @@ CONTAINS
       if (any(abs(step_slope) < 1e-15)) then
         print*, "step_slope=", step_slope
         call raise%fatal_code(&
-          "This is a division by zero error."//&
-          "Set the slope in tanh(phi/step_slope) greater than about 1e-15.",&
+          "This is a division by zero error.  &
+          Set the slope in tanh(phi/step_slope) greater than about 1e-15.",&
           __FILE__, __LINE__)
       end if
 
@@ -1085,7 +1085,7 @@ CONTAINS
 
       call raise%fatal_cosmo(&
         "Epsilon is >3.0 in SUBROUTINE getEps. &
-         This means H is complex.&
+         This means H is complex.  &
          (This is not universe I'd like to live in.) &
          This error might arise if there is a large separation &
          in scales (stiff problem) and the integrator walks &
@@ -1135,7 +1135,7 @@ CONTAINS
 
     if (getH_with_t < 0.0e0_dp) then
       call raise%fatal_cosmo(&
-        "H is complex.&
+        "H is complex.  &
         Try smaller stepsize in integrator.",&
         __FILE__,__LINE__)
     else
@@ -1163,7 +1163,7 @@ CONTAINS
 
       call raise%fatal_cosmo(&
         "Epsilon is >3.0 in SUBROUTINE getEps_with_t. &
-        This means H is complex.&
+        This means H is complex.  &
         (This is not universe I'd like to live in.) &
         This error might arise if there is a large separation &
         in scales (stiff problem) and the integrator walks &
@@ -1622,7 +1622,7 @@ CONTAINS
 
       if (adiab_index ==0) then
         call raise%fatal_cosmo(&
-        "It appears that no field space directions have projection&
+        "It appears that no field space directions have projection &
         along the adiab direction.",&
         __FILE__, __LINE__)
       end if

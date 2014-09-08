@@ -203,8 +203,8 @@ CONTAINS
        if (dh > 0.1) print*, "MODPK: Error in Hubble interpolation", dh
 
        call raise%fatal_code(&
-          'The interpolation in SUBROUTINE evolve&
-          has suspiciously large errors.&
+          'The interpolation in SUBROUTINE evolve &
+          has suspiciously large errors.  &
           Your model smells fishy.',&
           __FILE__, __LINE__)
 
