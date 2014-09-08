@@ -75,7 +75,7 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 1-
+  param_sampling = 1
 
   use_first_priorval = .true.
 

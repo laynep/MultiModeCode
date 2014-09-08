@@ -11,6 +11,7 @@ program multimodecode
   use modpk_deltaN_SR
   use modpk_observables, only : observables
   use csv_file, only : csv_write
+  use modpk_errorhandling, only : raise
 
   implicit none
 
@@ -125,8 +126,11 @@ program multimodecode
     end do
 
   else
-    print*, "MODPK: sampling technique",ic_sampling,"not implemented."
-    stop
+    print*, "MODPK: sampling technique=",ic_sampling
+    call raise%fatal_code(&
+      "This sampling technique is not implemented.",&
+      __FILE__, __LINE__)
+
   end if
 
   contains
@@ -667,8 +671,8 @@ program multimodecode
 	    call init_random_seed()
 
       if (allocated(phi0_priors_max)) then
-        print*, "MODPK: Priors allocated before initialization."
-        stop
+        call raise%fatal_code("Priors allocated before initialization.", &
+          __FILE__, __LINE__)
       else
         allocate(phi0_priors_max(num_inflaton))
         allocate(dphi0_priors_max(num_inflaton))
@@ -682,8 +686,8 @@ program multimodecode
 
       if (save_iso_N) then
         if (allocated(phi_iso_N) .or. allocated(dphi_iso_N)) then
-          print*, "MODPK: Iso-N arrays already allocated."
-          stop
+          call raise%fatal_code("Iso-N arrays already allocated..", &
+            __FILE__, __LINE__)
         else
           allocate(phi_iso_N(num_inflaton))
           allocate(dphi_iso_N(num_inflaton))

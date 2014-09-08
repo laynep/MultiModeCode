@@ -195,18 +195,27 @@ contains
       end if
 
       if (abs(x2-x)<1e-10) then
-        print*, "reached end of N-integration...."
-        print*, "y=",y
-        print*, "Efolds=",x
-        stop
+        print*, "MODPK: y=",y
+        print*, "MODPK: Efolds=",x
+
+        call raise%fatal_code(&
+        "Reached the end of the integration in N. &
+        Could try to increase the max number of steps, &
+        but more likely that the integrator is taking steps &
+        that are too small.  Potentially stiff problem.", &
+        __FILE__, __LINE__)
+
       end if
 
       IF (ode_underflow) RETURN
 
       if ( .not. tech_opt%use_dvode_integrator) then
         IF (ABS(hnext) < hmin) THEN
-           write(*,*) 'stepsize smaller than minimum in odeint'
-           STOP
+
+          call raise%fatal_code(&
+           'stepsize smaller than minimum in odeint_r', &
+           __FILE__, __LINE__)
+
         END IF
       end if
 
@@ -292,10 +301,13 @@ contains
         rtol = tech_opt%dvode_rtol_back
         atol = tech_opt%dvode_atol_back(1:neq)
       else
-        print*, "MODPK: initialize_dvode"
+
         print*, "MODPK: accuracy_setting =", tech_opt%accuracy_setting
-        print*, "MODPK: is not supported."
-        stop
+
+        call raise%fatal_code(&
+        "This accuracy_setting is not supported in initialize_dvode.",&
+        __FILE__, __LINE__)
+
       end if
 
       istate = 1 !Set =1 for 1st call to integrator
@@ -411,14 +423,16 @@ contains
 
        IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
 
-          PRINT*,'MODPK: This could be a model for which inflation does not end.'
-          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
-          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING in odeint_r'
-          WRITE(*, *) 'x, x1, x2 :', x, x1, x2
-          WRITE(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
+          WRITE(*, *) 'MODPK: x, x1, x2 :', x, x1, x2
+          WRITE(*,*) 'MODPK: vparams: ', (vparams(i,:),i=1,size(vparams,1))
           IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP
+
+          call raise%fatal_cosmo(&
+            "This could be a model for which inflation does not end.  &
+            Either adjust phi_init or use slowroll_infl_end for a potential &
+            for which inflation does not end by breakdown of slowroll.", &
+            __FILE__, __LINE__)
+
        END IF
 
      end subroutine check_for_eternal_inflation
@@ -474,12 +488,14 @@ contains
              ENDIF
           ELSE
              IF(getEps(phi, dphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-                PRINT*,'MODPK: reached. Please take another look at your inputs.'
-                PRINT*,'MODPK: QUITTING'
-                PRINT*,'EPSILON =', getEps(phi, dphi)
-                STOP
+                PRINT*,'MODPK: epsilon =', getEps(phi, dphi)
+
+                call raise%fatal_cosmo(&
+                  'You asked for a no-slowroll-breakdown model, but inflation &
+                  already ended via slowroll violation before your phi_end was &
+                  reached. Please take another look at your inputs.',&
+                  __FILE__, __LINE__)
+
              ENDIF
 
              !MULTIFIELD
@@ -646,12 +662,15 @@ contains
    DO nstp=1,MAXSTP
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
-         print*, "MODPK in odeint_c"
-         print*, "MODPK: y has a NaN value."
-         print*, "E-fold",x
-         print*, "nstp",nstp
-         print*, "y", y
-         stop
+
+         print*, "MODPK: E-fold",x
+         print*, "MODPK: nstp",nstp
+         print*, "MODPK: y", y
+
+         call raise%fatal_code(&
+           "y has a NaN value in odeint_c.",&
+           __FILE__, __LINE__)
+
        end if
 
        IF (use_q) THEN
@@ -681,8 +700,13 @@ contains
          call get_stats(rstats,istats)
 
          if (istate<0) then
-           print*, "MODPK in dvode_f90 istate=", istate
-           stop
+
+          print*, "MODPK istate=", istate
+
+          call raise%fatal_code(&
+            "The dvode_f90 integrator threw an error. &
+            Check the documentation there.",&
+            __FILE__, __LINE__)
          end if
 
          !Set complex y from real y's
@@ -744,9 +768,10 @@ contains
        IF(ode_ps_output) THEN
 
          !DEBUG
-         if (potential_choice == 13 .and. &
-           all(turning_choice == 5)) then
-           call find_turning_scales()
+         if (potential_choice == 13) then
+           if (all(turning_choice == 5)) then
+             call find_turning_scales()
+           end if
          end if
 
          ! if k<aH/eval_ps, then k<<aH
@@ -840,8 +865,9 @@ contains
 
        if (.not. tech_opt%use_dvode_integrator) then
          IF (ABS(hnext) < hmin) THEN
-            WRITE(*,*) 'stepsize smaller than minimum in odeint'
-            stop
+           call raise%fatal_code(&
+            'stepsize smaller than minimum in odeint_c', &
+            __FILE__, __LINE__)
          end if
        end if
 
@@ -854,15 +880,18 @@ contains
 
     end do
 
-    print*,'too many steps in odeint_c'
+    ode_underflow=.TRUE.
+
     print*,'N =', x
     print*, 'stepsize, h =', h
     print*, 'background, y =', y(1:num_inflaton)
     print*, 'accuracy =', eps_adjust, eps
     print*, "epsilon", getEps(phi,delphi)
-    ode_underflow=.TRUE.
 
-    stop
+    call raise%fatal_code(&
+         'Too many steps in odeint_c.  Probably due to numerical accuracy or &
+         stiffness in the problem.', &
+         __FILE__, __LINE__)
 
   contains
 
@@ -1087,17 +1116,19 @@ contains
     subroutine check_for_eternal_inflation_MODES()
 
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
-          PRINT*,'MODPK: This could be a model for which inflation does not end.'
-          PRINT*,'MODPK: Either adjust phi_init or use slowroll_infl_end for a potential'
-          PRINT*,'MODPK: for which inflation does not end by breakdown of slowroll.'
-          PRINT*,'MODPK: QUITTING in odeint_c'
-          WRITE(*, *) 'vparams: ', (vparams(i,:),i=1, size(vparams,1))
-          WRITE(*, *) 'x1, x, x2 :', x1, x, x2
-          WRITE(*, *) 'phi_back :', real(y(1:num_inflaton))
-          WRITE(*, *) 'epsilon :', geteps(real(y(1:num_inflaton)),&
+          WRITE(*, *) 'MODPK: vparams: ', (vparams(i,:),i=1, size(vparams,1))
+          WRITE(*, *) 'MODPK: x1, x, x2 :', x1, x, x2
+          WRITE(*, *) 'MODPK: phi_back :', real(y(1:num_inflaton))
+          WRITE(*, *) 'MODPK: epsilon :', geteps(real(y(1:num_inflaton)),&
             real(y(num_inflaton+1:2*num_inflaton)))
-          IF (.NOT.instreheat) WRITE(*,*) 'N_pivot: ', N_pivot
-          STOP
+          IF (.NOT.instreheat) WRITE(*,*) 'MODPK: N_pivot: ', N_pivot
+
+          call raise%fatal_cosmo(&
+            'This could be a model for which inflation does not end.  &
+            Either adjust phi_init or use slowroll_infl_end for a potential &
+            for which inflation does not end by breakdown of slowroll.', &
+            __FILE__, __LINE__)
+
        END IF
 
     end subroutine check_for_eternal_inflation_MODES
@@ -1179,12 +1210,14 @@ contains
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-                PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-                PRINT*,'MODPK: reached. Please take another look at your inputs.'
-                PRINT*,'MODPK: QUITTING'
-                PRINT*,'EPSILON =', getEps(phi, delphi), 'phi =', phi
-                STOP
+                PRINT*,'MODPK: epsilon =', getEps(phi, delphi), 'phi =', phi
+
+                call raise%fatal_cosmo(&
+                  'You asked for a no-slowroll-breakdown model, but inflation &
+                  already ended via slowroll violation before your phi_end was &
+                  reached. Please take another look at your inputs.', &
+                  __FILE__, __LINE__)
+
              ENDIF
 
              !MULTIFIELD
@@ -1378,12 +1411,15 @@ contains
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
-         print*, "MODPK in odeint_r"
-         print*, "MODPK: y has a NaN value."
+
          print*, "E-fold",x
          print*, "nstp",nstp
          print*, "y", y
-         stop
+
+         call raise%fatal_code(&
+           "y has a NaN value in odeint_with_t.",&
+           __FILE__, __LINE__)
+
        end if
 
        !use_t = .true.
@@ -1540,7 +1576,8 @@ contains
     select case(potential_choice)
     case(13)
 
-      ![ LP: ] Complete ad-hoc bullshit
+      !DEBUG
+      ![ LP: ] Complete ad-hoc
       if (phi(1) < 244.95-0.4) stopping=.true.
 
     case default

@@ -1,6 +1,7 @@
 MODULE modpk_utils
   use modpkparams
   use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
+  use modpk_errorhandling, only : raise
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -112,19 +113,29 @@ CONTAINS
     !Instability check since H^2=V/(3-eps) is not numerically stable as V~0 for
     !H>0
     IF(eps .gt. 3.0e0_dp) THEN
-       WRITE(*,*) 'MODPK: H is imaginary in bderivs.'
-       write(*,*) 'Check if V~=0, since makes H unstable'
-       write(*,*) 'Or check if start step-size too large.'
-       write(*,*) 'Pot=', pot(p)
-       write(*,*) 'Eps=',eps
-       write(*,*) 'Using t?', use_t
+       write(*,*) 'MODPK: Pot=', pot(p)
+       write(*,*) 'MODPK: Eps=',eps
+       write(*,*) 'MODPK: Using t?', use_t
        if (use_t) then
-         write(*,*) 't=',x
+         write(*,*) 'MODPK: t=',x
        else
-         write(*,*) 'E-fold=',x
+         write(*,*) 'MODPK: E-fold=',x
        end if
-       write(*,*) "Phi=",p
-       write(*,*) "Dphi=",delp
+       write(*,*) "MODPK: Phi=",p
+       write(*,*) "MODPK: Dphi=",delp
+       write(*,*) 'MODPK: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+       if (.not.instreheat) write(*,*) 'MODPK: N_pivot: ', N_pivot
+
+       !Can sometimes get here when IC sampling
+       !close to the point where V=0, since H^2=V/(3-eps)
+       !Might override this error
+       call raise%fatal_cosmo(&
+         'H is imaginary in bderivs.  &
+         Check if V~=0, since makes H unstable.  &
+         Or check if start step-size too large.  &
+         You might be able to override this error if &
+         you know how to auto-correct it.',&
+         __FILE__, __LINE__)
 
        !In the case of the hilltop potential, the integrator
        !in a trial step can go here very occasionally because
@@ -137,16 +148,6 @@ CONTAINS
           yprime(2)=0.0e0_dp
           RETURN
        ENDIF
-       !if (ic_sampling==ic_flags%reg_samp .or. ic_sampling==ic_flags%parameter_loop_samp) then
-         WRITE(*,*) 'MODPK: QUITTING'
-         write(*,*) 'vparams: ', (vparams(i,:),i=1,size(vparams,1))
-         if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
-         STOP
-       !else
-         !Override this error and return
-         !pk_bad=bad_ic
-         !return
-       !end if
     END IF
 
     !MULTIFIELD
@@ -222,26 +223,27 @@ CONTAINS
     grad_V = sqrt(dot_product(Vp, Vp))
 
     IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
-       WRITE(*,*) 'MODPK: H is imaginary in derivs.'
-       write(*,*) 'Eps=',0.5*dot_product(delphi,delphi)
-       write(*,*) 'E-fold=',x
-       write(*,*) "Phi=",phi
-       write(*,*) "Dphi=",delphi
+       write(*,*) 'MODPK: Using t?', use_t
+       if (use_t) then
+         write(*,*) 'MODPK: t=',x
+       else
+         write(*,*) 'MODPK: E-fold=',x
+       end if
+       write(*,*) 'MODPK: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+       if (.not.instreheat) write(*,*) 'MODPK: N_pivot: ', N_pivot
 
        !Can sometimes get here when IC sampling
        !close to the point where V=0, since H^2=V/(3-eps)
+       !Might override this error
+       call raise%fatal_cosmo(&
+         'H is imaginary in derivs.  &
+         Check if V~=0, since makes H unstable.  &
+         Or check if start step-size too large.  &
+         You might be able to override this error if &
+         you know how to auto-correct it.',&
+         __FILE__, __LINE__)
 
-       !Can override this error
-       if (ic_sampling/=ic_flags%reg_samp) then
-         !Override this error and return
-         pk_bad=bad_ic
-         !return
-       end if
 
-       WRITE(*,*) 'MODPK: QUITTING'
-       write(*,*) 'vparams: ', (vparams(i, :), i=1, size(vparams,1))
-       if (.not.instreheat) write(*,*) 'N_pivot: ', N_pivot
-       STOP
     END IF
 
     hubble=getH(phi,delphi)
@@ -387,11 +389,12 @@ CONTAINS
     real(dp), DIMENSION(size(y)) :: yerr,ytemp
     real(dp), PARAMETER :: SAFETY=0.9e0_dp,PGROW=-0.2e0_dp,PSHRNK=-0.25e0_dp,&
          ERRCON=1.89e-4_dp
+
     if (size(y)==size(dydx) .and. size(dydx)==size(yscal)) then
        ndum = size(y)
     else
-       write(*,*) 'Wrong array sizes in rkqs'
-       stop
+      call raise%fatal_code(&
+       'Wrong array sizes in rkqs', __FILE__, __LINE__)
     end if
     h=htry
     do
@@ -405,9 +408,9 @@ CONTAINS
        htemp=SAFETY*h*(errmax**PSHRNK)
        h=sign(max(abs(htemp),0.1e0_dp*abs(h)),h)
        xnew=x+h
-       !Errors if use xnew==x, as one might suspect
-       !if (xnew == x) then 
-       if (abs(h)<1e-30_dp) then 
+       !Errors if use xnew==x, as one might expect
+       !if (xnew == x) then
+       if (abs(h)<1e-30_dp) then
           print*, 'stepsize underflow in rkqs_r'
           ode_underflow = .true.
           return
@@ -454,8 +457,8 @@ CONTAINS
     if (size(y)==size(dydx) .and. size(dydx)==size(yscal)) then
        ndum = size(y)
     else
-       write(*,*) 'Wrong array sizes in rkqs'
-       stop
+      call raise%fatal_code(&
+       'Wrong array sizes in rkqs', __FILE__, __LINE__)
     end if
     h=htry
     do
@@ -463,10 +466,10 @@ CONTAINS
 
        ! in doing error estimation and step size rescaling, we switch to real components
        yerr_r(1 : size(yerr)) = real(yerr,kind=dp)
-       yerr_r(size(yerr)+1 : 2*size(yerr)) = real(yerr*(0,-1),kind=dp) 
+       yerr_r(size(yerr)+1 : 2*size(yerr)) = real(yerr*(0,-1),kind=dp)
 
        yscal_r(1 : size(yscal)) = real(yscal,kind=dp)
-       yscal_r(size(yscal)+1 : 2*size(yscal)) = real(yscal*(0,-1),kind=dp)  
+       yscal_r(size(yscal)+1 : 2*size(yscal)) = real(yscal*(0,-1),kind=dp)
 
        errmax=maxval(abs(yerr_r(:)/yscal_r(:)))/eps
 
@@ -477,8 +480,8 @@ CONTAINS
        xnew=x+h
 
        !Errors if use xnew==x, as one might suspect
-       !if (xnew == x) then 
-       if (abs(h)<1e-30_dp) then 
+       !if (xnew == x) then
+       if (abs(h)<1e-30_dp) then
           print*, 'stepsize underflow in rkqs_c'
           ode_underflow = .true.
           return
@@ -522,12 +525,14 @@ CONTAINS
          C6=512.0e0_dp/1771.0e0_dp,DC1=C1-2825.0e0_dp/27648.0e0_dp,&
          DC3=C3-18575.0e0_dp/48384.0e0_dp,DC4=C4-13525.0e0_dp/55296.0e0_dp,&
          DC5=-277.0e0_dp/14336.0e0_dp,DC6=C6-0.25e0_dp
+
     if (size(y)==size(dydx) .and. size(dydx)==size(yout) .and. size(yout)==size(yerr)) then
        ndum = size(y)
     else
-       write(*,*) 'Wrong array sizes in rkck'
-       stop
+      call raise%fatal_code(&
+       'Wrong array sizes in rkck', __FILE__, __LINE__)
     end if
+
     ytemp=y+B21*h*dydx
     call derivs(x+A2*h,ytemp,ak2)
     ytemp=y+h*(B31*dydx+B32*ak2)
@@ -571,12 +576,14 @@ CONTAINS
          C6=512.0e0_dp/1771.0e0_dp,DC1=C1-2825.0e0_dp/27648.0e0_dp,&
          DC3=C3-18575.0e0_dp/48384.0e0_dp,DC4=C4-13525.0e0_dp/55296.0e0_dp,&
          DC5=-277.0e0_dp/14336.0e0_dp,DC6=C6-0.25e0_dp
+
     if (size(y)==size(dydx) .and. size(dydx)==size(yout) .and. size(yout)==size(yerr)) then
        ndum = size(y)
     else
-       write(*,*) 'Wrong array sizes in rkck'
-       stop
+      call raise%fatal_code(&
+       'Wrong array sizes in rkqs', __FILE__, __LINE__)
     end if
+
     ytemp=y+B21*h*dydx
     call derivs(x+A2*h,ytemp,ak2)
     ytemp=y+h*(B31*dydx+B32*ak2)
@@ -600,8 +607,8 @@ CONTAINS
     INTEGER*4 :: nold,ierr
     allocate(reallocate_rv(n),stat=ierr)  !! allocate memeory of size n at new address to be returned
     if (ierr /= 0) then
-       write(*,*) 'reallocate_rv: problem in attempt to allocate memory'
-       stop
+      call raise%fatal_code(&
+       'reallocate_rv: problem in attempt to allocate memory', __FILE__, __LINE__)
     end if
     if (.not. associated(p)) RETURN
     nold=size(p)
@@ -616,8 +623,8 @@ CONTAINS
     INTEGER*4 :: nold,mold,ierr
     allocate(reallocate_rm(n,m),stat=ierr)
     if (ierr /= 0) then
-       write(*,*) 'reallocate_rm: problem in attempt to allocate memory'
-       stop
+      call raise%fatal_code(&
+       'reallocate_rm: problem in attempt to allocate memory', __FILE__, __LINE__)
     end if
     if (.not. associated(p)) RETURN
     nold=size(p,1)

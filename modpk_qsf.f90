@@ -2,6 +2,7 @@ module modpk_qsf
   use modpkparams
   use modpk_numerics
   use internals, only : pi
+  use modpk_errorhandling, only : raise
   implicit none
 
   !Need one choice for every heavy direction (assumes one light direction)
@@ -70,8 +71,9 @@ contains
     turning_function = 0e0_dp
 
     if (heavy_field_index <2) then
-      print*, "Set heavy_field_index>1. heavy_field_index=", heavy_field_index
-      stop
+      print*, "MODPK: heavy_field_index=", heavy_field_index
+      call raise%fatal_code(&
+              "Set heavy_field_index>1.", __FILE__, __LINE__)
     end if
 
     select case(turning_choice)
@@ -82,8 +84,10 @@ contains
       !North-facing hyperbola, symm around y-axis, min at phi=0
 
       if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
+        print*, "MODPK: turning_choice=", turning_choice
+        call raise%fatal_code(&
+                "Not enough vparams to set this turning choice.",&
+                __FILE__, __LINE__)
       end if
 
       offset_phi   = vparams(4,heavy_field_index) !min turning_function in phi
@@ -97,8 +101,10 @@ contains
       !hyperbolic tangent
 
       if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
+        print*, "MODPK: turning_choice=", turning_choice
+        call raise%fatal_code(&
+                "Not enough vparams to set this turning choice.",&
+                __FILE__, __LINE__)
       end if
 
       offset_phi     = vparams(4,heavy_field_index) !position of the turn in phi direction
@@ -121,8 +127,10 @@ contains
     case(5)
       !Two-knot trajectory
        if (size(vparams,1) <6) then
-        print*, "Not enough vparams to set turning_choice=", turning_choice
-        stop
+        print*, "MODPK: turning_choice=", turning_choice
+        call raise%fatal_code(&
+                "Not enough vparams to set this turning choice.",&
+                __FILE__, __LINE__)
        end if
 
        !vparams(4,:) = phi position of turn midpoint
@@ -367,9 +375,10 @@ contains
       end if
 
     case default
-      print*, "MODPK: turning_function_parametric not implemented for"
       print*, "MODPK: turning_choice = ", turning_choice
-      stop
+      call raise%fatal_code(&
+              "MODPK: turning_function_parametric not implemented.",&
+              __FILE__, __LINE__)
     end select
 
   end function turning_function_parametric
@@ -408,9 +417,10 @@ contains
         funct(2) = 1e0_dp
       end if
     case default
-      print*, "MODPK: dturndparam not implemented for"
       print*, "MODPK: turning_choice = ", turning_choice
-      stop
+      call raise%fatal_code(&
+              "MODPK: dturndparam not implemented.",&
+              __FILE__, __LINE__)
     end select
 
   end function dturndparam
@@ -447,9 +457,10 @@ contains
         funct(2) = 0e0_dp
       end if
     case default
-      print*, "MODPK: d2turndparam2 not implemented for"
       print*, "MODPK: turning_choice = ", turning_choice
-      stop
+      call raise%fatal_code(&
+              "MODPK: d2turndparam2 not implemented.",&
+              __FILE__, __LINE__)
     end select
 
   end function d2turndparam2
@@ -482,9 +493,10 @@ contains
 
     case default
 
-      print*, "QSF: dparam_closest_dphi not implemented for"
-      print*, "QSF: turning_choice =", turning_choice
-      stop
+      print*, "MODPK: turning_choice = ", turning_choice
+      call raise%fatal_code(&
+              "MODPK: dparam_closest_dphi not implemented.",&
+              __FILE__, __LINE__)
 
     end select
 
@@ -510,9 +522,10 @@ contains
 
     case default
 
-      print*, "QSF: d2param_closest_dphi2 not implemented for"
-      print*, "QSF: turning_choice =", turning_choice
-      stop
+      print*, "MODPK: turning_choice = ", turning_choice
+      call raise%fatal_code(&
+              "MODPK: d2param_closest_dphi2 not implemented.",&
+              __FILE__, __LINE__)
 
     end select
 
@@ -581,12 +594,14 @@ contains
 
     !Check for functionality
     if (.not. allocated(self%phi_light_vs_param)) then
-      print*, "QSF: Trying to set initial parameter guess,"
-      print*, "QSF: but haven't integrated trajectory yet."
-      stop
+      call raise%fatal_code(&
+        "Trying to set initial parameter guess, &
+        QSF: but haven't integrated trajectory yet.", &
+        __FILE__, __LINE__)
+
     else if (present(phi_light) .and. present(param) ) then
-      print*, "QSF: Can't have both phi_light and param."
-      stop
+      call raise%fatal_code("Can't have both phi_light and param.",&
+        __FILE__, __LINE__)
     end if
 
     if (present(phi_light)) then
@@ -603,9 +618,11 @@ contains
 #undef PK_ARR
 
     else
-      print*, "QSF: Give choose_parameter either phi_light or param."
-      print*, "QSF: Neither is present."
-      stop
+
+      call raise%fatal_code(&
+        "Give choose_parameter either phi_light or param.  &
+        Neither is present.", &
+        __FILE__, __LINE__)
     end if
 
   end subroutine choose_parameter
@@ -661,9 +678,12 @@ contains
       if (length(counter,1)>2.0e0_dp*phi_start) exit
 
       if (ii==maxsteps-1) then
-        print*, "QSF: Couldn't integrate until length of curve=", 2.0e0_dp*phi_start
-        print*, "QSF: Either lower phi_start or make maxsteps or stepsize bigger."
-        stop
+        print*, "MODPK: length of curve=", 2.0e0_dp*phi_start
+
+        call raise%fatal_cosmo(&
+          "Couldn't integrate until this point &
+          Either lower phi_start or make maxsteps or stepsize bigger.",&
+          __FILE__, __LINE__)
       end if
 
     end do
@@ -692,8 +712,9 @@ contains
     integer :: ii, jj
 
     if (.not. self%traj_init) then
-      print*, "QSF: Trying to get phi_light before integrating traj."
-      stop
+      call raise%fatal_code(&
+        "QSF: Trying to get phi_light before integrating traj.", &
+        __FILE__, __LINE__)
     end if
 
     param_guess = self%hunt_guess
@@ -721,19 +742,23 @@ contains
     end if
 
     if(abs(del_phi) > 0.1) then
-      print*,'QSF: The interpolation in get_phi_light/locator has suspiciously large errors'
-      print*,'QSF: QUITTING'
-      print*,"QSF: del_phi", del_phi
-      stop
+      print*,"MODECODE: del_phi", del_phi
+      call raise%fatal_code(&
+        'The interpolation in get_phi_light/locator has &
+        suspiciously large errors',&
+        __FILE__, __LINE__)
+
     else if (phi_light > self%phi_light_vs_param(INTLEN,1) .or. &
       phi_light < self%phi_light_vs_param(1,1)) then
-      print*, "QSF: phi_light is out of bounds"
-      print*, "QSF: phi_light > LIGHT(MAX) or < LIGHT(MIN)"
-      print*, "QSF: phi_light =", phi_light
-      print*, "QSF: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
-      print*, "QSF: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
-      print*, "QSF: param_guess =", param_guess
-      stop
+      print*, "MODECODE: phi_light =", phi_light
+      print*, "MODECODE: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
+      print*, "MODECODE: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
+      print*, "MODECODE: param_guess =", param_guess
+
+      call raise%fatal_code(&
+        "phi_light is out of bounds.  &
+        phi_light > LIGHT(MAX) or < LIGHT(MIN)", &
+        __FILE__, __LINE__)
     end if
 
     self%hunt_guess = param_guess
