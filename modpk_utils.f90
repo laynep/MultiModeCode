@@ -1,7 +1,7 @@
 MODULE modpk_utils
   use modpkparams
-  use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
-  use modpk_errorhandling, only : raise
+  use modpk_icsampling, only : ic_sampling, ic_flags
+  use modpk_errorhandling, only : raise, run_outcome
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -113,18 +113,18 @@ CONTAINS
     !Instability check since H^2=V/(3-eps) is not numerically stable as V~0 for
     !H>0
     IF(eps .gt. 3.0e0_dp) THEN
-       write(*,*) 'MODPK: Pot=', pot(p)
-       write(*,*) 'MODPK: Eps=',eps
-       write(*,*) 'MODPK: Using t?', use_t
+       write(*,*) 'MODECODE: Pot=', pot(p)
+       write(*,*) 'MODECODE: Eps=',eps
+       write(*,*) 'MODECODE: Using t?', use_t
        if (use_t) then
-         write(*,*) 'MODPK: t=',x
+         write(*,*) 'MODECODE: t=',x
        else
-         write(*,*) 'MODPK: E-fold=',x
+         write(*,*) 'MODECODE: E-fold=',x
        end if
-       write(*,*) "MODPK: Phi=",p
-       write(*,*) "MODPK: Dphi=",delp
-       write(*,*) 'MODPK: vparams= ', (vparams(i,:),i=1,size(vparams,1))
-       if (.not.instreheat) write(*,*) 'MODPK: N_pivot: ', N_pivot
+       write(*,*) "MODECODE: Phi=",p
+       write(*,*) "MODECODE: Dphi=",delp
+       write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+       if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
 
        !Can sometimes get here when IC sampling
        !close to the point where V=0, since H^2=V/(3-eps)
@@ -223,14 +223,14 @@ CONTAINS
     grad_V = sqrt(dot_product(Vp, Vp))
 
     IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
-       write(*,*) 'MODPK: Using t?', use_t
+       write(*,*) 'MODECODE: Using t?', use_t
        if (use_t) then
-         write(*,*) 'MODPK: t=',x
+         write(*,*) 'MODECODE: t=',x
        else
-         write(*,*) 'MODPK: E-fold=',x
+         write(*,*) 'MODECODE: E-fold=',x
        end if
-       write(*,*) 'MODPK: vparams= ', (vparams(i,:),i=1,size(vparams,1))
-       if (.not.instreheat) write(*,*) 'MODPK: N_pivot: ', N_pivot
+       write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+       if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
 
        !Can sometimes get here when IC sampling
        !close to the point where V=0, since H^2=V/(3-eps)
@@ -401,7 +401,7 @@ CONTAINS
        call rkck(y,dydx,x,h,ytemp,yerr,derivs)
 
        !For possible error overrides in derivs
-       if (pk_bad /= 0) return
+       if (pk_bad /= run_outcome%success) return
 
        errmax=maxval(abs(yerr(:)/yscal(:)))/eps
        if (errmax <= 1.0e0_dp) exit

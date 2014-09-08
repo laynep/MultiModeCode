@@ -71,7 +71,7 @@ contains
     turning_function = 0e0_dp
 
     if (heavy_field_index <2) then
-      print*, "MODPK: heavy_field_index=", heavy_field_index
+      print*, "MODECODE: heavy_field_index=", heavy_field_index
       call raise%fatal_code(&
               "Set heavy_field_index>1.", __FILE__, __LINE__)
     end if
@@ -84,7 +84,7 @@ contains
       !North-facing hyperbola, symm around y-axis, min at phi=0
 
       if (size(vparams,1) <6) then
-        print*, "MODPK: turning_choice=", turning_choice
+        print*, "MODECODE: turning_choice=", turning_choice
         call raise%fatal_code(&
                 "Not enough vparams to set this turning choice.",&
                 __FILE__, __LINE__)
@@ -101,7 +101,7 @@ contains
       !hyperbolic tangent
 
       if (size(vparams,1) <6) then
-        print*, "MODPK: turning_choice=", turning_choice
+        print*, "MODECODE: turning_choice=", turning_choice
         call raise%fatal_code(&
                 "Not enough vparams to set this turning choice.",&
                 __FILE__, __LINE__)
@@ -127,7 +127,7 @@ contains
     case(5)
       !Two-knot trajectory
        if (size(vparams,1) <6) then
-        print*, "MODPK: turning_choice=", turning_choice
+        print*, "MODECODE: turning_choice=", turning_choice
         call raise%fatal_code(&
                 "Not enough vparams to set this turning choice.",&
                 __FILE__, __LINE__)
@@ -329,7 +329,7 @@ contains
         exit
 
       !elseif (phi == knot_positions(HEAVY_INDX,i,1)) then
-      !  print*, "MODPK: In turning_function, exactly at knot-point."
+      !  print*, "MODECODE: In turning_function, exactly at knot-point."
         !DEBUG
       !  stop
       end if
@@ -375,9 +375,9 @@ contains
       end if
 
     case default
-      print*, "MODPK: turning_choice = ", turning_choice
+      print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODPK: turning_function_parametric not implemented.",&
+              "MODECODE: turning_function_parametric not implemented.",&
               __FILE__, __LINE__)
     end select
 
@@ -417,9 +417,9 @@ contains
         funct(2) = 1e0_dp
       end if
     case default
-      print*, "MODPK: turning_choice = ", turning_choice
+      print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODPK: dturndparam not implemented.",&
+              "MODECODE: dturndparam not implemented.",&
               __FILE__, __LINE__)
     end select
 
@@ -457,9 +457,9 @@ contains
         funct(2) = 0e0_dp
       end if
     case default
-      print*, "MODPK: turning_choice = ", turning_choice
+      print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODPK: d2turndparam2 not implemented.",&
+              "MODECODE: d2turndparam2 not implemented.",&
               __FILE__, __LINE__)
     end select
 
@@ -493,9 +493,9 @@ contains
 
     case default
 
-      print*, "MODPK: turning_choice = ", turning_choice
+      print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODPK: dparam_closest_dphi not implemented.",&
+              "MODECODE: dparam_closest_dphi not implemented.",&
               __FILE__, __LINE__)
 
     end select
@@ -522,9 +522,9 @@ contains
 
     case default
 
-      print*, "MODPK: turning_choice = ", turning_choice
+      print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODPK: d2param_closest_dphi2 not implemented.",&
+              "MODECODE: d2param_closest_dphi2 not implemented.",&
               __FILE__, __LINE__)
 
     end select
@@ -678,7 +678,7 @@ contains
       if (length(counter,1)>2.0e0_dp*phi_start) exit
 
       if (ii==maxsteps-1) then
-        print*, "MODPK: length of curve=", 2.0e0_dp*phi_start
+        print*, "MODECODE: length of curve=", 2.0e0_dp*phi_start
 
         call raise%fatal_cosmo(&
           "Couldn't integrate until this point &
@@ -742,7 +742,7 @@ contains
     end if
 
     if(abs(del_phi) > 0.1) then
-      print*,"MODPK: del_phi", del_phi
+      print*,"MODECODE: del_phi", del_phi
       call raise%fatal_code(&
         'The interpolation in get_phi_light/locator has &
         suspiciously large errors',&
@@ -750,10 +750,10 @@ contains
 
     else if (phi_light > self%phi_light_vs_param(INTLEN,1) .or. &
       phi_light < self%phi_light_vs_param(1,1)) then
-      print*, "MODPK: phi_light =", phi_light
-      print*, "MODPK: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
-      print*, "MODPK: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
-      print*, "MODPK: param_guess =", param_guess
+      print*, "MODECODE: phi_light =", phi_light
+      print*, "MODECODE: LIGHT(MAX) =", self%phi_light_vs_param(INTLEN,1)
+      print*, "MODECODE: LIGHT(MIN) =", self%phi_light_vs_param(1,1)
+      print*, "MODECODE: param_guess =", param_guess
 
       call raise%fatal_code(&
         "phi_light is out of bounds.  &

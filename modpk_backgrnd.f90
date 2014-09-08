@@ -10,7 +10,7 @@ MODULE background_evolution
   use modpk_numerics, only : locate, polint, array_polint
   use modpk_io, only : out_opt
   use modpk_qsf
-  use modpk_errorhandling, only : raise
+  use modpk_errorhandling, only : raise, run_outcome
 
   IMPLICIT NONE
   PUBLIC :: backgrnd
@@ -19,7 +19,7 @@ CONTAINS
 
   SUBROUTINE backgrnd
     use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
-      dphi_iso_N, ic_sampling, ic_flags, bad_ic
+      dphi_iso_N, ic_sampling, ic_flags
 
     INTEGER*4 :: i,j, rescl_count
 
@@ -103,16 +103,17 @@ CONTAINS
           phi_init_trial=phi_init
           CALL trial_background(phi_init_trial, alpha_e, V_end)
           !! no rescaling implemented for multifield, so the code will exit here for multifield
-          IF ((pk_bad/=0) .OR. phi_init_trial(1).EQ.phi_init(1)) EXIT
+          IF ((pk_bad/= run_outcome%success) &
+            .OR. phi_init_trial(1).EQ.phi_init(1)) EXIT
 
           rescl_count=rescl_count+1
           IF (rescl_count .EQ. 50) THEN
-             pk_bad=2
-             PRINT*,'MODPK: phi_init rescaling did not work after 50 tries.'
+             pk_bad= run_outcome%infl_didnt_start
+             PRINT*,'MODECODE: phi_init rescaling did not work after 50 tries.'
              EXIT
           END IF
           if (out_opt%modpkoutput) then
-             PRINT*,'MODPK: phi_init was inconsistent. Rescaling:'
+             PRINT*,'MODECODE: phi_init was inconsistent. Rescaling:'
              WRITE(*,fmt) ' phi_init =', phi_init_trial
           end if
           phi_init = phi_init_trial
@@ -123,10 +124,10 @@ CONTAINS
 
       CALL trial_background(phi_init, alpha_e, V_end)
 
-
-      if (pk_bad .ne. 0) then
+      if (pk_bad .ne. run_outcome%success) then
         !Override specific errors when doing IC sampling
-        if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) then
+        if (ic_sampling/=ic_flags%reg_samp .and. &
+          pk_bad/=run_outcome%success) then
           return
         else
           call raise%fatal_cosmo(&
@@ -137,7 +138,7 @@ CONTAINS
     end if
     !END MULTIFIELD
 
-    IF(pk_bad==0) THEN
+    IF(pk_bad==run_outcome%success) THEN
 
        !Matching condition
        if (ic_sampling == ic_flags%qsf_parametric) then
@@ -149,23 +150,22 @@ CONTAINS
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
           if (out_opt%modpkoutput) then
-            write(*, *), "MODPK: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
+            write(*, *), "MODECODE: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
             call raise%warning(&
-              'Not enough efolds obtained. Please adjust your initial value.',&
-              __FILE__, __LINE__)
+              'Not enough efolds obtained.')
           end if
-          pk_bad = 6
+          pk_bad = run_outcome%pivot_didnt_leaveH
           return
 
        else if ((alpha_e - lna(1)) .gt. Nefold_max) then
 
           if (out_opt%modpkoutput) then
             call raise%warning(&
-              'Too many efolds obtained. Please rescale your initial value.',&
+              'Too many efolds obtained.',&
               __FILE__, __LINE__)
           end if
-          pk_bad = 6
-          !return
+          pk_bad = run_outcome%cant_init_scalefact
+
        end if
        !MULTIFIELD
 
@@ -192,9 +192,9 @@ CONTAINS
             alpha_iso_N = alpha_e - N_iso_ref
             if (alpha_iso_N<0e0_dp) then
               if (out_opt%modpkoutput) then
-                print*, "MODPK: alpha_iso_N=",alpha_iso_N,"<0"
+                print*, "MODECODE: alpha_iso_N=",alpha_iso_N,"<0"
               end if
-              pk_bad=bad_ic
+              pk_bad = run_outcome%ref_efold_didnt_leaveH
               return
             end if
           end if
@@ -231,12 +231,12 @@ CONTAINS
 
 
           if (isnan(a_end) .or. a_end<1.0e-100_dp) then
-            print*, "MODPK: a_end=", a_end
-            print*, "MODPK: N_efold=", alpha_pivot
-            print*, "MODPK: likely too many efolds before"
-            print*, "MODPK: pivot scale leaves horizon"
+            print*, "MODECODE: a_end=", a_end
+            print*, "MODECODE: N_efold=", alpha_pivot
+            print*, "MODECODE: likely too many efolds before"
+            print*, "MODECODE: pivot scale leaves horizon"
             if (ic_sampling/=ic_flags%reg_samp) then
-              pk_bad = bad_ic
+              pk_bad = run_outcome%cant_init_scalefact
             else
               call raise%fatal_cosmo(&
                 "See above.  &
@@ -247,12 +247,8 @@ CONTAINS
           end if
 
           IF (a_end .GT. a_end_inst) THEN
-             PRINT*,'MODPK: inflation ends too late with this N_pivot', N_pivot
-             if (ic_sampling/=ic_flags%reg_samp) then
-               pk_bad = bad_ic
-             else
-              pk_bad=3
-             end if
+             PRINT*,'MODECODE: inflation ends too late with this N_pivot', N_pivot
+             pk_bad = run_outcome%bad_reheat
              RETURN
           ENDIF
        END IF
@@ -279,7 +275,7 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
-    use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
+    use modpk_icsampling, only : ic_sampling, ic_flags
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2
@@ -364,7 +360,7 @@ CONTAINS
     ode_infl_end = .TRUE.
     save_steps = .true.
 
-    pk_bad = 0
+    pk_bad = run_outcome%success
 
     !MULTIFIELD
     IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
@@ -445,7 +441,8 @@ CONTAINS
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
-    if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
+    if (ic_sampling/=ic_flags%reg_samp .and. &
+      pk_bad/=run_outcome%success) return
 
     IF(.NOT. ode_underflow) THEN
       if (size(lna) < kount .or. size(xp) < kount) then
@@ -502,20 +499,20 @@ CONTAINS
              !Check if didn't get enough e-folds
              if (lna(kount) < N_pivot) then
                if (out_opt%modpkoutput) then
-                 write(*, *), "MODPK: lna(kount) - lna(1) =", lna(kount) - lna(1),"< ",N_pivot
+                 write(*, *), "MODECODE: lna(kount) - lna(1) =", lna(kount) - lna(1),"< ",N_pivot
                  call raise%warning(&
-                    'Not enough efolds obtained. Please adjust your initial value.',&
+                    'Not enough efolds obtained.',&
                     __FILE__, __LINE__)
                end if
-               pk_bad = 6
+               pk_bad = run_outcome%pivot_didnt_leaveH
                return
              else
 
-               print*,"MODPK: dalpha", dalpha
-               print*,"MODPK: dv", dv
-               print*,"MODPK: bb", bb
-               print*,"MODPK: lna", lna(kount-5:kount), "alpha_e", alpha_e
-               print*,"MODPK: epsarr", epsarr(kount-5:kount), "ep", ep
+               print*,"MODECODE: dalpha", dalpha
+               print*,"MODECODE: dv", dv
+               print*,"MODECODE: bb", bb
+               print*,"MODECODE: lna", lna(kount-5:kount), "alpha_e", alpha_e
+               print*,"MODECODE: epsarr", epsarr(kount-5:kount), "ep", ep
 
                call raise%fatal_code(&
                'The interpolation in SUBROUTINE trial_background &
@@ -594,7 +591,7 @@ CONTAINS
           END IF
        ENDIF
     ELSE
-       pk_bad=4
+       pk_bad = run_outcome%underflow
     ENDIF
 
     !END MULTIFIELD
@@ -623,7 +620,7 @@ CONTAINS
     ode_ps_output = .FALSE.
     ode_infl_end = .TRUE.
     save_steps = .TRUE.
-    pk_bad = 0
+    pk_bad = run_outcome%success
 
     IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 1.) THEN
        slowroll_start=.FALSE.
@@ -648,7 +645,7 @@ CONTAINS
        lna(1:kount)=xp(1:kount)
        nactual_bg=kount
     ELSE
-       pk_bad = 4
+       pk_bad = run_outcome%underflow
     END IF
 
     N_tot = lna(nactual_bg) - lna(1)

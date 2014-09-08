@@ -2,6 +2,9 @@
 module modpk_io
   implicit none
 
+  private
+  public :: out_opt
+
   type :: print_options
 
     !Things to print
@@ -46,6 +49,7 @@ module modpk_io
     contains
 
       procedure, public :: open_files => output_file_open
+      procedure, public :: close_files => output_file_close
       procedure, public :: formatting => make_formatting
 
   end type
@@ -98,6 +102,38 @@ module modpk_io
       end if
 
     end subroutine output_file_open
+
+    !Close output files
+    subroutine output_file_close(self,ICs,SR)
+      class(print_options) :: self
+      logical, intent(in), optional :: ICs, SR
+
+      if (self%save_traj) &
+        close(self%trajout)
+      if (self%spectra) &
+        close(self%spectraout)
+      if (self%fields_horiz) &
+        close(self%fields_h_out)
+      if (self%fields_end_infl) &
+        close(self%fields_end_out)
+      if (self%modes) then
+        close(self%modeout(1))
+        close(self%modeout(2))
+        close(self%modeout(3))
+        close(self%modeout(4))
+      end if
+
+      if (present(ICs) .and. ICs) then
+        close(self%outsamp)
+        close(self%outsamp_N_iso)
+      end if
+
+      if (present(SR) .and. SR) then
+        close(self%outsamp_SR)
+        close(self%outsamp_N_iso_SR)
+      end if
+
+    end subroutine output_file_close
 
     subroutine make_formatting(self, num_inflaton)
       class(print_options) :: self

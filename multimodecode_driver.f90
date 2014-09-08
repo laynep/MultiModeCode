@@ -11,7 +11,7 @@ program multimodecode
   use modpk_deltaN_SR
   use modpk_observables, only : observables
   use csv_file, only : csv_write
-  use modpk_errorhandling, only : raise
+  use modpk_errorhandling, only : raise, run_outcome
 
   implicit none
 
@@ -90,6 +90,8 @@ program multimodecode
 
     call calculate_pk_observables(k_pivot,dlnk)
 
+    call out_opt%close_files(SR=use_deltaN_SR)
+
   else if &
     !Eqen sampling
     (ic_sampling == ic_flags%eqen_samp .or. &
@@ -125,8 +127,10 @@ program multimodecode
 
     end do
 
+    call out_opt%close_files(ICs=.true., SR=use_deltaN_SR)
+
   else
-    print*, "MODPK: sampling technique=",ic_sampling
+    print*, "MODECODE: sampling technique=",ic_sampling
     call raise%fatal_code(&
       "This sampling technique is not implemented.",&
       __FILE__, __LINE__)
@@ -396,7 +400,7 @@ program multimodecode
       character(1024) :: cname
       integer :: ii
 
-      pk_bad=0
+      pk_bad = run_outcome%success
       leave = .false.
 
       !Get vparams
@@ -535,7 +539,7 @@ program multimodecode
       !Print output array
       !Only get the SR arrays if use_deltaN_SR
       !Only print observs if evaluated modes
-      if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+      if (out_opt%output_badic .or. pk_bad==run_outcome%success) then
 
         if (evaluate_modes) then
           if (out_opt%first_outsamp) then
@@ -563,7 +567,7 @@ program multimodecode
         if (use_deltaN_SR) &
           observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
 
-        if (out_opt%output_badic .or. pk_bad/=bad_ic) then
+        if (out_opt%output_badic .or. pk_bad==run_outcome%success) then
 
           if (evaluate_modes) then
             if (out_opt%first_outsamp_N_iso) then
@@ -642,8 +646,9 @@ program multimodecode
       logical,  intent(inout)  :: leave
       type(observables) :: observ
 
-      !NB: If pk_bad==4, then ode_underflow
-      if (pk_bad==bad_ic .or. pk_bad==4) then
+      if (pk_bad /= run_outcome%success) then
+
+        call run_outcome%print_outcome(pk_bad)
         call observ%set_zero()
 
         !Flag for voiding calculation

@@ -102,8 +102,8 @@ CONTAINS
     case(8)
        !Canonical two-field hybrid
        if (size(phi) /= 2) then
-         print*, "MODPK: Potential_choice =", Potential_choice
-         print*, "MODPK: Number of fields =", size(phi)
+         print*, "MODECODE: Potential_choice =", Potential_choice
+         print*, "MODECODE: Number of fields =", size(phi)
          call raise%fatal_cosmo(&
              "This potential requires two fields.  &
              Set num_inflaton=2.", &
@@ -124,7 +124,7 @@ CONTAINS
       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
 
     case(10)
-      print*, "MODPK: Potential_choice=", Potential_choice
+      print*, "MODECODE: Potential_choice=", Potential_choice
       call raise%fatal_code(&
         "This potential choice is broken for some reason.",&
         __FILE__, __LINE__)
@@ -200,7 +200,7 @@ CONTAINS
 
       !Check for /0 error
       if (any(abs(step_slope) < 1e-15)) then
-        print*, "MODPK: step_slope=", step_slope
+        print*, "MODECODE: step_slope=", step_slope
         call raise%fatal_code(&
           "This is a division by zero error.  &
           Set the slope in tanh(phi/step_slope) greater than about 1e-15.",&
@@ -247,10 +247,10 @@ CONTAINS
       !Check not getting too far off line
       if (dist >5e-1_dp) then
       !if (dist >1e0_dp) then
-        print*, "MODPK: dist =", dist
-        print*, "MODPK: param_closest =", param_closest
-        print*, "MODPK: phi =", phi
-        print*, "MODPK: turning_function_parametric =", &
+        print*, "MODECODE: dist =", dist
+        print*, "MODECODE: param_closest =", param_closest
+        print*, "MODECODE: phi =", phi
+        print*, "MODECODE: turning_function_parametric =", &
           turning_function_parametric(param_closest)
 
         call raise%fatal_cosmo(&
@@ -268,12 +268,12 @@ CONTAINS
       !DEBUG
       if (param_closest < param0 .or. &
         phi_light > qsf_runref%phi_light_vs_param(size(qsf_runref%phi_light_vs_param,1),1)) then
-        print*, "MODPK: param_closest = ", param_closest
-        print*, "MODPK: phi = ", phi
-        print*, "MODPK: phi_light = ", phi_light
-        print*, "MODPK: qsf_runref%param = ", qsf_runref%param
-        print*, "MODPK: dist = ", dist
-        print*, "MODPK: dist2 = ", distance(4.0e0_dp)
+        print*, "MODECODE: param_closest = ", param_closest
+        print*, "MODECODE: phi = ", phi
+        print*, "MODECODE: phi_light = ", phi_light
+        print*, "MODECODE: qsf_runref%param = ", qsf_runref%param
+        print*, "MODECODE: dist = ", dist
+        print*, "MODECODE: dist2 = ", distance(4.0e0_dp)
         stop
       end if
 
@@ -310,7 +310,7 @@ CONTAINS
 
 
     case default
-      print*, "MODPK: potential_choice =", potential_choice
+      print*, "MODECODE: potential_choice =", potential_choice
       call raise%fatal_code(&
           "Need to set the potential V(phi) for this potential choice.",&
           __FILE__, __LINE__)
@@ -420,7 +420,7 @@ CONTAINS
           m2_V = (vparams(1,:))
           first_deriv = m2_V*phi
        case(10)
-         print*, "MODPK: Potential_choice=", Potential_choice
+         print*, "MODECODE: Potential_choice=", Potential_choice
          call raise%fatal_code(&
            "This potential choice is broken for some reason.",&
            __FILE__, __LINE__)
@@ -583,7 +583,7 @@ CONTAINS
        !END MULTIFIELD
        case default
 
-         print*, "MODPK: potential_choice =", potential_choice
+         print*, "MODECODE: potential_choice =", potential_choice
          call raise%fatal_code(&
            "Need to set first derivative for this potential choice &
            or use numerical derivatives (vnderivs=.true.)",&
@@ -699,7 +699,7 @@ CONTAINS
           m2_V = vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = m2_V(i)
        case(10)
-         print*, "MODPK: Potential_choice=", Potential_choice
+         print*, "MODECODE: Potential_choice=", Potential_choice
          call raise%fatal_code(&
            "This potential choice is broken for some reason.",&
            __FILE__, __LINE__)
@@ -951,7 +951,7 @@ CONTAINS
 
        case default
 
-         print*, "MODPK: potential_choice =", potential_choice
+         print*, "MODECODE: potential_choice =", potential_choice
          call raise%fatal_code(&
            "Need to set second_deriv for this potential choice.",&
             __FILE__, __LINE__)
@@ -1006,7 +1006,7 @@ CONTAINS
 
     case default
 
-      print*, "MODPK: potential_choice =", potential_choice
+      print*, "MODECODE: potential_choice =", potential_choice
       call raise%fatal_code(&
         "Need to set third derivative for this potential choice.",&
         __FILE__, __LINE__)
@@ -1081,7 +1081,7 @@ CONTAINS
     getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
 
     if (getEps >=3.0e0_dp) then
-      print*, "MODPK: epsilon =", getEps
+      print*, "MODECODE: epsilon =", getEps
 
       call raise%fatal_cosmo(&
         "Epsilon is >3.0 in SUBROUTINE getEps. &
@@ -1159,7 +1159,7 @@ CONTAINS
       dot_product(dphi,dphi)/hubble**2
 
     if (getEps_with_t >3.0e0_dp) then
-      print*, "MODPK: epsilon =", getEps_with_t
+      print*, "MODECODE: epsilon =", getEps_with_t
 
       call raise%fatal_cosmo(&
         "Epsilon is >3.0 in SUBROUTINE getEps_with_t. &
@@ -1650,7 +1650,7 @@ CONTAINS
         if (norm(spanning(i,:)) > div_zero_tol) then
           s_iso(i-1,:) = spanning(i,:)/norm(spanning(i,:))
         else
-          print*, "MODPK: i=",i
+          print*, "MODECODE: i=",i
           call raise%fatal_cosmo(&
             "The component spanning(i,:) has zero norm.",&
             __FILE__, __LINE__)
@@ -2385,7 +2385,7 @@ dataset=dataset
       stop
 
     case default
-      print*, "MODPK: potential choice =", potential_choice, &
+      print*, "MODECODE: potential choice =", potential_choice, &
         "not implemented in guess_EOI_field"
       stop
     end select

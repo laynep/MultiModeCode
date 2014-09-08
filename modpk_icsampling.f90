@@ -30,8 +30,6 @@ module modpk_icsampling
   logical :: use_first_priorval
 
 
-  integer, parameter :: bad_ic=6
-
   real(dp) :: penalty_fact
   logical :: save_iso_N=.false.
   real(dp) :: N_iso_ref
@@ -110,7 +108,7 @@ module modpk_icsampling
         !Only works for N-quadratic
 
         if (potential_choice /= 1 .and. potential_choice /= 16) then
-          print*, "MODPK: potential_choice=", potential_choice
+          print*, "MODECODE: potential_choice=", potential_choice
           call raise%fatal_code(&
             "Can't implicitly define the iso_N surface for this potential choice.",&
             __FILE__, __LINE__)
@@ -153,7 +151,7 @@ module modpk_icsampling
         if (potential_choice>2 .and. potential_choice/=11 .and. &
           potential_choice/=12 .and. potential_choice /=16) then
 
-          print*, "MODPK: potential_choice=", potential_choice
+          print*, "MODECODE: potential_choice=", potential_choice
           call raise%fatal_code(&
             "The sampling technique parameter_loop_samp &
             doesn't work for this potential choice.",&
@@ -227,7 +225,7 @@ module modpk_icsampling
       else if (ic_sampling==ic_flags%param_unif_prior) then
 
         if (potential_choice /= 11) then
-          print*, "MODPK: potential_choice=", potential_choice
+          print*, "MODECODE: potential_choice=", potential_choice
           call raise%fatal_code(&
             "The sampling technique param_unif_prior &
             doesn't work for this potential choice.",&
@@ -286,8 +284,8 @@ module modpk_icsampling
         if (num_inflaton>1 .and. maxval(number_knots_qsfrandom)>0) then
           allocate(knot_positions(num_inflaton-1, maxval(number_knots_qsfrandom), 2))
         else
-          print*, "MODPK: Num_inflaton=", num_inflaton
-          print*, "MODPK: number_knots_qsfrandom=", number_knots_qsfrandom
+          print*, "MODECODE: Num_inflaton=", num_inflaton
+          print*, "MODECODE: number_knots_qsfrandom=", number_knots_qsfrandom
 
           call raise%fatal_cosmo(&
             "Incorrect specifications for knot_positions.",&
@@ -309,8 +307,8 @@ module modpk_icsampling
               !DEBUG
               if (custom_knot_range) then
                 if (knot_range_min(i) .ge. knot_range_max(i)) then
-                  print*, "MODPK: knot_range_min =", knot_range_min
-                  print*, "MODPK: knot_range_max =", knot_range_max
+                  print*, "MODECODE: knot_range_min =", knot_range_min
+                  print*, "MODECODE: knot_range_max =", knot_range_max
 
                   call raise%fatal_code(&
                     "The knot_range_min > knot_range_max.",&
@@ -619,7 +617,7 @@ print*, new_measure
       real(dp), dimension(num_inflaton) :: phi0_min, &
         phi0_max, dphi0_min, dphi0_max
 
-      print*, "MODPK: IC with equal energy and eqen_prior=", eqen_prior
+      print*, "MODECODE: IC with equal energy and eqen_prior=", eqen_prior
 
       if (eqen_prior==equal_area_prior) then
         !Use the pseudo--"equal-area" prior of Easther-Price (1304.4244)
@@ -660,10 +658,10 @@ print*, new_measure
                 if (mod(ll,200)==0) print*, "IC off shell ------------- cycling", ll
               end if
               if (ll==maxtry) then
-                print*, "MODPK: Energy overrun =", rho_not_alloc
-                print*, "MODPK: E**4 =", energy_scale**4
-                print*, "MODPK: KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "MODPK: PE =", pot(phi)
+                print*, "MODECODE: Energy overrun =", rho_not_alloc
+                print*, "MODECODE: E**4 =", energy_scale**4
+                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODECODE: PE =", pot(phi)
                 call raise%warning(&
                   'Energy overrun when setting initial conditions &
                   with equal energy prior',&
@@ -692,10 +690,10 @@ print*, new_measure
 	      	  if (rho_not_alloc<1e-25_dp) then
               print*, "IC off shell ------------- cycling", ll
               if (ll==maxtry) then
-                print*, "MODPK: Energy overrun =", rho_not_alloc
-                print*, "MODPK: E**4 =", energy_scale**4
-                print*, "MODPK: KE =", 0.5e0_dp*sum(dphi*dphi)
-                print*, "MODPK: PE =", pot(phi)
+                print*, "MODECODE: Energy overrun =", rho_not_alloc
+                print*, "MODECODE: E**4 =", energy_scale**4
+                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODECODE: PE =", pot(phi)
                 call raise%warning(&
                   "Energy overrun when setting initial conditions with equal &
                   energy prior",&
@@ -799,7 +797,7 @@ print*, new_measure
 
 
       else
-        print*, "MODPK: eqen_prior = ", eqen_prior
+        print*, "MODECODE: eqen_prior = ", eqen_prior
 
         call raise%fatal_code(&
             "The prior for the equal energy sampler is not recognized.",&
@@ -1117,7 +1115,7 @@ print*, new_measure
 
         y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
       else
-        write(*,*) "MODPK: potential_choice=",potential_choice
+        write(*,*) "MODECODE: potential_choice=",potential_choice
 
         call raise%fatal_code(&
             "This potential choice isn't supported.",&
@@ -1187,7 +1185,7 @@ print*, new_measure
           vpnew(1,i) = vpnew(1,1)+rand
         else
 
-          write(*,*) "MODPK: prior=", prior
+          write(*,*) "MODECODE: prior=", prior
           call raise%fatal_code(&
             "This prior is not supported.",&
             __FILE__, __LINE__)
@@ -1239,7 +1237,7 @@ print*, new_measure
 
         else
 
-          write(*,*) "MODPK: prior=", prior
+          write(*,*) "MODECODE: prior=", prior
           call raise%fatal_code(&
               "The prior is not recognized.",&
               __FILE__, __LINE__)
@@ -1298,7 +1296,7 @@ print*, new_measure
           logmasses2(i) = logmasses2(1)+rand
         else
 
-          write(*,*) "MODPK: prior=", prior
+          write(*,*) "MODECODE: prior=", prior
           call raise%fatal_code(&
             "This prior is not supported.",&
             __FILE__, __LINE__)
@@ -1628,7 +1626,7 @@ print*, new_measure
 
       else
 
-        print*, "MODPK: param_sampling=", param_sampling
+        print*, "MODECODE: param_sampling=", param_sampling
 
         call raise%fatal_code(&
             "This choice of param_sampling is not supported.",&

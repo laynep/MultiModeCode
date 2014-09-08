@@ -1,12 +1,12 @@
 MODULE modpk_odeint
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
-  use modpk_icsampling, only : ic_sampling, bad_ic, ic_flags
+  use modpk_icsampling, only : ic_sampling, ic_flags
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
-  use modpk_errorhandling, only : raise
+  use modpk_errorhandling, only : raise, run_outcome
   implicit none
 
   interface odeint
@@ -111,9 +111,9 @@ contains
     DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
-         print*, "MODPK: E-fold",x
-         print*, "MODPK: nstp",nstp
-         print*, "MODPK: y", y
+         print*, "MODECODE: E-fold",x
+         print*, "MODECODE: nstp",nstp
+         print*, "MODECODE: y", y
 
          call raise%fatal_code(&
            "y has a NaN value in odeint_r.",&
@@ -134,7 +134,7 @@ contains
 
        CALL derivs(x,y,dydx)
        !If get bad deriv, then override this error when IC sampling
-       if (pk_bad==bad_ic) return
+       if (pk_bad /= run_outcome%success) return
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
@@ -152,7 +152,7 @@ contains
 
         if (istate<0) then
 
-          print*, "MODPK istate=", istate
+          print*, "MODECODE istate=", istate
 
           call raise%fatal_code(&
             "The dvode_f90 integrator threw an error. &
@@ -195,8 +195,8 @@ contains
       end if
 
       if (abs(x2-x)<1e-10) then
-        print*, "MODPK: y=",y
-        print*, "MODPK: Efolds=",x
+        print*, "MODECODE: y=",y
+        print*, "MODECODE: Efolds=",x
 
         call raise%fatal_code(&
         "Reached the end of the integration in N. &
@@ -241,22 +241,21 @@ contains
     !It got to the end without going through enough inflation to even be called
     !"slowroll_start"
     if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
-      pk_bad = bad_ic
+      pk_bad = run_outcome%infl_didnt_start
 
       call raise%warning(&
         "N-integration finished with eps>1.0 and &
-        without inflating or only transient periods of inflation.", &
-        __FILE__, __LINE__)
+        without inflating or only transient periods of inflation.")
       return
 
     else
 
-      PRINT*, 'MODPK: nsteps', nstp, MAXSTP
-      PRINT*, "MODPK: E-fold", x
-      print*, "MODPK: Step size", h
-      print*, "MODPK: epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-      print*, "MODPK: V=", pot(y(1:num_inflaton))
-      PRINT*, "MODPK: y=", y
+      PRINT*, 'MODECODE: nsteps', nstp, MAXSTP
+      PRINT*, "MODECODE: E-fold", x
+      print*, "MODECODE: Step size", h
+      print*, "MODECODE: epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+      print*, "MODECODE: V=", pot(y(1:num_inflaton))
+      PRINT*, "MODECODE: y=", y
       ode_underflow=.TRUE.
 
       call raise%warning(&
@@ -308,7 +307,7 @@ contains
         atol = tech_opt%dvode_atol_back(1:neq)
       else
 
-        print*, "MODPK: accuracy_setting =", tech_opt%accuracy_setting
+        print*, "MODECODE: accuracy_setting =", tech_opt%accuracy_setting
 
         call raise%fatal_code(&
         "This accuracy_setting is not supported in initialize_dvode.",&
@@ -429,9 +428,9 @@ contains
 
        IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
 
-          WRITE(*, *) 'MODPK: x, x1, x2 :', x, x1, x2
-          WRITE(*,*) 'MODPK: vparams: ', (vparams(i,:),i=1,size(vparams,1))
-          IF (.NOT.instreheat) WRITE(*,*) 'MODPK:  N_pivot: ', N_pivot
+          WRITE(*, *) 'MODECODE: x, x1, x2 :', x, x1, x2
+          WRITE(*,*) 'MODECODE: vparams: ', (vparams(i,:),i=1,size(vparams,1))
+          IF (.NOT.instreheat) WRITE(*,*) 'MODECODE:  N_pivot: ', N_pivot
 
           call raise%fatal_cosmo(&
             "This could be a model for which inflation does not end.  &
@@ -494,7 +493,7 @@ contains
              ENDIF
           ELSE
              IF(getEps(phi, dphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: epsilon =', getEps(phi, dphi)
+                PRINT*,'MODECODE: epsilon =', getEps(phi, dphi)
 
                 call raise%fatal_cosmo(&
                   'You asked for a no-slowroll-breakdown model, but inflation &
@@ -669,9 +668,9 @@ contains
 
        if (any(isnan(real(y))) .or. any(isnan(aimag(y)))) then
 
-         print*, "MODPK: E-fold",x
-         print*, "MODPK: nstp",nstp
-         print*, "MODPK: y", y
+         print*, "MODECODE: E-fold",x
+         print*, "MODECODE: nstp",nstp
+         print*, "MODECODE: y", y
 
          call raise%fatal_code(&
            "y has a NaN value in odeint_c.",&
@@ -707,7 +706,7 @@ contains
 
          if (istate<0) then
 
-          print*, "MODPK istate=", istate
+          print*, "MODECODE istate=", istate
 
           call raise%fatal_code(&
             "The dvode_f90 integrator threw an error. &
@@ -888,11 +887,11 @@ contains
 
     ode_underflow=.TRUE.
 
-    print*, 'MODPK: N =', x
-    print*, 'MODPK: stepsize, h =', h
-    print*, 'MODPK: background, y =', y(1:num_inflaton)
-    print*, 'MODPK: accuracy =', eps_adjust, eps
-    print*, "MODPK: epsilon", getEps(phi,delphi)
+    print*, 'MODECODE: N =', x
+    print*, 'MODECODE: stepsize, h =', h
+    print*, 'MODECODE: background, y =', y(1:num_inflaton)
+    print*, 'MODECODE: accuracy =', eps_adjust, eps
+    print*, "MODECODE: epsilon", getEps(phi,delphi)
 
     call raise%fatal_code(&
          'Too many steps in odeint_c.  Probably due to numerical accuracy or &
@@ -1122,12 +1121,12 @@ contains
     subroutine check_for_eternal_inflation_MODES()
 
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
-          WRITE(*, *) 'MODPK: vparams: ', (vparams(i,:),i=1, size(vparams,1))
-          WRITE(*, *) 'MODPK: x1, x, x2 :', x1, x, x2
-          WRITE(*, *) 'MODPK: phi_back :', real(y(1:num_inflaton))
-          WRITE(*, *) 'MODPK: epsilon :', geteps(real(y(1:num_inflaton)),&
+          WRITE(*, *) 'MODECODE: vparams: ', (vparams(i,:),i=1, size(vparams,1))
+          WRITE(*, *) 'MODECODE: x1, x, x2 :', x1, x, x2
+          WRITE(*, *) 'MODECODE: phi_back :', real(y(1:num_inflaton))
+          WRITE(*, *) 'MODECODE: epsilon :', geteps(real(y(1:num_inflaton)),&
             real(y(num_inflaton+1:2*num_inflaton)))
-          IF (.NOT.instreheat) WRITE(*,*) 'MODPK: N_pivot: ', N_pivot
+          IF (.NOT.instreheat) WRITE(*,*) 'MODECODE: N_pivot: ', N_pivot
 
           call raise%fatal_cosmo(&
             'This could be a model for which inflation does not end.  &
@@ -1216,7 +1215,7 @@ contains
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODPK: epsilon =', getEps(phi, delphi), 'phi =', phi
+                PRINT*,'MODECODE: epsilon =', getEps(phi, delphi), 'phi =', phi
 
                 call raise%fatal_cosmo(&
                   'You asked for a no-slowroll-breakdown model, but inflation &
@@ -1418,9 +1417,9 @@ contains
 
        if (any(isnan(y))) then
 
-         print*, "MODPK: E-fold",x
-         print*, "MODPK: nstp",nstp
-         print*, "MODPK: y", y
+         print*, "MODECODE: E-fold",x
+         print*, "MODECODE: nstp",nstp
+         print*, "MODECODE: y", y
 
          call raise%fatal_code(&
            "y has a NaN value in odeint_with_t.",&
@@ -1431,11 +1430,6 @@ contains
        !use_t = .true.
 
        CALL derivs(x,y,dydx)
-
-       !If get bad deriv, then override this error when IC sampling
-       !if (pk_bad==bad_ic) then
-       !  return
-       !end if
 
        yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
 
@@ -1504,12 +1498,12 @@ contains
           __FILE__, __LINE__)
 
         !DEBUG
-        print*, "MODPK: N", Nefolds
-        print*, "MODPK: eps", getEps_with_t(p, delp)
-        print*, "MODPK: t", x
-        print*, "MODPK: t_end", x2
-        print*, "MODPK: nstp", nstp
-        print*, "MODPK: N last", y(2*num_inflaton+1)
+        print*, "MODECODE: N", Nefolds
+        print*, "MODECODE: eps", getEps_with_t(p, delp)
+        print*, "MODECODE: t", x
+        print*, "MODECODE: t_end", x2
+        print*, "MODECODE: nstp", nstp
+        print*, "MODECODE: N last", y(2*num_inflaton+1)
         ystart = y
         return
       end if
@@ -1525,10 +1519,10 @@ contains
        !      ENDIF
        !   ELSE
        !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN
-       !         PRINT*,'MODPK: You asked for a no-slowroll-breakdown model, but inflation'
-       !         PRINT*,'MODPK: already ended via slowroll violation before your phi_end was'
-       !         PRINT*,'MODPK: reached. Please take another look at your inputs.'
-       !         PRINT*,'MODPK: QUITTING'
+       !         PRINT*,'MODECODE: You asked for a no-slowroll-breakdown model, but inflation'
+       !         PRINT*,'MODECODE: already ended via slowroll violation before your phi_end was'
+       !         PRINT*,'MODECODE: reached. Please take another look at your inputs.'
+       !         PRINT*,'MODECODE: QUITTING'
        !         PRINT*,'EPSILON =', getEps_with_t(p, delp)
        !         STOP
        !      ENDIF
@@ -1545,12 +1539,12 @@ contains
        h=hnext
     END DO
 
-    PRINT*, "MODPK: t=", x, "Step size", h
-    print*, "MODPK: N", Nefolds
-    print*, "MODPK: eps", getEps_with_t(p, delp)
-    print*, "MODPK: t", x
-    print*, "MODPK: t_end", x2
-    print*, "MODPK: nstp", nstp
+    PRINT*, "MODECODE: t=", x, "Step size", h
+    print*, "MODECODE: N", Nefolds
+    print*, "MODECODE: eps", getEps_with_t(p, delp)
+    print*, "MODECODE: t", x
+    print*, "MODECODE: t_end", x2
+    print*, "MODECODE: nstp", nstp
 
     call raise%warning('Too many steps in odeint_with_t', __FILE__, __LINE__)
 

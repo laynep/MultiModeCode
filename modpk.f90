@@ -2,7 +2,7 @@ MODULE access_modpk
   use modpkparams, only : dp
   USE camb_interface
   use modpk_io, only : out_opt
-  use modpk_errorhandling, only : raise
+  use modpk_errorhandling, only : raise, run_outcome
   implicit none
   private
   public :: potinit, evolve, total_efold
@@ -23,27 +23,19 @@ CONTAINS
     USE modpk_observables
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
-    use modpk_icsampling, only : bad_ic, ic_flags, ic_sampling
+    use modpk_icsampling, only : ic_flags, ic_sampling
     IMPLICIT NONE
-    real(dp) :: k,klo,khi
 
 
     !
     !     Solve the background equations
     !
-    pk_bad = 0
+    pk_bad = run_outcome%success
     phi_init = initialphi(phi_init0)
 
     !NB: For eqen sampling, dphi_init set in trial_background
     CALL backgrnd
 
-    !When scanning ICs, let some backgrnd errors be overridden
-    if (ic_sampling/=ic_flags%reg_samp .and. pk_bad == bad_ic) then
-      if (out_opt%modpkoutput) then
-        print*, "--------------- BAD IC; RESTARTING -------------------"
-      end if
-      return
-    end if
 
   END SUBROUTINE potinit
 
@@ -53,7 +45,7 @@ CONTAINS
     USE potential, ONLY : initialphi
     IMPLICIT NONE
 
-    pk_bad = 0
+    pk_bad = run_outcome%success
     phi_init = initialphi(phi_init0)
     CALL backgrnd_efold
     RETURN
@@ -69,7 +61,7 @@ CONTAINS
       pot, d2Vdphi2
     USE modpk_utils, ONLY : derivs, qderivs, rkqs_c
     use modpk_numerics, only : locate, polint, array_polint
-    use modpk_icsampling, only : bad_ic, ic_sampling, ic_flags
+    use modpk_icsampling, only : ic_sampling, ic_flags
     use modpk_qsf
     IMPLICIT NONE
 
@@ -145,13 +137,13 @@ CONTAINS
     i= locate(log_aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
-       PRINT*,'MODPK: The background solution worked,'
-       PRINT*,'MODPK: but the k you requested', k,' is outside'
-       PRINT*,'MODPK: the bounds of the background you solved for.'
+       PRINT*,'MODECODE: The background solution worked,'
+       PRINT*,'MODECODE: but the k you requested', k,' is outside'
+       PRINT*,'MODECODE: the bounds of the background you solved for.'
 
        !Override the stop.
        if (ic_sampling/=ic_flags%reg_samp) then
-         pk_bad=bad_ic
+         pk_bad = run_outcome%cant_set_modeIC
          return
        end if
 
@@ -184,8 +176,8 @@ CONTAINS
 
     IF(x1.le.0.) THEN
 
-      print*, "MODPK: alpha=",x1
-      print*, "MODPK: dalpha", dalpha
+      print*, "MODECODE: alpha=",x1
+      print*, "MODECODE: dalpha", dalpha
 
       call raise%fatal_cosmo(&
          'The phi_init you specified is too small to give &
@@ -197,10 +189,10 @@ CONTAINS
 
     IF((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1 .OR. dalpha .GT. 0.1 .OR. dh .GT. 0.1) THEN
        if ((sqrt(dot_product(delphi,delphi))/num_inflaton) .GT. 0.1)&
-         print*, "MODPK: Error in dphi interpolation.",&
+         print*, "MODECODE: Error in dphi interpolation.",&
          (sqrt(dot_product(delphi,delphi))/num_inflaton)
-       if (dalpha .GT. 0.1) print*, "MODPK: Error in alpha interpolation.", dalpha
-       if (dh > 0.1) print*, "MODPK: Error in Hubble interpolation", dh
+       if (dalpha .GT. 0.1) print*, "MODECODE: Error in alpha interpolation.", dalpha
+       if (dh > 0.1) print*, "MODECODE: Error in Hubble interpolation", dh
 
        call raise%fatal_code(&
           'The interpolation in SUBROUTINE evolve &
@@ -222,7 +214,7 @@ CONTAINS
 
     save_steps = .false.
 
-    pk_bad = 0
+    pk_bad = run_outcome%success
 
     !MULTIFIELD, need to evolve towards the end of inflation
     x2 = lna(nactual_bg) + 5.e0_dp
@@ -243,7 +235,7 @@ CONTAINS
     else if (tech_opt%accuracy_setting==-1) then
       accuracy=tech_opt%rk_accuracy_modes
     else
-      print*, "MODPK: accuracy_setting ==", tech_opt%accuracy_setting
+      print*, "MODECODE: accuracy_setting ==", tech_opt%accuracy_setting
 
       call raise%fatal_code(&
         "This accuracy_setting is not supported.",&
@@ -263,7 +255,7 @@ CONTAINS
       powerspectrum_out%adiab= 0e0_dp
       powerspectrum_out%isocurv=0e0_dp
       powerspectrum_out%tensor=0e0_dp
-      pk_bad=1
+      pk_bad = run_outcome%underflow
     endif
 
 
