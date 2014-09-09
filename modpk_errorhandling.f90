@@ -17,13 +17,18 @@ module modpk_errorhandling
 
   !Type that contains indices for classifying bad sets of parameters
   type :: run_outcome_type
+    !Success
     integer :: success = 0
+
+    !Failure
     integer :: infl_didnt_start = 1
     integer :: pivot_didnt_leaveH = 2
     integer :: cant_set_modeIC = 3
     integer :: cant_init_scalefact = 4
     integer :: ref_efold_didnt_leaveH = 5
     integer :: bad_reheat = 6
+
+    !Fatal
     integer :: underflow = -1
 
     contains
@@ -47,10 +52,12 @@ module modpk_errorhandling
       if (out_opt%modpkoutput) then
         if (.not. out_opt%output_reduced) then
 
+          print*, "**********************************************"
           if (present(fname)) &
             print*, "WARNING: Occured in file ", fname
           if (present(fname)) &
             print*, "WARNING: At line number ", line
+          print*, "**********************************************"
 
         end if
 
@@ -158,7 +165,7 @@ module modpk_errorhandling
 
       else if (outcome == self%ref_efold_didnt_leaveH) then
         if (out_opt%modpkoutput) &
-          print*, "MODECODE: Trying to save some reference N, &
+          print*, "MODECODE: Trying to save the field values at some reference N, &
           but got less evolution than that.", outcome
 
       else if (outcome == self%bad_reheat) then
@@ -174,8 +181,7 @@ module modpk_errorhandling
         print*, "MODECODE: pk_bad=", outcome
         call raise%fatal_code(&
           "The outcome flag pk_bad was set to a value that &
-          wasn't caught by our run_outcome type.  You shouldn't &
-          be seeing this.", &
+          wasn't caught by the run_outcome type.", &
           __FILE__, __LINE__)
 
       end if
@@ -183,7 +189,8 @@ module modpk_errorhandling
       !Check if the whole run should be stopped because of the outcome
       call self%is_fatal(outcome)
 
-      print*, "............... RESTARTING ..............."
+      if (out_opt%modpkoutput) &
+        print*, "............... RESTARTING ..............."
 
     end subroutine output_the_outcome
 

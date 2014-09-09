@@ -620,7 +620,6 @@ program multimodecode
       !print*, guess_EOI_field(phi_pivot, phi_end)
       !stop
 
-
       if (use_horiz_cross_approx) then
         HC_approx=.true.
       else
