@@ -8,7 +8,7 @@ program multimodecode
   use internals
   use modpk_icsampling
   use modpk_io, only : out_opt
-  use modpk_deltaN_SR
+  use modpk_deltaN
   use modpk_observables, only : observables
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome
@@ -208,6 +208,7 @@ program multimodecode
       else
         allocate(vparams(vparam_rows,num_inflaton))
       end if
+
       allocate(icpriors_max(2,num_inflaton))
       allocate(icpriors_min(2,num_inflaton))
 

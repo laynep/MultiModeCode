@@ -53,6 +53,7 @@ CONTAINS
         __FILE__, __LINE__)
     end if
 
+
     if (out_opt%modpkoutput .and. &
       .not. out_opt%output_reduced) then
       write(*, array_fmt) 'phi_init0 =', phi_init
@@ -333,11 +334,24 @@ CONTAINS
         call qsf_runref%get_param(phi_light=vparams(3,1))
       end if
 
-      h_init=SQRT(pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
+      h_init=pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
            (1.e0_dp+SQRT(1.e0_dp+2.e0_dp/3.e0_dp* M_Pl**2 *&
            dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) &
-           / pot(phi_init_trial)**2.)))
+           / pot(phi_init_trial)**2.))
+
+      if (h_init<0.0e0_dp) then
+        print*, "MODECODE: h_init=", h_init
+        call raise%fatal_code(&
+          "The initial value of H is imaginary.  This is &
+          likely related to a problem in the definition of V &
+          or its derivatives.",&
+          __FILE__, __LINE__)
+      else
+        h_init = sqrt(h_init)
+      end if
+
       !END MULTIFIELD
+
       y(size(y)/2+1 : (size(y))) = &
         -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
 

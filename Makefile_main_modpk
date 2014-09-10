@@ -13,7 +13,7 @@ MODPKOBJ = dvode_f90_m.o \
 					 modpk_qsf.o modpk_rng.o \
   				 modpk_potential.o modpk_icsampling.o \
 					 modpk_utils.o  modpk_odeint.o \
-					 modpk_backgrnd.o modpk.o # modpk_postprocessing.o
+					 modpk_backgrnd.o modpk.o modpk_deltaN.o
 
 
 default: powspec
@@ -23,10 +23,10 @@ csv_file.o: csv_file.f90 csv_file_1d.f90 csv_file_2d.f90
 modpk_io.o: modpk_io.f90 csv_file.o
 modpk_errorhandling.o: modpk_errorhandling.f90 modpk_io.o
 modpk_modules.o: modpk_modules.f90 csv_file.o modpk_io.o modpk_errorhandling.o
+modpk_rng.o: modpk_modules.o modpk_rng.f90 modpk_errorhandling.o
 modpk_numerics.o: modpk_numerics.f90 modpk_modules.o modpk_errorhandling.o
 modpk_qsf.o: modpk_qsf.f90 modpk_modules.o modpk_numerics.o modpk_errorhandling.o
 modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o modpk_errorhandling.o
-modpk_rng.o: modpk_modules.o modpk_rng.f90 modpk_errorhandling.o
 modpk_icsampling.o: modpk_modules.o modpk_potential.o modpk_rng.o modpk_icsampling.f90 \
 	modpk_errorhandling.o modpk_io.o
 modpk_utils.o: modpk_modules.o modpk_potential.o modpk_icsampling.o modpk_utils.f90 \
@@ -35,6 +35,7 @@ modpk_odeint.o:  modpk_modules.o modpk_io.o modpk_io.o modpk_potential.o modpk_i
  	modpk_utils.o dvode_f90_m.o modpk_odeint.f90 modpk_errorhandling.o
 modpk_backgrnd.o: modpk_odeint.o modpk_backgrnd.f90 modpk_errorhandling.o
 modpk.o: modpk_backgrnd.o modpk.f90 modpk_errorhandling.o
+modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorhandling.o
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
 	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER) -o $@

@@ -1,12 +1,12 @@
-MODULE potential
-  USE modpkparams
+module potential
+  use modpkparams
   use internals, only : pi
   use modpk_qsf
   use modpk_numerics
-  use modpk_errorhandling, only : raise
-  IMPLICIT NONE
-  PRIVATE
-  PUBLIC :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
+  use modpk_errorhandling, only : raise, assert
+  implicit none
+  private
+  public :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, &
        getEps_with_t, d3Vdphi3, &
        logP_of_observ, fisher_rao_metric, guess_EOI_field
@@ -14,6 +14,7 @@ MODULE potential
   public :: norm
   public :: bundle, field_bundle
 
+  !Bundle width isocurvature measure
   type :: bundle
     real(dp) :: N=0e0_dp
     real(dp) :: exp_scalar=0e0_dp
@@ -24,8 +25,7 @@ MODULE potential
 
   type(bundle) :: field_bundle
 
-
-CONTAINS
+contains
 
 
   recursive function pot(phi) result(V_potential)
@@ -65,60 +65,96 @@ CONTAINS
     real(dp), dimension(size(phi),size(phi)) :: B_ij
     integer :: ii, jj
 
+    !Make sure that vparams is set up properly
+    if (.not. allocated(vparams)) then
+      call raise%fatal_code(&
+        "The array vparams that contains the potential parameters is &
+        not allocated.",&
+        __FILE__,__LINE__)
+    end if
+
     select case(potential_choice)
 
     case(1)
       ! m_i^2 phi_i^2 --- N-quadratic
-       m2_V = 10.e0_dp**(vparams(1,:))
-       V_potential = 0.5e0_dp*sum(m2_V*phi*phi)
+
+      call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
+
+      m2_V = 10.e0_dp**(vparams(1,:))
+      V_potential = 0.5e0_dp*sum(m2_V*phi*phi)
 
     case(2)
       ! N-flation (axions)
-       lambda = 10.e0_dp**vparams(1,:)
-       finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-       V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+      V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
 
     case(3)
-       lambda = 10.e0_dp**vparams(1,:)
-       V_potential = sum(0.25e0_dp*lambda*phi**4)
+
+      call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      V_potential = sum(0.25e0_dp*lambda*phi**4)
 
     case(4)
-       lambda = 10.e0_dp**vparams(1,:)
-       V_potential = sum(lambda*phi)
+
+      call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      V_potential = sum(lambda*phi)
 
     case(5)
-       lambda = 10.e0_dp**vparams(1,:)
-       V_potential = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
+
+      call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      V_potential = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
 
     case(6)
-       lambda = 10.e0_dp**vparams(1,:)
-       mu = 10.e0_dp**vparams(2,:)
-       V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      mu = 10.e0_dp**vparams(2,:)
+      V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
 
     case(7) !product of exponentials
-       lambda = vparams(2, :)
-       V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl))
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      lambda = vparams(2, :)
+      V_potential = vparams(1,1)*M_Pl**4 * exp(dot_product(lambda, phi/M_Pl))
 
     case(8)
-       !Canonical two-field hybrid
-       if (size(phi) /= 2) then
-         print*, "MODECODE: Potential_choice =", Potential_choice
-         print*, "MODECODE: Number of fields =", size(phi)
-         call raise%fatal_cosmo(&
-             "This potential requires two fields.  &
-             Set num_inflaton=2.", &
-             __FILE__, __LINE__)
-       end if
+      !Canonical two-field hybrid
+      if (size(phi) /= 2) then
+        print*, "MODECODE: Potential_choice =", Potential_choice
+        print*, "MODECODE: Number of fields =", size(phi)
+        call raise%fatal_cosmo(&
+            "This potential requires two fields.  &
+            Set num_inflaton=2.", &
+            __FILE__, __LINE__)
+      end if
 
-       lambda_hybrid = vparams(1,1)
-       mass_hybrid = vparams(1,2)
-       mu_hybrid =vparams(1,3)
-       nu_hybrid =vparams(1,4)
-       V_potential = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
-         phi(2)**2/mu_hybrid**2 +&
-         phi(1)**2*phi(2)**2/nu_hybrid**4)
+
+      call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
+      call assert%check(size(vparams,2)>=4,__FILE__,__LINE__)
+
+      lambda_hybrid = vparams(1,1)
+      mass_hybrid = vparams(1,2)
+      mu_hybrid =vparams(1,3)
+      nu_hybrid =vparams(1,4)
+      V_potential = (lambda_hybrid**4)*((1.0_dp - phi(1)**2/mass_hybrid**2)**2 +&
+        phi(2)**2/mu_hybrid**2 +&
+        phi(1)**2*phi(2)**2/nu_hybrid**4)
 
     case(9)
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
       m2_V = vparams(1,:)
       c1_V = vparams(2,:)
       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V)
@@ -133,6 +169,8 @@ CONTAINS
       !N-quadratic w/one quartic intxn term
       !phi_i^2 + phi_{lightest}^2*phi_i^2
 
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
       m2_V = 10.0e0_dp**(vparams(1,:))
       lambda4 = 10.0e0_dp**vparams(2,:)
       phi_light_index = minloc(m2_V,1)
@@ -143,6 +181,9 @@ CONTAINS
     case(12)
       !Mass matrix with diagonal terms = m_i^2
       !Off-diagonal terms = \eps
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
       m2_V = 10.e0_dp**(vparams(1,:))
       lambda2 = 10.e0_dp**(vparams(2,1))
       V_potential = 0e0_dp
@@ -170,6 +211,9 @@ CONTAINS
       !vparams(3,:)  = \alpha_i
       !vparams(4+,:) = turn_funct params
 
+      call assert%check(size(vparams,1)>=3,__FILE__,__LINE__)
+
+
       !Only need vparams(X,2:num_inflaton)
       lambda4  = 10.0e0_dp**vparams(2,:)
       alpha2 = vparams(3,:)
@@ -192,6 +236,8 @@ CONTAINS
 
     case(14)
 
+      call assert%check(size(vparams,1)>=4,__FILE__,__LINE__)
+
       !Multifield step potential
       m2_V = 10.e0_dp**(vparams(1,:))
       location_phi = vparams(2,:)
@@ -209,12 +255,15 @@ CONTAINS
 
       V_potential=0e0_dp
 
+#define ARG ((phi(i)-location_phi(i))/step_slope(i))
       do i=1,num_inflaton
         V_potential = V_potential + &
             0.5*m2_V(i)*(phi(i)**2) * &
             (1.0e0_dp + step_size(i)* &
-            tanh( (phi(i)-location_phi(i))/step_slope(i)))
+            tanh(ARG ))
       end do
+
+#undef ARG
 
     case(15)
 
@@ -222,6 +271,9 @@ CONTAINS
       !(1/2)m_L^2 phi_L^2 + (1/2)M_heavy^2 D^2
       !for D^2 = MIN( sum_i (phi_i - funct_i(param))^2; wrt param)
       !Where param_min is found numerically
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+      call assert%check(size(vparams,2)>=2,__FILE__,__LINE__)
 
       m_light2 = 10.0e0_dp**vparams(1,1)
       M_heavy2 = 10.0e0_dp**vparams(1,2)
@@ -286,6 +338,7 @@ CONTAINS
     case(16)
       ! (1/p) lambda_i |phi_i|^p --- N-monomial
 
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
       p_exp = vparams(2,1)
       m2_V = vparams(1,:)
@@ -294,19 +347,23 @@ CONTAINS
     case(17)
       ! Generalized axions
 
-      V0 = vparams(1,1)
-      A_i = vparams(2,:)
-      B_ij = vparams(3:num_inflaton+2,:)
+      call assert%check(size(vparams,1)>=1+num_inflaton,__FILE__,__LINE__)
 
-      V_potential = V0
+      A_i = vparams(1,:)
+      B_ij = vparams(2:num_inflaton+1,:)
+
+
+      V_potential = 0e0_dp
       do ii=1,size(A_i)
-        V_potential = V_potential + A_i(ii)*cos(2.0e0_dp*pi*phi(ii))
+        V_potential = V_potential + A_i(ii)*(1.0e0_dp-cos(2.0e0_dp*pi*phi(ii)))
       end do
+
 
       do ii=1,size(A_i); do jj=1, size(A_i)
         V_potential = V_potential + B_ij(ii,jj)*&
           cos(2.0e0_dp*pi*phi(ii) - 2.0e0_dp*pi*phi(jj))
       end do; end do
+
 
 
     case default
@@ -494,16 +551,17 @@ CONTAINS
          step_slope = vparams(4,:)
 
 
+#define ARG ((phi(i)-location_phi(i))/step_slope(i))
          do i=1,num_inflaton
 
           first_deriv(i) = m2_V(i)*phi(i)* &
-            (1.0e0_dp + step_size(i)* &
-            tanh( (phi(i)-location_phi(i))/step_slope(i))) + &
+            (1.0e0_dp + step_size(i)*tanh(ARG )) + &
             0.5e0_dp*m2_V(i)*phi(i)**2*step_size(i)* &
-            (MySech((phi(i)-location_phi(i))/step_slope(i)))**(2)/&
+            (MySech(ARG))**(2)/&
             step_slope(i)
+          end do
 
-         end do
+#undef ARG
 
        case(15)
          !Numerical QSF
@@ -562,20 +620,19 @@ CONTAINS
        case(17)
          ! Generalized axions
 
-         V0 = vparams(1,1)
-         A_i = vparams(2,:)
-         B_ij = vparams(3:num_inflaton+2,:)
+         A_i = vparams(1,:)
+         B_ij = vparams(2:num_inflaton+1,:)
 
          twopi = 2.0e0_dp*pi
 
-         first_deriv = -twopi*sin(twopi*phi)
+         first_deriv = -twopi*A_i*sin(twopi*phi)
 
          do alpha=1, size(first_deriv)
-           do beta=1, size(first_deriv)
-             if (alpha==beta) cycle
-             first_deriv(alpha) = first_deriv(alpha) + &
-               twopi*(B_ij(alpha,beta)+B_ij(beta,alpha))* &
-               sin(twopi*phi(beta) - twopi*phi(alpha))
+           do ii=1, size(first_deriv)
+             if (alpha==ii) cycle
+             first_deriv(alpha) = first_deriv(alpha) - &
+               twopi*(B_ij(alpha,ii)+B_ij(ii,alpha))* &
+               sin(twopi*phi(alpha) - twopi*phi(ii))
            end do
          end do
 
@@ -815,19 +872,18 @@ CONTAINS
 
          second_deriv=0e0_dp
 
+#define ARG ((phi(i)-location_phi(i))/step_slope(i))
          do i=1,num_inflaton
 
            second_deriv(i,i) = m2_V(i)*&
-              (1.0e0_dp + step_size(i)* &
-              tanh( (phi(i)-location_phi(i))/step_slope(i))) +&
+              (1.0e0_dp + step_size(i)* tanh( ARG )) +&
               2.0e0_dp*m2_V(i)*phi(i)*step_size(i)* &
-              (MySech( (phi(i)-location_phi(i))/step_slope(i)))**(2)/&
-              step_slope(i) - &
-              m2_V(i)*phi(i)**2 * (step_size(i)/step_slope(i)**2) *&
-              tanh((phi(i)-location_phi(i))/step_slope(i)) *&
-              (MySech((phi(i)-location_phi(i))/step_slope(i)))**(2)
+              (MySech( ARG ))**(2)/step_slope(i) - &
+              m2_V(i)*phi(i)**2 * (step_size(i)/step_slope(i)**2) *tanh(ARG) *&
+              (MySech(ARG))**(2)
 
          end do
+#undef ARG
 
        case(15)
 
@@ -917,9 +973,8 @@ CONTAINS
        case(17)
          ! Generalized axions
 
-         V0 = vparams(1,1)
-         A_i = vparams(2,:)
-         B_ij = vparams(3:num_inflaton+2,:)
+         A_i = vparams(1,:)
+         B_ij = vparams(2:num_inflaton+1,:)
 
          twopi = 2.0e0_dp*pi
          fourpi_sq = 4.0e0_dp*pi**2
@@ -930,24 +985,27 @@ CONTAINS
            delta(ii,ii) = 1.0e0_dp
          end do
 
-         !Optimize me...
+         second_deriv=0e0_dp
          do alpha=1, size(A_i)
            do beta=1, size(A_i)
-             second_deriv(alpha,beta) = fourpi_sq*(B_ij(alpha,beta)+B_ij(beta,alpha))*&
-               cos(twopi*phi(beta) - twopi*phi(alpha)) -&
-               fourpi_sq*delta(alpha,beta)*A_i(alpha)*&
-               cos(twopi*phi(alpha))
+             second_deriv(alpha, beta) = &
+               -fourpi_sq*A_i(alpha)*delta(alpha,beta)*cos(twopi*phi(alpha)) &
+               +fourpi_sq*(B_ij(alpha,beta) + B_ij(beta,alpha))*&
+                  cos(twopi*phi(alpha)-twopi*phi(beta))*&
+                  (1.0e0_dp-delta(alpha,beta))
 
-             if (alpha==beta) then
-               do ii=1, size(A_i)
-                 second_deriv(alpha,beta) = second_deriv(alpha,beta) + &
-                   fourpi_sq*(B_ij(alpha,ii) + B_ij(ii,alpha))*&
-                   cos(twopi*phi(ii) - twopi*phi(alpha))
-               end do
-             end if
+              if (alpha/=beta) cycle
+
+              do ii=1,size(A_i)
+                if (ii==alpha) cycle
+                second_deriv(alpha, beta) = second_deriv(alpha, beta)&
+                  -fourpi_sq*(B_ij(alpha,ii) + B_ij(ii,alpha))*&
+                  cos(twopi*phi(alpha)-twopi*phi(ii))*delta(alpha,beta)
+              end do
 
            end do
          end do
+
 
        case default
 
@@ -978,15 +1036,39 @@ CONTAINS
 
     real(dp) :: p_exp
 
+    real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
+
     third_deriv = 0e0_dp
 
     select case(potential_choice)
     case(1)
       m2_V = 10.e0_dp**(vparams(1,:))
       third_deriv=0e0_dp
+    case(14)
+
+      !Multifield step potential
+      m2_V = 10.e0_dp**(vparams(1,:))
+      location_phi = vparams(2,:)
+      step_size = vparams(3,:)
+      step_slope = vparams(4,:)
+
+#define ARG ((phi(ii)-location_phi(ii))/step_slope(ii))
+      third_deriv=0e0_dp
       do ii=1,size(phi)
-        third_deriv(ii,ii,ii)=m2_V(ii)
+
+        third_deriv(ii,ii,ii)=&
+          (3.0e0_dp*step_size(ii)*m2_V(ii)/step_slope(ii))*&
+            (MySech(ARG)**2) &
+          - (step_size(ii)*m2_V(ii)*phi(ii)**2/step_size(ii)**3)*&
+            (MySech(ARG)**4) &
+          -(6.0e0_dp*step_size(ii)*m2_V(ii)*phi(ii)/step_slope(ii)**2)*&
+            (MySech(ARG)**2)*tanh(ARG) &
+          +(2.0e0_dp*step_size(ii)*m2_V(ii)*phi(ii)**2/step_slope(ii)**3)*&
+            (MySech(ARG)**2)*(tanh(ARG)**2)
+
       end do
+#undef ARG
+
     case(15)
       !DEBUG
       print*, "testing --- fake d3Vdphi3 for numerical qsf..."
@@ -1014,7 +1096,6 @@ CONTAINS
     end select
 
   end function d3Vdphi3
-
 
   FUNCTION initialphi(phi0)
     !
@@ -1082,15 +1163,17 @@ CONTAINS
 
     if (getEps >=3.0e0_dp) then
       print*, "MODECODE: epsilon =", getEps
+      print*, "MODECODE: phi =", phi
+      print*, "MODECODE: dphi =", dphi
 
       call raise%fatal_cosmo(&
-        "Epsilon is >3.0 in SUBROUTINE getEps. &
+        "Epsilon is >3.0 in subroutine getEps. &
          This means H is complex.  &
-         (This is not universe I'd like to live in.) &
+         (This is not a universe I'd like to live in.) &
          This error might arise if there is a large separation &
          in scales (stiff problem) and the integrator walks &
          to a bad position in parameter space. &
-         Try reducing the integration stepsize.", &
+         Try reducing the integration stepsize or use the DVODE integrator.", &
         __FILE__, __LINE__)
 
     end if
@@ -1160,15 +1243,17 @@ CONTAINS
 
     if (getEps_with_t >3.0e0_dp) then
       print*, "MODECODE: epsilon =", getEps_with_t
+      print*, "MODECODE: phi =", phi
+      print*, "MODECODE: dphi =", dphi
 
       call raise%fatal_cosmo(&
-        "Epsilon is >3.0 in SUBROUTINE getEps_with_t. &
+        "Epsilon is >3.0 in subroutine getEps_with_t. &
         This means H is complex.  &
-        (This is not universe I'd like to live in.) &
+        (This is not a universe I'd like to live in.) &
         This error might arise if there is a large separation &
         in scales (stiff problem) and the integrator walks &
         to a bad position in parameter space. &
-        Try reducing the integration stepsize.", &
+        Try reducing the integration stepsize or use the DVODE integrator.", &
         __FILE__, __LINE__)
     end if
     !END MULTIFIELD
@@ -2393,421 +2478,4 @@ dataset=dataset
   end function guess_EOI_field
 
 
-
-
 END MODULE potential
-
-
-!Module that lets us compare the mode evolution to the slow-roll expectation for
-!sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
-module modpk_deltaN_SR
-  use modpkparams, only : dp, vparams
-  use modpk_observables, only : power_spectra
-  use internals, only : pi
-  use potential, only : pot, dVdphi, d2Vdphi2, d3Vdphi3
-  implicit none
-
-  !The horizon crossing approximation
-  logical :: HC_approx=.false.
-
-  contains
-
-    !Evalutes adiabatic power spectrum under SR approximation at field positions
-    !phi_end, given that the mode of interest crossed the horizon at phi_pivot
-    !Assumes a massless, uncorrelated mode subhorizon
-    function PR_SR(phi_pivot,phi_end, spectrum) result(PR)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) ::PR
-      real(dp), dimension(size(phi_pivot)) :: dN
-      real(dp) :: H_piv, V_piv, P_dphi
-      real(dp), dimension(size(phi_pivot)) :: eps_i, u_i
-      type(power_spectra), intent(in), optional :: spectrum
-      integer :: ii, jj
-
-      V_piv = pot(phi_pivot)
-      H_piv = sqrt(V_piv/3.0e0_dp)
-      dN = dNdphi_SR(phi_pivot,phi_end)
-
-      eps_i = eps_SR(phi_pivot)
-      u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V_piv
-
-      P_dphi = (H_piv/2.0e0_dp/pi)**2
-
-      PR = sum(dN*dN)*P_dphi
-
-      if (present(spectrum)) then
-        PR=0e0_dp
-        do ii=1,size(dN); do jj=1,size(dN)
-          PR = PR+ &
-            dN(ii)*dN(jj)*spectrum%phi_ij(ii,jj)
-        end do; end do
-      end if
-
-    end function PR_SR
-
-    function r_SR(phi_pivot,phi_end, spectrum) result(r)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: r
-      real(dp), dimension(size(phi_pivot)) :: dN
-      type(power_spectra), intent(in), optional :: spectrum
-      real(dp) :: P_tens, P_scal, H, V
-
-      integer :: ii, jj
-
-      dN = dNdphi_SR(phi_pivot,phi_end)
-
-      r = 8.0e0_dp/sum(dN*dN)
-
-      if (present(spectrum)) then
-        V = pot(phi_pivot)
-        H = sqrt(V/3.0e0_dp)
-        P_tens = 8.0e0_dp*(H/2.0e0_dp/pi)**2
-
-        P_scal=0e0_dp
-        do ii=1,size(dN); do jj=1,size(dN)
-          P_scal = P_scal + &
-            dN(ii)*dN(jj)*spectrum%phi_ij(ii,jj)
-        end do; end do
-
-        r = P_tens/P_scal
-
-      end if
-
-
-    end function r_SR
-
-    function nt_SR(phi_pivot) result(nt)
-      real(dp), dimension(:), intent(in) :: phi_pivot
-      real(dp) :: nt, eps(size(phi_pivot))
-
-      eps = eps_SR(phi_pivot)
-
-      nt = -2.0e0_dp*sum(eps)
-      !nt = -2.0e0_dp*sum(eps)/(1.0e0_dp - sum(eps))
-
-    end function nt_SR
-
-    !Assumes independent, GRFs at horizon exit
-    function fNL_SR(phi_pivot,phi_end) result(fnl)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: fnl
-      real(dp), dimension(size(phi_pivot)) :: dN
-      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2N
-      integer :: ii, jj
-
-      dN = dNdphi_SR(phi_pivot,phi_end)
-      d2N = d2Ndphi2_SR(phi_pivot,phi_end)
-
-      fnl=0e0_dp
-      do ii=1,size(dN); do jj=1,size(dN)
-        fnl = fnl + dN(ii)*dN(jj)*d2N(ii,jj)
-      end do; end do
-      fnl = fnl*(-5.0e0_dp/6.0e0_dp)/(sum(dN*dN))**2
-
-    end function fNL_SR
-
-    !Assumes independent, GRFs at horizon exit
-    !From Eq 41 in astro-ph/0611075
-    function tauNL_SR(phi_pivot,phi_end) result(taunl)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: taunl
-      real(dp), dimension(size(phi_pivot)) :: dN
-      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2N
-      integer :: aa, bb, cc
-
-      dN = dNdphi_SR(phi_pivot,phi_end)
-      d2N = d2Ndphi2_SR(phi_pivot,phi_end)
-
-      taunl=0e0_dp
-      do aa=1,size(dN); do bb=1,size(dN); do cc=1,size(dN)
-        taunl = taunl + d2N(aa,bb)*d2N(aa,cc)*dN(bb)*dN(cc)
-      end do; end do; end do
-      taunl = taunl*(1.0e0_dp)/(sum(dN*dN))**3
-
-    end function tauNL_SR
-
-    function ns_SR(phi_pivot,phi_end) result(ns)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: ns, eps_piv, V
-      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2V
-      real(dp), dimension(size(phi_pivot)) :: dV, dN
-      integer :: ii, jj
-      real(dp), dimension(size(phi_pivot)) :: eps_i, eta_i, u_i
-
-      !dV = dVdphi(phi_pivot)
-      d2V = d2Vdphi2(phi_pivot)
-      dN = dNdphi_SR(phi_pivot,phi_end)
-      !eps_i = eps_SR(phi_pivot)
-      !eta_i = eta_SR(phi_pivot)
-      eps_piv = sum(eps_SR(phi_pivot))
-      V = pot(phi_pivot)
-
-      !u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V
-
-      !ns = 1.0e0_dp - 2.0e0_dp*eps_piv &
-      !  - (4.0e0_dp/sum(u_i**2/eps_i))*&
-      !  (1.0e0_dp - sum(eta_i*u_i**2/2.0e0_dp/eps_i))
-
-      ns = 1.0e0_dp &
-        - 2.0e0_dp*eps_piv &
-        - (2.0e0_dp/sum(dN*dN))
-
-      do ii=1,size(phi_pivot); do jj=1,size(phi_pivot)
-        ns = ns +&
-          2.0e0_dp*d2V(ii,jj)*dN(ii)*dN(jj)/V/sum(dN*dN)
-      end do; end do
-
-    end function ns_SR
-
-    !Running of ns
-    !Formula as in Eq 6.14 1203.3792
-    function alpha_s_SR(phi_pivot,phi_end) result(alpha_s)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp) :: alpha_s
-
-
-      real(dp), dimension(size(phi_pivot)) :: V_i, Z_i, u_i
-      real(dp) :: V, eps_piv
-      real(dp), dimension(size(phi_pivot)) :: eps_i_piv, eta_i_piv, &
-        xi_i_piv
-      real(dp) :: sum_ui_over_epsi
-      real(dp) :: term1, term2, term3, term4, term5, term6
-
-      V = pot(phi_pivot)
-      eps_i_piv = eps_SR(phi_pivot)
-      eps_piv = sum(eps_i_piv)
-      xi_i_piv = xi_SR(phi_pivot)
-      eta_i_piv = eta_SR(phi_pivot)
-
-      V_i = V_i_sum_sep(phi_pivot)
-      Z_i = Z_i_BE(phi_end)
-      u_i = (V_i + Z_i)/V
-
-      sum_ui_over_epsi = sum(u_i**2/eps_i_piv)
-
-      term1 = -8.0e0_dp * eps_piv**2
-      term2 = 4.0e0_dp * sum(eps_i_piv*eta_i_piv)
-
-      term3 = (-16.0e0_dp/sum_ui_over_epsi**2)*&
-        (1.0e0_dp - sum(eta_i_piv*u_i**2/2.0e0_dp/eps_i_piv))**2
-
-      term4 = (-8.0e0_dp/sum_ui_over_epsi)*&
-        sum(eta_i_piv*u_i*(1.0e0_dp - &
-          eta_i_piv*u_i**2/2.0e0_dp/eps_i_piv))
-
-      term5 = (4.0e0_dp*eps_piv/sum_ui_over_epsi)*&
-        sum(eta_i_piv*u_i**2/eps_i_piv)
-
-      term6 = (-2.0e0_dp/sum_ui_over_epsi)*&
-        sum(xi_i_piv*u_i**2/eps_i_piv)
-
-      alpha_s = term1 + term2 + term3 + term4 + term5 + term6
-
-
-    end function alpha_s_SR
-
-    !Deriv of N wrt phi on horiz cross surface
-    !Battefeld-Easther eq 29
-    function dNdphi_SR(phi_pivot,phi_end)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp), dimension(size(phi_pivot)) :: dNdphi_SR
-      real(dp), dimension(size(phi_pivot)) :: eps, V_i, Z_i
-      real(dp) :: V
-
-      eps = eps_SR(phi_pivot)
-      V_i = V_i_sum_sep(phi_pivot)
-      Z_i = Z_i_BE(phi_end)
-      V = pot(phi_pivot)
-
-      dNdphi_SR = ((1.0e0_dp/sqrt(2.0e0_dp*eps))/V)*(V_i + Z_i)
-
-    end function dNdphi_SR
-
-    !2nd Deriv of N wrt phi on horiz cross surface
-    !Battefeld-Easther eq 32
-    function d2Ndphi2_SR(phi_pivot,phi_end)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp), dimension(size(phi_pivot),size(phi_pivot)) :: d2Ndphi2_SR
-      real(dp), dimension(size(phi_end),size(phi_end)) :: delta
-
-      real(dp), dimension(size(phi_end)) :: eta_piv, eps_piv, V_i_piv, Z_i
-      real(dp) :: V_piv
-      real(dp), dimension(size(phi_end),size(phi_end)) :: dZ_ij
-
-      integer :: ll, kk
-
-      eta_piv = eta_SR(phi_pivot)
-      eps_piv = eps_SR(phi_pivot)
-      V_i_piv = V_i_sum_sep(phi_pivot)
-      Z_i = Z_i_BE(phi_end)
-      V_piv = pot(phi_pivot)
-      dZ_ij = dZdphi_ij_BE(phi_pivot,phi_end)
-
-      !Identity matrix
-      delta=0e0_dp
-      do ll=1, size(phi_end)
-        delta(ll,ll) = 1.0e0_dp
-      end do
-
-      do ll=1, size(phi_end); do kk=1,size(phi_end)
-        d2Ndphi2_SR(ll,kk) = delta(kk,ll)*&
-            (1.0e0_dp - &
-              (eta_piv(ll)/2.0e0_dp/eps_piv(ll))*&
-              (V_i_piv(ll)+Z_i(ll))/V_piv&
-             ) +&
-             (1.0e0_dp/sqrt(2.0e0_dp*eps_piv(ll))/V_piv)*dZ_ij(ll,kk)
-      end do; end do
-
-    end function d2Ndphi2_SR
-
-    function eps_SR(phi)
-      real(dp), dimension(:), intent(in) :: phi
-      real(dp), dimension(size(phi)) :: eps_SR
-      real(dp), dimension(size(phi)) :: dV
-      real(dp) :: V
-
-      dV = dVdphi(phi)
-      V = pot(phi)
-      eps_SR = 0.5e0_dp*( dV**2/V**2)
-
-    end function eps_SR
-
-    function eta_SR(phi)
-      real(dp), dimension(:), intent(in) :: phi
-      real(dp), dimension(size(phi)) :: eta_SR
-      real(dp), dimension(size(phi),size(phi)) :: d2V
-      real(dp) :: V
-      integer :: i
-
-      d2V = d2Vdphi2(phi)
-      V = pot(phi)
-
-      do i=1, size(eta_SR)
-        eta_SR(i) = d2V(i,i)**2/V
-      end do
-
-    end function eta_SR
-
-    function xi_SR(phi)
-      real(dp), dimension(:), intent(in) :: phi
-      real(dp), dimension(size(phi)) :: xi_SR
-      real(dp), dimension(size(phi),size(phi),size(phi)) :: d3V
-      real(dp) :: V
-      real(dp), dimension(size(phi)) :: dV
-      integer :: i
-
-      d3V = d3Vdphi3(phi)
-      V = pot(phi)
-      dV = dVdphi(phi)
-
-      do i=1, size(xi_SR)
-        xi_SR(i) = dV(i)*d3V(i,i,i)**2/V**2
-      end do
-
-    end function xi_SR
-
-    !The function Z_i from Battefeld-Easther that encodes all details from the
-    !end of inflation surface.  Eq. 31
-    function Z_i_BE(phi_end)
-      real(dp), dimension(:), intent(in) :: phi_end
-      real(dp), dimension(size(phi_end)) :: Z_i_BE
-
-      real(dp), dimension(size(phi_end)) :: eps_end
-      real(dp) :: eps, V
-
-      if (HC_approx) then
-        Z_i_BE=0e0_dp
-        return
-      end if
-
-      eps_end = eps_SR(phi_end)
-      eps = sum(eps_end)
-      V = pot(phi_end)
-
-      Z_i_BE = V*eps_end/eps - V_i_sum_sep(phi_end)
-
-    end function Z_i_BE
-
-    !Deriv of Z_i wrt fields at horiz cross
-    !Battefeld-Easther Eq. 33
-    function dZdphi_ij_BE(phi_pivot,phi_end)
-      real(dp), dimension(:), intent(in) :: phi_pivot, phi_end
-      real(dp), dimension(size(phi_end),size(phi_end)) :: dZdphi_ij_BE
-
-      real(dp), dimension(size(phi_end)) :: eps_end, eps_piv, eta_end
-      real(dp) :: eps_t_end, V_end, V_piv
-      real(dp), dimension(size(phi_end),size(phi_end)) :: delta
-
-      integer :: jj, ll, kk
-
-      if (HC_approx) then
-        dZdphi_ij_BE=0e0_dp
-        return
-      end if
-
-      eps_end = eps_SR(phi_end)
-      eps_piv = eps_SR(phi_pivot)
-      eps_t_end = sum(eps_end)
-      V_end = pot(phi_end)
-      V_piv = pot(phi_pivot)
-      eta_end = eta_SR(phi_end)
-
-      !Identity matrix
-      delta=0e0_dp
-      do ll=1, size(phi_end)
-        delta(ll,ll) = 1.0e0_dp
-      end do
-
-      !Summation over jj
-      dZdphi_ij_BE = 0e0_dp
-      do ll=1, size(phi_end); do kk=1,size(phi_end)
-        do jj=1,size(phi_end)
-          dZdphi_ij_BE(ll,kk) = dZdphi_ij_BE(ll,kk) + &
-            (-V_end**2/V_piv)*sqrt(2.0e0_dp/eps_piv(kk))*&
-            (&
-              eps_end(jj)*&
-              ((eps_end(ll)/eps_t_end) - delta(ll,jj))*&
-              ((eps_end(kk)/eps_t_end) - delta(kk,jj))*&
-              (1.0e0_dp - (eta_end(jj)/eps_t_end))&
-            )
-        end do
-      end do; end do
-
-
-    end function dZdphi_ij_BE
-
-    !For a sum-separable potential V=\sum_i V_i.  This returns only the V_i part
-    function V_i_sum_sep(phi)
-      real(dp), dimension(:), intent(in) :: phi
-      real(dp), dimension(size(phi)) :: V_i_sum_sep
-
-      real(dp), dimension(:,:), allocatable :: vparams_temp
-      integer :: vrows, jj
-      real(dp) :: V
-
-      !The idea: make temp copy of vparams; change vparams as if it had only the
-      !one field; get V; restore vparams
-      !NB: vparams(vrows,num_inflaton)
-
-      vrows = size(vparams,1)
-
-      allocate(vparams_temp(size(vparams,1),size(vparams,2)))
-      vparams_temp = vparams
-
-      do jj=1,size(phi)
-        deallocate(vparams)
-        allocate(vparams(vrows,1))
-        vparams(:,1) = vparams_temp(:,jj)
-        V_i_sum_sep(jj) = pot((/phi(jj)/))
-      end do
-
-      deallocate(vparams)
-      allocate(vparams(size(vparams_temp,1),size(vparams_temp,2)))
-      vparams = vparams_temp
-      deallocate(vparams_temp)
-
-    end function V_i_sum_sep
-
-
-
-end module modpk_deltaN_SR

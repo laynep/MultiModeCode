@@ -5,7 +5,7 @@ module modpk_errorhandling
   implicit none
 
   private
-  public :: raise, run_outcome
+  public :: raise, run_outcome, assert
 
   !General class for errors
   type :: error
@@ -37,7 +37,14 @@ module modpk_errorhandling
 
   end type
 
+  type :: asserter
+    logical :: use_assertions = .true.
+    contains
+      procedure, public :: check => check_an_assertion
+  end type asserter
+
   type(error) :: raise
+  type(asserter) :: assert
   type(run_outcome_type) :: run_outcome
 
   contains
@@ -193,5 +200,21 @@ module modpk_errorhandling
         print*, "............... RESTARTING ..............."
 
     end subroutine output_the_outcome
+
+    subroutine check_an_assertion(self, flag,  fname, line)
+      class(asserter) :: self
+      logical, intent(in) :: flag
+      character(*), intent(in) :: fname
+      integer, intent(in) :: line
+
+      !Turn off assertions
+      if (.not. self%use_assertions) return
+
+      if (.not. flag) then
+        call raise%fatal_code(&
+          "An assertion failed.", fname, line)
+      end if
+
+    end subroutine check_an_assertion
 
 end module modpk_errorhandling
