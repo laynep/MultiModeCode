@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 2
+  num_inflaton = 10
   potential_choice = 14
   vparam_rows = 4
   more_potential_params = .false.
@@ -22,7 +22,7 @@ sum-separable potentials.
 
 &analytical
   use_deltaN_SR = .true.
-  use_horiz_cross_approx = .true.
+  use_horiz_cross_approx = .false.
   evaluate_modes = .true.
 /
 
@@ -108,12 +108,12 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 20.0 20.0
+  phi_init0 = 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0
 
-  vparams(1,:) = -12 -12
-  vparams(2,:) = 10.0e0 10.0e0
-  vparams(3,:) = 0.25e0 0.25e0
-  vparams(4,:) = 1e-3 1e-2
+  vparams(1,:) = -12.031471963395132       -11.619318052075640       -11.408714438953703       -11.245659250130332       -11.108070395982081       -10.986132182101100       -10.873823140954451       -10.766083620752493       -10.655878161770907       -10.500369222043680
+  vparams(2,:) = 8.7995E+00  7.3792E+00  6.1893E+00  5.0193E+00  3.9037E+00  2.8859E+00  2.0001E+00  1.2671E+00  6.9151E-01  2.1342E-01
+  vparams(3,:) = 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0 0.25e0
+  vparams(4,:) = 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2
 
 
 

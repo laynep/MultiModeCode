@@ -238,11 +238,13 @@ contains
 
       call assert%check(size(vparams,1)>=4,__FILE__,__LINE__)
 
+
       !Multifield step potential
       m2_V = 10.e0_dp**(vparams(1,:))
       location_phi = vparams(2,:)
       step_size = vparams(3,:)
       step_slope = vparams(4,:)
+
 
       !Check for /0 error
       if (any(abs(step_slope) < 1e-15)) then
@@ -256,7 +258,7 @@ contains
       V_potential=0e0_dp
 
 #define ARG ((phi(i)-location_phi(i))/step_slope(i))
-      do i=1,num_inflaton
+      do i=1,size(phi)
         V_potential = V_potential + &
             0.5*m2_V(i)*(phi(i)**2) * &
             (1.0e0_dp + step_size(i)* &
@@ -264,6 +266,7 @@ contains
       end do
 
 #undef ARG
+
 
     case(15)
 
@@ -552,14 +555,14 @@ contains
 
 
 #define ARG ((phi(i)-location_phi(i))/step_slope(i))
-         do i=1,num_inflaton
 
-          first_deriv(i) = m2_V(i)*phi(i)* &
-            (1.0e0_dp + step_size(i)*tanh(ARG )) + &
-            0.5e0_dp*m2_V(i)*phi(i)**2*step_size(i)* &
-            (MySech(ARG))**(2)/&
-            step_slope(i)
-          end do
+         do i=1,size(phi)
+           first_deriv(i) = m2_V(i)*phi(i)* &
+             (1.0e0_dp + step_size(i)*tanh(ARG )) + &
+             0.5e0_dp*m2_V(i)*phi(i)**2*step_size(i)* &
+             (MySech(ARG))**(2)/&
+             step_slope(i)
+         end do
 
 #undef ARG
 
@@ -873,7 +876,7 @@ contains
          second_deriv=0e0_dp
 
 #define ARG ((phi(i)-location_phi(i))/step_slope(i))
-         do i=1,num_inflaton
+         do i=1,size(phi)
 
            second_deriv(i,i) = m2_V(i)*&
               (1.0e0_dp + step_size(i)* tanh( ARG )) +&

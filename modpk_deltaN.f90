@@ -11,6 +11,15 @@ module modpk_deltaN
   !The horizon crossing approximation
   logical :: HC_approx=.false.
 
+  !Tolerance value for checking division by zero
+  real(dp), private, parameter :: div_tol=1e-20
+
+  !Zero checking for regularization
+  interface check_div_zero
+  	module procedure check_div_zero_real
+  	module procedure check_div_zero_array
+  end interface
+
   contains
 
     !Evalutes adiabatic power spectrum under SR approximation at field positions
@@ -29,8 +38,8 @@ module modpk_deltaN
       H_piv = sqrt(V_piv/3.0e0_dp)
       dN = dNdphi_SR(phi_pivot,phi_end)
 
-      eps_i = eps_SR(phi_pivot)
-      u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V_piv
+      !eps_i = eps_SR(phi_pivot)
+      !u_i = (V_i_sum_sep(phi_pivot)+Z_i_BE(phi_end))/V_piv
 
       P_dphi = (H_piv/2.0e0_dp/pi)**2
 
@@ -197,7 +206,11 @@ module modpk_deltaN
       Z_i = Z_i_BE(phi_end)
       u_i = (V_i + Z_i)/V
 
+      !Check for division by zero
+      call check_div_zero(eps_i_piv)
+
       sum_ui_over_epsi = sum(u_i**2/eps_i_piv)
+
 
       term1 = -8.0e0_dp * eps_piv**2
       term2 = 4.0e0_dp * sum(eps_i_piv*eta_i_piv)
@@ -230,10 +243,15 @@ module modpk_deltaN
       real(dp), dimension(size(phi_pivot)) :: eps, V_i, Z_i
       real(dp) :: V
 
+      integer :: ii
+
       eps = eps_SR(phi_pivot)
       V_i = V_i_sum_sep(phi_pivot)
       Z_i = Z_i_BE(phi_end)
       V = pot(phi_pivot)
+
+      !Check for division by zero
+      call check_div_zero(eps)
 
       dNdphi_SR = ((1.0e0_dp/sqrt(2.0e0_dp*eps))/V)*(V_i + Z_i)
 
@@ -266,6 +284,10 @@ module modpk_deltaN
       do ll=1, size(phi_end)
         delta(ll,ll) = 1.0e0_dp
       end do
+
+      !Check for division by zero
+      call check_div_zero(eps_piv)
+      call check_div_zero(V_piv)
 
       do ll=1, size(phi_end); do kk=1,size(phi_end)
         d2Ndphi2_SR(ll,kk) = delta(kk,ll)*&
@@ -350,6 +372,9 @@ module modpk_deltaN
       eps = sum(eps_end)
       V = pot(phi_end)
 
+      !Check for division by zero
+      call check_div_zero(eps)
+
       Z_i_BE = V*eps_end/eps - V_i_sum_sep(phi_end)
 
       call assert%check(.not. any(isnan(Z_i_BE)), __FILE__, __LINE__)
@@ -366,7 +391,7 @@ module modpk_deltaN
       real(dp) :: eps_t_end, V_end, V_piv
       real(dp), dimension(size(phi_end),size(phi_end)) :: delta
 
-      integer :: jj, ll, kk
+      integer :: ii, jj, ll, kk
 
       if (HC_approx) then
         dZdphi_ij_BE=0e0_dp
@@ -379,6 +404,11 @@ module modpk_deltaN
       V_end = pot(phi_end)
       V_piv = pot(phi_pivot)
       eta_end = eta_SR(phi_end)
+
+      !Check for division by zero
+      call check_div_zero(eps_piv)
+      call check_div_zero(eps_t_end)
+      call check_div_zero(V_piv)
 
       !Identity matrix
       delta=0e0_dp
@@ -421,7 +451,7 @@ module modpk_deltaN
 
       vrows = size(vparams,1)
 
-      allocate(vparams_temp(size(vparams,1),size(vparams,2)))
+      allocate(vparams_temp(size(vparams,1), size(vparams,2)))
       vparams_temp = vparams
 
       do jj=1,size(phi)
@@ -432,11 +462,35 @@ module modpk_deltaN
       end do
 
       deallocate(vparams)
-      allocate(vparams(size(vparams_temp,1),size(vparams_temp,2)))
+      allocate(vparams(size(vparams_temp,1), size(vparams_temp,2)))
       vparams = vparams_temp
       deallocate(vparams_temp)
 
     end function V_i_sum_sep
+
+    !Subroutines for regularizing a 0/0 error in the summations above
+    pure subroutine check_div_zero_array(array)
+      real(dp), dimension(:), intent(inout) :: array
+      integer :: ii
+
+      if (any(abs(array)<div_tol)) then
+        do ii=1, size(array)
+          if (abs(array(ii))<div_tol) then
+            array(ii) = div_tol
+          end if
+        end do
+      end if
+
+    end subroutine check_div_zero_array
+
+    pure subroutine check_div_zero_real(real_)
+      real(dp), intent(inout) :: real_
+
+      if (abs(real_)<div_tol) then
+        real_ = div_tol
+      end if
+
+    end subroutine check_div_zero_real
 
 
 

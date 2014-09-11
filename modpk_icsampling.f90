@@ -16,15 +16,25 @@ module modpk_icsampling
 
   integer :: ic_sampling
   type :: ic_samp_flags
-    integer :: reg_samp=1, eqen_samp=2, slowroll_samp=3, &
-      fromfile_samp=4, parameter_loop_samp=5, iso_N=6, param_unif_prior=7, &
-      qsf_random=8, qsf_parametric=9, fisher_inf=10
+    integer :: reg_samp = 1
+    integer :: eqen_samp = 2
+    integer :: slowroll_samp = 3
+    integer :: fromfile_samp = 4
+    integer :: parameter_loop_samp = 5
+    integer :: iso_N = 6
+    integer :: param_unif_prior = 7
+    integer :: qsf_random = 8
+    integer :: qsf_parametric = 9
+    integer :: fisher_inf = 10
   end type
   type(ic_samp_flags) :: ic_flags
 
   integer :: param_sampling
   type :: param_samp_flags
-    integer :: reg_constant=1, unif_prior=2, log_prior=3, num_QSF=4
+    integer :: reg_constant = 1
+    integer :: unif_prior = 2
+    integer :: log_prior = 3
+    integer :: num_QSF = 4
   end type
   type(param_samp_flags) :: param_flags
   real(dp), dimension(:,:), allocatable :: vp_prior_max, vp_prior_min
@@ -128,10 +138,6 @@ module modpk_icsampling
 
         ic_radius = sqrt(2.0e0_dp * N_iso_ref * p_exp)
 
-        !DEBUG
-        !print*, "overriding ICs!!!!!!!"
-        !y_background(1:num_inflaton) = ic_radius/sqrt(50.0)
-
         call sample_nsphere(y_background(1:num_inflaton),ic_radius)
 
 
@@ -177,7 +183,8 @@ module modpk_icsampling
 
           !DEBUG
           print*, "vparams from mass_spectrum_nflation"
-          print*, vparams
+          print*, vparams(1,:)
+          stop
 
         else if (potential_choice==2) then
           !N-flation (axions-cosine)
@@ -920,8 +927,8 @@ module modpk_icsampling
               "The prior is not recognized.",&
               __FILE__, __LINE__)
 
-          stop
         end if
+
       end do
 
     end subroutine n_quadratic_mass_intxn_looping
