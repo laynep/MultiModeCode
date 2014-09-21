@@ -389,39 +389,85 @@ contains
 
         do ii=1,num_inflaton
           write(cname, "(A2,I4.4)") "dV", ii
-          call csv_write(&
-            out_opt%trajout,&
-            trim(cname), &
-            advance=.false.)
-        end do
-
-        !Advance here
-        do ii=1,2*num_inflaton
-          if (ii==2*num_inflaton) then
+          if (ii==num_inflaton) then
             adv=.true.
           else
             adv=.false.
           end if
-          write(cname, "(A3,I4.4)") "d2V", ii
           call csv_write(&
             out_opt%trajout,&
             trim(cname), &
             advance=adv)
         end do
 
+        !Advance here
+        !do ii=1,2*num_inflaton
+        !  if (ii==2*num_inflaton) then
+        !    adv=.true.
+        !  else
+        !    adv=.false.
+        !  end if
+        !  write(cname, "(A3,I4.4)") "d2V", ii
+        !  call csv_write(&
+        !    out_opt%trajout,&
+        !    trim(cname), &
+        !    advance=adv)
+        !end do
+
         out_opt%first_trajout = .false.
       end if
 
+      !write(out_opt%trajout,'(100E18.10)'),&
+      !  x, &
+      !  y(:), &
+      !  pot(y(1:num_inflaton)),&
+      !  getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+      !  getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+      !  geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+      !  dVdphi(y(1:num_inflaton)), &
+      !  d2Vdphi2(y(1:num_inflaton))
+
       !Write the trajectory
-      write(out_opt%trajout,'(100E18.10)'),&
+      call csv_write(&
+        out_opt%trajout,&
         x, &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         y(:), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         pot(y(1:num_inflaton)),&
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
         dVdphi(y(1:num_inflaton)), &
-        d2Vdphi2(y(1:num_inflaton))
+        advance=.true.)
+
+      !call csv_write(&
+      !  out_opt%trajout,&
+      !  d2Vdphi2(y(1:num_inflaton)), &
+      !  advance=.true.)
+
     end subroutine print_traj
 
     subroutine check_for_eternal_inflation
@@ -1191,7 +1237,8 @@ contains
         call csv_write(&
           out_opt%spectraout,&
           (/character(len=10) ::&
-          'N', 'P_ad', 'P_iso', 'P_ent', 'P_nad', 'P_tens'/), &
+          'N', 'P_ad', 'P_iso', 'P_ent', 'P_nad', &
+          'P_tens','P_press','P_pressad','P_cross'/), &
           advance=.true.)
 
         out_opt%first_spectraout = .false.
@@ -1200,11 +1247,15 @@ contains
       call csv_write(out_opt%spectraout,&
         (/ x - (n_tot - N_pivot), &
           power_internal%adiab, &
-          power_internal%isocurv,&
+          power_internal%isocurv, &
           power_internal%entropy, &
           power_internal%pnad, &
-          power_internal%tensor/),&
+          power_internal%tensor, &
+          power_internal%pressure, &
+          power_internal%press_ad, &
+          power_internal%cross_ad_iso /), &
         advance=.true.)
+
 
     end subroutine write_spectra
 

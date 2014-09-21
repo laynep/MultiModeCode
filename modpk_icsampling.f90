@@ -1111,7 +1111,7 @@ module modpk_icsampling
       !msqd = msqd*(1e-5_dp**2)
 
       !For Planck-normalization on SR, single-field attractor solution
-      msqd = msqd*(1.0842e-11_dp)
+      msqd = msqd*(4.30e-11_dp)
 
 
 

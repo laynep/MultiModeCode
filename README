@@ -1,0 +1,112 @@
+MultiModeCode
+-------------
+An efficient perturbation solver for multifield inflation, specializing
+in model exploration via Bayesian Monte Carlo techniques.
+
+Release 1.0.0, October 2014
+www.modecode.com
+
+The latest source code is downloadable from the website.
+
+
+Authors
+-------
+Layne C. Price (Auckland)
+Jonathan Frazer (UPV/EHU)
+Jiajun Xu (Wisconsin-Madison)
+Hiranya V. Peiris (UCL)
+Richard Easther (Auckland)
+
+
+Contact
+-------
+    other contact info (email address, website, company name, address, etc)
+
+
+Credit & Acknowledgement
+------------------------
+If using MultiModeCode in your work, we request you cite the following:
+  For general use --- 1007.4205, 1112.0326, 1410.XXXX
+In addition, for more specific uses, we request you also cite:
+  For reconstruction of inflationary potential --- 1202.0304
+  For the equal-energy initial conditions prior --- 1304.4244, 1312.4035
+  For the equal-e-folding initial conditions prior --- 1303.3611, 1312.4035
+
+
+History
+-------
+The multifield solver MultiModeCode is a significant extension to the
+publicly available single-field solver ModeCode, developed in:
+M.J. Mortonson, H.V. Peiris, & R. Easther, arXiv:1007.4205
+R. Easther & H. Peiris, arXiv:1112.0326
+J. Norena, C. Wagner, L. Verde, H. Peiris, & R. Easther, arXiv:1202.0304
+
+These papers are based on code previously used in
+Peiris, et al., astro-ph/0302225
+Mortonson, Dvorkin, Peiris, & Hu, arXiv:0903.4920
+Adams, Cresswell, & Easther, astro-ph/0102236
+
+
+Requirements
+------------
+A Fortran compiler that can handle type-bound procedures, such as
+the freely available Gfortran 4.6.3+ or ifort 14.0.0+.  There are no
+external dependencies, but we have included the DVODE integrator with
+BSD-like license in dvode_f90_m.f90 (written by XXX)
+and the CSV module from XXX.
+
+
+Project Directory
+-----------------
+All files for MultiModeCode are contained in the same directory (XXX MAKEFILES).
+The default executable name is powspec.
+All source code is in files with the prefix modpk_*, indicating a
+modified power spectrum P(k).
+The driver file is multimodecode_driver.f90 with the associated parameter
+file parameters_multimodecode.txt.
+Output files are prefixed with out_*, in the same directory.
+The file dvode_f90_m.f90 contains source code for the numerical solver and
+the csv*f90 files have information about writing in CSV format with Fortran.
+
+
+Usage/Install
+-------------
+See the USAGE file.
+Some general usage documentation can be found in Appendix XXX of 1410.XXXX.
+The latest code, including patches and bug fixes, can be downloaded from
+www.modecode.com.
+
+
+License
+-------
+We distribute MultiModeCode under a three-clause Modified BSD License.
+See the LICENSE file, the content of which must be included in
+any redistribution of this software.
+
+
+Feature Requests, Patches, & Bugs
+---------------------------------
+If you find a bug, have a patch, or request a certain feature, then please
+contact us at the address provided above.
+
+
+Changelog
+---------
+October 2014 - 1.0.0
+  Major update to include general multifield models,
+  see 1312.4035, 1409.2498, 1410.XXXX
+June 2012 - 0.3.0
+  Added Hubble slow roll reconstruction to the choice of
+  potentials, see arXiv:1202.0304; updated to Jan2012 version of
+  cosmomc/CAMB.
+December 4, 2011 - 0.2.0
+  Updated to interface with MultiNest, adds priors
+  on post-inflationary dynamics, computation of Bayesian Evidence.
+February 17, 2011 - 0.1.1
+  Fixed bug with output of derived parameters when
+  sampling from priors, added params_modpk_F.paramnames for running code
+  with use_modpk=F. (available as modecode.tar.gz)
+February 10, 2011 - 0.1.0
+  Updated to January 2011 version of CAMB.
+July 21, 2010 - 0.0.0
+  Initial release.

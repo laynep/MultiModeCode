@@ -1458,6 +1458,13 @@ contains
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !------------------------------------------------------------
 
+    !DEBUG
+    !print*, "from here...", (hubble/2.0e0_dp/pi)**2
+    !do i=1,size(power_matrix,1); do j=1,size(power_matrix,2)
+    !  print*, i, j, power_matrix(i,j)
+    !  end do; end do
+    !stop
+
     !Isocurvature power spectra
     if (numb_infl>1) then
 
@@ -1621,10 +1628,14 @@ contains
       power_entropy = ((H/Pdot)**2)*power_pnad
 
     else
-      power_spectrum%isocurv =  0e0_dp
-      power_spectrum%pnad    =  0e0_dp
-      power_spectrum%entropy =  0e0_dp
-      power_spectrum%cross_ad_iso =  0e0_dp
+      power_spectrum%phi_ij  = 0e0_dp
+      power_spectrum%adiab   = 0e0_dp
+      power_spectrum%isocurv = 0e0_dp
+      power_spectrum%pnad    = 0e0_dp
+      power_spectrum%entropy = 0e0_dp
+      power_spectrum%pressure = 0e0_dp
+      power_spectrum%press_ad = 0e0_dp
+      power_spectrum%cross_ad_iso = 0e0_dp
     end if
 
     power_spectrum%phi_ij  =  power_matrix

@@ -61,3 +61,4 @@ cleanoutput:
 	-rm out_ic_eqen_SR.txt
 	-rm out_ic_isoN.txt
 	-rm out_ic_isoN_SR.txt
+	-rm gmon.out

@@ -68,39 +68,39 @@ module modpk_io
 
       if (self%save_traj) &
         open(newunit=self%trajout, &
-          file="out_trajectory.txt")
+          file="out_trajectory.csv")
       if (self%spectra) &
         open(newunit=self%spectraout, &
-          file="out_powerspectra.txt")
+          file="out_powerspectra.csv")
       if (self%fields_horiz) &
         open(newunit=self%fields_h_out, &
-          file="out_fields_horizon_cross.txt")
+          file="out_fields_horizon_cross.csv")
       if (self%fields_end_infl) &
         open(newunit=self%fields_end_out, &
-          file="out_fields_infl_end.txt")
+          file="out_fields_infl_end.csv")
       if (self%modes) then
         open(newunit=self%modeout(1), &
-          file="out_modes_1.txt")
+          file="out_modes_1.csv")
         open(newunit=self%modeout(2), &
-          file="out_modes_2.txt")
+          file="out_modes_2.csv")
         open(newunit=self%modeout(3), &
-          file="out_modes_3.txt")
+          file="out_modes_3.csv")
         open(newunit=self%modeout(4), &
-          file="out_modes_4.txt")
+          file="out_modes_4.csv")
       end if
 
       if (present(ICs) .and. ICs) then
         open(newunit=self%outsamp,&
-          file="out_ic_eqen.txt")
+          file="out_ic_eqen.csv")
         open(newunit=self%outsamp_N_iso,&
-          file="out_ic_isoN.txt")
+          file="out_ic_isoN.csv")
       end if
 
       if (present(SR) .and. SR) then
         open(newunit=self%outsamp_SR,&
-          file="out_ic_eqen_SR.txt")
+          file="out_ic_eqen_SR.csv")
         open(newunit=self%outsamp_N_iso_SR,&
-          file="out_ic_isoN_SR.txt")
+          file="out_ic_isoN_SR.csv")
       end if
 
     end subroutine output_file_open

@@ -11,7 +11,7 @@ program multimodecode
   use modpk_deltaN
   use modpk_observables, only : observables
   use csv_file, only : csv_write
-  use modpk_errorhandling, only : raise, run_outcome
+  use modpk_errorhandling, only : raise, run_outcome, assert
 
   implicit none
 
@@ -26,7 +26,7 @@ program multimodecode
 
   !Sampling parameters for ICs
   integer :: numb_samples
-  integer :: out_adiab, out_isoc
+  integer :: out_adiab
   real(dp) :: energy_scale
   real(dp), dimension(:,:), allocatable :: icpriors_min, icpriors_max
 
@@ -62,7 +62,7 @@ program multimodecode
 
   namelist /print_out/ out_opt, get_runningofrunning
 
-  namelist /technical/ tech_opt
+  namelist /technical/ tech_opt, assert
 
   !------------------------------------------------
 
@@ -139,10 +139,9 @@ program multimodecode
 
   contains
 
-    subroutine get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
+    subroutine get_full_pk(pk_arr,calc_full_pk)
 
       real(dp), dimension(:,:), allocatable, intent(out) :: pk_arr
-      real(dp), allocatable, optional, intent(out) :: pk_iso_arr(:,:)
 
       real(dp) :: kmin, kmax, incr
       logical, intent(inout) :: calc_full_pk
@@ -164,12 +163,10 @@ program multimodecode
 
       !Make the output arrays
       if (allocated(pk_arr)) deallocate(pk_arr)
-      if (allocated(pk_iso_arr) .and. present(pk_iso_arr)) &
-        deallocate(pk_iso_arr)
-      allocate(pk_arr(steps, 2))
-      if (present(pk_iso_arr)) allocate(pk_iso_arr(steps, 2))
+
+      allocate(pk_arr(steps, 9))
+
       pk_arr=0e0_dp
-      if (present(pk_iso_arr)) pk_iso_arr=0e0_dp
 
       !Make the arrays for k values to sample
       allocate(k_input(steps))
@@ -181,8 +178,15 @@ program multimodecode
       do i=1,steps
         call evolve(k_input(i), pk)
 
-        pk_arr(i,:)=(/k_input(i),pk%adiab/)
-        if (present(pk_iso_arr)) pk_iso_arr(i,:)=(/k_input(i),pk%isocurv/)
+        pk_arr(i,:)=(/k_input(i),&
+          pk%adiab, &
+          pk%isocurv, &
+          pk%entropy, &
+          pk%pnad, &
+          pk%tensor, &
+          pk%pressure, &
+          pk%press_ad, &
+          pk%cross_ad_iso /)
 
       end do
 
@@ -229,14 +233,13 @@ program multimodecode
 
     end subroutine allocate_vars
 
-    subroutine output_observables(pk_arr, pk_iso_arr,&
+    subroutine output_observables(pk_arr,&
         calc_full_pk, &
         observ_modes, observ_SR)
 
       type(observables), intent(in), optional :: observ_modes
       type(observables), intent(in), optional :: observ_SR
       real(dp), dimension(:,:), intent(in) :: pk_arr
-      real(dp), dimension(:,:), intent(in), optional :: pk_iso_arr
 
       type(observables) :: SR_pred
 
@@ -358,17 +361,28 @@ program multimodecode
       if (calc_full_pk .and. evaluate_modes) then
 
         !Open output files
-        open(newunit=out_adiab,file="out_pk_adiab.txt")
-        open(newunit=out_isoc, file="out_pk_isocurv.txt")
+        open(newunit=out_adiab,file="out_pk.csv")
+
+        !Write the column header
+        call csv_write(&
+          out_adiab,&
+          (/'k', 'P_ad', 'P_iso', 'P_ent', 'P_nad', &
+          'P_tens','P_press','P_pressad','P_cross'/), &
+          advance=.true.)
 
         do i=1,size(pk_arr,1)
-          write(out_adiab,*) pk_arr(i,:)
-          if(present(pk_iso_arr)) write(out_isoc,*) pk_iso_arr(i,:)
+          call csv_write(out_adiab,&
+            pk_arr(i,:),&
+            advance=.true.)
+
         end do
 
-        write(*,*) "Adiab P(k) written to out_pk_adiab.txt"
-        if (present(pk_iso_arr))&
-          write(*,*) "Iso-P(k) written to out_pk_isocurv.txt"
+        if (out_opt%modpkoutput)&
+          write(*,*) "Full P(k) written to out_pk.csv"
+
+        !Close output files
+        close(out_adiab)
+
 
       end if
 
@@ -392,7 +406,7 @@ program multimodecode
     subroutine calculate_pk_observables(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
-      real(dp), dimension(:,:), allocatable :: pk_arr, pk_iso_arr
+      real(dp), dimension(:,:), allocatable :: pk_arr
       logical :: calc_full_pk, leave
 
       type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
@@ -522,17 +536,17 @@ program multimodecode
 
 
         !Get full spectrum for adiab and isocurv at equal intvs in lnk
-        call get_full_pk(pk_arr,pk_iso_arr,calc_full_pk)
+        call get_full_pk(pk_arr,calc_full_pk)
 
       end if
 
       !Write output to stdout
       if (out_opt%modpkoutput) then
         if (evaluate_modes) then
-          call output_observables(pk_arr,pk_iso_arr, &
+          call output_observables(pk_arr, &
             calc_full_pk, observs, observs_SR)
         else
-          call output_observables(pk_arr,pk_iso_arr, &
+          call output_observables(pk_arr, &
             calc_full_pk, observ_SR = observs_SR)
         end if
       end if
