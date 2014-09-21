@@ -1,10 +1,17 @@
 MODULE camb_interface
+  !Simple module to tell an external program, such as CAMB or the
+  !multimodecode_driver, that a given set of parameters does not give an
+  !appropriate inflationary realization.
   IMPLICIT NONE
   INTEGER :: pk_bad
   LOGICAL :: pk_initialized
 END MODULE camb_interface
 
 MODULE modpkparams
+  !Module defining many "global" variables that various cosmology portions of
+  !the code will need access to.  A variable added here can be seen in most
+  !places.
+
   IMPLICIT NONE
 
   !Double precision.
@@ -73,6 +80,8 @@ END MODULE modpkparams
 
 
 MODULE ode_path
+  !Module for control parameters for the numerical integration of either the
+  !background equations or the mode equations.
   use modpkparams, only : dp
   implicit none
 
@@ -90,6 +99,7 @@ END MODULE ode_path
 
 
 MODULE internals
+  !Module that defines some variables for internal use in the code.
   use modpkparams, only : num_inflaton, dp
   IMPLICIT NONE
   real(dp), PARAMETER :: PI=3.141592653589793238462643383279502884197e0_dp
@@ -103,8 +113,9 @@ MODULE internals
 END MODULE internals
 
 
-!Module that holds objects for observables, power spectra, etc
 module modpk_observables
+  !Module that defines the various observables one could calculate around the
+  !pivot scale.  Defines objects for observables, power spectra, etc.
   use modpkparams, only : dp, num_inflaton
   use modpk_io, only : out_opt
   use csv_file, only : csv_write

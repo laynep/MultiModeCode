@@ -1,10 +1,7 @@
-!Implements various IC sampling techniques:
-!reg_samp = Take phi_init0 from param file and set dphi in SR
-!eqen_samp = Sample an iso-E surface by alternating which dimn is set by the
-!energy constraint
-!slowroll_samp = Sample phi0, set dphi in SR
-
 module modpk_icsampling
+  !Module that implements various sampling techniques for the initial conditions
+  !and model parameters.  These routines should generally be called prior to
+  !doing any integration.  Monte Carlo methodology.
   use potential, only : norm, pot, getH
   use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &

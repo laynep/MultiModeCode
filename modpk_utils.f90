@@ -1,4 +1,8 @@
 MODULE modpk_utils
+  !Module that contains the main subroutines that define the equations we need to
+  !solve for the background and the modes, as functions of different variables.
+  !Also contains some utility functions for general use and the Runge-Kutta
+  !methods.
   use modpkparams
   use modpk_icsampling, only : ic_sampling, ic_flags
   use modpk_errorhandling, only : raise, run_outcome

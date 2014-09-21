@@ -1,5 +1,5 @@
-!Some numerical routines
 module modpk_numerics
+  !Module with some auxiliary numerical routines.
   use modpkparams, only : dp, num_inflaton
   use modpk_errorhandling, only : raise
   implicit none

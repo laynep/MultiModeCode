@@ -1,6 +1,6 @@
-!Module for handling exceptions and warnings.
-!More info is sometimes printed to screen where these occur.
 module modpk_errorhandling
+  !Module for handling exceptions and warnings.
+  !More info is sometimes printed to screen where these occur.
   use modpk_io, only : out_opt
   implicit none
 

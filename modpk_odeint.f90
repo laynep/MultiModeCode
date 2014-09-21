@@ -1,4 +1,7 @@
 MODULE modpk_odeint
+  !Module that controls the numerical integration of the equations of motion for
+  !both the background and the modes.  Has various cosmology checks implemented
+  !in addition to numerical checking.
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
   use modpk_icsampling, only : ic_sampling, ic_flags

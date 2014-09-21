@@ -1,6 +1,8 @@
-!Module that contains routines for random number generation.  Some of this has been taken (where indicated) from RosettaCode.org and from other sites on the net.
 
 module modpk_rng
+  !Module that contains routines for random number generation.
+  !Some of this has been taken (where indicated) from
+  !RosettaCode.org and from other sites on the net.
   use modpkparams, only : dp
   implicit none
 

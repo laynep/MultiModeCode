@@ -1,7 +1,143 @@
 MultiModeCode Usage
 -------------------
 
-    5-line code snippet on how its used (if it's a library)
-    instruction to grab the documentation
-    instructions to install, configure, and to run the programs
-    instruction to grab the latest code and detailed instructions to build it (or quick overview and "Read INSTALL")
+Download
+--------
+The latest source code is available as a tarball from www.modecode.com.
+As usual, *.tar.gz files can be unzipped and extracted using the command
+'tar -xzvf *.tar.gz'.  Extract these files to a source directory, which
+we will refer to as multimodecode_source.
+
+
+Documentation
+-------------
+Some general usage documentation can be found in Appendix XXX of 1410.XXXX.
+
+
+Compile/Build
+-------------
+You will need a Fortran compiler that can compile code with type-bound
+procedures.  We have tested this with Gfortran 4.6.3+ and ifort 14.0.0+.
+
+We have included options in Makefile_XXX that we have used when compiling
+with Gfortran and ifort.  While we have tested with all 3 levels of optimization,
+with both compilers, and found no issues, we recommend you take the usual
+precautions when using full optimization.  The ifort compiler with -O3 is
+much faster than Gfortran in our experience.
+
+In Makefile_XXX, uncomment the flags for the compiler you wish to use and
+leave the others commented out.  If you're using a different compiler, we
+suggest that you include the command to force the compiler to interpret
+all real/double precision variables as real(8).
+
+The full dependency chains for the source code are in Makefile_main_modpk,
+including a simple cleaning routine that can be run with
+
+$ > make clean
+
+Note that 'make clean' will remove all output (out_*csv) files
+in multimodecode_source.
+
+To build the program executable, which by default is named powspec,
+based on the default driver multimodecode_driver.f90, simply run
+
+$ > make
+
+To run the resulting executable, with the parameters as specified in
+parameters_multimodecode.txt, do
+
+$ > ./powspec
+
+
+Parameters file
+---------------
+We have used Fortran namelists to allow changing parameters between
+different runs of the code without recompiling.  The namelists are
+contained in parameters_multimodecode.txt and a general explanation
+of each of these are given in Appendix XXX of 1410.XXXX.  Furthermore,
+each namelist contains a small description, which explains their usage.
+
+
+Description of modules
+----------------------
+
+---Variables:
+
+camb_interface --- modpk_modules.f90
+  Simple module to tell an external program, such as CAMB or the
+  multimodecode_driver, that a given set of parameters does not give an
+  appropriate inflationary realization.
+
+modpkparams --- modpk_modules.f90
+  Module defining many "global" variables that various cosmology portions of
+  the code will need access to.  A variable added here can be seen in most
+  places.
+
+ode_path --- modpk_modules.f90
+  Module for control parameters for the numerical integration of either the
+  background equations or the mode equations.
+
+modpk_observables --- modpk_modules.f90
+  Module that defines the various observables one could calculate around the
+  pivot scale.  Defines objects for observables, power spectra, etc.
+
+internals --- modpk_modules.f90
+  Module that defines some variables for internal use in the code.
+
+---Cosmology:
+
+modpk_odeint --- modpk_odeint.f90
+  Module that controls the numerical integration of the equations of motion for
+  both the background and the modes.  Has various cosmology checks implemented
+  in addition to numerical checking.
+
+potential --- modpk_potential.f90
+  Module that defines the inflationary potential and its derivatives.
+  Implement your potential by adding a new case here.  Also contains routines
+  for calculating cosmological parameters and power spectra.
+
+modpk_utils --- modpk_utils.f90
+  Module that contains the main subroutines that define the equations we need to
+  solve for the background and the modes, as functions of different variables.
+  Also contains some utility functions for general use and the Runge-Kutta
+  methods.
+
+modpk_icsampling --- modpk_icsampling.f90
+  Module that implements various sampling techniques for the initial conditions
+  and model parameters.  These routines should generally be called prior to
+  doing any integration.  Monte Carlo methodology.
+
+background_evolution --- modpk_backgrnd.f90
+  Module that evolves the background equation of motion after the initial
+  conditions and parameters are chosen.  Performs many checks to make sure that
+  the results make sense.
+
+---Auxiliary:
+
+modpk_numerics --- modpk_numerics.f90
+  Module with some auxiliary numerical routines.
+
+modpk_io --- modpk_io.f90
+  Behold the beauty that is Fortran IO.
+  Controls output options for the run.
+
+modpk_errorhandling --- modpk_errorhandling.f90
+  Module for handling exceptions and warnings.
+
+modpk_rng --- modpk_rng.f90
+  Module that contains routines for random number generation.
+
+csv_file --- csv_file.f90
+  Small module to facilitate writing CSV-files.
+
+dvode_f90_m --- dvode_f90_m.f90
+  Numerical integration, interface to the VODE routines.
+
+
+Adapting Source
+---------------
+
+
+
+
+

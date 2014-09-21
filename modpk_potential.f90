@@ -1,4 +1,7 @@
 module potential
+  !Module that defines the inflationary potential and its derivatives.
+  !Implement your potential by adding a new case here.  Also contains routines
+  !for calculating cosmological parameters and power spectra.
   use modpkparams
   use internals, only : pi
   use modpk_qsf

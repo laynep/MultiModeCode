@@ -1,5 +1,6 @@
-!Behold the beauty that is Fortran IO.
 module modpk_io
+  !Behold the beauty that is Fortran IO.
+  !Controls output options for the run.
   implicit none
 
   private

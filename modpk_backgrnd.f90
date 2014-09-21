@@ -1,4 +1,7 @@
 MODULE background_evolution
+  !Module that evolves the background equation of motion after the initial
+  !conditions and parameters are chosen.  Performs many checks to make sure that
+  !the results make sense.
   USE camb_interface
   USE modpkparams
   USE modpk_odeint
