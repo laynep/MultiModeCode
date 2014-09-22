@@ -96,6 +96,7 @@ contains
       V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
 
     case(3)
+      ! lambda_i phi_i^4 --- N-quartic
 
       call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
 
@@ -103,6 +104,7 @@ contains
       V_potential = sum(0.25e0_dp*lambda*phi**4)
 
     case(4)
+      ! lambda_i phi_i --- N-linear
 
       call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
 
@@ -110,6 +112,7 @@ contains
       V_potential = sum(lambda*phi)
 
     case(5)
+      ! lambda_i phi_i^(2/3)
 
       call assert%check(size(vparams,1)>=1,__FILE__,__LINE__)
 
@@ -117,6 +120,7 @@ contains
       V_potential = sum(lambda*1.5e0_dp*phi**(2.e0_dp/3.e0_dp))
 
     case(6)
+      ! Lambda^4 - mu*phi^4
 
       call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
@@ -124,7 +128,8 @@ contains
       mu = 10.e0_dp**vparams(2,:)
       V_potential = sum(lambda**4 - mu*phi**4/4.e0_dp)
 
-    case(7) !product of exponentials
+    case(7)
+      ! Product of exponentials
 
       call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
@@ -155,6 +160,7 @@ contains
         phi(1)**2*phi(2)**2/nu_hybrid**4)
 
     case(9)
+      ! V0 + m_i^2 phi_i^2
 
       call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 

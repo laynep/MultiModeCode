@@ -1,5 +1,5 @@
 #NAMELISTS
-Passes parameters to MultiModeCode without the need for recompiling.
+Passes parameters to multimodecode_driver.f90 without the need for recompiling.
 
 ----------------
 Parameters to control the major functionality of ModeCode
@@ -18,12 +18,14 @@ Set potential and its derivatives in modpk_potential.f90
 ----------------
 Parameters to control the output of analytic approximations for
 comparison.  The deltaN calculation is only valid for
-sum-separable potentials.
+sum-separable potentials.  The horizon crossing approximation (HCA)
+ignores the contributions from the end of inflation surface.
 
 &analytical
   use_deltaN_SR = .true.
   use_horiz_cross_approx = .false.
   evaluate_modes = .true.
+  get_runningofrunning = .true.
 /
 
 ----------------
@@ -157,7 +159,7 @@ For calculating the full power spectrum P(k).  Samples in
 uniform increments in log(k).
 
 &full_pk
-  calc_full_pk = .true.
+  calc_full_pk = .false.
   steps = 300
   kmin = 1.0e-4
   kmax = 1.0e6
@@ -178,7 +180,6 @@ Options for output from the code.
   out_opt%spectra = .true.
   out_opt%modes = .true.
 
-  get_runningofrunning = .false.
 /
 
 ----------------

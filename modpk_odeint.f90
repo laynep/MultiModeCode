@@ -573,7 +573,7 @@ contains
              ELSE
                ! for multifield, determine the total field distance travelled
 
-               if(check_stop_when_not_slowroll_infl_end(phi,dphi)) then
+               if(alternate_infl_end(phi,dphi)) then
                  infl_ended = .true.
                  ystart(:) = y(:)
                  IF (save_steps) CALL save_a_step
@@ -1284,7 +1284,7 @@ contains
                 IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
                 IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
              ELSE
-               if (check_stop_when_not_slowroll_infl_end(phi,delphi)) infl_ended = .TRUE.
+               if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
              END IF
              !END MULTIFIELD
           ENDIF
@@ -1625,7 +1625,7 @@ contains
   !When not requiring inflation to end, the stopping requirements will likely
   !vary with the potential that you're using, so here's the function that you
   !will need to edit.
-  logical function check_stop_when_not_slowroll_infl_end(phi, dphi) &
+  logical function alternate_infl_end(phi, dphi) &
     result(stopping)
     use modpkparams, only : potential_choice, phi_init, delsigma
     real(dp), dimension(:), intent(in) :: phi, dphi
@@ -1647,6 +1647,6 @@ contains
 
     end select
 
-  end function check_stop_when_not_slowroll_infl_end
+  end function alternate_infl_end
 
 END MODULE modpk_odeint

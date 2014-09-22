@@ -64,7 +64,7 @@ and the CSV module from XXX.
 
 Project Directory
 -----------------
-All files for MultiModeCode are contained in the same directory (XXX MAKEFILES).
+All files for MultiModeCode are contained in the same directory.
 The default executable name is powspec.
 All source code is in files with the prefix modpk_*, indicating a
 modified power spectrum P(k).

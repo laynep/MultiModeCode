@@ -45,7 +45,7 @@ program multimodecode
     more_potential_params
 
   namelist /analytical/ use_deltaN_SR, evaluate_modes, &
-    use_horiz_cross_approx
+    use_horiz_cross_approx, get_runningofrunning
 
   namelist /ic_sampling_nml/ ic_sampling, energy_scale, numb_samples, &
     save_iso_N, N_iso_ref
@@ -60,7 +60,7 @@ program multimodecode
     number_knots_qsfrandom, stand_dev_qsfrandom, &
     knot_range_min, knot_range_max, custom_knot_range
 
-  namelist /print_out/ out_opt, get_runningofrunning
+  namelist /print_out/ out_opt
 
   namelist /technical/ tech_opt, assert
 
@@ -72,6 +72,7 @@ program multimodecode
   read(unit=pfile, nml=init)
   read(unit=pfile, nml=analytical)
 
+  !Make some arrays
   call allocate_vars()
 
   !Read other params from file
@@ -140,6 +141,8 @@ program multimodecode
   contains
 
     subroutine get_full_pk(pk_arr,calc_full_pk)
+      !Find P(k) for all the power spectra from kmin to kmax, as given in the
+      !parameters file.
 
       real(dp), dimension(:,:), allocatable, intent(out) :: pk_arr
 
@@ -193,6 +196,8 @@ program multimodecode
     end subroutine get_full_pk
 
     subroutine allocate_vars()
+      !Allocate all the necessary arrays that we can with the information given
+      !in the parameters file.
 
       !Prepare extra params if necessary
       if (more_potential_params) then
@@ -236,6 +241,7 @@ program multimodecode
     subroutine output_observables(pk_arr,&
         calc_full_pk, &
         observ_modes, observ_SR)
+      !Write the observables to screen/file at the end of a successful run.
 
       type(observables), intent(in), optional :: observ_modes
       type(observables), intent(in), optional :: observ_SR
@@ -389,6 +395,8 @@ program multimodecode
     end subroutine output_observables
 
     subroutine output_initial_data()
+      !Write the initial data to screen.
+
       integer :: i
 
       call out_opt%formatting(num_inflaton)
@@ -402,7 +410,8 @@ program multimodecode
     end subroutine output_initial_data
 
 
-    !Calculate observables, optionally grab a new IC each time called
+    !Calculate observables, optionally grab a new IC or a new set of parameters
+    !each time this routine is called.
     subroutine calculate_pk_observables(k_pivot,dlnk)
 
       real(dp), intent(in) :: k_pivot,dlnk
@@ -672,6 +681,9 @@ program multimodecode
     end subroutine test_bad
 
     subroutine init_sampler(icpriors_min, icpriors_max)
+      !Initialize the parameter or IC sampler if we're using it.
+      !Need to allocate some arrays and set the random seed.
+
       use modpk_rng, only : init_random_seed
 
       real(dp), dimension(:,:), intent(out) :: icpriors_min, &

@@ -38,7 +38,6 @@ module modpk_icsampling
   logical :: use_first_priorval
 
 
-  real(dp) :: penalty_fact
   logical :: save_iso_N=.false.
   real(dp) :: N_iso_ref
   real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N
@@ -46,8 +45,6 @@ module modpk_icsampling
   !For choosing an equal-energy prior
   integer, parameter, private :: equal_area_prior=1, unif_prior=2
   integer, parameter, private :: eqen_prior = equal_area_prior
-
-  integer, private :: icfile
 
 
   contains

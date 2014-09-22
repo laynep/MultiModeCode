@@ -49,8 +49,15 @@ parameters_multimodecode.txt, do
 $ > ./powspec
 
 
-Parameters file
----------------
+Description of driver
+---------------------
+We have included a generic and adaptable driver file in
+multimodecode_driver.f90.  The driver contains a number of functions
+that are used to initialize the run, calculate the power spectrum,
+and output observables to file.  It can also loop through multiple
+sets of parameters in order to build a dataset through repeated
+sampling of parameter and initial conditions priors.
+
 We have used Fortran namelists to allow changing parameters between
 different runs of the code without recompiling.  The namelists are
 contained in parameters_multimodecode.txt and a general explanation
@@ -60,29 +67,6 @@ each namelist contains a small description, which explains their usage.
 
 Description of modules
 ----------------------
-
----Variables:
-
-camb_interface --- modpk_modules.f90
-  Simple module to tell an external program, such as CAMB or the
-  multimodecode_driver, that a given set of parameters does not give an
-  appropriate inflationary realization.
-
-modpkparams --- modpk_modules.f90
-  Module defining many "global" variables that various cosmology portions of
-  the code will need access to.  A variable added here can be seen in most
-  places.
-
-ode_path --- modpk_modules.f90
-  Module for control parameters for the numerical integration of either the
-  background equations or the mode equations.
-
-modpk_observables --- modpk_modules.f90
-  Module that defines the various observables one could calculate around the
-  pivot scale.  Defines objects for observables, power spectra, etc.
-
-internals --- modpk_modules.f90
-  Module that defines some variables for internal use in the code.
 
 ---Cosmology:
 
@@ -112,14 +96,36 @@ background_evolution --- modpk_backgrnd.f90
   conditions and parameters are chosen.  Performs many checks to make sure that
   the results make sense.
 
+---Variables:
+
+camb_interface --- modpk_modules.f90
+  Simple module to tell an external program, such as CAMB or the
+  multimodecode_driver, that a given set of parameters does not give an
+  appropriate inflationary realization.
+
+modpkparams --- modpk_modules.f90
+  Module defining many "global" variables that various cosmology portions of
+  the code will need access to.  A variable added here can be seen in most
+  places.
+
+ode_path --- modpk_modules.f90
+  Module for control parameters for the numerical integration of either the
+  background equations or the mode equations.
+
+modpk_observables --- modpk_modules.f90
+  Module that defines the various observables one could calculate around the
+  pivot scale.  Defines objects for observables, power spectra, etc.
+
+internals --- modpk_modules.f90
+  Module that defines some variables for internal use in the code.
+
 ---Auxiliary:
 
 modpk_numerics --- modpk_numerics.f90
   Module with some auxiliary numerical routines.
 
 modpk_io --- modpk_io.f90
-  Behold the beauty that is Fortran IO.
-  Controls output options for the run.
+  Controls output options.
 
 modpk_errorhandling --- modpk_errorhandling.f90
   Module for handling exceptions and warnings.
@@ -134,10 +140,78 @@ dvode_f90_m --- dvode_f90_m.f90
   Numerical integration, interface to the VODE routines.
 
 
-Adapting Source
----------------
+Adapting the Source
+-------------------
+To make this code useful we have attempted to design everything so that
+the user can adapt it to his/her own needs.  In particular, we have made
+it easy to implement a new potential and it is straightforward to add
+a different sampling technique for model exploration.  We will quickly
+sketch a few common situations here.
 
+---New potential:
+The choice of potential is given by the variable potential_choice in
+modpk_potential.f90 in the module potential.  To add a new potential, one
+must simply add a new case in the functions pot, dVdphi, d2Vdphi2, and
+if the potential is sum-separable, d3Vdphi3.  If the derivatives are not
+easy to calculate analytically, you can optionally compute their values
+numerically by setting 'vnderivs=.true.'.
 
+---New prior/sampling technique:
+We have found that the sampling technique you might use for a given
+situation is heavily dependent on the potential that you choose.
+While we have left all of the choices that we have used in our own
+analysis, the user will likely have to implement his/her own.
 
+We have implemented the sampling techniques for the potential parameters
+(masses, couplings, etc) and the fields' initial conditions in the subroutines
+get_vparams and get_ic in modpk_icsampling.f90, respectively.  These are
+called in multimodecode_driver.f90 prior to solving any ODEs for the
+background or modes.  We have set these up so that get_vparams is called
+before get_ics, with the assumption that if there are any conditional
+dependencies here, it will be in this order.
 
+To adapt get_vparams you will need to add a new value for the param_sampling
+type, defined in modpk_icsampling.f90, that gives a unique integer value that
+you can set the variable param_sampling to.  Based off the given values of
+vp_prior_min and vp_prior_max in parameters_multimodecode.txt, you should then
+implement your prior on the parameters so that it is invoked only when
+param_sampling=param_flags%YOURFLAG.
 
+Similarly, to adapt get_IC to your needs, you will need to add a new value
+for ic_samp_flags types, defined in modpk_icsampling.f90, that is unique.
+Then, following the examples that are present in get_IC, implement your choice
+of prior so that it is invoked only if ic_sampling=ic_flags%YOURFLAG.
+
+If you need to pass new parameters to either of these functions, then either
+explicitly update the argument list where the routines are defined (likely
+specifying the new arguments as 'optional') or add the new parameters to
+the module modpkparams in modpk_modules.f90, so that they will be visible to
+other portions of the code.  If you do add new global variables in modpkparams,
+then wherever you want to use them (say, multimodecode_driver.f90 or
+modpk_icsampling.f90) you will need to explicitly 'use' them wherever the
+using module imports modpkparams.  Do this by updating
+
+use modpkparams, only : BLAH ---> ..., only : BLAH, YOUR_UPDATE.
+
+Be careful when making new global variables, as Fortran doesn't really have
+the namespace concept.
+
+---New mode ICs:
+We set the background and mode initial conditions in the subroutine
+set_background_and_mode_ic in modpk.f90.  See 1410.XXXX for more information
+about the method.  You will need to update these here.
+We find the mode k at which we can initially set the Bunch-Davies initial
+condition for the mode equations in the subroutine set_consistent_BD_scale
+in modpk.f90.  You will also need to update this subroutine with the new
+requirement you impose on how much subhorizon evolution you need to allow
+for you modes to be self-consistent (or bypass this entirely).
+
+---New classification:
+We have performed a few checks for whether a given set of parameters/ICs is
+able to give an appropriate cosmological solution.  The classification scheme
+is given via the run_outcome_type in modpk_errorhandling.f90 and the explicit
+checking of a given run's outcome is done through the compare_params_fatal
+subroutine in modpk_errorhandling.f90 (which is a type-bound procedure). To
+add a new classification add a new integer flag to the run_outcome_type.  By
+convention we have chosen to call all flags with a negative value "fatal" and
+stop the code's execution whenever one of these is found.

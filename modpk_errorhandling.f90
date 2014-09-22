@@ -20,7 +20,7 @@ module modpk_errorhandling
     !Success
     integer :: success = 0
 
-    !Failure
+    !Failure, not fatal > 0
     integer :: infl_didnt_start = 1
     integer :: pivot_didnt_leaveH = 2
     integer :: cant_set_modeIC = 3
@@ -28,7 +28,7 @@ module modpk_errorhandling
     integer :: ref_efold_didnt_leaveH = 5
     integer :: bad_reheat = 6
 
-    !Fatal
+    !Fatal < 0
     integer :: underflow = -1
 
     contains
