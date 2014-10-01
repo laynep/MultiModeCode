@@ -112,7 +112,7 @@ program multimodecode
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
 
-    !Initialize the sampler
+    !Initialize the IC sampler
     call init_sampler(icpriors_min, icpriors_max)
 
     do sample_looper=1,numb_samples
@@ -717,7 +717,7 @@ program multimodecode
 
       if (save_iso_N) then
         if (allocated(phi_iso_N) .or. allocated(dphi_iso_N)) then
-          call raise%fatal_code("Iso-N arrays already allocated..", &
+          call raise%fatal_code("Iso-N arrays already allocated.", &
             __FILE__, __LINE__)
         else
           allocate(phi_iso_N(num_inflaton))

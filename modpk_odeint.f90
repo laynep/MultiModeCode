@@ -1106,11 +1106,8 @@ contains
 
       else
 
-        !DEBUG
-        !print*, "testing accuracy settings........................"
-
         !Set rtol to 10^-(m+1) where m = # decimal places that are important
-        !rtol = 1e-5_dp
+        rtol = 1e-6_dp
 
         !Set atol_i where |y_i| is insignificant
         !atol(1:num_inflaton) = 1e-8_dp
@@ -1130,12 +1127,7 @@ contains
 
         !atol((neq/2)+1:neq)=atol(1:neq/2)
 
-        !DEBUG
-        rtol = 1e-6_dp
-        atol = 1e-14_dp
-
-        print*, "testing accuracy..."
-
+        atol = 1e-12_dp
 
 
       end if
