@@ -33,7 +33,6 @@ program multimodecode
   !Other sampling params
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
   logical :: varying_N_pivot
-  logical :: more_potential_params
   logical :: get_runningofrunning
   logical :: use_horiz_cross_approx
 
@@ -41,8 +40,7 @@ program multimodecode
 
   !For run-time alloc w/out re-compile
   namelist /init/ num_inflaton, potential_choice, &
-    slowroll_infl_end, instreheat, vparam_rows, &
-    more_potential_params
+    slowroll_infl_end, instreheat, vparam_rows
 
   namelist /analytical/ use_deltaN_SR, evaluate_modes, &
     use_horiz_cross_approx, get_runningofrunning
@@ -55,10 +53,6 @@ program multimodecode
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
-
-  namelist /more_params/ effective_V_choice, turning_choice, &
-    number_knots_qsfrandom, stand_dev_qsfrandom, &
-    knot_range_min, knot_range_max, custom_knot_range
 
   namelist /print_out/ out_opt
 
@@ -99,16 +93,7 @@ program multimodecode
     !Set vels in SR and fields on iso-N surface for N-quad
     ic_sampling == ic_flags%iso_N .or.&
     !Set vels in SR
-    ic_sampling == ic_flags%slowroll_samp .or.&
-    !Grab IC from file
-    ic_sampling == ic_flags%fromfile_samp .or. &
-    !Loop over different vparams for given num_inflaton
-    ic_sampling == ic_flags%parameter_loop_samp .or. &
-    ic_sampling == ic_flags%param_unif_prior .or. &
-    !QSF trajectories
-    ic_sampling == ic_flags%qsf_random .or.  &
-    ic_sampling == ic_flags%qsf_parametric &
-    ) then
+    ic_sampling == ic_flags%slowroll_samp) then
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)
 
@@ -199,18 +184,6 @@ program multimodecode
       !Allocate all the necessary arrays that we can with the information given
       !in the parameters file.
 
-      !Prepare extra params if necessary
-      if (more_potential_params) then
-        allocate(turning_choice(num_inflaton-1))
-        allocate(number_knots_qsfrandom(num_inflaton-1))
-        allocate(stand_dev_qsfrandom(num_inflaton-1))
-        allocate(knot_range_min(num_inflaton-1))
-        allocate(knot_range_max(num_inflaton-1))
-
-        read(unit=pfile, nml=more_params)
-
-      end if
-
       !Model dependent
       if (potential_choice==8) then
         allocate(vparams(1,4))
@@ -271,10 +244,6 @@ program multimodecode
         "Number of Inflaton =", num_inflaton
       write(*, out_opt%i_fmt) &
         "Potential Choice =", potential_choice
-      if (potential_choice == 14 .or. potential_choice==15) then
-        write(*, out_opt%i_fmt) &
-          "Turning Choice =", turning_choice
-      end if
       write(*, out_opt%e_fmt) &
         "N_pivot =", N_pivot
       write(*, out_opt%e_fmt) &
@@ -520,9 +489,6 @@ program multimodecode
         call evolve(k_pivot, pk0)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
-!DEBUG
-!print*, "Not evaluating second and third evolve routines"
-!stop
         call evolve(k_pivot*exp(-dlnk), pk1)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
@@ -648,10 +614,6 @@ program multimodecode
       j=min(max(i-(4-1)/2,1),nactual_bg+1-4)
       call array_polint(lna(j:j+4), phiarr(:,j:j+4),&
         Npiv_renorm, phi_pivot, del_phi)
-
-      !DEBUG
-      !print*, guess_EOI_field(phi_pivot, phi_end)
-      !stop
 
       if (use_horiz_cross_approx) then
         HC_approx=.true.

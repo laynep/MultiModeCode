@@ -1,5 +1,4 @@
 #Driver for standalone P(k) code
-#PKDRIVER	= driver_modpk.f90
 PKDRIVER	= multimodecode_driver.f90
 
 
@@ -10,7 +9,7 @@ MODPKOBJ = dvode_f90_m.o \
 					 modpk_errorhandling.o \
 					 modpk_io.o \
 					 modpk_modules.o modpk_numerics.o \
-					 modpk_qsf.o modpk_rng.o \
+					 modpk_rng.o \
   				 modpk_potential.o modpk_icsampling.o \
 					 modpk_utils.o  modpk_odeint.o \
 					 modpk_backgrnd.o modpk.o modpk_deltaN.o
@@ -25,8 +24,7 @@ modpk_errorhandling.o: modpk_errorhandling.f90 modpk_io.o
 modpk_modules.o: modpk_modules.f90 csv_file.o modpk_io.o modpk_errorhandling.o
 modpk_rng.o: modpk_modules.o modpk_rng.f90 modpk_errorhandling.o
 modpk_numerics.o: modpk_numerics.f90 modpk_modules.o modpk_errorhandling.o
-modpk_qsf.o: modpk_qsf.f90 modpk_modules.o modpk_numerics.o modpk_errorhandling.o
-modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o modpk_errorhandling.o
+modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_errorhandling.o
 modpk_icsampling.o: modpk_modules.o modpk_potential.o modpk_rng.o modpk_icsampling.f90 \
 	modpk_errorhandling.o modpk_io.o
 modpk_utils.o: modpk_modules.o modpk_potential.o modpk_icsampling.o modpk_utils.f90 \
@@ -44,12 +42,10 @@ powspec : $(MODPKOBJ) $(PKDRIVER)
 	$(F90C) $(F90FLAGS) -c $*.f90
 
 clean: cleanoutput
-	-rm -f *.o *.a *.d core *.mod
+	-rm -f *.o *.mod
 	-rm powspec
 
 cleanoutput:
-	-rm fort.*
-	-rm *.dat
 	-rm out_fields_infl_end.csv
 	-rm out_fields_horizon_cross.csv
 	-rm out_powerspectra.csv
@@ -61,4 +57,3 @@ cleanoutput:
 	-rm out_ic_eqen_SR.csv
 	-rm out_ic_isoN.csv
 	-rm out_ic_isoN_SR.csv
-	-rm gmon.out
