@@ -93,7 +93,7 @@ contains
 
       lambda = 10.e0_dp**vparams(1,:)
       finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-      V_potential = sum(lambda**4*(1.e0_dp+cos(finv*phi)))
+      V_potential = sum(lambda**4*(1.e0_dp-cos(finv*phi)))
 
     case(3)
       ! lambda_i phi_i^4 --- N-quartic
@@ -457,7 +457,7 @@ contains
        case(2)
           lambda = 10.e0_dp**vparams(1,:)
           finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-          first_deriv = -lambda**4*finv*sin(finv*phi)
+          first_deriv = lambda**4*finv*sin(finv*phi)
        case(3)
           lambda = 10.e0_dp**vparams(1,:)
           first_deriv = lambda*phi**3
@@ -731,7 +731,7 @@ contains
        case(2)
           lambda = 10.e0_dp**vparams(1,:)
           finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
-          forall (i = 1:size(phi)) second_deriv(i,i) = -lambda(i)**4*finv(i)*finv(i)*cos(finv(i)*phi(i))
+          forall (i = 1:size(phi)) second_deriv(i,i) = lambda(i)**4*finv(i)*finv(i)*cos(finv(i)*phi(i))
        case(3)
           lambda = 10.e0_dp**vparams(1,:)
           forall (i = 1:size(phi)) second_deriv(i,i) = 3.e0_dp*lambda(i)*phi(i)**2
