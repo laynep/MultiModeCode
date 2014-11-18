@@ -11,7 +11,7 @@ module potential
   private
   public :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_numer, &
-       getEps_with_t, d3Vdphi3, &
+       getEps_with_t, d3Vdphi3, geteta_with_t, &
        logP_of_observ, fisher_rao_metric, guess_EOI_field
 
   public :: norm
@@ -1336,6 +1336,18 @@ contains
     geteta = getdepsdalpha(phi, dphi) / eps
 
   END FUNCTION geteta
+
+  FUNCTION geteta_with_t(phi, dphidt)
+    !
+    !    Return the eta parameter eta = deps/dalpha / eps
+    !
+    real(dp), INTENT(IN) :: phi(:), dphidt(:)
+    real(dp) :: geteta_with_t, eps
+
+    !DEBUG
+    geteta_with_t = 0e0_dp
+
+  END FUNCTION geteta_with_t
 
   ! Powerspectrum for psi ptbs mode matrix, outputting full IJ matrix,
   !adiabatic P(k), and isocurv P(k); includes cross correlations

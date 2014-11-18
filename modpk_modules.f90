@@ -38,6 +38,7 @@ MODULE modpkparams
 
   real(dp), ALLOCATABLE :: phidot_sign(:)
   real(dp) :: Nefold_max=100000.e0_dp
+  real(dp) :: t_max=1.e100_dp
   real(dp) :: lna(nsteps)
   real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
   LOGICAL :: slowroll_infl_end
@@ -69,6 +70,7 @@ MODULE modpkparams
     integer :: accuracy_setting
     logical :: use_dvode_integrator
     logical :: use_analytical_jacobian
+    logical :: use_tinteg_init
     real(dp) :: rk_accuracy_modes, rk_accuracy_back
     real(dp) :: dvode_rtol_modes, dvode_rtol_back
     real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag, dvode_atol_back

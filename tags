@@ -1183,6 +1183,7 @@ getcs2	modpk_potential.f90	/^    function getcs2(/;"	f
 getdHdalpha	modpk_potential.f90	/^  FUNCTION getdHdalpha(/;"	f	module:potential
 getdepsdalpha	modpk_potential.f90	/^  FUNCTION getdepsdalpha(/;"	f	module:potential
 geteta	modpk_potential.f90	/^  FUNCTION geteta(/;"	f	module:potential
+geteta_with_t	modpk_potential.f90	/^  FUNCTION geteta_with_t(/;"	f	module:potential
 getrhodot	modpk_potential.f90	/^    function getrhodot(/;"	f
 guess_EOI_field	modpk_potential.f90	/^  function guess_EOI_field(/;"	f
 h_ik	modpk_modules.f90	/^  real(dp) :: h_ik$/;"	v	module:internals
@@ -1223,6 +1224,7 @@ init_random_seed_serial	modpk_rng.f90	/^subroutine init_random_seed_serial(/;"	s
 init_sampler	multimodecode_driver.f90	/^    subroutine init_sampler(/;"	s	program:multimodecode
 initialize_dvode	modpk_odeint.f90	/^    subroutine initialize_dvode(/;"	s	subroutine:odeint_r
 initialize_dvode_MODES	modpk_odeint.f90	/^    subroutine initialize_dvode_MODES(/;"	s	subroutine:odeint_c
+initialize_dvode_with_t	modpk_odeint.f90	/^    subroutine initialize_dvode_with_t(/;"	s	subroutine:odeint_with_t
 initialphi	modpk_potential.f90	/^  FUNCTION initialphi(/;"	f	module:potential
 instreheat	modpk_modules.f90	/^  LOGICAL :: use_modpk, vnderivs, instreheat$/;"	v	module:modpkparams
 int_dlogP_MCMC	modpk_potential.f90	/^      subroutine int_dlogP_MCMC(/;"	s	function:fisher_rao_metric
@@ -1395,6 +1397,7 @@ print_modes	modpk_odeint.f90	/^    subroutine print_modes(/;"	s	subroutine:odein
 print_options	modpk_io.f90	/^  type :: print_options$/;"	t	module:modpk_io
 print_out	multimodecode_driver.f90	/^  namelist \/print_out\//;"	n	program:multimodecode
 print_traj	modpk_odeint.f90	/^    subroutine print_traj(/;"	s	subroutine:odeint_r
+print_traj	modpk_odeint.f90	/^    subroutine print_traj(/;"	s	subroutine:odeint_with_t
 priors	multimodecode_driver.f90	/^      namelist \/priors\//;"	n	subroutine:init_sampler
 projection	modpk_potential.f90	/^  pure function projection(/;"	f
 ps0	driver_modpk.f90	/^  real(dp) :: ps0,/;"	v	program:driver_modpk
@@ -1469,6 +1472,7 @@ stupid_locate	modpk_numerics.f90	/^    pure integer function stupid_locate(/;"	f
 success	modpk_errorhandling.f90	/^    integer :: success /;"	k	type:run_outcome_type
 summand	modpk_modules.f90	/^    real(dp) :: summand /;"	k	type:KahanSum
 switch_to_qvar	modpk_odeint.f90	/^    subroutine switch_to_qvar(/;"	s	subroutine:odeint_c
+t_max	modpk_modules.f90	/^  real(dp) :: t_max=/;"	v	module:modpkparams
 tauNL_SR	modpk_deltaN.f90	/^    function tauNL_SR(/;"	f	module:modpk_deltaN
 tau_NL	modpk_modules.f90	/^    real(dp) :: tau_NL$/;"	k	type:observables
 tech_opt	modpk_modules.f90	/^  type(tech_opti/;"	v	module:modpkparams

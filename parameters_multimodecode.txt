@@ -201,8 +201,10 @@ Set atol_i where |y_i| is insignificant.
 &technical
   assert%use_assertions = .true.
 
+  tech_opt%use_tinteg_init = .true.
+
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .false.
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7

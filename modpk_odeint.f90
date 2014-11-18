@@ -9,7 +9,7 @@ MODULE modpk_odeint
     set_intermediate_opts
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
-  use modpk_errorhandling, only : raise, run_outcome
+  use modpk_errorhandling, only : raise, run_outcome, assert
   implicit none
 
   interface odeint
@@ -243,11 +243,12 @@ contains
 
     !It got to the end without going through enough inflation to even be called
     !"slowroll_start"
-    if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+    !if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+    if (.not. slowroll_start) then
       pk_bad = run_outcome%infl_didnt_start
 
       call raise%warning(&
-        "N-integration finished with eps>1.0 and &
+        "N-integration finished &
         without inflating or only transient periods of inflation.")
       return
 
@@ -513,7 +514,7 @@ contains
            else
 
              infl_efolds = x - infl_efolds_start
-             if (infl_efolds > 3.0) then
+             if (infl_efolds > 3.0e0_dp) then
                slowroll_start=.true.
              end if
 
@@ -1382,7 +1383,8 @@ contains
     USE modpk_observables
     USE modpkparams
     USE potential
-    USE modpk_utils, ONLY : reallocate_rv, reallocate_rm, use_t
+    use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode, &
+      jacobian_background_DVODE, use_t
 
     IMPLICIT NONE
     real(dp), DIMENSION(:), INTENT(INOUT) :: ystart
@@ -1431,6 +1433,17 @@ contains
     logical :: infl_checking, stability
     real(dp) :: Nefolds
 
+    !For DVODE integrator
+    integer :: neq, istats(31)
+    integer :: itask, istate
+    real(dp) :: rtol, rstats(22), t_out, dt_step
+    real(dp), dimension(:), allocatable :: atol
+    type (vode_opts) :: ode_integrator_opt
+
+    !DEBUG
+    !Only really have this working for one potential...
+    call assert%check(ic_sampling==ic_flags%single_axion,__FILE__,__LINE__)
+
 
     !Don't save_steps, bc interfere with N-integrator
     !DEBUG
@@ -1446,6 +1459,8 @@ contains
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
 
+    Nefolds = 0e0_dp
+
     x=x1
     h=SIGN(h1,x2-x1)
     nok=0
@@ -1459,13 +1474,12 @@ contains
        ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
     END IF
 
-    DO nstp=1,MAXSTP
+    if (tech_opt%use_dvode_integrator) then
+      !Options for first call to dvode integrator
+      call initialize_dvode_with_t()
+    end if
 
-    !DEBUG
-    !if (nstp==1) then
-        print*, "this is y:", y
-        print*, "theta:", (y(1)*2.0-pi)/(2.0*pi)
-    !end if
+    DO nstp=1,MAXSTP/10
 
        if (any(isnan(y))) then
 
@@ -1477,21 +1491,53 @@ contains
 
        end if
 
-       CALL derivs(x,y,dydx)
+       !Record the background trajectory
+       if (out_opt%save_traj) call print_traj()
 
-       yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
+       CALL derivs(x,y,dydx)
+       !If get bad deriv, then override this error when IC sampling
+       if (pk_bad /= run_outcome%success) return
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
             CALL save_a_step
-       IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
 
-       CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+       if (tech_opt%use_dvode_integrator) then
 
-       IF (hdid == h) THEN
-          nok=nok+1
-       ELSE
-          nbad=nbad+1
-       END IF
+         if (tech_opt%use_analytical_jacobian) then
+           call dvode_f90(bderivs_dvode,neq,y,x,t_out, &
+             itask,istate,ode_integrator_opt,J_FCN=jacobian_background_DVODE)
+         else
+           call dvode_f90(bderivs_dvode,neq,y,x,t_out, &
+             itask,istate,ode_integrator_opt)
+         end if
+         call get_stats(rstats,istats)
+
+         if (istate<0) then
+
+           print*, "MODECODE istate=", istate
+
+           call raise%fatal_code(&
+             "The dvode_f90 integrator threw an error. &
+             Check the documentation there.",&
+             __FILE__, __LINE__)
+
+         end if
+
+       else
+
+         yscal(:)=ABS(y(:))+ABS(h*dydx(:))+TINY
+
+         IF ((x+h-x2)*(x+h-x1) > 0.0) h = x2 - x
+
+         CALL rkqs_r(y,dydx,x,h,eps,yscal,hdid,hnext,derivs)
+
+         IF (hdid == h) THEN
+            nok=nok+1
+         ELSE
+            nbad=nbad+1
+         END IF
+
+       end if
 
        !MULTIFIELD
        p = y(1:num_inflaton)
@@ -1500,6 +1546,7 @@ contains
        Nefolds = y(2*num_inflaton+1)
 
 
+       !Check to see if we're inflating or not
        IF(getEps_with_t(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
          if (ic_sampling==ic_flags%reg_samp) then
            slowroll_start=.true.
@@ -1539,8 +1586,11 @@ contains
          return
        end if
 
+       !Check if we should quit evolving
 
-      if (abs(x2-x)<1e-10) then
+
+
+       if (abs(x2-x)<1e-10) then
         use_t=.false.
 
         call raise%warning(&
@@ -1581,20 +1631,52 @@ contains
        !ENDIF
 
        IF (ode_underflow) RETURN
-       IF (ABS(hnext) < hmin) THEN
-         call raise%fatal_code(&
-          'Stepsize smaller than minimum in odeint.',&
-          __FILE__, __LINE__)
-       END IF
-       h=hnext
+       if ( .not. tech_opt%use_dvode_integrator) then
+         IF (ABS(hnext) < hmin) THEN
+           call raise%fatal_code(&
+            'Stepsize smaller than minimum in odeint.',&
+            __FILE__, __LINE__)
+         END IF
+       end if
+
+       !Set up next N-step
+       if (tech_opt%use_dvode_integrator) then
+         if (itask/=2) t_out = min(x + dt_step, x2)
+
+         !Increase accuracy requirements when not in SR
+         if (tech_opt%accuracy_setting>0) then
+           if (getEps_with_t(p,delp)>0.2e0_dp) then
+             rtol=1e-12_dp
+             atol=1e-12_dp
+             istate=3
+           end if
+         end if
+
+       else
+         h=hnext
+       end if
     END DO
 
-    PRINT*, "MODECODE: t=", x, "Step size", h
-    print*, "MODECODE: N", Nefolds
-    print*, "MODECODE: eps", getEps_with_t(p, delp)
-    print*, "MODECODE: t", x
-    print*, "MODECODE: t_end", x2
-    print*, "MODECODE: nstp", nstp
+    !It got to the end without going through enough inflation to even be called
+    !"slowroll_start"
+    !if (getEps_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+    if (.not. slowroll_start) then
+      pk_bad = run_outcome%infl_didnt_start
+
+      call raise%warning(&
+        "t-integration finished &
+        without inflating or only transient periods of inflation.")
+
+      return
+    end if
+
+    !DEBUG
+    !PRINT*, "MODECODE: t=", x, "Step size", h
+    !print*, "MODECODE: N", Nefolds
+    !print*, "MODECODE: eps", getEps_with_t(p, delp)
+    !print*, "MODECODE: t", x
+    !print*, "MODECODE: t_end", x2
+    !print*, "MODECODE: nstp", nstp
 
     call raise%warning('Too many steps in odeint_with_t', __FILE__, __LINE__)
     ystart=y
@@ -1602,6 +1684,161 @@ contains
     ode_underflow=.TRUE.
 
   CONTAINS
+
+    subroutine print_traj()
+      integer :: ii
+      character(1024) :: cname
+      logical :: adv
+
+      !Write the column header
+      if (out_opt%first_trajout) then
+
+        !First column
+        call csv_write(&
+          out_opt%trajout,&
+          'N', &
+          advance=.false.)
+
+        !Next num_inflaton columns
+        do ii=1,num_inflaton
+          write(cname, "(A3,I4.4)") "phi", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=.false.)
+        end do
+
+        do ii=1,num_inflaton
+          write(cname, "(A4,I4.4)") "dphi", ii
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=.false.)
+        end do
+
+        call csv_write(&
+          out_opt%trajout,&
+          (/character(len=10) ::&
+          'V', 'eps','H','eta'/), &
+          advance=.false.)
+
+        do ii=1,num_inflaton
+          write(cname, "(A2,I4.4)") "dV", ii
+          if (ii==num_inflaton) then
+            adv=.true.
+          else
+            adv=.false.
+          end if
+          call csv_write(&
+            out_opt%trajout,&
+            trim(cname), &
+            advance=adv)
+        end do
+
+        out_opt%first_trajout = .false.
+      end if
+
+      !Write the trajectory
+      call csv_write(&
+        out_opt%trajout,&
+        Nefolds, &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        y(:), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        pot(y(1:num_inflaton)),&
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        getEps_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        getH_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        geteta_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        dVdphi(y(1:num_inflaton)), &
+        advance=.true.)
+
+    end subroutine print_traj
+
+    subroutine initialize_dvode_with_t()
+
+      neq = size(y)
+
+      if (allocated(atol)) deallocate(atol)
+      allocate(atol(neq))
+
+      !Relative tolerance
+      !Absolute tolerance
+      if (tech_opt%accuracy_setting==2) then
+        rtol = 1.e-10_dp
+        atol = 1.0e-14_dp
+      else if (tech_opt%accuracy_setting==1) then
+        rtol = 1.e-6_dp
+        atol = 1.0e-6_dp
+      else if (tech_opt%accuracy_setting==0) then
+        rtol = 1.e-5_dp
+        atol = 1.0e-5_dp
+      else if (tech_opt%accuracy_setting==-1) then
+        rtol = tech_opt%dvode_rtol_back
+        atol = tech_opt%dvode_atol_back(1:neq)
+      else
+
+        print*, "MODECODE: accuracy_setting =", tech_opt%accuracy_setting
+
+        call raise%fatal_code(&
+        "This accuracy_setting is not supported in initialize_dvode_with_t.",&
+        __FILE__, __LINE__)
+
+      end if
+
+      istate = 1 !Set =1 for 1st call to integrator
+
+      itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
+      !itask  = 2 !Take only one time-step and output
+
+      if (itask /=2) then
+        !Integrate until nefold_out
+        dt_step = sign(1e19_dp,x2-x1)
+        t_out = x + dt_step
+      else
+        !Take only one step
+        t_out = t_max
+      end if
+
+      !Force initial step-size guess very small
+      if (tech_opt%use_analytical_jacobian) then
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+          abserr_vector=atol,&
+          relerr=rtol,&
+          user_supplied_jacobian=.true., &
+          mxstep=50000,&
+          H0=1e-9_dp)
+      else
+        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+          abserr_vector=atol,&
+          relerr=rtol,&
+          user_supplied_jacobian=.false., &
+          mxstep=50000,&
+          H0=1e-9_dp)
+      end if
+
+    end subroutine initialize_dvode_with_t
 
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
     SUBROUTINE save_a_step
