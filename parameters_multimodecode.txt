@@ -6,13 +6,13 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
-  potential_choice = 1
+  num_inflaton = 1
+  potential_choice = 2
   vparam_rows = 4
   more_potential_params = .false.
 
   slowroll_infl_end = .true.
-  instreheat = .false.
+  instreheat = .true.
 /
 
 ----------------
@@ -23,9 +23,9 @@ ignores the contributions from the end of inflation surface.
 
 &analytical
   use_deltaN_SR = .true.
-  use_horiz_cross_approx = .false.
+  use_horiz_cross_approx = .true.
   evaluate_modes = .true.
-  get_runningofrunning = .true.
+  get_runningofrunning = .false.
 /
 
 ----------------
@@ -55,7 +55,7 @@ Parameters to control how the ICs are sampled
   7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
 &ic_sampling_nml
-  ic_sampling = 1
+  ic_sampling = 11
   numb_samples = 1
 
   energy_scale = .1
@@ -110,16 +110,23 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0
+  phi_init0 = 6.2
 
-  vparams(1,:) =     -11.4331129107601       -11.0209589994406       -10.8103553863187     -10.6473001974953       -10.5097113433471       -10.3877731294661     -10.2754640883194       -10.1677245681175       -10.0575191091359     -9.90201016940867
-  vparams(2,:) = 8.8703E+00  7.3356E+00  6.0441E+00  4.8025E+00  3.6507E+00  2.6300E+00  1.7696E+00  1.0831E+00  5.6668E-01  1.6206E-01
-  vparams(3,:) = 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3
-  vparams(4,:) = 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2
+  vparams(1,:) =     -10.5097113433471
+  vparams(2,:) = 0.3E+00
+  vparams(3,:) = 1e-3
+  vparams(4,:) = 1e-2
 
 
 
 /
+  phi_init0 = 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2
+
+  vparams(1,:) =     -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 
+  vparams(2,:) = 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00 0.3E+00
+  vparams(3,:) = 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3
+  vparams(4,:) = 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2 1e-2
+
   phi_init0 = 12.0 12.0
 
   vparams(1,:) =     -11.7 -10.0
@@ -141,13 +148,13 @@ Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
 
 &priors
-  phi0_priors_min = 2.0 2.0
+  phi0_priors_min = 2.0
 
-  phi0_priors_max = 30.0 30.0
+  phi0_priors_max = 30.0
 
 
-  dphi0_priors_min = -1.262e0 -1.262e0
-  dphi0_priors_max =  1.262e0 1.262e0
+  dphi0_priors_min = -1.262e0
+  dphi0_priors_max =  1.262e0
 
   N_pivot_prior_min = 30
   N_pivot_prior_max = 70
@@ -194,7 +201,7 @@ Set atol_i where |y_i| is insignificant.
 &technical
   assert%use_assertions = .true.
 
-  tech_opt%accuracy_setting = 1
+  tech_opt%accuracy_setting = 2
   tech_opt%use_dvode_integrator = .false.
   tech_opt%use_analytical_jacobian = .false.
 

@@ -31,7 +31,11 @@ CONTAINS
     !     Solve the background equations
     !
     pk_bad = run_outcome%success
-    phi_init = initialphi(phi_init0)
+    if (ic_sampling == ic_flags%reg_samp) then
+      phi_init = initialphi(phi_init0)
+    else
+      phi_init = phi_init0
+    end if
 
     !NB: For eqen sampling, dphi_init set in trial_background
     CALL backgrnd

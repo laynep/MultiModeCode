@@ -164,7 +164,7 @@ module modpk_errorhandling
 
       else if (outcome == self%cant_set_modeIC) then
         if (out_opt%modpkoutput) &
-          print*, "MODECODE: A modes' IC couldn't be consistently set.", outcome
+          print*, "MODECODE: A mode's IC couldn't be consistently set.", outcome
 
       else if (outcome == self%cant_init_scalefact) then
         if (out_opt%modpkoutput) &

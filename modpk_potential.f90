@@ -10,7 +10,7 @@ module potential
   implicit none
   private
   public :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
-       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_on_H, &
+       tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_numer, &
        getEps_with_t, d3Vdphi3, &
        logP_of_observ, fisher_rao_metric, guess_EOI_field
 
@@ -1041,9 +1041,11 @@ contains
   !of the scalar running, alpha_s, and if you wish to give an analytical
   !Jacobian for the mode equation evolution.
   function d3Vdphi3(phi) result(third_deriv)
+    implicit none
     real(dp), intent(in) :: phi(:)
     real(dp) :: third_deriv(size(phi),size(phi),size(phi))
     real(dp) :: m2_V(size(phi))
+    real(dp) :: lambda(size(phi)), finv(size(phi))
     integer :: ii
 
     real(dp) :: p_exp
@@ -1056,6 +1058,11 @@ contains
     case(1)
       m2_V = 10.e0_dp**(vparams(1,:))
       third_deriv=0e0_dp
+    case(2)
+      lambda = 10.e0_dp**vparams(1,:)
+      finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+      third_deriv=0e0_dp
+      forall (ii = 1:size(phi)) third_deriv(ii,ii,ii) = -lambda(ii)**4*finv(ii)*finv(ii)*finv(ii)*sin(finv(ii)*phi(ii))
     case(14)
 
       !Multifield step potential
@@ -1128,33 +1135,33 @@ contains
     if (size(phi0) .gt. 1) then
        phii = phi0 ! MULTIFIELD
     else  !SINGLE FIELD
-       select case(potential_choice)
-       case(1)
-          phii = 2.e0_dp*sqrt(Ninit+0.5e0_dp)
-       case(2)
-          finv = 1.e0_dp/(10.e0_dp**vparams(2,1))
-          phii = 2.e0_dp/finv*asin(exp(-0.5e0_dp*Ninit*finv*finv)/ &
-               sqrt(1.e0_dp+0.5e0_dp*finv*finv))
-       case(3)
-          phii = sqrt(8.e0_dp*(Ninit+1.e0_dp))
-       case(4)
-          phii = sqrt(2.e0_dp*Ninit+0.5e0_dp)
-       case(5)
-          phii = sqrt(4.e0_dp/3.e0_dp*Ninit+2.e0_dp/9.e0_dp)
-       case(6)
-          lambda = 10.e0_dp**vparams(1,1)
-          mu = 10.e0_dp**vparams(2,1)
-          x1 = lambda**4/mu
-          phesq = ((sqrt(2.e0_dp)*x1)**(-4./3.)+1.e0_dp/(4.e0_dp*x1))**(-0.5)
-          if (vparams(1,1)<-3.e0_dp) then
-             phii = sqrt(phesq/(2.e0_dp**1.5*Ninit/sqrt(phesq)+1.e0_dp))
-          else
-             x2 = 4.e0_dp*Ninit + 2.e0_dp*x1/phesq + 0.5e0_dp*phesq
-             phii = sqrt(x2)*sqrt(1.e0_dp-sqrt(1.e0_dp-4.e0_dp*x1/x2/x2))
-          end if
-       case default
-          phii = phi0
-       end select
+      select case(potential_choice)
+      case(1)
+         phii = 2.e0_dp*sqrt(Ninit+0.5e0_dp)
+      case(2)
+         finv = 1.e0_dp/(10.e0_dp**vparams(2,1))
+         phii = 2.e0_dp/finv*asin(exp(-0.5e0_dp*Ninit*finv*finv)/ &
+              sqrt(1.e0_dp+0.5e0_dp*finv*finv))
+      case(3)
+         phii = sqrt(8.e0_dp*(Ninit+1.e0_dp))
+      case(4)
+         phii = sqrt(2.e0_dp*Ninit+0.5e0_dp)
+      case(5)
+         phii = sqrt(4.e0_dp/3.e0_dp*Ninit+2.e0_dp/9.e0_dp)
+      case(6)
+         lambda = 10.e0_dp**vparams(1,1)
+         mu = 10.e0_dp**vparams(2,1)
+         x1 = lambda**4/mu
+         phesq = ((sqrt(2.e0_dp)*x1)**(-4./3.)+1.e0_dp/(4.e0_dp*x1))**(-0.5)
+         if (vparams(1,1)<-3.e0_dp) then
+            phii = sqrt(phesq/(2.e0_dp**1.5*Ninit/sqrt(phesq)+1.e0_dp))
+         else
+            x2 = 4.e0_dp*Ninit + 2.e0_dp*x1/phesq + 0.5e0_dp*phesq
+            phii = sqrt(x2)*sqrt(1.e0_dp-sqrt(1.e0_dp-4.e0_dp*x1/x2/x2))
+         end if
+      case default
+         phii = phi0
+      end select
     end if
 
     initialphi = phii
@@ -1225,6 +1232,7 @@ contains
     real(dp), INTENT(IN) :: phi(:), dphidt(:)
 
     ! MULTIFIELD
+    !H^2 = ...
     getH_with_t= (pot(phi) + 0.5e0_dp*dot_product(dphidt, dphidt))/ &
       3.0e0_dp/M_pl**2
 
@@ -1234,6 +1242,7 @@ contains
         Try smaller stepsize in integrator.",&
         __FILE__,__LINE__)
     else
+      !H=...
       getH_with_t = sqrt(getH_with_t)
     end if
 
@@ -1254,19 +1263,30 @@ contains
       dot_product(dphi,dphi)/hubble**2
 
     if (getEps_with_t >3.0e0_dp) then
-      print*, "MODECODE: epsilon =", getEps_with_t
-      print*, "MODECODE: phi =", phi
-      print*, "MODECODE: dphi =", dphi
 
-      call raise%fatal_cosmo(&
-        "Epsilon is >3.0 in subroutine getEps_with_t. &
-        This means H is complex.  &
-        (This is not a universe I'd like to live in.) &
-        This error might arise if there is a large separation &
-        in scales (stiff problem) and the integrator walks &
-        to a bad position in parameter space. &
-        Try reducing the integration stepsize or use the DVODE integrator.", &
-        __FILE__, __LINE__)
+      !Check if =3 within "double" precision
+      getEps_with_t = getEps_with_t*1e14_dp
+      getEps_with_t = anint(getEps_with_t)
+      getEps_with_t = getEps_with_t*1e-14_dp
+
+      if (getEps_with_t >3.0e0_dp) then
+
+        print*, "MODECODE: epsilon =", getEps_with_t
+        print*, "MODECODE: phi =", phi
+        print*, "MODECODE: dphi =", dphi
+
+        call raise%fatal_cosmo(&
+          "Epsilon is >3.0 in subroutine getEps_with_t. &
+          This means H is complex.  &
+          (This is not a universe I'd like to live in.) &
+          This error might arise if there is a large separation &
+          in scales (stiff problem) and the integrator walks &
+          to a bad position in parameter space. &
+          Try reducing the integration stepsize or use the DVODE integrator.", &
+          __FILE__, __LINE__)
+      end if
+
+
     end if
     !END MULTIFIELD
 
@@ -2066,16 +2086,27 @@ contains
 
   !Checks to see if H^2=V/(3-eps) is stable, ie, if H>0 and if V~0, then it will
   !return FALSE for unstable.
-  subroutine stability_check_on_H(stable,phi,dphi,using_t)
+  subroutine stability_check_numer(stable,phi,dphi,slowroll,using_t)
     logical, intent(inout) :: stable
     real(dp), dimension(:), intent(in) :: phi, dphi
-    logical, intent(in) :: using_t
+    logical, intent(in) :: slowroll, using_t
     real(dp) :: eps, V
 
     !DEBUG
     !overriding stability check...
     !stable = .true.
     !return
+
+    if (slowroll) then
+      stable = .true.
+      return
+
+    else
+      !DEBUG
+      !Overriding H stability check
+      stable = .false.
+      return
+    end if
 
     V=pot(phi)
 
@@ -2085,10 +2116,10 @@ contains
       eps = getEps(phi, dphi)
     end if
 
-    stable = (3.0e0_dp -eps >1.0e-6)
+    stable = eps < 1.0e0_dp
 
 
-  end subroutine stability_check_on_H
+  end subroutine stability_check_numer
 
   !From a histogram-estimate of a PDF, return the log(P) for a
   !vector-valued observable, given the model parameters, which are

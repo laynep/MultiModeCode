@@ -107,7 +107,9 @@ program multimodecode
     ic_sampling == ic_flags%param_unif_prior .or. &
     !QSF trajectories
     ic_sampling == ic_flags%qsf_random .or.  &
-    ic_sampling == ic_flags%qsf_parametric &
+    ic_sampling == ic_flags%qsf_parametric .or. &
+    !Single-field axion
+    ic_sampling == ic_flags%single_axion &
     ) then
 
     call out_opt%open_files(ICs=.true., SR=use_deltaN_SR)

@@ -8,7 +8,7 @@ MODULE background_evolution
   USE ode_path
   USE modpk_observables
   USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
-    getH_with_t, stability_check_on_H, getEps_with_t
+    getH_with_t, stability_check_numer, getEps_with_t
   USE modpk_utils, ONLY : bderivs, rkqs_r, use_t
   use modpk_numerics, only : locate, polint, array_polint
   use modpk_io, only : out_opt
@@ -175,18 +175,24 @@ CONTAINS
 
        IF (instreheat) THEN
 
-          a_init = EXP(-71.1e0_dp - alpha_e + LOG(V_i/V_end)/4.e0_dp + LOG((M_Pl**4)/V_i)/4.e0_dp)
+          a_init = EXP(-71.1e0_dp - alpha_e + LOG(V_i/V_end)/4.e0_dp &
+              + LOG((M_Pl**4)/V_i)/4.e0_dp)
           Np_last = 0.5e0_dp*N_pivot
-          do while (abs(N_pivot-Np_last)>0.01e0_dp)  ! determine N_pivot iteratively
+          do while (abs(N_pivot-Np_last)>0.01e0_dp)
+          ! determine N_pivot iteratively
              Np_last = N_pivot
              alpha_pivot = alpha_e-N_pivot
 
              i=locate(lna(1:nactual_bg),alpha_pivot)
              j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
-             CALL polint(lna(j:j+4), hubarr(j:j+4), alpha_pivot, H_pivot, dh)
-             CALL array_polint(lna(j:j+4), phiarr(:, j:j+4), alpha_pivot, phi_pivot, bb)
-             CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), alpha_pivot, dphi_pivot, bb)
-             N_pivot = -71.1e0_dp-log(V_end/(M_Pl**4))/4.e0_dp-log(k_pivot*Mpc2Mpl/H_pivot)
+             CALL polint(lna(j:j+4), hubarr(j:j+4), alpha_pivot, &
+                 H_pivot, dh)
+             CALL array_polint(lna(j:j+4), phiarr(:, j:j+4), &
+                 alpha_pivot, phi_pivot, bb)
+             CALL array_polint(lna(j:j+4), dphiarr(:, j:j+4), &
+                 alpha_pivot, dphi_pivot, bb)
+             N_pivot = -71.1e0_dp-log(V_end/(M_Pl**4))/4.e0_dp &
+                 -log(k_pivot*Mpc2Mpl/H_pivot)
           end do
           a_end = EXP(alpha_e)*a_init
        ELSE
@@ -290,16 +296,18 @@ CONTAINS
 
     real(dp), DIMENSION(:) :: z_int_with_t(BNVAR*size(phi_init_trial)+1)
 
-    logical :: H_stable, slowroll_init
+    logical :: numer_stable, slowroll_init
     !! END MULTIFIELD
 
     real(dp) :: accuracy, h1, hmin, x1, x2
     real(dp) :: alpha_e, dalpha, V_end, dv, ep
     real(dp) :: ph, alpha_pivot, aa(size(phi_init_trial)), bb(size(phi_init_trial))
     real(dp) :: vv(nsteps) !!epsarr(nsteps),
+    INTEGER, PARAMETER :: MAXSTP=nsteps
 
     real(dp), DIMENSION(:) :: Vp(num_inflaton)
     real(dp) :: Vz, dotphi, thetaN, grad_V
+    real(dp) :: t_out, t_start
 
     CHARACTER(16) :: fmt = '(a25,es15.7)'
 
@@ -402,19 +410,25 @@ CONTAINS
     !Check if ICs give instability in H^2=V/(3-eps)
     !If unstable, then integrate in cosmic time t until reach stable region
     !for e-fold integrator
-    H_stable = .false.
-    call stability_check_on_H(H_stable,y(1:num_inflaton),&
-      y(num_inflaton+1:2*num_inflaton),&
+    numer_stable = .false.
+    call stability_check_numer(numer_stable,y(1:num_inflaton),&
+      y(num_inflaton+1:2*num_inflaton), slowroll=slowroll_start,&
       using_t=.false.)
 
-    if (.not. H_stable) then
+    if (.not. numer_stable) then
       !Decrease initial stepsize guess in case near a point where H is approx unstable.
-      !print*, "H is UNSTABLE"
-      h1 = 1.0e-12_dp
-      accuracy = 1.0e-15_dp
-      hmin = 0.0e0_dp
+      !DEBUG
+      print*, "UNSTABLE"
+      !h1 = 1.0e-12_dp
+      !accuracy = 1.0e-15_dp
+      !hmin = 0.0e0_dp
+
+      h1 = 1.0e12_dp
+      accuracy = 1.0e-10_dp
+      hmin = 1.0e6_dp
     else
-      !print*, "H is STABLE"
+      !DEBUG
+      print*, "STABLE"
       h1 = 1.0e-7_dp
       if (tech_opt%accuracy_setting>0) then
         accuracy=1.0e-8
@@ -425,35 +439,58 @@ CONTAINS
       hmin=1.0e-20_dp
     end if
 
-!    if (.not. H_stable) then
-!      use_t = .true.
-!
-!      !Convert from using N to using t as integ variable
-!      z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
-!      z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
-!      z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
-!
-!      !Integrate in t until H is stable for integration with N
-!      call odeint_with_t(z_int_with_t,0e0_dp, 1e15_dp, accuracy, h1, hmin, bderivs, rkqs_r)
-!      if (ic_sampling/=ic_flags%reg_samp .and. pk_bad==bad_ic) return
-!
-!      call stability_check_on_H(H_stable,z_int_with_t(1:num_inflaton), &
-!        z_int_with_t(num_inflaton+1:2*num_inflaton), using_t=.true.)
-!
-!      if (.not. H_stable) then
-!
-!      !H_stable = .true.
-!      use_t=.false.
-!
-!      !Convert back to N
-!      h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-!      y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
-!      y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
-!
-!      !Start N-integration at e-fold=z_int_with_t(last)
-!      x1=z_int_with_t(2*num_inflaton+1)
-!
-!    end if
+    !DEBUG
+    print*, "testing"
+    print*, numer_stable
+
+    if (.not. numer_stable) then
+      use_t = .true.
+
+      !Convert from using N to using t as integ variable
+      z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
+      z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
+      z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
+
+      t_start = 0e0_dp
+      t_out = 1e100_dp
+      do i=1,10
+
+        !Integrate in t until H is stable for integration with N
+        call odeint_with_t(z_int_with_t,t_start, t_out, &
+            accuracy, h1, hmin, bderivs, rkqs_r)
+        if (ic_sampling/=ic_flags%reg_samp .and. &
+            pk_bad/=run_outcome%success) return
+
+        call stability_check_numer(numer_stable,&
+            z_int_with_t(1:num_inflaton), &
+            z_int_with_t(num_inflaton+1:2*num_inflaton),&
+            slowroll=slowroll_start,&
+            using_t=.true.)
+        if (numer_stable) then
+            exit
+        else
+            t_start=t_out
+            t_out=t_start*2.0e0_dp
+        end if
+
+      end do
+
+      !DEBUG
+      print*, "stopping here"
+        stop
+
+      !H_stable = .true.
+      use_t=.false.
+
+      !Convert back to N
+      h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
+      y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
+      y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
+
+      !Start N-integration at e-fold=z_int_with_t(last)
+      x1=z_int_with_t(2*num_inflaton+1)
+
+    end if
 
 
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)

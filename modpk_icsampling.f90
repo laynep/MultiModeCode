@@ -2,7 +2,7 @@ module modpk_icsampling
   !Module that implements various sampling techniques for the initial conditions
   !and model parameters.  These routines should generally be called prior to
   !doing any integration.  Monte Carlo methodology.
-  use potential, only : norm, pot, getH
+  use potential, only : norm, pot, getH, getEps_with_t, getEps
   use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
@@ -23,6 +23,7 @@ module modpk_icsampling
     integer :: qsf_random = 8
     integer :: qsf_parametric = 9
     integer :: fisher_inf = 10
+    integer :: single_axion = 11
   end type
   type(ic_samp_flags) :: ic_flags
 
@@ -70,10 +71,12 @@ module modpk_icsampling
 
       real(dp), dimension(:,:), allocatable :: sample
       real(dp) :: H, rho
-      integer :: i,j, kk
+      integer :: i,j, kk, ii
 
       logical :: with_velocity, with_eqen
       real(dp) :: beta, rand
+      real(dp) :: finv(num_inflaton)
+      real(dp) :: lambda(num_inflaton)
 
       !DEBUG
       !Hard-coded parameter priors for potential_choice==11
@@ -359,6 +362,42 @@ module modpk_icsampling
         !Set initial condition from this parameter in the valley
         y_background(1:num_inflaton) = turning_function_parametric(qsf_runref%param)
         y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
+      else if (ic_sampling == ic_flags%single_axion) then
+        !Kinetic-dominated initial condition for single-field axion
+        !Sets initial field value with uniform prior over range
+        !-pi/f < phi < pi/f
+
+        if (potential_choice /= 2) then
+          print*, "MODECODE: potential_choice=", potential_choice
+          call raise%fatal_code(&
+            "The sampling technique param_unif_prior &
+            doesn't work for this potential choice.",&
+            __FILE__,__LINE__)
+        end if
+
+        if (num_inflaton>1) then
+          call raise%fatal_code(&
+            "This IC sampler only works for &
+            one field.",&
+            __FILE__,__LINE__)
+        end if
+
+        !Axion params
+        lambda = 10.e0_dp**vparams(1,:)
+        finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+
+
+        !Set field IC with uniform random prior
+
+        !Something weird with the clock in init_random_seed_serial?
+        call random_number(rand); call random_number(rand)
+        y_background(1:num_inflaton) = rand*&
+            (2.0e0_dp*pi/finv)-(pi/finv)
+
+        !Set velocity at 10x the "axion scale"=lambda
+        y_background(num_inflaton+1:2*num_inflaton) = &
+            10.0e0_dp*2.0e0_dp*lambda**2
 
       !-----------------------------------------
       else

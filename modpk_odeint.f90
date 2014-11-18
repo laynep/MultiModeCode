@@ -203,7 +203,7 @@ contains
 
         call raise%fatal_code(&
         "Reached the end of the integration in N. &
-        Could try to increase the max number of steps, &
+        You could try to increase the max number of steps, &
         but more likely that the integrator is taking steps &
         that are too small.  Potentially stiff problem.", &
         __FILE__, __LINE__)
@@ -1461,10 +1461,14 @@ contains
 
     DO nstp=1,MAXSTP
 
+    !DEBUG
+    !if (nstp==1) then
+        print*, "this is y:", y
+        print*, "theta:", (y(1)*2.0-pi)/(2.0*pi)
+    !end if
+
        if (any(isnan(y))) then
 
-         print*, "MODECODE: E-fold",x
-         print*, "MODECODE: nstp",nstp
          print*, "MODECODE: y", y
 
          call raise%fatal_code(&
@@ -1472,8 +1476,6 @@ contains
            __FILE__, __LINE__)
 
        end if
-
-       !use_t = .true.
 
        CALL derivs(x,y,dydx)
 
@@ -1493,7 +1495,7 @@ contains
 
        !MULTIFIELD
        p = y(1:num_inflaton)
-       delp = y(num_inflaton+1 : 2*num_inflaton)
+       delp = y(num_inflaton+1 : 2*num_inflaton) !dphi/dt
 
        Nefolds = y(2*num_inflaton+1)
 
@@ -1524,11 +1526,13 @@ contains
        !END MULTIFIELD
 
        !Check if H is stable now, so switch to integrate w/N
-       call stability_check_on_H(stability,p,delp,using_t=.true.)
+       call stability_check_numer(stability,p,delp,&
+           slowroll=slowroll_start,using_t=.true.)
        if (stability) then
          !DEBUG
          print*, "Was using t, but H now stable!!"
-         stop
+         print*, "nstp=",nstp
+         print*, "Nefolds=",Nefolds
 
          ystart = y
          use_t=.false.
@@ -1593,6 +1597,7 @@ contains
     print*, "MODECODE: nstp", nstp
 
     call raise%warning('Too many steps in odeint_with_t', __FILE__, __LINE__)
+    ystart=y
 
     ode_underflow=.TRUE.
 
