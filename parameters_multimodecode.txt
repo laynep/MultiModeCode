@@ -12,7 +12,7 @@ Set potential and its derivatives in modpk_potential.f90
   more_potential_params = .false.
 
   slowroll_infl_end = .true.
-  instreheat = .true.
+  instreheat = .false.
 /
 
 ----------------
@@ -113,7 +113,7 @@ the smallest mass; others are discarded.
   phi_init0 = 6.2
 
   vparams(1,:) =     -10.5097113433471
-  vparams(2,:) = 0.3E+00
+  vparams(2,:) = 0.69897
   vparams(3,:) = 1e-3
   vparams(4,:) = 1e-2
 

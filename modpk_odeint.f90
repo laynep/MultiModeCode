@@ -1445,9 +1445,6 @@ contains
     call assert%check(ic_sampling==ic_flags%single_axion,__FILE__,__LINE__)
 
 
-    !Don't save_steps, bc interfere with N-integrator
-    !DEBUG
-    save_steps = .false.
     stability = .false.
 
     !Inits for checking whether in
@@ -1459,19 +1456,21 @@ contains
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
 
+    !Assume we start at N=0, need to fix this otherwise
     Nefolds = 0e0_dp
 
     x=x1
     h=SIGN(h1,x2-x1)
     nok=0
     nbad=0
-    kount=0
+    kount_t=0
     y(:)=ystart(:)
-    NULLIFY(xp,yp)
+    NULLIFY(xp_t,yp_t)
     IF (save_steps) THEN
        xsav=x-2.e0_dp*dxsav
-       ALLOCATE(xp(256))
-       ALLOCATE(yp(SIZE(ystart),SIZE(xp)))
+       ALLOCATE(xp_t(256))
+       if (ic_sampling == ic_flags%qsf_parametric) ALLOCATE(param_p_t(256))
+       ALLOCATE(yp_t(SIZE(ystart),SIZE(xp_t)))
     END IF
 
     if (tech_opt%use_dvode_integrator) then
@@ -1842,14 +1841,16 @@ contains
 
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
     SUBROUTINE save_a_step
-      kount=kount+1
-      IF (kount > SIZE(xp)) THEN
-         xp=>reallocate_rv(xp,2*SIZE(xp))
-         yp=>reallocate_rm(yp,SIZE(yp,1), SIZE(xp))
+      kount_t=kount_t+1
+      IF (kount_t > SIZE(xp_t)) THEN
+         xp_t=>reallocate_rv(xp_t,2*SIZE(xp_t))
+         if (ic_sampling==ic_flags%qsf_parametric) &
+           param_p_t=>reallocate_rv(param_p_t,2*SIZE(xp))
+         yp_t=>reallocate_rm(yp_t,SIZE(yp_t,1), SIZE(xp_t))
       END IF
-      xp(kount)=x
-      yp(:,kount)=y(:)
-      xsav=x
+      xp_t(kount_t)=Nefolds
+      yp_t(:,kount_t)=y(:)
+      xsav=Nefolds
     END SUBROUTINE save_a_step
 
 

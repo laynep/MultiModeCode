@@ -235,11 +235,7 @@ CONTAINS
 
           a_init=k_pivot*Mpc2Mpl/H_pivot/EXP(alpha_pivot)
 
-
           a_end=EXP(alpha_e)*a_init
-
-          a_end_inst=EXP(-71.1e0_dp+LOG(V_i/V_end)/4.e0_dp+LOG((M_Pl**4)/V_i)/4.e0_dp)
-
 
           if (isnan(a_end) .or. a_end<1.0e-100_dp) then
             print*, "MODECODE: a_end=", a_end
@@ -257,11 +253,12 @@ CONTAINS
 
           end if
 
-          IF (a_end .GT. a_end_inst) THEN
-             PRINT*,'MODECODE: inflation ends too late with this N_pivot', N_pivot
-             pk_bad = run_outcome%bad_reheat
-             RETURN
-          ENDIF
+          !a_end_inst=EXP(-71.1e0_dp+LOG(V_i/V_end)/4.e0_dp+LOG((M_Pl**4)/V_i)/4.e0_dp)
+          !IF (a_end .GT. a_end_inst) THEN
+          !   PRINT*,'MODECODE: inflation ends too late with this N_pivot', N_pivot
+          !   pk_bad = run_outcome%bad_reheat
+          !   RETURN
+          !ENDIF
        END IF
 
        a_pivot = EXP(alpha_pivot)*a_init
@@ -390,7 +387,7 @@ CONTAINS
 
     !MULTIFIELD
     if (tech_opt%use_tinteg_init) then
-      slowroll_start = .false.
+      slowroll_start = .false. !Uses this flag to see if N-integration is stable
     else
       IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
          slowroll_start=.FALSE.
@@ -412,7 +409,7 @@ CONTAINS
 
     dxsav=1.e-7_dp
 
-    !Option for using a cosmic-time integrator to start, which checks to see if
+    !Uses a cosmic-time integrator to start, which checks to see if
     !it can switch to integrating in e-folds.
     !Useful if there's a significantly kinetic-dominated phase initially.
     if (tech_opt%use_tinteg_init) then
@@ -423,24 +420,57 @@ CONTAINS
     end if
 
 
+    !Call the integrator
+    ode_underflow = .FALSE.
+    ode_ps_output = .FALSE.
+    ode_infl_end = .TRUE.
+    save_steps = .true.
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
+
 
     if (ic_sampling/=ic_flags%reg_samp .and. &
       pk_bad/=run_outcome%success) return
 
     IF(.NOT. ode_underflow) THEN
-      if (size(lna) < kount .or. size(xp) < kount) then
+      if ((.not. tech_opt%use_tinteg_init .and. &
+          (size(lna) < kount+kount_t .or. size(xp) < kount+kount_t)) &
+          .or. tech_opt%use_tinteg_init .and. &
+          (size(lna) < kount .or. size(xp) < kount)) then
         call raise%fatal_code(&
-         "kount is too big.  &
+         "kount or kount_t is too big.  &
          Giving this error instead of &
          a segmentation fault.", &
         __FILE__, __LINE__)
       end if
 
-       lna(1:kount)=xp(1:kount)
-       phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
-       dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
-       if (ic_sampling == ic_flags%qsf_parametric) param_arr(1:kount) = param_p(1:kount)
+      if (tech_opt%use_tinteg_init) then
+        !Add the t-int xp_t to the N-int xp
+
+        lna(1:kount_t)=xp_t(1:kount_t)
+        lna(kount_t+1:kount_t+kount)=xp(1:kount)
+
+        phiarr(:,1:kount_t)=yp_t(1:size(y)/2, 1:kount_t)
+        phiarr(:,kount_t+1:kount_t+kount)=yp(1:size(y)/2, 1:kount)
+
+        dphiarr(:,1:kount_t)=yp_t(size(y)/2+1:size(y),1:kount_t)
+        dphiarr(:,kount_t+1:kount_t+kount)=yp(size(y)/2+1:size(y),1:kount)
+        if (ic_sampling == ic_flags%qsf_parametric) then
+          param_arr(1:kount_t) = param_p_t(1:kount_t)
+          param_arr(kount_t+1:kount_t+kount) = param_p(1:kount)
+        end if
+
+        !Add the two arrays together
+        kount = kount+kount_t
+
+      else
+
+        lna(1:kount)=xp(1:kount)
+        phiarr(:,1:kount)=yp(1:size(y)/2, 1:kount)
+        dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
+        if (ic_sampling == ic_flags%qsf_parametric) param_arr(1:kount) = param_p(1:kount)
+
+      end if
+
 
        !MULTIFIELD
        if (ic_sampling == ic_flags%qsf_parametric) then
@@ -477,8 +507,10 @@ CONTAINS
           !MULTIFIELD
           CALL array_polint(epsarr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
 
+
           !Check for interpolation errors
           if(dalpha > 0.1 .or. dv > 0.1 .or. bb(1) > 0.1) THEN
+
 
              !Check if didn't get enough e-folds
              if (lna(kount) < N_pivot) then
@@ -595,7 +627,7 @@ CONTAINS
         if (.not. numer_stable) then
           !Decrease initial stepsize guess in case near a point where H is approx unstable.
           !DEBUG
-          print*, "UNSTABLE"
+          !print*, "UNSTABLE"
           !h1 = 1.0e-12_dp
           !accuracy = 1.0e-15_dp
           !hmin = 0.0e0_dp
@@ -605,7 +637,7 @@ CONTAINS
           hmin = 1.0e6_dp
         else
           !DEBUG
-          print*, "STABLE"
+          !print*, "STABLE"
           h1 = 1.0e-7_dp
           if (tech_opt%accuracy_setting>0) then
             accuracy=1.0e-8
@@ -615,10 +647,6 @@ CONTAINS
 
           hmin=1.0e-20_dp
         end if
-
-        !DEBUG
-        print*, "testing"
-        print*, numer_stable
 
         if (.not. numer_stable) then
           use_t = .true.
@@ -651,10 +679,6 @@ CONTAINS
               end otherwise.",&
               __FILE__,__LINE__)
           end if
-
-!DEBUG
-print*, "stopping here"
-stop
 
           !H_stable = .true.
           use_t=.false.

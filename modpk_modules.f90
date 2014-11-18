@@ -39,8 +39,7 @@ MODULE modpkparams
   real(dp), ALLOCATABLE :: phidot_sign(:)
   real(dp) :: Nefold_max=100000.e0_dp
   real(dp) :: t_max=1.e100_dp
-  real(dp) :: lna(nsteps)
-  real(dp) :: hubarr(nsteps), log_aharr(nsteps), epsarr(nsteps), dtheta_dN(nsteps)
+  real(dp), dimension(nsteps*2) :: lna, hubarr, log_aharr, epsarr, dtheta_dN
   LOGICAL :: slowroll_infl_end
   LOGICAL :: slowroll_start=.false.
 
@@ -93,16 +92,16 @@ MODULE ode_path
   use modpkparams, only : dp
   implicit none
 
-  INTEGER*4 :: nok,nbad,kount
+  INTEGER*4 :: nok,nbad,kount, kount_t
   LOGICAL, SAVE :: save_steps=.false.
   LOGICAL :: ode_underflow
   LOGICAL :: ode_ps_output
   LOGICAL :: ode_infl_end
   LOGICAL :: infl_ended
   real(dp) :: dxsav
-  real(dp), DIMENSION(:), POINTER :: xp
-  real(dp), DIMENSION(:), POINTER :: param_p
-  real(dp), DIMENSION(:,:), POINTER :: yp
+  real(dp), DIMENSION(:), POINTER :: xp, xp_t
+  real(dp), DIMENSION(:), POINTER :: param_p, param_p_t
+  real(dp), DIMENSION(:,:), POINTER :: yp, yp_t
 END MODULE ode_path
 
 

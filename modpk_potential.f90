@@ -2113,16 +2113,11 @@ contains
     !stable = .true.
     !return
 
-    if (slowroll) then
-      stable = .true.
-      return
+    !Stable iff slowly rolling
+    stable = slowroll
+    return
 
-    else
-      !DEBUG
-      !Overriding H stability check
-      stable = .false.
-      return
-    end if
+
 
     V=pot(phi)
 
