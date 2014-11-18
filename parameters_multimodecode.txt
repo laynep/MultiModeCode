@@ -202,6 +202,7 @@ Set atol_i where |y_i| is insignificant.
   assert%use_assertions = .true.
 
   tech_opt%use_tinteg_init = .true.
+  tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
   tech_opt%use_dvode_integrator = .true.

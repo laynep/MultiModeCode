@@ -67,10 +67,16 @@ MODULE modpkparams
 
   !Technical options
   type :: tech_options
+    !Accuracy options
     integer :: accuracy_setting
+    !Which integrator to use
     logical :: use_dvode_integrator
-    logical :: use_analytical_jacobian
     logical :: use_tinteg_init
+    !Whether we have an analytic Jacobian (not yet ready)
+    logical :: use_analytical_jacobian
+    !Use option to find appropriate IC for single-field inflation
+    logical :: automate_singlefield_ic
+
     real(dp) :: rk_accuracy_modes, rk_accuracy_back
     real(dp) :: dvode_rtol_modes, dvode_rtol_back
     real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag, dvode_atol_back

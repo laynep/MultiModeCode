@@ -1135,33 +1135,37 @@ contains
     if (size(phi0) .gt. 1) then
        phii = phi0 ! MULTIFIELD
     else  !SINGLE FIELD
-      select case(potential_choice)
-      case(1)
-         phii = 2.e0_dp*sqrt(Ninit+0.5e0_dp)
-      case(2)
-         finv = 1.e0_dp/(10.e0_dp**vparams(2,1))
-         phii = 2.e0_dp/finv*asin(exp(-0.5e0_dp*Ninit*finv*finv)/ &
-              sqrt(1.e0_dp+0.5e0_dp*finv*finv))
-      case(3)
-         phii = sqrt(8.e0_dp*(Ninit+1.e0_dp))
-      case(4)
-         phii = sqrt(2.e0_dp*Ninit+0.5e0_dp)
-      case(5)
-         phii = sqrt(4.e0_dp/3.e0_dp*Ninit+2.e0_dp/9.e0_dp)
-      case(6)
-         lambda = 10.e0_dp**vparams(1,1)
-         mu = 10.e0_dp**vparams(2,1)
-         x1 = lambda**4/mu
-         phesq = ((sqrt(2.e0_dp)*x1)**(-4./3.)+1.e0_dp/(4.e0_dp*x1))**(-0.5)
-         if (vparams(1,1)<-3.e0_dp) then
-            phii = sqrt(phesq/(2.e0_dp**1.5*Ninit/sqrt(phesq)+1.e0_dp))
-         else
-            x2 = 4.e0_dp*Ninit + 2.e0_dp*x1/phesq + 0.5e0_dp*phesq
-            phii = sqrt(x2)*sqrt(1.e0_dp-sqrt(1.e0_dp-4.e0_dp*x1/x2/x2))
-         end if
-      case default
-         phii = phi0
-      end select
+      if (.not. tech_opt%automate_singlefield_ic) then
+        phii = phi0
+      else
+        select case(potential_choice)
+        case(1)
+           phii = 2.e0_dp*sqrt(Ninit+0.5e0_dp)
+        case(2)
+           finv = 1.e0_dp/(10.e0_dp**vparams(2,1))
+           phii = 2.e0_dp/finv*asin(exp(-0.5e0_dp*Ninit*finv*finv)/ &
+                sqrt(1.e0_dp+0.5e0_dp*finv*finv))
+        case(3)
+           phii = sqrt(8.e0_dp*(Ninit+1.e0_dp))
+        case(4)
+           phii = sqrt(2.e0_dp*Ninit+0.5e0_dp)
+        case(5)
+           phii = sqrt(4.e0_dp/3.e0_dp*Ninit+2.e0_dp/9.e0_dp)
+        case(6)
+           lambda = 10.e0_dp**vparams(1,1)
+           mu = 10.e0_dp**vparams(2,1)
+           x1 = lambda**4/mu
+           phesq = ((sqrt(2.e0_dp)*x1)**(-4./3.)+1.e0_dp/(4.e0_dp*x1))**(-0.5)
+           if (vparams(1,1)<-3.e0_dp) then
+              phii = sqrt(phesq/(2.e0_dp**1.5*Ninit/sqrt(phesq)+1.e0_dp))
+           else
+              x2 = 4.e0_dp*Ninit + 2.e0_dp*x1/phesq + 0.5e0_dp*phesq
+              phii = sqrt(x2)*sqrt(1.e0_dp-sqrt(1.e0_dp-4.e0_dp*x1/x2/x2))
+           end if
+        case default
+           phii = phi0
+        end select
+      end if
     end if
 
     initialphi = phii

@@ -70,7 +70,8 @@ CONTAINS
     phiarr = 0e0_dp
     dphiarr = 0e0_dp
 
-    if (size(phi_init) .eq. 1) then !! for single field
+    if (size(phi_init) .eq. 1 &
+      .and. tech_opt%automate_singlefield_ic) then !! for single field
 
        phidot_sign = -(dVdphi(phi_init))/ABS(dVdphi(phi_init))
        !if < 0 field rolls from large to small
@@ -388,11 +389,15 @@ CONTAINS
     pk_bad = run_outcome%success
 
     !MULTIFIELD
-    IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
-       slowroll_start=.FALSE.
-    ELSE
-       slowroll_start=.TRUE.
-    ENDIF
+    if (tech_opt%use_tinteg_init) then
+      slowroll_start = .false.
+    else
+      IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
+         slowroll_start=.FALSE.
+      ELSE
+         slowroll_start=.TRUE.
+      ENDIF
+    end if
 
     !Check to see if starts outside slowroll, then slow-rolls later
     slowroll_init = slowroll_start
@@ -647,8 +652,8 @@ CONTAINS
               __FILE__,__LINE__)
           end if
 
-!DEBUG  
-print*  , "stopping here"
+!DEBUG
+print*, "stopping here"
 stop
 
           !H_stable = .true.
