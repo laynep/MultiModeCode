@@ -152,8 +152,10 @@ CONTAINS
        end if
        V_i=pot(phi_init)
 
+
        !MULTIFIELD
        if ((alpha_e - lna(1)) .lt. N_pivot) then
+
           if (out_opt%modpkoutput) then
             write(*, *), "MODECODE: alpha_e - lna(1) =", alpha_e - lna(1),"< ",N_pivot
             call raise%warning(&
@@ -321,67 +323,7 @@ CONTAINS
     x1=0.0 !starting value
     x2=Nefold_max !ending value
 
-    !MULTIFIELD
-    !Set the ICS
-    y(1 : size(y)/2) = phi_init_trial  !phi(x1)
-
-    vv = 0e0_dp
-
-    if (ic_sampling==ic_flags%slowroll_samp .or. ic_sampling==ic_flags%iso_N .or.&
-      ic_sampling==ic_flags%reg_samp .or. &
-      ic_sampling==ic_flags%qsf_random .or. &
-      ic_sampling==ic_flags%qsf_parametric .or. &
-      (ic_sampling==ic_flags%param_unif_prior .and. num_inflaton==1)) then
-
-      if( ic_sampling == ic_flags%reg_samp .and. &
-        out_opt%modpkoutput) print*, "Setting velocity in slow-roll"
-
-      !dphi/dalpha(x1) slowroll approx
-      !MULTIFIELD
-      if (ic_sampling == ic_flags%qsf_parametric) then
-        !Reset the hunt_guess for determing vv below
-        call qsf_runref%get_param(phi_light=vparams(3,1))
-      end if
-
-      h_init=pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
-           (1.e0_dp+SQRT(1.e0_dp+2.e0_dp/3.e0_dp* M_Pl**2 *&
-           dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) &
-           / pot(phi_init_trial)**2.))
-
-      if (h_init<0.0e0_dp) then
-        print*, "MODECODE: h_init=", h_init
-        call raise%fatal_code(&
-          "The initial value of H is imaginary.  This is &
-          likely related to a problem in the definition of V &
-          or its derivatives.",&
-          __FILE__, __LINE__)
-      else
-        h_init = sqrt(h_init)
-      end if
-
-      !END MULTIFIELD
-
-      y(size(y)/2+1 : (size(y))) = &
-        -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
-
-      dphi_init0 = y(size(y)/2+1 : (size(y)))
-
-    else
-
-      h_init = getH(phi_init_trial,dphi_init0)
-
-      !Set not necess close to SR
-      y(size(y)/2+1 : (size(y))) = dphi_init0
-
-    end if
-    !END MULTIFIELD
-
-
-    !Call the integrator
-    ode_underflow = .FALSE.
-    ode_ps_output = .FALSE.
-    ode_infl_end = .TRUE.
-    save_steps = .true.
+    call set_background_ICs()
 
     pk_bad = run_outcome%success
 
@@ -404,7 +346,7 @@ CONTAINS
 
     !guessed start stepsize
     if (potential_choice.eq.6) then
-       h1 = 0.001e0_dp
+      h1 = 0.001e0_dp
     end if
 
     dxsav=1.e-7_dp
@@ -414,16 +356,28 @@ CONTAINS
     !Useful if there's a significantly kinetic-dominated phase initially.
     if (tech_opt%use_tinteg_init) then
 
+      !Call the t-integrator
+      ode_underflow = .FALSE.
+      ode_ps_output = .FALSE.
+      ode_infl_end = .TRUE.
+      save_steps = .true.
+
       call integrate_witht_initially()
       if (pk_bad/=run_outcome%success) return
 
     end if
 
+    !DEBUG
+    print*, "this is N", x1
+    print*, "this is y", y
+
     !Call the N-integrator
 
-    !DEBUG
-    !print*, "STABLE"
-    h1 = 1.0e-7_dp
+    if (tech_opt%use_tinteg_init) then
+      h1 = 1.0e-3_dp
+    else
+      h1 = 1.0e-7_dp
+    end if
     if (tech_opt%accuracy_setting>0) then
       accuracy=1.0e-8
     else
@@ -472,6 +426,7 @@ CONTAINS
 
         !Add the two arrays together
         kount = kount+kount_t
+        kount_t=0
 
       else
 
@@ -640,8 +595,6 @@ CONTAINS
           use_t = .true.
 
           !Decrease initial stepsize guess in case near a point where H is approx unstable.
-          !DEBUG
-          !print*, "UNSTABLE"
           h1 = 1.0e12_dp
           accuracy = 1.0e-10_dp
           hmin = 1.0e6_dp
@@ -690,6 +643,66 @@ CONTAINS
 
 
       end subroutine integrate_witht_initially
+
+      subroutine set_background_ICs()
+
+        !MULTIFIELD
+        !Set the ICS
+        y(1 : size(y)/2) = phi_init_trial  !phi(x1)
+
+        vv = 0e0_dp
+
+
+        if (ic_sampling==ic_flags%slowroll_samp .or. ic_sampling==ic_flags%iso_N .or.&
+          ic_sampling==ic_flags%reg_samp .or. &
+          ic_sampling==ic_flags%qsf_random .or. &
+          ic_sampling==ic_flags%qsf_parametric .or. &
+          (ic_sampling==ic_flags%param_unif_prior .and. num_inflaton==1)) then
+
+          if( ic_sampling == ic_flags%reg_samp .and. &
+            out_opt%modpkoutput) print*, "Setting velocity in slow-roll"
+
+          !dphi/dalpha(x1) slowroll approx
+          !MULTIFIELD
+          if (ic_sampling == ic_flags%qsf_parametric) then
+            !Reset the hunt_guess for determing vv below
+            call qsf_runref%get_param(phi_light=vparams(3,1))
+          end if
+
+          h_init=pot(phi_init_trial)/(6.e0_dp*M_Pl**2) * &
+               (1.e0_dp+SQRT(1.e0_dp+2.e0_dp/3.e0_dp* M_Pl**2 *&
+               dot_product(dVdphi(phi_init_trial), dVdphi(phi_init_trial)) &
+               / pot(phi_init_trial)**2.))
+
+          if (h_init<0.0e0_dp) then
+            print*, "MODECODE: h_init=", h_init
+            call raise%fatal_code(&
+              "The initial value of H is imaginary.  This is &
+              likely related to a problem in the definition of V &
+              or its derivatives.",&
+              __FILE__, __LINE__)
+          else
+            h_init = sqrt(h_init)
+          end if
+
+          !END MULTIFIELD
+
+          y(size(y)/2+1 : (size(y))) = &
+            -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
+
+          dphi_init0 = y(size(y)/2+1 : (size(y)))
+
+        else
+
+          h_init = getH(phi_init_trial,dphi_init0)
+
+          !Set not necess close to SR
+          y(size(y)/2+1 : (size(y))) = dphi_init0
+
+        end if
+        !END MULTIFIELD
+
+      end subroutine set_background_ICs
 
   END SUBROUTINE trial_background
 

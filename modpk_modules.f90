@@ -79,6 +79,8 @@ MODULE modpkparams
     real(dp) :: rk_accuracy_modes, rk_accuracy_back
     real(dp) :: dvode_rtol_modes, dvode_rtol_back
     real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag, dvode_atol_back
+    real(dp) :: dvode_dN_r, dvode_dN_c, dvode_dt
+
   end type tech_options
 
   type(tech_options) :: tech_opt

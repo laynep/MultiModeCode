@@ -326,9 +326,7 @@ contains
 
       if (itask /=2) then
         !Integrate until nefold_out
-        !dN_step = sign(0.001e0_dp,x2-x1)
-        !dN_step = sign(0.01e0_dp,x2-x1)
-        dN_step = sign(0.001e0_dp,x2-x1)
+        dN_step = sign(tech_opt%dvode_dN_r,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
@@ -1139,9 +1137,7 @@ contains
 
       if (itask /=2) then
         !Integrate until nefold_out
-        !dN_step = sign(0.01e0_dp,x2-x1)
-        !dN_step = sign(0.005e0_dp,x2-x1)
-        dN_step = sign(0.001e0_dp,x2-x1)
+        dN_step = sign(tech_opt%dvode_dN_c,x2-x1)
         nefold_out = x + dN_step
       else
         !Take only one step
@@ -1457,7 +1453,7 @@ contains
     infl_ended=.FALSE.
 
     !For t-integration, e-folds evolved as variable
-    Nefolds = y(size(y))
+    Nefolds = ystart(size(ystart))
 
     x=x1
     h=SIGN(h1,x2-x1)
@@ -1498,7 +1494,7 @@ contains
        if (pk_bad /= run_outcome%success) return
 
        IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
+            CALL save_a_step_t
 
        if (tech_opt%use_dvode_integrator) then
 
@@ -1741,7 +1737,13 @@ contains
 
       call csv_write(&
         out_opt%trajout,&
-        y(:), &
+        y(1:num_inflaton), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        y(num_inflaton+1:2*num_inflaton)/&
+        getH_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
         advance=.false.)
 
       call csv_write(&
@@ -1809,7 +1811,7 @@ contains
 
       if (itask /=2) then
         !Integrate until nefold_out
-        dt_step = sign(1e19_dp,x2-x1)
+        dt_step = sign(tech_opt%dvode_dt,x2-x1)
         t_out = x + dt_step
       else
         !Take only one step
@@ -1836,7 +1838,7 @@ contains
     end subroutine initialize_dvode_with_t
 
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
-    SUBROUTINE save_a_step
+    SUBROUTINE save_a_step_t
       kount_t=kount_t+1
       IF (kount_t > SIZE(xp_t)) THEN
          xp_t=>reallocate_rv(xp_t,2*SIZE(xp_t))
@@ -1847,7 +1849,7 @@ contains
       xp_t(kount_t)=Nefolds
       yp_t(:,kount_t)=y(:)
       xsav=Nefolds
-    END SUBROUTINE save_a_step
+    END SUBROUTINE save_a_step_t
 
 
 
