@@ -23,7 +23,7 @@ ignores the contributions from the end of inflation surface.
 
 &analytical
   use_deltaN_SR = .true.
-  use_horiz_cross_approx = .true.
+  use_horiz_cross_approx = .false.
   evaluate_modes = .true.
   get_runningofrunning = .false.
 /
@@ -56,7 +56,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 11
-  numb_samples = 1
+  numb_samples = 1000
 
   energy_scale = .1
 
@@ -181,7 +181,7 @@ Options for output from the code.
   out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .true.
+  out_opt%save_traj = .false.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.
@@ -230,8 +230,8 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%dvode_atol_modes_imag(13:14) = 1e-8 1e-8
   tech_opt%dvode_atol_modes_imag(15:16) = 1e-3 1e-3
 
-  tech_opt%dvode_dN_r = 0.05
-  tech_opt%dvode_dN_c = 1e-1
-  tech_opt%dvode_dt = 1e19
+  tech_opt%dvode_dN_r = 0.01
+  tech_opt%dvode_dN_c = 5e-3
+  tech_opt%dvode_dt = 5e18
 /
   tech_opt%dvode_rtol_back = 1.0e-10

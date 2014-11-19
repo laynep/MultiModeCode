@@ -397,7 +397,7 @@ module modpk_icsampling
 
         !Set velocity at 10x the "axion scale"=lambda
         y_background(num_inflaton+1:2*num_inflaton) = &
-            10.0e0_dp*2.0e0_dp*lambda**2
+            10000.0e0_dp*2.0e0_dp*lambda**2
 
       !-----------------------------------------
       else

@@ -367,10 +367,6 @@ CONTAINS
 
     end if
 
-    !DEBUG
-    print*, "this is N", x1
-    print*, "this is y", y
-
     !Call the N-integrator
 
     if (tech_opt%use_tinteg_init) then
