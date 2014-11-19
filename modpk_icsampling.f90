@@ -395,9 +395,10 @@ module modpk_icsampling
         y_background(1:num_inflaton) = rand*&
             (2.0e0_dp*pi/finv)-(pi/finv)
 
-        !Set velocity at 10x the "axion scale"=lambda
+        !Set velocity much higher than the "axion scale"=lambda
         y_background(num_inflaton+1:2*num_inflaton) = &
             10000.0e0_dp*2.0e0_dp*lambda**2
+            !0.0e0_dp*2.0e0_dp*lambda**2
 
       !-----------------------------------------
       else
@@ -409,6 +410,7 @@ module modpk_icsampling
       !Load initial vals from sample
       phi0 = y_background(1:num_inflaton)
       dphi0 = y_background(num_inflaton+1:2*num_inflaton)
+      dphidt_init0 = y_background(num_inflaton+1:2*num_inflaton)
 
       !Convert dphidt-->dphidN
       rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)

@@ -1116,6 +1116,9 @@ dturndphi	modpk_qsf.f90	/^  real(dp) function dturndphi(/;"	f	module:modpk_qsf
 dvode_atol_back	modpk_modules.f90	/^    real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag, dvode_atol_back$/;"	k	type:tech_options
 dvode_atol_modes_imag	modpk_modules.f90	/^    real(dp), dimension(10000) :: dvode_atol_modes_real, dvode_atol_modes_imag,/;"	k	type:tech_options
 dvode_atol_modes_real	modpk_modules.f90	/^    real(dp), dimension(10000) :: dvode_atol_modes_real,/;"	k	type:tech_options
+dvode_dN_c	modpk_modules.f90	/^    real(dp) :: dvode_dN_r, dvode_dN_c,/;"	k	type:tech_options
+dvode_dN_r	modpk_modules.f90	/^    real(dp) :: dvode_dN_r,/;"	k	type:tech_options
+dvode_dt	modpk_modules.f90	/^    real(dp) :: dvode_dN_r, dvode_dN_c, dvode_dt$/;"	k	type:tech_options
 dvode_rtol_back	modpk_modules.f90	/^    real(dp) :: dvode_rtol_modes, dvode_rtol_back$/;"	k	type:tech_options
 dvode_rtol_modes	modpk_modules.f90	/^    real(dp) :: dvode_rtol_modes,/;"	k	type:tech_options
 dxsav	modpk_modules.f90	/^  real(dp) :: dxsav$/;"	v	module:ode_path
@@ -1449,10 +1452,11 @@ sample_looper	multimodecode_driver.f90	/^  integer :: sample_looper,/;"	v	progra
 sample_nsphere	modpk_icsampling.f90	/^    subroutine sample_nsphere(/;"	s	module:modpk_icsampling
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_c
 save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_r
-save_a_step	modpk_odeint.f90	/^    SUBROUTINE save_a_step$/;"	s	subroutine:odeint_with_t
+save_a_step_t	modpk_odeint.f90	/^    SUBROUTINE save_a_step_t$/;"	s	subroutine:odeint_with_t
 save_iso_N	modpk_icsampling.f90	/^  logical :: save_iso_N=/;"	v	module:modpk_icsampling
 save_steps	modpk_modules.f90	/^  LOGICAL, SAVE :: save_steps=/;"	v	module:ode_path
 save_traj	modpk_io.f90	/^    logical :: save_traj$/;"	k	type:print_options
+set_background_ICs	modpk_backgrnd.f90	/^      subroutine set_background_ICs(/;"	s	subroutine:trial_background
 set_background_and_mode_ic	modpk.f90	/^      subroutine set_background_and_mode_ic(/;"	s	subroutine:evolve
 set_consistent_BD_scale	modpk.f90	/^      subroutine set_consistent_BD_scale(/;"	s	subroutine:evolve
 set_observs_to_zero	modpk_modules.f90	/^    subroutine set_observs_to_zero(/;"	s	module:modpk_observables

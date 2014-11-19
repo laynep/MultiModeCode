@@ -597,7 +597,10 @@ CONTAINS
 
           !Convert from using N to using t as integ variable
           z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
-          z_int_with_t(num_inflaton+1:2*num_inflaton) = h_init*y(num_inflaton+1:2*num_inflaton)
+          !z_int_with_t(num_inflaton+1:2*num_inflaton) = &
+          !  h_init*y(num_inflaton+1:2*num_inflaton)
+          z_int_with_t(num_inflaton+1:2*num_inflaton) = &
+            dphidt_init0
           z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
 
           t_start = 0e0_dp

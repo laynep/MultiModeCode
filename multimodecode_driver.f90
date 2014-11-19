@@ -237,6 +237,7 @@ program multimodecode
       allocate(dphi_pivot(num_inflaton))
       allocate(dphi_init0(num_inflaton))
       allocate(dphi_init(num_inflaton))
+      allocate(dphidt_init0(num_inflaton))
 
     end subroutine allocate_vars
 
