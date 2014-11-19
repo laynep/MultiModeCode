@@ -56,7 +56,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 11
-  numb_samples = 1
+  numb_samples = 10
 
   energy_scale = .1
 
@@ -181,11 +181,11 @@ Options for output from the code.
   out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .true.
-  out_opt%fields_horiz = .true.
-  out_opt%fields_end_infl = .true.
-  out_opt%spectra = .true.
-  out_opt%modes = .true.
+  out_opt%save_traj = .false.
+  out_opt%fields_horiz = .false.
+  out_opt%fields_end_infl = .false.
+  out_opt%spectra = .false.
+  out_opt%modes = .false.
 
 /
 
@@ -205,7 +205,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .true.
+  tech_opt%use_dvode_integrator = .false.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7

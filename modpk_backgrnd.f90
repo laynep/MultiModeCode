@@ -419,8 +419,19 @@ CONTAINS
 
     end if
 
+    !Call the N-integrator
 
-    !Call the integrator
+    !DEBUG
+    !print*, "STABLE"
+    h1 = 1.0e-7_dp
+    if (tech_opt%accuracy_setting>0) then
+      accuracy=1.0e-8
+    else
+      accuracy=tech_opt%rk_accuracy_back
+    end if
+
+    hmin=1.0e-20_dp
+
     ode_underflow = .FALSE.
     ode_ps_output = .FALSE.
     ode_infl_end = .TRUE.
@@ -625,31 +636,15 @@ CONTAINS
           using_t=.false.)
 
         if (.not. numer_stable) then
+
+          use_t = .true.
+
           !Decrease initial stepsize guess in case near a point where H is approx unstable.
           !DEBUG
           !print*, "UNSTABLE"
-          !h1 = 1.0e-12_dp
-          !accuracy = 1.0e-15_dp
-          !hmin = 0.0e0_dp
-
           h1 = 1.0e12_dp
           accuracy = 1.0e-10_dp
           hmin = 1.0e6_dp
-        else
-          !DEBUG
-          !print*, "STABLE"
-          h1 = 1.0e-7_dp
-          if (tech_opt%accuracy_setting>0) then
-            accuracy=1.0e-8
-          else
-            accuracy=tech_opt%rk_accuracy_back
-          end if
-
-          hmin=1.0e-20_dp
-        end if
-
-        if (.not. numer_stable) then
-          use_t = .true.
 
           !Convert from using N to using t as integ variable
           z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
@@ -692,6 +687,7 @@ CONTAINS
           x1=z_int_with_t(2*num_inflaton+1)
 
         end if
+
 
       end subroutine integrate_witht_initially
 

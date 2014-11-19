@@ -1456,8 +1456,8 @@ contains
     ode_underflow=.FALSE.
     infl_ended=.FALSE.
 
-    !Assume we start at N=0, need to fix this otherwise
-    Nefolds = 0e0_dp
+    !For t-integration, e-folds evolved as variable
+    Nefolds = y(size(y))
 
     x=x1
     h=SIGN(h1,x2-x1)
@@ -1575,10 +1575,6 @@ contains
        call stability_check_numer(stability,p,delp,&
            slowroll=slowroll_start,using_t=.true.)
        if (stability) then
-         !DEBUG
-         print*, "Was using t, but H now stable!!"
-         print*, "nstp=",nstp
-         print*, "Nefolds=",Nefolds
 
          ystart = y
          use_t=.false.
