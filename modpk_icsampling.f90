@@ -2,7 +2,7 @@ module modpk_icsampling
   !Module that implements various sampling techniques for the initial conditions
   !and model parameters.  These routines should generally be called prior to
   !doing any integration.  Monte Carlo methodology.
-  use potential, only : norm, pot, getH, getEps_with_t, getEps
+  use potential, only : norm, pot, getH, getEps_with_t, getEps, getH_with_t
   use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
@@ -70,7 +70,7 @@ module modpk_icsampling
         dphi0_priors_min, phi0_priors_max, dphi0_priors_max
 
       real(dp), dimension(:,:), allocatable :: sample
-      real(dp) :: H, rho
+      real(dp) :: H
       integer :: i,j, kk, ii
 
       logical :: with_velocity, with_eqen
@@ -400,6 +400,12 @@ module modpk_icsampling
             10000.0e0_dp*2.0e0_dp*lambda**2
             !0.0e0_dp*2.0e0_dp*lambda**2
 
+        y_background(num_inflaton+1:2*num_inflaton) = sqrt(2.0e0_dp)
+
+            !DEBUG
+            !print*, "this is init v",y_background(num_inflaton+1:2*num_inflaton)
+            !stop
+
       !-----------------------------------------
       else
         call raise%fatal_code(&
@@ -409,13 +415,10 @@ module modpk_icsampling
 
       !Load initial vals from sample
       phi0 = y_background(1:num_inflaton)
-      dphi0 = y_background(num_inflaton+1:2*num_inflaton)
       dphidt_init0 = y_background(num_inflaton+1:2*num_inflaton)
 
       !Convert dphidt-->dphidN
-      rho=0.5e0_dp*sum(dphi0*dphi0)+pot(phi0)
-      H=sqrt(rho/3.0e0_dp)
-
+      H=getH_with_t(phi0, dphidt_init0)
       dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
 
     end subroutine get_ic

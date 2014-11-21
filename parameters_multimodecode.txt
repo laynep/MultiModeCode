@@ -205,7 +205,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .false.
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7
