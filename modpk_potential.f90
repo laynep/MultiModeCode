@@ -12,7 +12,7 @@ module potential
   public :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_numer, &
        getEps_with_t, d3Vdphi3, geteta_with_t, &
-       logP_of_observ, fisher_rao_metric, guess_EOI_field
+       logP_of_observ, fisher_rao_metric, guess_EOI_field, approx_phipiv_SR
 
   public :: norm
   public :: bundle, field_bundle
@@ -2118,7 +2118,6 @@ contains
     return
 
 
-
     V=pot(phi)
 
     if (using_t) then
@@ -2131,6 +2130,36 @@ contains
 
 
   end subroutine stability_check_numer
+
+  !Given N_piv, use the slow-roll approximation to find the point in field-space
+  !where the pivot scale leaves the horizon.
+  !N_* = - \sum_i \int_*^c (V_i/V_i') dphi_i
+  function approx_phipiv_SR() result(phipiv)
+
+    real(dp), dimension(num_inflaton) :: phipiv, lambda, finv
+
+    if (instreheat) then
+      call raise%warning("Calling approx_phipiv_SR with instreheat=T.",&
+        __FILE__,__LINE__)
+    end if
+
+    select case(potential_choice)
+    case(2)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+
+      !Valid up to a factor of (2*n*\pi)
+      phipiv = (2.0e0_dp/finv) * acos(exp(-0.5e0_dp*N_pivot*finv**2))
+
+    case default
+      print*, "MODECODE: potential_choice =", potential_choice
+      call raise%fatal_code(&
+          "Need to set the approx_phipiv_SR for this potential choice.",&
+          __FILE__, __LINE__)
+    end select
+
+  end function approx_phipiv_SR
 
   !From a histogram-estimate of a PDF, return the log(P) for a
   !vector-valued observable, given the model parameters, which are

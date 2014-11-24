@@ -1436,12 +1436,17 @@ contains
     real(dp), dimension(:), allocatable :: atol
     type (vode_opts) :: ode_integrator_opt
 
+    logical :: leave
+
     !DEBUG
+    !UNIQUE TO T
     !Only really have this working for one potential...
     call assert%check(ic_sampling==ic_flags%single_axion,__FILE__,__LINE__)
 
 
+    !UNIQUE TO T
     stability = .false.
+    leave = .false.
 
     !Inits for checking whether in
     !extended inflation period (for IC scan)
@@ -1453,6 +1458,7 @@ contains
     infl_ended=.FALSE.
 
     !For t-integration, e-folds evolved as variable
+    !UNIQUE TO T
     Nefolds = ystart(size(ystart))
 
     x=x1
@@ -1474,7 +1480,7 @@ contains
       call initialize_dvode_with_t()
     end if
 
-    DO nstp=1,MAXSTP/10
+    DO nstp=1,MAXSTP
 
        if (any(isnan(y))) then
 
@@ -1485,6 +1491,9 @@ contains
            __FILE__, __LINE__)
 
        end if
+
+    !UNIQUE TO T
+    !Removed bundle width calculation
 
        !Record the background trajectory
        if (out_opt%save_traj) call print_traj()
@@ -1534,6 +1543,9 @@ contains
 
        end if
 
+    !UNIQUE TO T
+    !checking for eternal inflation
+
        !MULTIFIELD
        p = y(1:num_inflaton)
        delp = y(num_inflaton+1 : 2*num_inflaton) !dphi/dt
@@ -1543,6 +1555,8 @@ contains
 
        !Check to see if we're inflating or not
        IF(getEps_with_t(p,delp) .LT. 1 .AND. .NOT.(slowroll_start)) then
+    !UNIQUE TO T
+    !Need to add in other sampling techniques
          if (ic_sampling==ic_flags%reg_samp) then
            slowroll_start=.true.
          else
@@ -1567,6 +1581,7 @@ contains
        endif
        !END MULTIFIELD
 
+    !UNIQUE TO T
        !Check if H is stable now, so switch to integrate w/N
        call stability_check_numer(stability,p,delp,&
            slowroll=slowroll_start,using_t=.true.)
@@ -1577,51 +1592,38 @@ contains
          return
        end if
 
+    !UNIQUE TO T
        !Check if we should quit evolving
+       call check_stop_tintegration(leave)
+       if (leave) then
+         !Record the background trajectory
+         if (out_opt%save_traj) call print_traj()
+         return
+       end if
 
 
 
        if (abs(x2-x)<1e-10) then
-        use_t=.false.
+         use_t=.false.
 
-        call raise%warning(&
-          "Reached end of t-integration.", &
-          __FILE__, __LINE__)
+         call raise%warning(&
+           "Reached end of t-integration.", &
+           __FILE__, __LINE__)
 
-        !DEBUG
-        print*, "MODECODE: N", Nefolds
-        print*, "MODECODE: eps", getEps_with_t(p, delp)
-        print*, "MODECODE: t", x
-        print*, "MODECODE: t_end", x2
-        print*, "MODECODE: nstp", nstp
-        print*, "MODECODE: N last", y(2*num_inflaton+1)
-        ystart = y
-        return
-      end if
+         !DEBUG
+         print*, "MODECODE: N", Nefolds
+         print*, "MODECODE: eps", getEps_with_t(p, delp)
+         print*, "MODECODE: t", x
+         print*, "MODECODE: t_end", x2
+         print*, "MODECODE: nstp", nstp
+         print*, "MODECODE: N last", y(2*num_inflaton+1)
+         ystart = y
+         return
+       end if
 
-
-       !IF(ode_infl_end) THEN
-       !   IF (slowroll_infl_end) THEN
-       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN
-       !         infl_ended = .TRUE.
-       !         ystart(:) = y(:)
-       !         IF (save_steps) CALL save_a_step
-       !         RETURN
-       !      ENDIF
-       !   ELSE
-       !      IF(getEps_with_t(p, delp) .GT. 1 .AND. slowroll_start) THEN
-       !         PRINT*,'MODECODE: You asked for a no-slowroll-breakdown model, but inflation'
-       !         PRINT*,'MODECODE: already ended via slowroll violation before your phi_end was'
-       !         PRINT*,'MODECODE: reached. Please take another look at your inputs.'
-       !         PRINT*,'MODECODE: QUITTING'
-       !         PRINT*,'EPSILON =', getEps_with_t(p, delp)
-       !         STOP
-       !      ENDIF
-
-       !   ENDIF
-       !ENDIF
 
        IF (ode_underflow) RETURN
+
        if ( .not. tech_opt%use_dvode_integrator) then
          IF (ABS(hnext) < hmin) THEN
            call raise%fatal_code(&
@@ -1630,6 +1632,8 @@ contains
          END IF
        end if
 
+    !UNIQUE TO T
+    !t-steps vs N-steps
        !Set up next N-step
        if (tech_opt%use_dvode_integrator) then
          if (itask/=2) t_out = min(x + dt_step, x2)
@@ -1652,11 +1656,12 @@ contains
     !"slowroll_start"
     !if (getEps_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
     if (.not. slowroll_start) then
-      pk_bad = run_outcome%infl_didnt_start
 
-      call raise%warning(&
+      call raise%fatal_code(&
         "t-integration finished &
-        without inflating or only transient periods of inflation.")
+        without inflating or only transient periods of inflation. &
+        You should catch this situation with the t-integration stopping &
+        routine.")
 
       return
     end if
@@ -1675,6 +1680,43 @@ contains
     ode_underflow=.TRUE.
 
   CONTAINS
+
+    !This routine is to stop the t-integration if the dynamics get stuck in a
+    !point that won't ever switch to "stable", eg, if this trajectory won't
+    !inflate and is oscillating around the vev.  This is situation-dependent.
+    subroutine check_stop_tintegration(leave)
+      logical, intent(inout) :: leave
+      real(dp) :: H, rho, V_pivot
+      real(dp), dimension(size(p)) :: phi_piv
+
+      leave = .false.
+
+      if (ic_sampling==ic_flags%single_axion) then
+
+        !Stop t-integration if the energy drops significantly below the
+        !V necessary to have the pivot scale leave the horizon (in SR)
+        H = getH_with_t(p, delp)
+        rho = 3.0e0_dp*H**2
+
+        phi_piv = approx_phipiv_SR()
+
+        V_pivot = pot(phi_piv)
+
+        if (rho/V_pivot<1e-4_dp) then
+          pk_bad = run_outcome%infl_didnt_start
+          leave = .true.
+        end if
+
+      else
+        call raise%fatal_code("Need to set t-integration ending &
+          criterion for this sampling routine and potential choice.",&
+          __FILE__,__LINE__)
+      end if
+
+
+      !pk_bad = run_outcome%infl_didnt_start
+
+    end subroutine check_stop_tintegration
 
     subroutine print_traj()
       integer :: ii
@@ -1809,6 +1851,7 @@ contains
       itask  = 1 !Indicates normal usage, see dvode_f90_m.f90 for other values
       !itask  = 2 !Take only one time-step and output
 
+      !UNIQUE TO T
       if (itask /=2) then
         !Integrate until nefold_out
         dt_step = sign(tech_opt%dvode_dt,x2-x1)

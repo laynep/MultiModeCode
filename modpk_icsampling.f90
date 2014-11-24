@@ -396,15 +396,19 @@ module modpk_icsampling
             (2.0e0_dp*pi/finv)-(pi/finv)
 
         !Set velocity much higher than the "axion scale"=lambda
+        !y_background(num_inflaton+1:2*num_inflaton) = &
+        !    1.0e6_dp*2.0e0_dp*lambda**2
+
+        !Set KE at SSB scale f^4
         y_background(num_inflaton+1:2*num_inflaton) = &
-            10000.0e0_dp*2.0e0_dp*lambda**2
-            !0.0e0_dp*2.0e0_dp*lambda**2
+            !finv**(-2)
+            1.0e0_dp
 
-        y_background(num_inflaton+1:2*num_inflaton) = sqrt(2.0e0_dp)
 
-            !DEBUG
-            !print*, "this is init v",y_background(num_inflaton+1:2*num_inflaton)
-            !stop
+        !y_background(num_inflaton+1:2*num_inflaton) = sqrt(2.0e0_dp)
+        !y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
+
 
       !-----------------------------------------
       else

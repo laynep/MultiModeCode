@@ -1023,6 +1023,7 @@ alpha_s	modpk_modules.f90	/^    real(dp) :: alpha_s$/;"	k	type:observables
 alpha_s_SR	modpk_deltaN.f90	/^    function alpha_s_SR(/;"	f	module:modpk_deltaN
 alternate_infl_end	modpk_odeint.f90	/^  logical function alternate_infl_end(/;"	f
 analytical	multimodecode_driver.f90	/^  namelist \/analytical\//;"	n	program:multimodecode
+approx_phipiv_SR	modpk_potential.f90	/^  function approx_phipiv_SR(/;"	f
 array_fmt	modpk_io.f90	/^    character(16) :: array_fmt$/;"	k	type:print_options
 array_polint	modpk_numerics.f90	/^    SUBROUTINE array_polint(/;"	s	module:modpk_numerics
 assert	modpk_errorhandling.f90	/^  type(asserte/;"	v	module:modpk_errorhandling
@@ -1056,6 +1057,7 @@ check_for_eternal_inflation_MODES	modpk_odeint.f90	/^    subroutine check_for_et
 check_inflation_ended_properly	modpk_odeint.f90	/^     subroutine check_inflation_ended_properly(/;"	s
 check_inflation_ended_properly_MODES	modpk_odeint.f90	/^    subroutine check_inflation_ended_properly_MODES(/;"	s	subroutine:odeint_c
 check_inflation_started_properly	modpk_odeint.f90	/^     subroutine check_inflation_started_properly(/;"	s
+check_stop_tintegration	modpk_odeint.f90	/^    subroutine check_stop_tintegration(/;"	s	subroutine:odeint_with_t
 choose_parameter	modpk_qsf.f90	/^  subroutine choose_parameter(/;"	s	module:modpk_qsf
 ci	modpk_io.f90	/^    character(len=2) :: ci$/;"	k	type:print_options
 compare_params_fatal	modpk_errorhandling.f90	/^    subroutine compare_params_fatal(/;"	s	module:modpk_errorhandling
@@ -1109,6 +1111,7 @@ dphi_iso_N	modpk_icsampling.f90	/^  real(dp), dimension(:), allocatable :: phi_i
 dphi_light_dparam	modpk_qsf.f90	/^  function dphi_light_dparam(/;"	f	module:modpk_qsf
 dphi_pivot	modpk_modules.f90	/^  real(dp), allocatable:: phi_pivot(:), dphi_pivot(/;"	v	module:modpkparams
 dphiarr	modpk_modules.f90	/^  real(dp), allocatable :: phiarr(:,:), dphiarr(/;"	v	module:modpkparams
+dphidt_init0	modpk_modules.f90	/^  real(dp), allocatable :: dphi_init0(:), dphi_init(:), dphidt_init0(/;"	v	module:modpkparams
 driver_modpk	driver_modpk.f90	/^program driver_modpk$/;"	p
 dtheta_dN	modpk_modules.f90	/^  real(dp), dimension(nsteps*2) :: lna, hubarr, log_aharr, epsarr, dtheta_dN$/;"	v	module:modpkparams
 dturndparam	modpk_qsf.f90	/^  function dturndparam(/;"	f	module:modpk_qsf
@@ -1236,7 +1239,7 @@ int_dlogP_quadrature	modpk_potential.f90	/^      subroutine int_dlogP_quadrature
 int_limits	modpk_potential.f90	/^      subroutine int_limits(/;"	s	function:fisher_rao_metric
 integrate_1d	modpk_numerics.f90	/^    function integrate_1d(/;"	f	module:modpk_numerics
 integrate_through_trajectory	modpk_qsf.f90	/^  subroutine integrate_through_trajectory(/;"	s	module:modpk_qsf
-integrate_witht_initially	modpk_backgrnd.f90	/^      subroutine integrate_witht_initially(/;"	s	subroutine:trial_background
+integrate_with_t_initially	modpk_backgrnd.f90	/^      subroutine integrate_with_t_initially(/;"	s	subroutine:trial_background
 internals	modpk_modules.f90	/^MODULE internals$/;"	m
 interpolator	modpk_qsf.f90	/^      subroutine interpolator(/;"	s	function:get_phi_light
 iso_N	modpk_icsampling.f90	/^    integer :: iso_N /;"	k	type:ic_samp_flags

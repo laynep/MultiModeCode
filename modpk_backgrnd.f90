@@ -359,10 +359,10 @@ CONTAINS
       !Call the t-integrator
       ode_underflow = .FALSE.
       ode_ps_output = .FALSE.
-      ode_infl_end = .TRUE.
+      ode_infl_end = .false.
       save_steps = .true.
 
-      call integrate_witht_initially()
+      call integrate_with_t_initially()
       if (pk_bad/=run_outcome%success) return
 
     end if
@@ -576,7 +576,7 @@ CONTAINS
 
     contains
 
-      subroutine integrate_witht_initially()
+      subroutine integrate_with_t_initially()
 
         !Check if ICs give instability in H^2=V/(3-eps)
         !If unstable, then integrate in cosmic time t until reach stable region
@@ -593,7 +593,7 @@ CONTAINS
           !Decrease initial stepsize guess in case near a point where H is approx unstable.
           h1 = 1.0e12_dp
           accuracy = 1.0e-10_dp
-          hmin = 1.0e6_dp
+          hmin = 0.0e0_dp
 
           !Convert from using N to using t as integ variable
           z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
@@ -623,7 +623,8 @@ CONTAINS
               "The cosmic time integrator didn't reach &
               a point where it was safe to switch to &
               integrating in e-folds and it didn't &
-              end otherwise.",&
+              end otherwise.  Try setting the time step &
+              larger or allow more integration steps.",&
               __FILE__,__LINE__)
           end if
 
@@ -641,7 +642,7 @@ CONTAINS
         end if
 
 
-      end subroutine integrate_witht_initially
+      end subroutine integrate_with_t_initially
 
       subroutine set_background_ICs()
 

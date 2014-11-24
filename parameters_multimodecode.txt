@@ -56,7 +56,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 11
-  numb_samples = 5
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -85,7 +85,7 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
 
   vp_prior_max(1,:) = -12
 
-  varying_N_pivot = .false.
+  varying_N_pivot = .true.
 
 /
   vp_prior_min(1,:) = 1.0e-14
@@ -112,14 +112,16 @@ the smallest mass; others are discarded.
 
   phi_init0 = 6.2
 
-  vparams(1,:) =     -10.5097113433471
-  vparams(2,:) = 0.69897
+  vparams(1,:) =     -6.0
+  vparams(2,:) = 0.5
   vparams(3,:) = 1e-3
   vparams(4,:) = 1e-2
 
 
 
 /
+  vparams(2,:) = 0.0
+
   phi_init0 = 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2 6.2
 
   vparams(1,:) =     -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 -10.5097113433471 
@@ -166,10 +168,10 @@ For calculating the full power spectrum P(k).  Samples in
 uniform increments in log(k).
 
 &full_pk
-  calc_full_pk = .false.
-  steps = 300
+  calc_full_pk = .true.
+  steps = 100
   kmin = 1.0e-4
-  kmax = 1.0e6
+  kmax = 5.0e-2
 /
 
 ----------------
@@ -181,7 +183,7 @@ Options for output from the code.
   out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .false.
+  out_opt%save_traj = .true.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.
@@ -205,7 +207,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .true.
+  tech_opt%use_dvode_integrator = .false.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7
@@ -232,6 +234,6 @@ Set atol_i where |y_i| is insignificant.
 
   tech_opt%dvode_dN_r = 0.01
   tech_opt%dvode_dN_c = 1e-3
-  tech_opt%dvode_dt = 5e18
+  tech_opt%dvode_dt = 1e16
 /
   tech_opt%dvode_rtol_back = 1.0e-10
