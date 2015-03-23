@@ -368,10 +368,10 @@ module modpk_icsampling
         !Sets initial field value with uniform prior over range
         !-pi/f < phi < pi/f
 
-        if (potential_choice /= 2) then
+        if (.not.(potential_choice == 2 .or. potential_choice==18)) then
           print*, "MODECODE: potential_choice=", potential_choice
           call raise%fatal_code(&
-            "The sampling technique param_unif_prior &
+            "The sampling technique single_axion &
             doesn't work for this potential choice.",&
             __FILE__,__LINE__)
         end if
@@ -407,6 +407,10 @@ module modpk_icsampling
 
         !y_background(num_inflaton+1:2*num_inflaton) = sqrt(2.0e0_dp)
         !y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+
+
+        y_background(1:num_inflaton) = (0.95*pi/2.0e0_dp)/finv
+        y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
 
 
 

@@ -376,6 +376,16 @@ contains
           cos(2.0e0_dp*pi*phi(ii) - 2.0e0_dp*pi*phi(jj))
       end do; end do
 
+    case(18)
+      ! Small-field axions
+
+      p_exp=3.0e0_dp
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      lambda = 10.e0_dp**vparams(1,:)
+      finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+      V_potential = sum(lambda**4*(1.e0_dp-(cos(finv*phi))**p_exp))
 
 
     case default
@@ -647,6 +657,20 @@ contains
                sin(twopi*phi(alpha) - twopi*phi(ii))
            end do
          end do
+
+
+       case(18)
+         ! Small-field axions
+
+         p_exp=3.0e0_dp
+
+         call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+         lambda = 10.e0_dp**vparams(1,:)
+         finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+         first_deriv = lambda**4*&
+           p_exp*finv*(cos(finv*phi))**(p_exp-1.0e0_dp)*&
+           sin(finv*phi)
 
 
        !END MULTIFIELD
@@ -1018,6 +1042,23 @@ contains
            end do
          end do
 
+       case(18)
+         ! Small-field axions
+
+         p_exp=3.0e0_dp
+
+         call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+         lambda = 10.e0_dp**vparams(1,:)
+         finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+
+         second_deriv=0e0_dp
+         do ii=1,size(phi)
+           second_deriv(ii,ii) = lambda(ii)**4*&
+             (p_exp*finv(ii)**2/2.0e0_dp)*&
+             (cos(phi(ii)*finv(ii))**(p_exp-2.0e0_dp))*&
+             (p_exp-2.0e0_dp+p_exp*cos(2.0e0_dp*phi(ii)*finv(ii)))
+         end do
 
        case default
 
@@ -1104,6 +1145,7 @@ contains
         third_deriv(ii,ii,ii) = (p_exp-2.0e0_dp)*(p_exp-1.0e0_dp)*&
           m2_V(ii)*abs(phi(ii))**(p_exp-3.0e0_dp)
       end do
+
 
     case default
 
@@ -2151,6 +2193,12 @@ contains
 
       !Valid up to a factor of (2*n*\pi)
       phipiv = (2.0e0_dp/finv) * acos(exp(-0.5e0_dp*N_pivot*finv**2))
+
+    case(18)
+      finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
+
+      !Valid up to a factor of (2*n*\pi)
+      phipiv = pi/2.0e0_dp/finv
 
     case default
       print*, "MODECODE: potential_choice =", potential_choice

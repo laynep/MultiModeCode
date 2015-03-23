@@ -10,6 +10,7 @@ MODULE modpk_odeint
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
+  use modpk_reheating, only : use_reheat
   implicit none
 
   interface odeint
@@ -113,34 +114,25 @@ contains
 
     DO nstp=1,MAXSTP
 
-       if (any(isnan(y))) then
-         print*, "MODECODE: E-fold",x
-         print*, "MODECODE: nstp",nstp
-         print*, "MODECODE: y", y
+      call check_NaN()
 
-         call raise%fatal_code(&
-           "y has a NaN value in odeint_r.",&
-           __FILE__, __LINE__)
+      !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
+      if (nstp==1) then
+        field_bundle%N=0e0_dp
+        field_bundle%dlogThetadN=0e0_dp
+        field_bundle%exp_scalar=1e0_dp
+      end if
+      call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
 
-       end if
+      !Record the background trajectory
+      if (out_opt%save_traj) call print_traj()
 
-       !Calc bundle exp_scalar by integrating tr(d2Vdphi2)
-       if (nstp==1) then
-         field_bundle%N=0e0_dp
-         field_bundle%dlogThetadN=0e0_dp
-         field_bundle%exp_scalar=1e0_dp
-       end if
-       call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
+      CALL derivs(x,y,dydx)
+      !If get bad deriv, then override this error when IC sampling
+      if (pk_bad /= run_outcome%success) return
 
-       !Record the background trajectory
-       if (out_opt%save_traj) call print_traj()
-
-       CALL derivs(x,y,dydx)
-       !If get bad deriv, then override this error when IC sampling
-       if (pk_bad /= run_outcome%success) return
-
-       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
-            CALL save_a_step
+      IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
+           CALL save_a_step
 
       if (tech_opt%use_dvode_integrator) then
 
@@ -267,6 +259,21 @@ contains
     end if
 
   CONTAINS
+
+    subroutine check_NaN()
+
+       if (any(isnan(y))) then
+         print*, "MODECODE: E-fold",x
+         print*, "MODECODE: nstp",nstp
+         print*, "MODECODE: y", y
+
+         call raise%fatal_code(&
+           "y has a NaN value in odeint_r.",&
+           __FILE__, __LINE__)
+
+       end if
+
+     end subroutine check_NaN
 
     !  (C) Copr. 1986-92 Numerical Recipes Software, adapted.
     SUBROUTINE save_a_step
@@ -402,32 +409,8 @@ contains
             advance=adv)
         end do
 
-        !Advance here
-        !do ii=1,2*num_inflaton
-        !  if (ii==2*num_inflaton) then
-        !    adv=.true.
-        !  else
-        !    adv=.false.
-        !  end if
-        !  write(cname, "(A3,I4.4)") "d2V", ii
-        !  call csv_write(&
-        !    out_opt%trajout,&
-        !    trim(cname), &
-        !    advance=adv)
-        !end do
-
         out_opt%first_trajout = .false.
       end if
-
-      !write(out_opt%trajout,'(100E18.10)'),&
-      !  x, &
-      !  y(:), &
-      !  pot(y(1:num_inflaton)),&
-      !  getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-      !  getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-      !  geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
-      !  dVdphi(y(1:num_inflaton)), &
-      !  d2Vdphi2(y(1:num_inflaton))
 
       !Write the trajectory
       call csv_write(&
@@ -464,11 +447,6 @@ contains
         out_opt%trajout,&
         dVdphi(y(1:num_inflaton)), &
         advance=.true.)
-
-      !call csv_write(&
-      !  out_opt%trajout,&
-      !  d2Vdphi2(y(1:num_inflaton)), &
-      !  advance=.true.)
 
     end subroutine print_traj
 
@@ -1282,7 +1260,8 @@ contains
     end subroutine check_inflation_ended_properly_MODES
 
     subroutine switch_to_qvar()
-          use_q = .TRUE.
+
+          use_q = .true.
           a_switch = scalefac
           !set intial condition in (Q*a_switch)
           ytmp(:) = y(:)
@@ -1300,15 +1279,7 @@ contains
             !Reset istate to let integrator know it's a new variable
             istate=1
 
-!DEBUG
-!print*, "Resetting absolute error tolerances"
-!atol(index_ptb_y:index_ptb_vel_y-1) = 1e-4_dp
-!atol(neq/2+index_ptb_y:neq/2+index_ptb_vel_y-1) = 1e-4_dp
-
-!atol = 1e-14_dp
-
           end if
-
 
     end subroutine switch_to_qvar
 
@@ -1898,7 +1869,7 @@ contains
 
   END SUBROUTINE odeint_with_t
 
-  !When not requiring inflation to end, the stopping requirements will likely
+  !When not requiring inflation to end by epsilon=1, the stopping requirements will likely
   !vary with the potential that you're using, so here's the function that you
   !will need to edit.
   logical function alternate_infl_end(phi, dphi) &
@@ -1907,6 +1878,16 @@ contains
     real(dp), dimension(:), intent(in) :: phi, dphi
 
     stopping = .false.
+
+    !When modelling reheating we will not want to stop with epsilon=1
+    if (use_reheat) then
+      print*, "I'm reheating..."
+      stop
+    end if
+
+    !DEBUG
+    print*, "checking alternate_infl_end"
+    stop
 
     select case(potential_choice)
     case(13)

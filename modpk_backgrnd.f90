@@ -328,7 +328,7 @@ CONTAINS
     pk_bad = run_outcome%success
 
     !MULTIFIELD
-    if (tech_opt%use_tinteg_init) then
+    if (tech_opt%use_integ_with_t) then
       slowroll_start = .false. !Uses this flag to see if N-integration is stable
     else
       IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 0.2) THEN
@@ -354,7 +354,7 @@ CONTAINS
     !Uses a cosmic-time integrator to start, which checks to see if
     !it can switch to integrating in e-folds.
     !Useful if there's a significantly kinetic-dominated phase initially.
-    if (tech_opt%use_tinteg_init) then
+    if (tech_opt%use_integ_with_t) then
 
       !Call the t-integrator
       ode_underflow = .FALSE.
@@ -369,7 +369,7 @@ CONTAINS
 
     !Call the N-integrator
 
-    if (tech_opt%use_tinteg_init) then
+    if (tech_opt%use_integ_with_t) then
       h1 = 1.0e-3_dp
     else
       h1 = 1.0e-7_dp
@@ -393,9 +393,9 @@ CONTAINS
       pk_bad/=run_outcome%success) return
 
     IF(.NOT. ode_underflow) THEN
-      if ((.not. tech_opt%use_tinteg_init .and. &
+      if ((.not. tech_opt%use_integ_with_t.and. &
           (size(lna) < kount+kount_t .or. size(xp) < kount+kount_t)) &
-          .or. tech_opt%use_tinteg_init .and. &
+          .or. tech_opt%use_integ_with_t.and. &
           (size(lna) < kount .or. size(xp) < kount)) then
         call raise%fatal_code(&
          "kount or kount_t is too big.  &
@@ -404,7 +404,7 @@ CONTAINS
         __FILE__, __LINE__)
       end if
 
-      if (tech_opt%use_tinteg_init) then
+      if (tech_opt%use_integ_with_t) then
         !Add the t-int xp_t to the N-int xp
 
         lna(1:kount_t)=xp_t(1:kount_t)
@@ -705,60 +705,6 @@ CONTAINS
       end subroutine set_background_ICs
 
   END SUBROUTINE trial_background
-
-  SUBROUTINE backgrnd_efold
-
-    INTEGER*4, PARAMETER :: BNVAR=2
-    real(dp), DIMENSION(:) :: y(BNVAR*num_inflaton)
-    real(dp) :: accuracy, h1, hmin, x1, x2
-
-
-    h_init=SQRT(pot(phi_init)/(6.0e0_dp*M_Pl**2) * &
-         (1.0e0_dp+SQRT(1.0e0_dp+2.0e0_dp/3.0e0_dp* M_Pl**2 &
-         * dot_product(dVdphi(phi_init), dVdphi(phi_init)) / pot(phi_init)**2.)))
-
-    x1=0.0e0_dp !starting value
-    x2=Nefold_max !ending value
-
-    y(1 : size(y)/2) = phi_init  !phi(x1)
-    y(size(y)/2+1 : (size(y))) = -dVdphi(phi_init)/3.e0_dp/h_init/h_init !dphi/dalpha(x1) slowroll approx
-
-    !Call the integrator
-    ode_underflow = .FALSE.
-    ode_ps_output = .FALSE.
-    ode_infl_end = .TRUE.
-    save_steps = .TRUE.
-    pk_bad = run_outcome%success
-
-    IF(getEps(y(1:size(y)/2),y(size(y)/2+1:size(y))) .GT. 1.) THEN
-       slowroll_start=.FALSE.
-    ELSE
-       slowroll_start=.TRUE.
-    ENDIF
-    if (out_opt%modpkoutput) write(*,'(a25, L2)') 'slowroll start =', slowroll_start
-
-    !guessed start stepsize
-    if (potential_choice.eq.6) then
-       h1 = 0.001e0_dp
-    else
-       h1 = 0.1e0_dp
-    end if
-
-    dxsav=1.e-7_dp
-    accuracy=1.0e-6_dp
-    hmin=0.0e0_dp !minimum stepsize
-    CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
-
-    IF(.NOT. ode_underflow) THEN
-       lna(1:kount)=xp(1:kount)
-       nactual_bg=kount
-    ELSE
-       pk_bad = run_outcome%underflow
-    END IF
-
-    N_tot = lna(nactual_bg) - lna(1)
-
-  END SUBROUTINE backgrnd_efold
 
 
 end module background_evolution

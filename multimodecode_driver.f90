@@ -12,6 +12,7 @@ program multimodecode
   use modpk_observables, only : observables
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
+  use modpk_reheating, only : use_reheat
 
   implicit none
 
@@ -64,6 +65,8 @@ program multimodecode
 
   namelist /technical/ tech_opt, assert
 
+  namelist /reheat/ use_reheat
+
   !------------------------------------------------
 
   !Read initializing params from file
@@ -80,6 +83,7 @@ program multimodecode
 	read(unit=pfile, nml=param_sampling_nml)
 	read(unit=pfile, nml=params)
 	read(unit=pfile, nml=print_out)
+	read(unit=pfile, nml=reheat)
 	read(unit=pfile, nml=technical)
 	close(unit=pfile)
 

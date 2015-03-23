@@ -70,7 +70,7 @@ MODULE modpkparams
     integer :: accuracy_setting
     !Which integrator to use
     logical :: use_dvode_integrator
-    logical :: use_tinteg_init
+    logical :: use_integ_with_t
     !Whether we have an analytic Jacobian (not yet ready)
     logical :: use_analytical_jacobian
     !Use option to find appropriate IC for single-field inflation

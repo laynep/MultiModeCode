@@ -5,7 +5,7 @@ MODULE access_modpk
   use modpk_errorhandling, only : raise, run_outcome
   implicit none
   private
-  public :: potinit, evolve, total_efold
+  public :: potinit, evolve
 
 ! Number of k values for computing spline of P(k).
 ! Set to lower numbers for smoother potentials.
@@ -39,17 +39,6 @@ CONTAINS
 
   END SUBROUTINE potinit
 
-  SUBROUTINE total_efold
-    USE modpkparams
-    USE background_evolution, ONLY : backgrnd_efold
-    USE potential, ONLY : initialphi
-    IMPLICIT NONE
-
-    pk_bad = run_outcome%success
-    phi_init = initialphi(phi_init0)
-    CALL backgrnd_efold
-    RETURN
-  END SUBROUTINE total_efold
 
   SUBROUTINE evolve(kin, powerspectrum_out)
     USE modpk_odeint
