@@ -79,9 +79,9 @@ the csv*f90 files have information about writing in CSV format with Fortran.
 Usage/Install
 -------------
 See the USAGE file.
-Some general usage documentation can be found in Appendix B of 1410.XXXX.
+Some general usage documentation can be found in Appendix B of 1410.0685.
 The latest code, including patches and bug fixes, can be downloaded from
-www.modecode.com.
+www.modecode.org.
 
 
 License
@@ -101,7 +101,7 @@ Changelog
 ---------
 October 2014 - 2.0.0
   Major update to include general multifield models,
-  see 1312.4035, 1409.2498, 1410.XXXX
+  see 1312.4035, 1409.2498, 1410.0685
 June 2012 - 1.3.0
   Added Hubble slow roll reconstruction to the choice of
   potentials, see arXiv:1202.0304; updated to Jan2012 version of
