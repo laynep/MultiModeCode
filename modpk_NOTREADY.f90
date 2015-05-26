@@ -1,4 +1,4 @@
-!For use in modpk_icsampling.f90
+!For use in modpk_sampling.f90
 
     !MCMC-style sampling that penalizes points for clustering together by giving
     !an inverse weighting to points that, if charged, would experience a large
@@ -341,7 +341,7 @@ print*, new_measure
 !Some routines for post-processing the IC data
 module modpk_postprocessing
   use modpkparams, only : dp, num_inflaton
-  use modpk_icsampling, only : ic_and_observables
+  use modpk_sampling, only : ic_and_observables
   implicit none
 
   contains

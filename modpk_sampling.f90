@@ -1,4 +1,4 @@
-module modpk_icsampling
+module modpk_sampling
   !Module that implements various sampling techniques for the initial conditions
   !and model parameters.  These routines should generally be called prior to
   !doing any integration.  Monte Carlo methodology.
@@ -39,7 +39,7 @@ module modpk_icsampling
   logical :: use_first_priorval
 
 
-  logical :: save_iso_N=.false.
+  logical :: save_iso_N=.false., set_Nisoref_by_Npivot=.false.
   real(dp) :: N_iso_ref
   real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N
 
@@ -124,6 +124,10 @@ module modpk_icsampling
 
         !Can't also record iso-N, since using N_iso_ref as override
         save_iso_N = .false.
+
+
+        !Setting N_iso_ref<0 defaults to N_iso_ref = N_pivot, which may vary
+        if (set_Nisoref_by_Npivot) N_iso_ref = N_pivot
 
         y_background = 0e0_dp
 
@@ -1368,4 +1372,4 @@ module modpk_icsampling
     end subroutine get_vparams
 
 
-end module modpk_icsampling
+end module modpk_sampling

@@ -12,7 +12,8 @@ module potential
   public :: pot, getH, getdHdalpha, getEps, dVdphi, d2Vdphi2, getdepsdalpha, powerspectrum, &
        tensorpower, initialphi, geteta, zpower, getH_with_t, stability_check_numer, &
        getEps_with_t, d3Vdphi3, geteta_with_t, &
-       logP_of_observ, fisher_rao_metric, guess_EOI_field, approx_phipiv_SR
+       logP_of_observ, fisher_rao_metric, guess_EOI_field, approx_phipiv_SR, &
+       getkineticenergy, getw
 
   public :: norm
   public :: bundle, field_bundle
@@ -1213,6 +1214,33 @@ contains
     initialphi = phii
 
   END FUNCTION initialphi
+
+  !Kinetic energy
+  function getkineticenergy(phi, dphidN) result(kinetic)
+    real(dp), intent(in) :: phi(:), dphidN(:)
+    real(dp) :: kinetic, Hubble
+
+    Hubble = getH(phi,dphidN)
+
+    kinetic = 0.5e0_dp*Hubble**2*sum(dphidN**2)
+
+
+  end function getkineticenergy
+
+  !Equation of state
+  function getw(phi, dphidN) result(w_eos)
+
+    real(dp), intent(in) :: phi(:), dphidN(:)
+    real(dp) :: w_eos, Vpot, kinetic, Xtest
+
+    Vpot = pot(phi)
+    kinetic = getkineticenergy(phi,dphidN)
+
+    Xtest =Vpot/kinetic
+
+    w_eos= (1.0e0_dp - Xtest)/(1.0e0_dp + Xtest)
+
+  end function getw
 
   FUNCTION getEps(phi,dphi)
     !

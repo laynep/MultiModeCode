@@ -86,7 +86,7 @@ modpk_utils --- modpk_utils.f90
   Also contains some utility functions for general use and the Runge-Kutta
   methods.
 
-modpk_icsampling --- modpk_icsampling.f90
+modpk_sampling --- modpk_sampling.f90
   Module that implements various sampling techniques for the initial conditions
   and model parameters.  These routines should generally be called prior to
   doing any integration.  Monte Carlo methodology.
@@ -164,21 +164,21 @@ analysis, the user will likely have to implement his/her own.
 
 We have implemented the sampling techniques for the potential parameters
 (masses, couplings, etc) and the fields' initial conditions in the subroutines
-get_vparams and get_ic in modpk_icsampling.f90, respectively.  These are
+get_vparams and get_ic in modpk_sampling.f90, respectively.  These are
 called in multimodecode_driver.f90 prior to solving any ODEs for the
 background or modes.  We have set these up so that get_vparams is called
 before get_ics, with the assumption that if there are any conditional
 dependencies here, it will be in this order.
 
 To adapt get_vparams you will need to add a new value for the param_sampling
-type, defined in modpk_icsampling.f90, that gives a unique integer value that
+type, defined in modpk_sampling.f90, that gives a unique integer value that
 you can set the variable param_sampling to.  Based off the given values of
 vp_prior_min and vp_prior_max in parameters_multimodecode.txt, you should then
 implement your prior on the parameters so that it is invoked only when
 param_sampling=param_flags%YOURFLAG.
 
 Similarly, to adapt get_IC to your needs, you will need to add a new value
-for ic_samp_flags types, defined in modpk_icsampling.f90, that is unique.
+for ic_samp_flags types, defined in modpk_sampling.f90, that is unique.
 Then, following the examples that are present in get_IC, implement your choice
 of prior so that it is invoked only if ic_sampling=ic_flags%YOURFLAG.
 
@@ -188,7 +188,7 @@ specifying the new arguments as 'optional') or add the new parameters to
 the module modpkparams in modpk_modules.f90, so that they will be visible to
 other portions of the code.  If you do add new global variables in modpkparams,
 then wherever you want to use them (say, multimodecode_driver.f90 or
-modpk_icsampling.f90) you will need to explicitly 'use' them wherever the
+modpk_sampling.f90) you will need to explicitly 'use' them wherever the
 using module imports modpkparams.  Do this by updating
 
 use modpkparams, only : BLAH ---> ..., only : BLAH, YOUR_UPDATE.

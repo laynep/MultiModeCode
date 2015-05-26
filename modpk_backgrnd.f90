@@ -21,7 +21,7 @@ MODULE background_evolution
 CONTAINS
 
   SUBROUTINE backgrnd
-    use modpk_icsampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
+    use modpk_sampling, only : save_iso_N, N_iso_ref, phi_iso_N, &
       dphi_iso_N, ic_sampling, ic_flags
 
     INTEGER*4 :: i,j, rescl_count
@@ -285,7 +285,7 @@ CONTAINS
   END SUBROUTINE backgrnd
 
   SUBROUTINE trial_background(phi_init_trial, alpha_e, V_end)
-    use modpk_icsampling, only : ic_sampling, ic_flags
+    use modpk_sampling, only : ic_sampling, ic_flags
 
     INTEGER*4 :: i,j
     INTEGER*4, PARAMETER :: BNVAR=2

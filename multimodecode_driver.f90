@@ -6,13 +6,13 @@ program multimodecode
   use camb_interface
   use access_modpk, only : evolve, potinit
   use internals
-  use modpk_icsampling
+  use modpk_sampling
   use modpk_io, only : out_opt
   use modpk_deltaN
   use modpk_observables, only : observables
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheating, only : use_reheat
+  use modpk_reheat, only : use_reheat, reheat_model
 
   implicit none
 
@@ -49,7 +49,7 @@ program multimodecode
     use_horiz_cross_approx, get_runningofrunning
 
   namelist /ic_sampling_nml/ ic_sampling, energy_scale, numb_samples, &
-    save_iso_N, N_iso_ref
+    save_iso_N, N_iso_ref, set_Nisoref_by_Npivot
 
   namelist /param_sampling_nml/ param_sampling, vp_prior_min, vp_prior_max, &
     varying_N_pivot, use_first_priorval
@@ -65,7 +65,7 @@ program multimodecode
 
   namelist /technical/ tech_opt, assert
 
-  namelist /reheat/ use_reheat
+  namelist /reheat/ use_reheat, reheat_model
 
   !------------------------------------------------
 
@@ -443,6 +443,13 @@ program multimodecode
       pk_bad = run_outcome%success
       leave = .false.
 
+      !Get e-folds after pivot scale leaves horizon
+      if (varying_N_pivot) then
+        save_iso_N = .false.
+        call get_new_N_pivot(N_pivot,&
+          N_pivot_prior_min, N_pivot_prior_max)
+      end if
+
       !Get vparams
       if (param_sampling /= param_flags%reg_constant) then
         call get_vparams()
@@ -455,11 +462,6 @@ program multimodecode
           numb_samples,energy_scale)
       end if
 
-      if (varying_N_pivot) then
-        save_iso_N = .false.
-        call get_new_N_pivot(N_pivot,&
-          N_pivot_prior_min, N_pivot_prior_max)
-      end if
 
       !Load ics
       allocate(observs%ic(2*num_inflaton))
@@ -655,10 +657,6 @@ program multimodecode
       j=min(max(i-(4-1)/2,1),nactual_bg+1-4)
       call array_polint(lna(j:j+4), phiarr(:,j:j+4),&
         Npiv_renorm, phi_pivot, del_phi)
-
-      !DEBUG
-      !print*, guess_EOI_field(phi_pivot, phi_end)
-      !stop
 
       if (use_horiz_cross_approx) then
         HC_approx=.true.

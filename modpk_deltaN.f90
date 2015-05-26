@@ -1,7 +1,7 @@
 !Module that lets us compare the mode evolution to the slow-roll expectation for
 !sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
 module modpk_deltaN
-  use modpkparams, only : dp, vparams
+  use modpkparams, only : dp, vparams, N_pivot
   use modpk_observables, only : power_spectra
   use internals, only : pi
   use potential, only : pot, dVdphi, d2Vdphi2, d3Vdphi3

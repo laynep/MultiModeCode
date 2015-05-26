@@ -4,13 +4,13 @@ MODULE modpk_odeint
   !in addition to numerical checking.
   use modpkparams, only : dp
   use camb_interface, only : pk_bad
-  use modpk_icsampling, only : ic_sampling, ic_flags
+  use modpk_sampling, only : ic_sampling, ic_flags
   use dvode_f90_m, only : vode_opts, set_normal_opts, dvode_f90, get_stats, &
     set_intermediate_opts
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheating, only : use_reheat
+  use modpk_reheat, only : use_reheat, reheat_ending_check
   implicit none
 
   interface odeint
@@ -182,7 +182,7 @@ contains
 
       !END MULTIFIELD
 
-      call check_inflation_ended_properly(leave)
+      call check_evolution_stop_properly(leave)
       if (leave) then
         !Record the background trajectory
         if (out_opt%save_traj) call print_traj()
@@ -502,8 +502,12 @@ contains
 
      end subroutine check_inflation_started_properly
 
-     subroutine check_inflation_ended_properly(leave)
+     subroutine check_evolution_stop_properly(leave)
        logical, intent(inout) :: leave
+
+       !DEBUG
+       !print*, "i'm checking check_evolution_stop_properly"
+       !stop
 
        leave = .false.
 
@@ -518,53 +522,20 @@ contains
                 RETURN
              ENDIF
           ELSE
-             IF(getEps(phi, dphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODECODE: epsilon =', getEps(phi, dphi)
 
-                call raise%fatal_cosmo(&
-                  'You asked for a no-slowroll-breakdown model, but inflation &
-                  already ended via slowroll violation before your phi_end was &
-                  reached. Please take another look at your inputs.',&
-                  __FILE__, __LINE__)
+            if(alternate_infl_end(phi,dphi)) then
+              infl_ended = .true.
+              ystart(:) = y(:)
+              if (save_steps) call save_a_step
 
-             ENDIF
+              leave=.true.
+              return
+            end if
 
-             !MULTIFIELD
-             IF (size(phi) .eq. 1) THEN
-                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) THEN
-                   infl_ended=.TRUE.
-                   ystart(:)=y(:)
-                   IF (save_steps) CALL save_a_step
-
-                   leave=.true.
-                   RETURN
-                ENDIF
-                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) THEN
-                   infl_ended=.TRUE.
-                   ystart(:)=y(:)
-                   IF (save_steps) CALL save_a_step
-
-                   leave=.true.
-                   RETURN
-                ENDIF
-             ELSE
-               ! for multifield, determine the total field distance travelled
-
-               if(alternate_infl_end(phi,dphi)) then
-                 infl_ended = .true.
-                 ystart(:) = y(:)
-                 IF (save_steps) CALL save_a_step
-
-                 leave=.true.
-                 RETURN
-               end if
-
-             END IF
-             !END MULTIFIELD
           ENDIF
        ENDIF
 
-     end subroutine check_inflation_ended_properly
+     end subroutine check_evolution_stop_properly
 
   END SUBROUTINE odeint_r
 
@@ -811,7 +782,7 @@ contains
 
        END IF
 
-       call check_inflation_ended_properly_MODES()
+       call check_evolution_stop_properly_MODES()
 
        call check_for_eternal_inflation_MODES()
 
@@ -1229,35 +1200,17 @@ contains
 
     end subroutine write_spectra
 
-    subroutine check_inflation_ended_properly_MODES()
+    subroutine check_evolution_stop_properly_MODES()
 
        IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
              IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
-             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) THEN
-                PRINT*,'MODECODE: epsilon =', getEps(phi, delphi), 'phi =', phi
-
-                call raise%fatal_cosmo(&
-                  'You asked for a no-slowroll-breakdown model, but inflation &
-                  already ended via slowroll violation before your phi_end was &
-                  reached. Please take another look at your inputs.', &
-                  __FILE__, __LINE__)
-
-             ENDIF
-
-             !MULTIFIELD
-             IF (SIZE(phi) .EQ. 1) THEN
-                IF (phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) infl_ended=.TRUE.
-                IF (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1))) infl_ended=.TRUE.
-             ELSE
-               if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
-             END IF
-             !END MULTIFIELD
+             if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
           ENDIF
         end if
 
-    end subroutine check_inflation_ended_properly_MODES
+    end subroutine check_evolution_stop_properly_MODES
 
     subroutine switch_to_qvar()
 
@@ -1866,28 +1819,49 @@ contains
     END SUBROUTINE save_a_step_t
 
 
-
   END SUBROUTINE odeint_with_t
 
-  !When not requiring inflation to end by epsilon=1, the stopping requirements will likely
+  !When requiring inflation to end before epsilon=1, the stopping requirements will likely
   !vary with the potential that you're using, so here's the function that you
   !will need to edit.
-  logical function alternate_infl_end(phi, dphi) &
+  !
+  !If you want to continue evolving after inflation ends, use the reheating options in modpk_reheat.
+  logical function alternate_infl_end(phi, dphidN) &
     result(stopping)
-    use modpkparams, only : potential_choice, phi_init, delsigma
-    real(dp), dimension(:), intent(in) :: phi, dphi
+    use modpkparams, only : potential_choice, phi_init, delsigma, slowroll_start, phidot_sign, phi_infl_end
+    use potential, only : geteps
+    real(dp), dimension(:), intent(in) :: phi, dphidN
 
     stopping = .false.
 
     !When modelling reheating we will not want to stop with epsilon=1
     if (use_reheat) then
-      print*, "I'm reheating..."
-      stop
+      call reheat_ending_check(phi,dphidN)
+      return
     end if
 
-    !DEBUG
-    print*, "checking alternate_infl_end"
-    stop
+
+    !If slowroll_infl_end, then usually expect eps=1 to never be reached.
+    IF(getEps(phi, dphidN) .GT. 1 .AND. slowroll_start) THEN
+       PRINT*,'MODECODE: epsilon =', getEps(phi, dphidN)
+
+       call raise%fatal_cosmo(&
+         'You asked for a no-slowroll-breakdown model, but inflation &
+         already ended via slowroll violation before your phi_end was &
+         reached. Please take another look at your inputs.',&
+         __FILE__, __LINE__)
+
+    ENDIF
+
+    !Default single-field inflation ending criterion if slowroll_infl_end not invoked
+    IF (size(phi) .eq. 1) THEN
+       IF ((phidot_sign(1).GT.0..AND.(phi(1).GT.(phi_infl_end(1)+0.1))) .or. &
+       (phidot_sign(1).LT.0..AND.(phi(1).LT.(phi_infl_end(1)-0.1)))) THEN
+          stopping=.true.
+          return
+       ENDIF
+    END IF
+
 
     select case(potential_choice)
     case(13)
@@ -1896,11 +1870,11 @@ contains
       ![ LP: ] Complete ad-hoc
       if (phi(1) < 244.95-0.4) stopping=.true.
 
-    case default
-      ! for multifield, determine the total field distance travelled
-      if (sqrt(dot_product(phi-phi_init, phi-phi_init)) .gt. (delsigma+0.1)) then
-        stopping = .true.
-      end if
+    !case default
+    !  ! for multifield, determine the total field distance travelled
+    !  if (sqrt(dot_product(phi-phi_init, phi-phi_init)) .gt. (delsigma+0.1)) then
+    !    stopping = .true.
+    !  end if
 
     end select
 

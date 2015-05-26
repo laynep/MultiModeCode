@@ -9,13 +9,13 @@ import pandas as pd
 nfields=100
 p=2.0
 
-nsamples=1000
+nsamples=100
 ic_weight = np.ones(nfields)
 
 low=1e-14
 high=1e-13
 
-obs_to_calc = ['n_t','r']
+obs_to_calc = ['n_s','r']
 
 run = cosmo.Nmono_universe(sampler="uniform",HC_approx=True,
         model="Nmono", nfields=nfields)
@@ -30,5 +30,7 @@ for row in sample_total:
         output[val].append(row[val])
 
 output = pd.DataFrame(output, columns=obs_to_calc)
+
+print output
 
 output.save('simple_output'+str(nfields)+'.pkl')

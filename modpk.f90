@@ -23,7 +23,7 @@ CONTAINS
     USE modpk_observables
     USE background_evolution, ONLY : backgrnd
     USE potential, ONLY : initialphi
-    use modpk_icsampling, only : ic_flags, ic_sampling
+    use modpk_sampling, only : ic_flags, ic_sampling
     IMPLICIT NONE
 
 
@@ -50,7 +50,7 @@ CONTAINS
       pot, d2Vdphi2
     USE modpk_utils, ONLY : derivs, qderivs, rkqs_c
     use modpk_numerics, only : locate, polint, array_polint
-    use modpk_icsampling, only : ic_sampling, ic_flags
+    use modpk_sampling, only : ic_sampling, ic_flags
     use modpk_qsf
     IMPLICIT NONE
 

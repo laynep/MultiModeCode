@@ -6,12 +6,12 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
-  potential_choice = 1
-  vparam_rows = 1
+  num_inflaton = 2
+  potential_choice = 16
+  vparam_rows = 2
   more_potential_params = .false.
 
-  slowroll_infl_end = .true.
+  slowroll_infl_end = .false.
   instreheat = .false.
 /
 
@@ -54,16 +54,13 @@ Parameters to control how the ICs are sampled
   4=fromfile_samp,5=parameter_loop_samp,6=isoN,
   7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
 
-  Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
-
 &ic_sampling_nml
   ic_sampling = 6
-  numb_samples = 10
+  numb_samples = 1
 
   energy_scale = .1
 
   save_iso_N = .false.
-  set_Nisoref_by_Npivot = .true.
   N_iso_ref = 55
 
 /
@@ -74,21 +71,23 @@ The vparams get marginalized --- detailed output is not saved.
 IMPORTANT: If param_sampling/=reg_constant, then this overrides the specific choices of
 vparams in namelist &params.
 
-param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarPast_dist}
+param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF}
   NB: Not all combinations of param_sampling and ic_sampling work together.
   NB: To use numerical QSF, set here
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
 
 &param_sampling_nml
-  param_sampling = 2
+  param_sampling = 3
 
   use_first_priorval = .true.
 
   vp_prior_min(1,:) = -14
+  vp_prior_min(2,:) = 0.301029995664
 
   vp_prior_max(1,:) = -12
+  vp_prior_max(2,:) = 0.301029995664
 
-  varying_N_pivot = .true.
+  varying_N_pivot = .false.
 
 /
 
@@ -123,15 +122,15 @@ the smallest mass; others are discarded.
 
   phi_init0 = 4.40
 
-  vparams(1,:) = 3.224213328870117E-013  1.472330507702213E-014  2.232530141001221E-013 4.153249875679770E-014  6.797116794461465E-014  4.609712991128059E-014 4.611943272904369E-013  1.030796272368782E-014  1.188131651618535E-014 8.295539563156965E-013
-
-
-
-/
 
   vparams(1,:) = 3.224213328870117E-012
 
   vparams(2,:) = 2.0
+
+
+/
+
+  vparams(1,:) = 3.224213328870117E-013  1.472330507702213E-014  2.232530141001221E-013 4.153249875679770E-014  6.797116794461465E-014  4.609712991128059E-014 4.611943272904369E-013  1.030796272368782E-014  1.188131651618535E-014 8.295539563156965E-013
 
   vparams(1,:) =     -3.0
   vparams(2,:) = 0.5
@@ -200,7 +199,7 @@ Options for output from the code.
   out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
-  out_opt%save_traj = .false.
+  out_opt%save_traj = .true.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.
@@ -215,7 +214,7 @@ The reheat model sets the style of reheating that we will use.
   1 = Perturbative reheating a la 1311.3972
 
 &reheat
-  use_reheat = .false.
+  use_reheat = .true.
   reheat_model = 1
 /
 
@@ -235,7 +234,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .false.
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7

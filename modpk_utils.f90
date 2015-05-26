@@ -4,7 +4,7 @@ MODULE modpk_utils
   !Also contains some utility functions for general use and the Runge-Kutta
   !methods.
   use modpkparams
-  use modpk_icsampling, only : ic_sampling, ic_flags
+  use modpk_sampling, only : ic_sampling, ic_flags
   use modpk_errorhandling, only : raise, run_outcome
   IMPLICIT NONE
 
