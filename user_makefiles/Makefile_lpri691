@@ -12,9 +12,11 @@ endif
 #ifort compile options
 else
 
+LINKFLAGS = -mkl #-L/opt/intel/mkl/lib/intel64 -mkl
+
 ifdef DEBUG
 F90C     = ifort
-FFLAGS = -fpp  -g -p -traceback -debug #-O0 -openmp  -fast # -DMPI
+FFLAGS = -fpp  -g -p -traceback -debug -mkl   #-O0 -openmp  -fast # -DMPI
 
 
 else

@@ -78,9 +78,10 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
   NB: Not all combinations of param_sampling and ic_sampling work together.
   NB: To use numerical QSF, set here
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
+  NB: If you need priors for other parameters in your model, set them with prior_other_params_max/min, with the total number of the other params set max(100,2*num_inflaton) (can be alterred in code, but I'm lazy)
 
 &param_sampling_nml
-  param_sampling = 2
+  param_sampling = 5
 
   use_first_priorval = .true.
 
@@ -90,7 +91,12 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
 
   varying_N_pivot = .true.
 
+  prior_other_params_min(:) = 0.5 5e-6
+  prior_other_params_max(:) = 0.5 5e-6
+
 /
+  prior_other_params_min(:) = 0.3333 1e-6
+  prior_other_params_max(:) = 0.6667 1e-5
 
   vp_prior_min(2,:) = 0.90309
 

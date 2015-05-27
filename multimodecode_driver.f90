@@ -52,7 +52,8 @@ program multimodecode
     save_iso_N, N_iso_ref, set_Nisoref_by_Npivot
 
   namelist /param_sampling_nml/ param_sampling, vp_prior_min, vp_prior_max, &
-    varying_N_pivot, use_first_priorval
+    varying_N_pivot, use_first_priorval, &
+    prior_other_params_min, prior_other_params_max
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -229,6 +230,8 @@ program multimodecode
 
       allocate(vp_prior_max(vparam_rows,num_inflaton))
       allocate(vp_prior_min(vparam_rows,num_inflaton))
+      allocate(prior_other_params_max(max(100,2*num_inflaton)))
+      allocate(prior_other_params_min(max(100,2*num_inflaton)))
 
       allocate(phi_init0(num_inflaton))
       allocate(phi_init(num_inflaton))

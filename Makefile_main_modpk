@@ -4,6 +4,7 @@ PKDRIVER	= multimodecode_driver.f90
 
 
 F90FLAGS      = $(FFLAGS)
+LINKERFLAGS   = $(LINKFLAGS)
 
 MODPKOBJ = dvode_f90_m.o \
 					 csv_file.o \
@@ -40,7 +41,7 @@ modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorha
 modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
-	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER) -o $@
+	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER) $(LINKFLAGS) -o $@ 
 
 %.o %.mod: %.f90
 	$(F90C) $(F90FLAGS) -c $*.f90

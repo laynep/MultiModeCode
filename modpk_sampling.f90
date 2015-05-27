@@ -33,9 +33,11 @@ module modpk_sampling
     integer :: unif_prior = 2
     integer :: log_prior = 3
     integer :: num_QSF = 4
+    integer :: MarPast_dist = 5
   end type
   type(param_samp_flags) :: param_flags
   real(dp), dimension(:,:), allocatable :: vp_prior_max, vp_prior_min
+  real(dp), dimension(:), allocatable :: prior_other_params_min, prior_other_params_max
   logical :: use_first_priorval
 
 
@@ -1322,9 +1324,15 @@ module modpk_sampling
 
     !Subroutine to setup the vparams based off the chosen sampling technique.
     subroutine get_vparams()
+      use modpk_rng, only : shuffle
 
       real(dp) :: rand
       integer :: ii, jj
+      real(dp), dimension(:,:), allocatable :: rectang_RM, square_RM
+      real(dp), dimension(:), allocatable :: eigvals
+      integer :: mp_M, mp_N, flag_eigvals
+      real(dp) :: rand_range, sigma, beta, beta_min, beta_max, sigma_min, sigma_max
+      real(dp), dimension(:), allocatable :: work_eigvals
 
       !Don't need to marginalize over vparams
       if (param_sampling == param_flags%num_QSF .or. &
@@ -1358,6 +1366,89 @@ module modpk_sampling
           vparams(ii,jj) = 10.0e0_dp**&
             ((vp_prior_max(ii,jj)-vp_prior_min(ii,jj))*rand+vp_prior_min(ii,jj))
         end do; end do
+
+      !Sample masses from the Marcenko-Pastur distribution from random matrix arguments
+      else if (param_sampling == param_flags%MarPast_dist) then
+        !other params: 1 = beta, 2 = sigma
+
+        !Build a big random matrix
+
+        !mp_M ~ # rows
+        !mp_N ~ # cols
+        !beta = M/N
+
+        !Get beta from uniform prior
+        beta_min = prior_other_params_min(1)
+        beta_max = prior_other_params_max(1)
+        call random_number(rand)
+        beta = rand*(beta_max-beta_min)+beta_min
+
+
+        !mp_M = num_inflaton
+        mp_M = 1000
+        mp_N = mp_M/beta
+
+
+        if (allocated(rectang_RM)) deallocate(rectang_RM)
+        if (allocated(square_RM)) deallocate(square_RM)
+        if (allocated(eigvals)) deallocate(eigvals)
+
+        allocate(rectang_RM(mp_M,mp_N))
+        allocate(square_RM(mp_M,mp_M))
+        allocate(eigvals(mp_M))
+
+        !DEBUG
+
+        !Get sigma from uniform prior
+        sigma_min = prior_other_params_min(2)
+        sigma_max = prior_other_params_max(2)
+        call random_number(rand)
+        sigma = rand*(sigma_max - sigma_min) + sigma_min
+
+        !sigma is stand dev of dist for elements of RM
+        rand_range=sqrt(3.0e0_dp)*sigma
+        do jj=1,mp_N; do ii=1,mp_M
+          call random_number(rand)
+          rand = rand*2.0e0_dp*abs(rand_range)-rand_range
+          rectang_RM(ii,jj) = rand
+
+        end do; end do
+
+        !Matrix multiplication rectang_RM.rectang_RM^T
+        call dgemm( 'n', 't', &
+          mp_M, mp_M, mp_N, &
+          1.0e0_dp, &
+          rectang_RM, mp_M, &
+          rectang_RM, mp_M, &
+          0e0_dp, &
+          square_RM, mp_M)
+
+        square_RM = square_RM/mp_N
+
+        !Find the eigenvalues
+        if (allocated(work_eigvals)) deallocate(work_eigvals)
+        allocate(work_eigvals(max(1,(3*mp_M-1)*10)))
+        call dsyev('N','U', &
+          mp_M, square_RM, mp_M, &
+          eigvals, &
+          work_eigvals, size(work_eigvals), &
+          flag_eigvals)
+
+        !Mix 'em up
+        call shuffle(eigvals)
+
+        !Set masses to eigenvalues
+        if (potential_choice /= 1) then
+          print*, "MODECODE: potential_choice=", potential_choice
+
+          call raise%fatal_code(&
+              "This potential is not yet supported for the MP distribution.",&
+              __FILE__, __LINE__)
+        else
+          vparams(1,1:size(vparams,2)) = log10(eigvals(1:size(vparams,2)))
+        end if
+
+        print*, vparams(1,:)
 
       else
 
