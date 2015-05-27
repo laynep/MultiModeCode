@@ -1384,8 +1384,7 @@ module modpk_sampling
         beta = rand*(beta_max-beta_min)+beta_min
 
 
-        !mp_M = num_inflaton
-        mp_M = 1000
+        mp_M = min(1000,num_inflaton)
         mp_N = mp_M/beta
 
 
@@ -1396,8 +1395,6 @@ module modpk_sampling
         allocate(rectang_RM(mp_M,mp_N))
         allocate(square_RM(mp_M,mp_M))
         allocate(eigvals(mp_M))
-
-        !DEBUG
 
         !Get sigma from uniform prior
         sigma_min = prior_other_params_min(2)
@@ -1445,10 +1442,20 @@ module modpk_sampling
               "This potential is not yet supported for the MP distribution.",&
               __FILE__, __LINE__)
         else
-          vparams(1,1:size(vparams,2)) = log10(eigvals(1:size(vparams,2)))
-        end if
 
-        print*, vparams(1,:)
+          if (size(eigvals) < size(vparams,2)) then
+
+            print*, "MODECODE: size(eigvals) < num_inflaton"
+
+            call raise%fatal_code(&
+                "Need to increase the size of the matrix (mp_M) that determines &
+                the eigenvalues for the MP distribution.",&
+                __FILE__, __LINE__)
+
+          else
+            vparams(1,1:size(vparams,2)) = log10(eigvals(1:size(vparams,2)))
+          end if
+        end if
 
       else
 

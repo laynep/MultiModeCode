@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 10
+  num_inflaton = 100
   potential_choice = 1
   vparam_rows = 1
   more_potential_params = .false.
@@ -58,7 +58,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 6
-  numb_samples = 10
+  numb_samples = 1
 
   energy_scale = .1
 
@@ -129,13 +129,13 @@ the smallest mass; others are discarded.
 
   phi_init0 = 4.40
 
-  vparams(1,:) = 3.224213328870117E-013  1.472330507702213E-014  2.232530141001221E-013 4.153249875679770E-014  6.797116794461465E-014  4.609712991128059E-014 4.611943272904369E-013  1.030796272368782E-014  1.188131651618535E-014 8.295539563156965E-013
+  vparams(1,:) = 3.224213328870117E-012
 
 
 
 /
+  vparams(1,:) = 3.224213328870117E-013  1.472330507702213E-014  2.232530141001221E-013 4.153249875679770E-014  6.797116794461465E-014  4.609712991128059E-014 4.611943272904369E-013  1.030796272368782E-014  1.188131651618535E-014 8.295539563156965E-013
 
-  vparams(1,:) = 3.224213328870117E-012
 
   vparams(2,:) = 2.0
 
@@ -181,7 +181,7 @@ Uniform priors on fields and dphi/dt (NOT dphi/DN)
   dphi0_priors_min = -1.262e0 -1.262e0
   dphi0_priors_max =  1.262e0 1.262e0
 
-  N_pivot_prior_min = 30
+  N_pivot_prior_min = 40
   N_pivot_prior_max = 70
 /
 

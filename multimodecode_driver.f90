@@ -13,6 +13,7 @@ program multimodecode
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
   use modpk_reheat, only : use_reheat, reheat_model
+  use modpk_rng, only : init_random_seed
 
   implicit none
 
@@ -87,6 +88,9 @@ program multimodecode
 	read(unit=pfile, nml=reheat)
 	read(unit=pfile, nml=technical)
 	close(unit=pfile)
+
+	!Set random seed
+	call init_random_seed()
 
   call output_initial_data()
 
@@ -287,8 +291,13 @@ program multimodecode
       end if
       write(*, out_opt%e_fmt) &
         "N_pivot =", N_pivot
-      write(*, out_opt%e_fmt) &
-        "phi_pivot =", phi_pivot(:)
+      if (out_opt%output_reduced) then
+        write(*, out_opt%e_fmt) &
+          "phi_pivot =", phi_pivot(1:min(10,num_inflaton))
+      else
+        write(*, out_opt%e_fmt) &
+          "phi_pivot =", phi_pivot(:)
+      end if
       if (potential_choice==1) then
         write(*, out_opt%e2_fmt)&
           "N_tot =", N_tot,'(', &
@@ -324,6 +333,8 @@ program multimodecode
         write(*, out_opt%e2_fmt)&
           "tau_NL =", SR_pred%tau_NL, &
           '(>', ((6.0/5.0)*SR_pred%f_NL)**2, ')'
+        write(*, out_opt%e2_fmt),&
+          "Bundle Width =", field_bundle%exp_scalar
 
         return
       end if
@@ -701,7 +712,6 @@ program multimodecode
       !Initialize the parameter or IC sampler if we're using it.
       !Need to allocate some arrays and set the random seed.
 
-      use modpk_rng, only : init_random_seed
 
       real(dp), dimension(:,:), intent(out) :: icpriors_min, &
         icpriors_max
@@ -715,31 +725,26 @@ program multimodecode
         dphi0_priors_min, dphi0_priors_max, &
         N_pivot_prior_min, N_pivot_prior_max
 
-	    !Set random seed
-	    call init_random_seed()
 
-      if (allocated(phi0_priors_max)) then
-        call raise%fatal_code("Priors allocated before initialization.", &
-          __FILE__, __LINE__)
-      else
-        allocate(phi0_priors_max(num_inflaton))
-        allocate(dphi0_priors_max(num_inflaton))
-        allocate(phi0_priors_min(num_inflaton))
-        allocate(dphi0_priors_min(num_inflaton))
-        phi0_priors_min=0e0_dp
-        phi0_priors_max=0e0_dp
-        dphi0_priors_min=0e0_dp
-        dphi0_priors_max=0e0_dp
-      end if
+      if (allocated(phi0_priors_max)) deallocate(phi0_priors_max)
+      if (allocated(dphi0_priors_max)) deallocate(dphi0_priors_max)
+      if (allocated(phi0_priors_min)) deallocate(phi0_priors_min)
+      if (allocated(dphi0_priors_min)) deallocate(dphi0_priors_min)
+
+      allocate(phi0_priors_max(num_inflaton))
+      allocate(dphi0_priors_max(num_inflaton))
+      allocate(phi0_priors_min(num_inflaton))
+      allocate(dphi0_priors_min(num_inflaton))
+      phi0_priors_min=0e0_dp
+      phi0_priors_max=0e0_dp
+      dphi0_priors_min=0e0_dp
+      dphi0_priors_max=0e0_dp
 
       if (save_iso_N) then
-        if (allocated(phi_iso_N) .or. allocated(dphi_iso_N)) then
-          call raise%fatal_code("Iso-N arrays already allocated.", &
-            __FILE__, __LINE__)
-        else
-          allocate(phi_iso_N(num_inflaton))
-          allocate(dphi_iso_N(num_inflaton))
-        endif
+        if (allocated(phi_iso_N)) deallocate(phi_iso_N)
+        if (allocated(dphi_iso_N)) deallocate(dphi_iso_N)
+        allocate(phi_iso_N(num_inflaton))
+        allocate(dphi_iso_N(num_inflaton))
       end if
 
       !Read phi0 priors from file

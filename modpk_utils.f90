@@ -92,7 +92,7 @@ CONTAINS
     real(dp), DIMENSION(:), INTENT(OUT) :: yprime
 
     !MULTIFIELD
-    real(dp), DIMENSION(size(y)/2) :: p, delp
+    real(dp), DIMENSION(size(y)/2) :: phi, delphi
     real(dp) :: hubble,dhubble, eps
     !END MULTIFIEND
 
@@ -104,20 +104,20 @@ CONTAINS
     !
 
     !MULTIFIELD
-    p = y(1 : size(y)/2)
-    delp = y(size(y)/2+1 : size(y))
+    phi = y(1 : size(y)/2)
+    delphi = y(size(y)/2+1 : size(y))
     !END MULTIFIELD
 
     if (.not. use_t) then
-      eps = getEps(p,delp)
+      eps = getEps(phi,delphi)
     else
-      eps = getEps_with_t(p,delp)
+      eps = getEps_with_t(phi,delphi)
     end if
 
     !Instability check since H^2=V/(3-eps) is not numerically stable as V~0 for
-    !H>0
-    IF(eps .gt. 3.0e0_dp) THEN
-       write(*,*) 'MODECODE: Pot=', pot(p)
+    !H>0, since requires eps->3
+    IF(eps .ge. 3.0e0_dp) THEN
+       write(*,*) 'MODECODE: Pot=', pot(phi)
        write(*,*) 'MODECODE: Eps=',eps
        write(*,*) 'MODECODE: Using t?', use_t
        if (use_t) then
@@ -125,8 +125,8 @@ CONTAINS
        else
          write(*,*) 'MODECODE: E-fold=',x
        end if
-       write(*,*) "MODECODE: Phi=",p
-       write(*,*) "MODECODE: Dphi=",delp
+       write(*,*) "MODECODE: Phi=",phi
+       write(*,*) "MODECODE: Dphi=",delphi
        write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
        if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
 
@@ -157,19 +157,19 @@ CONTAINS
     !MULTIFIELD
     if (.not. use_t) then
       !Derivs wrt e-folds
-      hubble=getH(p,delp)
-      dhubble=getdHdalpha(p,delp)
+      hubble=getH(phi,delphi)
+      dhubble=getdHdalpha(phi,delphi)
 
-      yprime(1 : size(y)/2) = delp
-      yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delp+&
-        dVdphi(p)/hubble/hubble)
+      yprime(1 : size(y)/2) = delphi
+      yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delphi+&
+        dVdphi(phi)/hubble/hubble)
     else
 
       !Derivs in cosmic time
-      hubble = getH_with_t(p,delp)
+      hubble = getH_with_t(phi,delphi)
 
-      yprime(1 : size(y)/2) = delp
-      yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delp - dVdphi(p)
+      yprime(1 : size(y)/2) = delphi
+      yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delphi - dVdphi(phi)
 
       !E-folds
       yprime(2*num_inflaton+1) = hubble
