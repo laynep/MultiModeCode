@@ -27,6 +27,13 @@ module modpk_sampling
   end type
   type(ic_samp_flags) :: ic_flags
 
+  integer :: inflaton_sampling
+  type :: inflaton_samp_flags
+    integer :: unif = 1
+    integer :: logunif = 2
+  end type
+  type(inflaton_samp_flags) :: inflaton_flags
+
   integer :: param_sampling
   type :: param_samp_flags
     integer :: reg_constant = 1
@@ -1410,6 +1417,7 @@ module modpk_sampling
           rectang_RM(ii,jj) = rand
 
         end do; end do
+
 
         !Matrix multiplication rectang_RM.rectang_RM^T
         call dgemm( 'n', 't', &

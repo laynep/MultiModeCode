@@ -1,6 +1,8 @@
 #gfortran compile options
 ifdef GFORTRAN
 
+LINKFLAGS = -llapack -lblas
+
 F90C     = gfortran
 FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8
 
@@ -12,7 +14,7 @@ endif
 #ifort compile options
 else
 
-LINKFLAGS = -mkl #-L/opt/intel/mkl/lib/intel64 -mkl
+LINKFLAGS = -mkl
 
 ifdef DEBUG
 F90C     = ifort

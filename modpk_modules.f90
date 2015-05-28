@@ -46,6 +46,8 @@ MODULE modpkparams
   !MULTIFIELD
   integer :: num_inflaton
   real(dp), dimension(:,:), allocatable :: vparams
+  real(dp), dimension(:), allocatable :: other_params
+  integer :: numb_other_params
   real(dp), allocatable :: phi_init0(:), phi_init(:)
   real(dp), allocatable :: dphi_init0(:), dphi_init(:), dphidt_init0(:)
   real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
@@ -125,7 +127,8 @@ END MODULE internals
 module modpk_observables
   !Module that defines the various observables one could calculate around the
   !pivot scale.  Defines objects for observables, power spectra, etc.
-  use modpkparams, only : dp, num_inflaton
+  use modpkparams, only : dp, num_inflaton, &
+    vparams, other_params, numb_other_params, N_pivot, num_inflaton
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   implicit none
@@ -242,16 +245,50 @@ module modpk_observables
       integer, intent(in) :: outunit
 
       character(1024) :: cname
-      integer :: ii
+      integer :: ii, jj
+
+      !First write any desired auxiliary parameters
+      if (out_opt%detailed%needmoreopts) then
+
+        if (out_opt%detailed%write_Npiv) &
+          call csv_write(outunit, 'N_*',advance=.false.)
+
+        if (out_opt%detailed%write_num_inflaton) &
+          call csv_write(outunit, 'N_fields',advance=.false.)
+
+        if (out_opt%detailed%write_vparams) then
+          do ii=1,size(vparams,1); do jj=1,size(vparams,2)
+            write(cname, "(A5,I4.4,A1,I4.4,A1)") "vpar(", ii, ",", jj, ")"
+            call csv_write(&
+              outunit,&
+              trim(cname), &
+              advance=.false.)
+          end do; end do
+
+        end if
+
+        if (out_opt%detailed%write_other_params) then
+          do ii=1,numb_other_params
+            write(cname, "(A8,I4.4)") "auxparam", ii
+            call csv_write(&
+              outunit,&
+              trim(cname), &
+              advance=.false.)
+          end do
+        end if
+
+      end if
 
       !First columns for IC
-      do ii=1,size(self%ic)
-        write(cname, "(A3,I4.4)") "phi_piv", ii
-        call csv_write(&
-          outunit,&
-          trim(cname), &
-          advance=.false.)
-      end do
+      if (out_opt%phi0) then
+        do ii=1,size(self%ic)
+          write(cname, "(A3,I4.4)") "phi_piv", ii
+          call csv_write(&
+            outunit,&
+            trim(cname), &
+            advance=.false.)
+        end do
+      end if
 
       !Remaining columns
       call csv_write(outunit,&
@@ -271,10 +308,33 @@ module modpk_observables
       class(observables) :: self
       integer, intent(in) :: outunit
 
+      !First write the desired auxiliary parameters
+      if (out_opt%detailed%needmoreopts) then
+
+        if (out_opt%detailed%write_Npiv) &
+          call csv_write(outunit,N_pivot,advance=.false.)
+
+        if (out_opt%detailed%write_num_inflaton) &
+          call csv_write(outunit,num_inflaton,advance=.false.)
+
+        if (out_opt%detailed%write_vparams) then
+          call csv_write(outunit,&
+            (/ vparams/), advance=.false.)
+        end if
+
+        if (out_opt%detailed%write_other_params) then
+          call csv_write(outunit,&
+            (/ other_params(1:numb_other_params)/), advance=.false.)
+        end if
+
+      end if
+
+      if (out_opt%phi0) &
+        call csv_write(outunit,&
+          (/ self%ic(:)/), advance=.false.)
 
       call csv_write(outunit,&
-        (/ self%ic(:), &
-        self%As, &
+        (/self%As, &
         self%ns,&
         self%r, &
         self%nt, &

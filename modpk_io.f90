@@ -6,6 +6,17 @@ module modpk_io
   private
   public :: out_opt
 
+  type :: detailed_print_options
+    !Do we need more detailed options
+    logical :: needmoreopts
+
+    !Print out other relevant parameters
+    logical :: write_Npiv
+    logical :: write_num_inflaton
+    logical :: write_vparams
+    logical :: write_other_params
+  end type
+
   type :: print_options
 
     !Verbosity
@@ -19,6 +30,7 @@ module modpk_io
     logical :: fields_end_infl
     logical :: spectra
     logical :: modes
+    logical :: phi0
 
     !File unit numbers for output
     integer :: trajout
@@ -48,6 +60,9 @@ module modpk_io
     character(16) :: i_fmt = '(a25,I3)'
     character(16) :: array_fmt
     character(len=2) :: ci
+
+    !Detailed output options
+    type (detailed_print_options) :: detailed
 
     contains
 

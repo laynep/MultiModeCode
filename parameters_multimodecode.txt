@@ -7,6 +7,7 @@ Set potential and its derivatives in modpk_potential.f90
 
 &init
   num_inflaton = 100
+
   potential_choice = 1
   vparam_rows = 1
   more_potential_params = .false.
@@ -26,6 +27,15 @@ ignores the contributions from the end of inflation surface.
   use_horiz_cross_approx = .false.
   evaluate_modes = .false.
   get_runningofrunning = .false.
+/
+
+----------------
+Parameters to control sampling the number of fields
+&inflaton_sampling_nml
+  varying_num_inflaton = .true.
+  num_inflaton_prior_min = 10
+  num_inflaton_prior_max = 10
+  inflaton_sampling = 1
 /
 
 ----------------
@@ -58,7 +68,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 6
-  numb_samples = 1
+  numb_samples = 2
 
   energy_scale = .1
 
@@ -91,6 +101,7 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
 
   varying_N_pivot = .true.
 
+  numb_other_params = 2
   prior_other_params_min(:) = 0.5 5e-6
   prior_other_params_max(:) = 0.5 5e-6
 
@@ -207,11 +218,17 @@ Options for output from the code.
   out_opt%output_badic =.false.
 
   out_opt%save_traj = .false.
+  out_opt%phi0 = .false.
   out_opt%fields_horiz = .false.
   out_opt%fields_end_infl = .false.
   out_opt%spectra = .false.
   out_opt%modes = .false.
 
+  out_opt%detailed%needmoreopts = .true.
+  out_opt%detailed%write_Npiv = .true.
+  out_opt%detailed%write_num_inflaton = .true.
+  out_opt%detailed%write_vparams = .false.
+  out_opt%detailed%write_other_params = .true.
 /
 
 EXPERIMENTAL

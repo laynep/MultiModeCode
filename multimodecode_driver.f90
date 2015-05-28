@@ -34,7 +34,8 @@ program multimodecode
 
   !Other sampling params
   real(dp) :: N_pivot_prior_min, N_pivot_prior_max
-  logical :: varying_N_pivot
+  integer :: num_inflaton_prior_min, num_inflaton_prior_max
+  logical :: varying_N_pivot, varying_num_inflaton
   logical :: more_potential_params
   logical :: get_runningofrunning
   logical :: use_horiz_cross_approx
@@ -46,6 +47,10 @@ program multimodecode
     slowroll_infl_end, instreheat, vparam_rows, &
     more_potential_params
 
+  namelist /inflaton_sampling_nml/ varying_num_inflaton, &
+    num_inflaton_prior_min, num_inflaton_prior_max,&
+    inflaton_sampling
+
   namelist /analytical/ use_deltaN_SR, evaluate_modes, &
     use_horiz_cross_approx, get_runningofrunning
 
@@ -54,7 +59,7 @@ program multimodecode
 
   namelist /param_sampling_nml/ param_sampling, vp_prior_min, vp_prior_max, &
     varying_N_pivot, use_first_priorval, &
-    prior_other_params_min, prior_other_params_max
+    numb_other_params, prior_other_params_min, prior_other_params_max
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -76,6 +81,7 @@ program multimodecode
     status="old", delim = "apostrophe")
   read(unit=pfile, nml=init)
   read(unit=pfile, nml=analytical)
+  read(unit=pfile, nml=inflaton_sampling_nml)
 
   !Make some arrays
   call allocate_vars()
@@ -234,6 +240,8 @@ program multimodecode
 
       allocate(vp_prior_max(vparam_rows,num_inflaton))
       allocate(vp_prior_min(vparam_rows,num_inflaton))
+
+      allocate(other_params(max(100,2*num_inflaton)))
       allocate(prior_other_params_max(max(100,2*num_inflaton)))
       allocate(prior_other_params_min(max(100,2*num_inflaton)))
 
@@ -251,6 +259,38 @@ program multimodecode
       allocate(dphidt_init0(num_inflaton))
 
     end subroutine allocate_vars
+
+    subroutine deallocate_vars()
+      !Deallocate all the arrays that we allocate in allocate_vars()
+
+      if (allocated(turning_choice)) deallocate(turning_choice)
+      if (allocated(number_knots_qsfrandom)) deallocate(number_knots_qsfrandom)
+      if (allocated(stand_dev_qsfrandom)) deallocate(stand_dev_qsfrandom)
+      if (allocated(knot_range_min)) deallocate(knot_range_min)
+      if (allocated(knot_range_max)) deallocate(knot_range_max)
+      if (allocated(vparams)) deallocate(vparams)
+      if (allocated(other_params)) deallocate(other_params)
+      if (allocated(icpriors_max)) deallocate(icpriors_max)
+      if (allocated(icpriors_min)) deallocate(icpriors_min)
+      if (allocated(vp_prior_max)) deallocate(vp_prior_max)
+      if (allocated(vp_prior_min)) deallocate(vp_prior_min)
+      if (allocated(prior_other_params_max)) deallocate(prior_other_params_max)
+      if (allocated(prior_other_params_min)) deallocate(prior_other_params_min)
+
+      if (allocated(phi_init0)) deallocate(phi_init0)
+      if (allocated(phi_init)) deallocate(phi_init)
+      if (allocated(phidot_sign)) deallocate(phidot_sign)
+      if (allocated(phiarr)) deallocate(phiarr)
+      if (allocated(dphiarr)) deallocate(dphiarr)
+      if (allocated(param_arr)) deallocate(param_arr)
+      if (allocated(phi_infl_end)) deallocate(phi_infl_end)
+      if (allocated(phi_pivot)) deallocate(phi_pivot)
+      if (allocated(dphi_pivot)) deallocate(dphi_pivot)
+      if (allocated(dphi_init0)) deallocate(dphi_init0)
+      if (allocated(dphi_init)) deallocate(dphi_init)
+      if (allocated(dphidt_init0)) deallocate(dphidt_init0)
+
+    end subroutine deallocate_vars
 
     subroutine output_observables(pk_arr,&
         calc_full_pk, &
@@ -457,12 +497,16 @@ program multimodecode
       pk_bad = run_outcome%success
       leave = .false.
 
+      !num_inflaton sets many array sizes, have to treat it slightly differently
+      if (varying_num_inflaton) call get_new_num_inflaton()
+
       !Get e-folds after pivot scale leaves horizon
       if (varying_N_pivot) then
         save_iso_N = .false.
         call get_new_N_pivot(N_pivot,&
           N_pivot_prior_min, N_pivot_prior_max)
       end if
+
 
       !Get vparams
       if (param_sampling /= param_flags%reg_constant) then
@@ -686,6 +730,7 @@ program multimodecode
       observs_SR%f_NL  = fnl_SR(phi_pivot,phi_end)
       observs_SR%tau_NL  = taunl_SR(phi_pivot,phi_end)
       observs_SR%alpha_s  = alpha_s_SR(phi_pivot,phi_end)
+      observs_SR%A_bundle = field_bundle%exp_scalar
 
     end subroutine calculate_SR_observables
 
@@ -759,5 +804,86 @@ program multimodecode
       icpriors_min(2,:) = dphi0_priors_min
 
     end subroutine init_sampler
+
+    !*********************
+    !LIMITED FUNCTIONALITY
+    !*********************
+    !Gets a new number of inflatons and resets arrays that have already been allocated.
+    !Checks for conflicts with other parameter settings.
+    subroutine get_new_num_inflaton()
+       real(dp) :: rand
+
+       !Checks
+       if (ic_sampling==ic_flags%reg_samp .or. &
+         ic_sampling==ic_flags%eqen_samp .or. &
+         ic_sampling==ic_flags%parameter_loop_samp .or. &
+         ic_sampling==ic_flags%param_unif_prior .or. &
+         ic_sampling==ic_flags%qsf_random .or. &
+         ic_sampling==ic_flags%qsf_parametric .or. &
+         ic_sampling==ic_flags%slowroll_samp) then
+
+
+         print*, "MODECODE: sampling technique=",ic_sampling
+         call raise%fatal_code(&
+           "This sampling technique is not safe when varying num_inflaton.",&
+           __FILE__, __LINE__)
+       end if
+
+       !Get rid of arrays you've just allocated
+       call deallocate_vars()
+
+       !Uniform sampling for num_inflaton
+       if (inflaton_sampling==inflaton_flags%unif) then
+
+         call random_number(rand)
+         call random_number(rand)
+         rand = rand*(num_inflaton_prior_max-num_inflaton_prior_min) + num_inflaton_prior_min
+
+         num_inflaton = floor(rand)
+
+       !Uniform sampling for log(num_inflaton)
+       else if (inflaton_sampling==inflaton_flags%logunif) then
+         call random_number(rand)
+         call random_number(rand)
+         rand = rand*&
+           (log10(real(num_inflaton_prior_max,dp))-&
+           log10(real(num_inflaton_prior_min,dp))) &
+           + log10(real(num_inflaton_prior_min,dp))
+
+         num_inflaton = floor(10.0e0_dp**rand)
+       else
+
+         print*, "MODECODE: inflaton_sampling technique=",inflaton_sampling
+         call raise%fatal_code(&
+           "This sampling technique is not implemented.",&
+           __FILE__, __LINE__)
+
+       end if
+
+       !Remake the necessary arrays
+       call allocate_vars()
+
+       !You have to reinitialize the sampling priors intelligently.
+       !Can't just call init_sampler because param file will likely depend on a
+       !set number of fields
+       !This can go wrong very easily...
+       if (ic_sampling == ic_flags%iso_N) then
+	       open(newunit=pfile, file="parameters_multimodecode.txt", &
+           status="old", delim = "apostrophe")
+         read(unit=pfile, nml=param_sampling_nml)
+	       close(unit=pfile)
+
+       else
+         print*, "MODECODE: sampling technique=",ic_sampling
+         call raise%fatal_code(&
+           "This sampling technique is not implemented with variable num_inflaton.",&
+           __FILE__, __LINE__)
+       end if
+
+
+       !Get new formatting, etc
+       call output_initial_data()
+
+    end subroutine get_new_num_inflaton
 
 end program multimodecode

@@ -41,7 +41,7 @@ modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorha
 modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
-	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER) $(LINKFLAGS) -o $@ 
+	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER)  $(LINKFLAGS) -o $@
 
 %.o %.mod: %.f90
 	$(F90C) $(F90FLAGS) -c $*.f90
