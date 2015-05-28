@@ -59,7 +59,7 @@ program multimodecode
 
   namelist /param_sampling_nml/ param_sampling, vp_prior_min, vp_prior_max, &
     varying_N_pivot, use_first_priorval, &
-    numb_other_params, prior_other_params_min, prior_other_params_max
+    numb_auxparams, prior_auxparams_min, prior_auxparams_max
 
   namelist /params/ phi_init0, dphi_init0, vparams, &
     N_pivot, k_pivot, dlnk
@@ -241,9 +241,9 @@ program multimodecode
       allocate(vp_prior_max(vparam_rows,num_inflaton))
       allocate(vp_prior_min(vparam_rows,num_inflaton))
 
-      allocate(other_params(max(100,2*num_inflaton)))
-      allocate(prior_other_params_max(max(100,2*num_inflaton)))
-      allocate(prior_other_params_min(max(100,2*num_inflaton)))
+      allocate(auxparams(max(100,2*num_inflaton)))
+      allocate(prior_auxparams_max(max(100,2*num_inflaton)))
+      allocate(prior_auxparams_min(max(100,2*num_inflaton)))
 
       allocate(phi_init0(num_inflaton))
       allocate(phi_init(num_inflaton))
@@ -269,13 +269,13 @@ program multimodecode
       if (allocated(knot_range_min)) deallocate(knot_range_min)
       if (allocated(knot_range_max)) deallocate(knot_range_max)
       if (allocated(vparams)) deallocate(vparams)
-      if (allocated(other_params)) deallocate(other_params)
+      if (allocated(auxparams)) deallocate(auxparams)
       if (allocated(icpriors_max)) deallocate(icpriors_max)
       if (allocated(icpriors_min)) deallocate(icpriors_min)
       if (allocated(vp_prior_max)) deallocate(vp_prior_max)
       if (allocated(vp_prior_min)) deallocate(vp_prior_min)
-      if (allocated(prior_other_params_max)) deallocate(prior_other_params_max)
-      if (allocated(prior_other_params_min)) deallocate(prior_other_params_min)
+      if (allocated(prior_auxparams_max)) deallocate(prior_auxparams_max)
+      if (allocated(prior_auxparams_min)) deallocate(prior_auxparams_min)
 
       if (allocated(phi_init0)) deallocate(phi_init0)
       if (allocated(phi_init)) deallocate(phi_init)

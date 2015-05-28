@@ -14,7 +14,7 @@ module modpk_io
     logical :: write_Npiv
     logical :: write_num_inflaton
     logical :: write_vparams
-    logical :: write_other_params
+    logical :: write_auxparams
   end type
 
   type :: print_options

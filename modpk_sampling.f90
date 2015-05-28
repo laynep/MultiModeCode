@@ -44,7 +44,7 @@ module modpk_sampling
   end type
   type(param_samp_flags) :: param_flags
   real(dp), dimension(:,:), allocatable :: vp_prior_max, vp_prior_min
-  real(dp), dimension(:), allocatable :: prior_other_params_min, prior_other_params_max
+  real(dp), dimension(:), allocatable :: prior_auxparams_min, prior_auxparams_max
   logical :: use_first_priorval
 
 
@@ -1374,6 +1374,7 @@ module modpk_sampling
             ((vp_prior_max(ii,jj)-vp_prior_min(ii,jj))*rand+vp_prior_min(ii,jj))
         end do; end do
 
+#ifdef MKL_EXIST
       !Sample masses from the Marcenko-Pastur distribution from random matrix arguments
       else if (param_sampling == param_flags%MarPast_dist) then
         !other params: 1 = beta, 2 = sigma
@@ -1385,10 +1386,13 @@ module modpk_sampling
         !beta = M/N
 
         !Get beta from uniform prior
-        beta_min = prior_other_params_min(1)
-        beta_max = prior_other_params_max(1)
+        beta_min = prior_auxparams_min(1)
+        beta_max = prior_auxparams_max(1)
         call random_number(rand)
         beta = rand*(beta_max-beta_min)+beta_min
+
+        !Save this for output
+        auxparams(1) = beta
 
 
         mp_M = min(1000,num_inflaton)
@@ -1404,10 +1408,13 @@ module modpk_sampling
         allocate(eigvals(mp_M))
 
         !Get sigma from uniform prior
-        sigma_min = prior_other_params_min(2)
-        sigma_max = prior_other_params_max(2)
+        sigma_min = prior_auxparams_min(2)
+        sigma_max = prior_auxparams_max(2)
         call random_number(rand)
         sigma = rand*(sigma_max - sigma_min) + sigma_min
+
+        !Save this for output
+        auxparams(2) = sigma
 
         !sigma is stand dev of dist for elements of RM
         rand_range=sqrt(3.0e0_dp)*sigma
@@ -1465,6 +1472,7 @@ module modpk_sampling
           end if
         end if
 
+#endif
       else
 
         print*, "MODECODE: param_sampling=", param_sampling

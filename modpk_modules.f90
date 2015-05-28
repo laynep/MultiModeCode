@@ -46,8 +46,8 @@ MODULE modpkparams
   !MULTIFIELD
   integer :: num_inflaton
   real(dp), dimension(:,:), allocatable :: vparams
-  real(dp), dimension(:), allocatable :: other_params
-  integer :: numb_other_params
+  real(dp), dimension(:), allocatable :: auxparams
+  integer :: numb_auxparams
   real(dp), allocatable :: phi_init0(:), phi_init(:)
   real(dp), allocatable :: dphi_init0(:), dphi_init(:), dphidt_init0(:)
   real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
@@ -128,7 +128,7 @@ module modpk_observables
   !Module that defines the various observables one could calculate around the
   !pivot scale.  Defines objects for observables, power spectra, etc.
   use modpkparams, only : dp, num_inflaton, &
-    vparams, other_params, numb_other_params, N_pivot, num_inflaton
+    vparams, auxparams, numb_auxparams, N_pivot, num_inflaton
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   implicit none
@@ -267,8 +267,8 @@ module modpk_observables
 
         end if
 
-        if (out_opt%detailed%write_other_params) then
-          do ii=1,numb_other_params
+        if (out_opt%detailed%write_auxparams) then
+          do ii=1,numb_auxparams
             write(cname, "(A8,I4.4)") "auxparam", ii
             call csv_write(&
               outunit,&
@@ -322,9 +322,9 @@ module modpk_observables
             (/ vparams/), advance=.false.)
         end if
 
-        if (out_opt%detailed%write_other_params) then
+        if (out_opt%detailed%write_auxparams) then
           call csv_write(outunit,&
-            (/ other_params(1:numb_other_params)/), advance=.false.)
+            (/ auxparams(1:numb_auxparams)/), advance=.false.)
         end if
 
       end if

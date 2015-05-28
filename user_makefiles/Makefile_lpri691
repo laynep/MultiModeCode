@@ -37,4 +37,7 @@ endif
 
 endif
 
+#For using MKL/LAPACK/BLAS
+FFLAGS += -DMKL_EXIST
+
 include ./Makefile_main_modpk
