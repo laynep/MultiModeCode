@@ -1030,6 +1030,7 @@ array_polint	modpk_numerics.f90	/^    SUBROUTINE array_polint(/;"	s	module:modpk
 assert	modpk_errorhandling.f90	/^  type(asserte/;"	v	module:modpk_errorhandling
 asserter	modpk_errorhandling.f90	/^  type :: asserter$/;"	t	module:modpk_errorhandling
 automate_singlefield_ic	modpk_modules.f90	/^    logical :: automate_singlefield_ic$/;"	k	type:tech_options
+auxparams	modpk_modules.f90	/^  real(dp), dimension(:), allocatable :: auxparams$/;"	v	module:modpkparams
 backgrnd	modpk_backgrnd.f90	/^  SUBROUTINE backgrnd$/;"	s	module:background_evolution
 background_evolution	modpk_backgrnd.f90	/^MODULE background_evolution$/;"	m
 bad_reheat	modpk_errorhandling.f90	/^    integer :: bad_reheat /;"	k	type:run_outcome_type
@@ -1342,7 +1343,7 @@ num_inflaton_prior_max	multimodecode_driver.f90	/^  integer :: num_inflaton_prio
 num_inflaton_prior_min	multimodecode_driver.f90	/^  integer :: num_inflaton_prior_min,/;"	v	program:multimodecode
 num_second_deriv	modpk_numerics.f90	/^    subroutine num_second_deriv(/;"	s	module:modpk_numerics
 num_second_deriv_vectorfunct	modpk_numerics.f90	/^    subroutine num_second_deriv_vectorfunct(/;"	s	module:modpk_numerics
-numb_other_params	modpk_modules.f90	/^  integer :: numb_other_params$/;"	v	module:modpkparams
+numb_auxparams	modpk_modules.f90	/^  integer :: numb_auxparams$/;"	v	module:modpkparams
 numb_samples	multimodecode_driver.f90	/^  integer :: numb_samples$/;"	v	program:multimodecode
 number_knots_qsfrandom	modpk_qsf.f90	/^  integer, dimension(:), allocatable :: number_knots_qsfrandom$/;"	v	module:modpk_qsf
 numtasks	multimodecode_driver.f90	/^  integer :: numtasks,/;"	v	program:multimodecode
@@ -1355,7 +1356,6 @@ ode_underflow	modpk_modules.f90	/^  LOGICAL :: ode_underflow$/;"	v	module:ode_pa
 odeint_c	modpk_odeint.f90	/^  SUBROUTINE odeint_c(/;"	s	module:modpk_odeint
 odeint_r	modpk_odeint.f90	/^  subroutine odeint_r(/;"	s	module:modpk_odeint
 odeint_with_t	modpk_odeint.f90	/^  SUBROUTINE odeint_with_t(/;"	s	module:modpk_odeint
-other_params	modpk_modules.f90	/^  real(dp), dimension(:), allocatable :: other_params$/;"	v	module:modpkparams
 out_adiab	multimodecode_driver.f90	/^  integer :: out_adiab$/;"	v	program:multimodecode
 out_opt	modpk_io.f90	/^  type(print_options) :: out_opt$/;"	v	module:modpk_io
 output_badic	modpk_io.f90	/^    logical :: output_badic$/;"	k	type:print_options
@@ -1387,6 +1387,7 @@ penalized_constrained_montecarlo	modpk_NOTREADY.f90	/^    subroutine penalized_c
 perturbative	modpk_reheat.f90	/^    integer :: perturbative /;"	k	type:reheat_model_flags
 pfile	multimodecode_driver.f90	/^  integer :: pfile$/;"	v	program:multimodecode
 phi	modpk_qsf.f90	/^    real(dp), dimension(:), allocatable :: phi$/;"	k	type:qsf_reference
+phi0	modpk_io.f90	/^    logical :: phi0$/;"	k	type:print_options
 phi_ij	modpk_modules.f90	/^    complex(dp), dimension(:,:), allocatable :: phi_ij$/;"	k	type:power_spectra
 phi_infl_end	modpk_modules.f90	/^  real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(/;"	v	module:modpkparams
 phi_init	modpk_modules.f90	/^  real(dp), allocatable :: phi_init0/;"	v	module:modpkparams
@@ -1428,8 +1429,8 @@ print_options	modpk_io.f90	/^  type :: print_options$/;"	t	module:modpk_io
 print_out	multimodecode_driver.f90	/^  namelist \/print_out\//;"	n	program:multimodecode
 print_traj	modpk_odeint.f90	/^    subroutine print_traj(/;"	s	subroutine:odeint_r
 print_traj	modpk_odeint.f90	/^    subroutine print_traj(/;"	s	subroutine:odeint_with_t
-prior_other_params_max	modpk_sampling.f90	/^  real(dp), dimension(:), allocatable :: prior_other_params_min, prior_other_params_max$/;"	v	module:modpk_sampling
-prior_other_params_min	modpk_sampling.f90	/^  real(dp), dimension(:), allocatable :: prior_other_params_min,/;"	v	module:modpk_sampling
+prior_auxparams_max	modpk_sampling.f90	/^  real(dp), dimension(:), allocatable :: prior_auxparams_min, prior_auxparams_max$/;"	v	module:modpk_sampling
+prior_auxparams_min	modpk_sampling.f90	/^  real(dp), dimension(:), allocatable :: prior_auxparams_min,/;"	v	module:modpk_sampling
 priors	multimodecode_driver.f90	/^      namelist \/priors\//;"	n	subroutine:init_sampler
 projection	modpk_potential.f90	/^  pure function projection(/;"	f
 ps0	driver_modpk.f90	/^  real(dp) :: ps0,/;"	v	program:driver_modpk
@@ -1554,11 +1555,8 @@ vp_prior_min	modpk_sampling.f90	/^  real(dp), dimension(:,:), allocatable :: vp_
 vparam_rows	multimodecode_driver.f90	/^  integer :: sample_looper, vparam_rows$/;"	v	program:multimodecode
 vparams	modpk_modules.f90	/^  real(dp), dimension(:,:), allocatable :: vparams$/;"	v	module:modpkparams
 write_Npiv	modpk_io.f90	/^    logical :: write_Npiv$/;"	k	type:detailed_print_options
-write_dphi0	modpk_io.f90	/^    logical :: write_dphi0$/;"	k	type:detailed_print_options
+write_auxparams	modpk_io.f90	/^    logical :: write_auxparams$/;"	k	type:detailed_print_options
 write_num_inflaton	modpk_io.f90	/^    logical :: write_num_inflaton$/;"	k	type:detailed_print_options
-write_other_params	modpk_io.f90	/^    logical :: write_other_params$/;"	k	type:detailed_print_options
-write_phi0	modpk_io.f90	/^    logical :: write_phi0$/;"	k	type:detailed_print_options
-write_phi_piv	modpk_io.f90	/^    logical :: write_phi_piv$/;"	k	type:detailed_print_options
 write_spectra	modpk_odeint.f90	/^    subroutine write_spectra(/;"	s	subroutine:odeint_c
 write_vparams	modpk_io.f90	/^    logical :: write_vparams$/;"	k	type:detailed_print_options
 xi_SR	modpk_deltaN.f90	/^    function xi_SR(/;"	f	module:modpk_deltaN

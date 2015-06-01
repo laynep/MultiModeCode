@@ -497,9 +497,6 @@ program multimodecode
       pk_bad = run_outcome%success
       leave = .false.
 
-      !num_inflaton sets many array sizes, have to treat it slightly differently
-      if (varying_num_inflaton) call get_new_num_inflaton()
-
       !Get e-folds after pivot scale leaves horizon
       if (varying_N_pivot) then
         save_iso_N = .false.
@@ -507,6 +504,8 @@ program multimodecode
           N_pivot_prior_min, N_pivot_prior_max)
       end if
 
+      !num_inflaton sets many array sizes, have to treat it slightly differently
+      if (varying_num_inflaton) call get_new_num_inflaton()
 
       !Get vparams
       if (param_sampling /= param_flags%reg_constant) then
@@ -520,7 +519,6 @@ program multimodecode
           numb_samples,energy_scale)
       end if
 
-
       !Load ics
       allocate(observs%ic(2*num_inflaton))
       observs%ic(1:num_inflaton)=phi_init0
@@ -529,6 +527,16 @@ program multimodecode
         allocate(observs_SR%ic(2*num_inflaton))
         observs_SR%ic = observs%ic
       end if
+
+      !Estimate # of e-folds vs N_pivot
+      if (potential_choice==1) then
+        if (0.25e0_dp*sum(phi_init0**2)<0.75e0_dp*N_pivot) then
+          pk_bad = 2 !Not enough inflation for pivot scale to leave horizon
+        end if
+      end if
+
+      call test_bad(pk_bad, observs, leave)
+      if (leave) return
 
       !Initialize potential and calc background
       call potinit
@@ -753,7 +761,7 @@ program multimodecode
 
     end subroutine test_bad
 
-    subroutine init_sampler(icpriors_min, icpriors_max)
+    subroutine init_sampler(icpriors_min, icpriors_max,read_nml2)
       !Initialize the parameter or IC sampler if we're using it.
       !Need to allocate some arrays and set the random seed.
 
@@ -766,9 +774,11 @@ program multimodecode
 
       integer :: u, i
 
+      logical, intent(in), optional :: read_nml2
+
       namelist /priors/ phi0_priors_min, phi0_priors_max, &
         dphi0_priors_min, dphi0_priors_max, &
-        N_pivot_prior_min, N_pivot_prior_max
+        N_pivot_prior_min, N_pivot_prior_max, allow_superplanckian
 
 
       if (allocated(phi0_priors_max)) deallocate(phi0_priors_max)
@@ -791,6 +801,10 @@ program multimodecode
         allocate(phi_iso_N(num_inflaton))
         allocate(dphi_iso_N(num_inflaton))
       end if
+
+      !When varying num_inflaton this will be useful to stop
+      !segfaults when reading from the parameter file
+      if (present(read_nml2) .and. .not. read_nml2) return
 
       !Read phi0 priors from file
 	    open(newunit=u, file="parameters_multimodecode.txt", &
@@ -815,7 +829,7 @@ program multimodecode
 
        !Checks
        if (ic_sampling==ic_flags%reg_samp .or. &
-         ic_sampling==ic_flags%eqen_samp .or. &
+         !ic_sampling==ic_flags%eqen_samp .or. &
          ic_sampling==ic_flags%parameter_loop_samp .or. &
          ic_sampling==ic_flags%param_unif_prior .or. &
          ic_sampling==ic_flags%qsf_random .or. &
@@ -872,6 +886,24 @@ program multimodecode
            status="old", delim = "apostrophe")
          read(unit=pfile, nml=param_sampling_nml)
 	       close(unit=pfile)
+
+       else if (ic_sampling == ic_flags%eqen_samp) then
+
+	       open(newunit=pfile, file="parameters_multimodecode.txt", &
+           status="old", delim = "apostrophe")
+         read(unit=pfile, nml=param_sampling_nml)
+	       close(unit=pfile)
+
+         call init_sampler(icpriors_min, icpriors_max, read_nml2=.false.)
+
+         !Fixing field ranges by Planck mass
+         icpriors_max(1,:) = 1.0e0_dp
+         icpriors_min(1,:) = -1.0e0_dp
+
+         !Ignoring KE
+         icpriors_min(2,:) = 0e0_dp
+         icpriors_max(2,:) = 0e0_dp
+
 
        else
          print*, "MODECODE: sampling technique=",ic_sampling

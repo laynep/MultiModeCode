@@ -27,6 +27,8 @@ module modpk_sampling
   end type
   type(ic_samp_flags) :: ic_flags
 
+  logical :: allow_superplanckian
+
   integer :: inflaton_sampling
   type :: inflaton_samp_flags
     integer :: unif = 1
@@ -441,6 +443,13 @@ module modpk_sampling
       !Convert dphidt-->dphidN
       H=getH_with_t(phi0, dphidt_init0)
       dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
+
+      !Check if any fields are super-Planckian, if that's not allowed
+      if (.not. allow_superplanckian .and. any(abs(phi0)>1.0e0_dp)) then
+        call raise%fatal_cosmo(&
+            "A field value is super-Planckian, which you have not allowed.",&
+            __FILE__, __LINE__)
+      end if
 
     end subroutine get_ic
 
@@ -1391,6 +1400,7 @@ module modpk_sampling
         call random_number(rand)
         beta = rand*(beta_max-beta_min)+beta_min
 
+
         !Save this for output
         auxparams(1) = beta
 
@@ -1471,6 +1481,10 @@ module modpk_sampling
             vparams(1,1:size(vparams,2)) = log10(eigvals(1:size(vparams,2)))
           end if
         end if
+
+        deallocate(rectang_RM)
+        deallocate(square_RM)
+        deallocate(eigvals)
 
 #endif
       else

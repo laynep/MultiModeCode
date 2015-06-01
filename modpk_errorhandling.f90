@@ -160,7 +160,8 @@ module modpk_errorhandling
 
       else if (outcome == self%pivot_didnt_leaveH) then
         if (out_opt%modpkoutput) &
-          print*, "MODECODE: The pivot scale didn't leave the horizon.", outcome
+          print*, "MODECODE: Not enough e-folds obtained. The pivot &
+          scale didn't leave the horizon.", outcome
 
       else if (outcome == self%cant_set_modeIC) then
         if (out_opt%modpkoutput) &

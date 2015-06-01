@@ -33,8 +33,8 @@ ignores the contributions from the end of inflation surface.
 Parameters to control sampling the number of fields
 &inflaton_sampling_nml
   varying_num_inflaton = .true.
-  num_inflaton_prior_min = 200
-  num_inflaton_prior_max = 1000
+  num_inflaton_prior_min = 1
+  num_inflaton_prior_max = 200
   inflaton_sampling = 1
 /
 
@@ -67,8 +67,8 @@ Parameters to control how the ICs are sampled
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 2
-  numb_samples = 100000
+  ic_sampling = 6
+  numb_samples = 10000
 
   energy_scale = 1.0
 
@@ -102,8 +102,8 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
   varying_N_pivot = .true.
 
   numb_auxparams = 2
-  prior_auxparams_min(:) = 0.25 5e-6
-  prior_auxparams_max(:) = 0.75 5e-6
+  prior_auxparams_min(:) = 0.5 5e-6
+  prior_auxparams_max(:) = 0.5 5e-6
 
 /
   prior_auxparams_min(:) = 0.3333 1e-6
