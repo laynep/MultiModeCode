@@ -282,5 +282,37 @@ function rand_sign() result(sign)
 
 end function rand_sign
 
+function geometric(p_val)
+
+      !Returns a random number geometrically distributed with
+      !parameter P ie. mean 1/P
+
+
+      real(dp), intent(in) :: P_val
+      integer :: geometric
+      real(dp) :: U,TINY
+
+      TINY = 1.0D-12
+      geometric = 0
+
+      IF (P_val.GT.0.9D0) THEN
+ 10    geometric = geometric + 1
+       call random_number(u)
+       IF (U.GT.P_val) GOTO 10
+      ELSE
+       call random_number(u)
+
+       !For tiny P, 1-p will be stored inaccurately and log(1-p) may
+       !be zero. In this case approximate log(1-p) by -p
+
+       IF (P_val.GT.TINY) THEN
+        geometric = 1 + INT( LOG(U)/LOG(1.0e0_dp-P_val) )
+       ELSE
+        geometric = 1 + INT(-LOG(U)/P_val)
+       ENDIF
+      ENDIF
+
+end function geometric
+
 
 end module modpk_rng

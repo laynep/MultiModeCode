@@ -389,8 +389,10 @@ CONTAINS
     CALL odeint(y,x1,x2,accuracy,h1,hmin,bderivs,rkqs_r)
 
 
+
     if (ic_sampling/=ic_flags%reg_samp .and. &
       pk_bad/=run_outcome%success) return
+
 
     IF(.NOT. ode_underflow) THEN
       if ((.not. tech_opt%use_integ_with_t.and. &
@@ -431,6 +433,7 @@ CONTAINS
         dphiarr(:,1:kount)=yp(size(y)/2+1:size(y),1:kount)
         if (ic_sampling == ic_flags%qsf_parametric) param_arr(1:kount) = param_p(1:kount)
 
+
       end if
 
 
@@ -449,6 +452,7 @@ CONTAINS
 
        END DO
        !END MULTIFIELD
+
 
        !
        !     Determine the parameters needed for converting k(Mpc^-1) to K
@@ -469,10 +473,8 @@ CONTAINS
           !MULTIFIELD
           CALL array_polint(epsarr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
 
-
           !Check for interpolation errors
           if(dalpha > 0.1 .or. dv > 0.1 .or. bb(1) > 0.1) THEN
-
 
              !Check if didn't get enough e-folds
              if (lna(kount) < N_pivot) then
@@ -502,6 +504,7 @@ CONTAINS
            endif
 
        ELSE
+
           if (size(phi_init) .eq. 1) then
              ep = abs(phi_init(1) - phi_infl_end(1))
              i = locate(sigma_arr(1:kount), ep)
@@ -509,6 +512,7 @@ CONTAINS
              CALL polint(sigma_arr(j:j+4), lna(j:j+4), ep, alpha_e, dalpha)
              V_end = pot(phi_infl_end)
           else
+
 
             !If we have stopped inflation "by hand", then we can auto-set these
             select case(potential_choice)
@@ -530,6 +534,26 @@ CONTAINS
               CALL array_polint(sigma_arr(j:j+4), phiarr(:, j:j+4), ep, phi_infl_end, bb)
             end select
           end if
+
+          !Reheating experiment
+          if (use_reheat) then
+
+            dalpha = 0e0_dp
+            dv = 0e0_dp
+            bb = 0e0_dp
+
+            if (potential_choice==1) then
+              alpha_e = lna(nactual_bg)
+              V_end = vv(nactual_bg)
+              phi_infl_end = phiarr(:,nactual_bg)
+            else
+              call raise%fatal_code("Reheating array interpolation not &
+                implemented for this potential.",&
+                __FILE__,__LINE__)
+            end if
+
+          end if
+
           !END MULTIFIELD
        ENDIF
 

@@ -1020,6 +1020,7 @@ adv	csv_file_1d.f90	/^    logical                             :: adv$/;"	v
 adv	csv_file_2d.f90	/^    logical                             :: adv$/;"	v
 advance	csv_file_1d.f90	/^    logical, intent(in), optional       :: advance$/;"	v
 allocate_vars	multimodecode_driver.f90	/^    subroutine allocate_vars(/;"	s	program:multimodecode
+allow_superplanckian	modpk_sampling.f90	/^  logical :: allow_superplanckian$/;"	v	module:modpk_sampling
 alpha_s	modpk_modules.f90	/^    real(dp) :: alpha_s$/;"	k	type:observables
 alpha_s_SR	modpk_deltaN.f90	/^    function alpha_s_SR(/;"	f	module:modpk_deltaN
 alternate_infl_end	modpk_odeint.f90	/^  logical function alternate_infl_end(/;"	f	module:modpk_odeint

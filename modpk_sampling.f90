@@ -33,6 +33,7 @@ module modpk_sampling
   type :: inflaton_samp_flags
     integer :: unif = 1
     integer :: logunif = 2
+    integer :: geometric = 3
   end type
   type(inflaton_samp_flags) :: inflaton_flags
 
@@ -1340,7 +1341,7 @@ module modpk_sampling
 
     !Subroutine to setup the vparams based off the chosen sampling technique.
     subroutine get_vparams()
-      use modpk_rng, only : shuffle
+      use modpk_rng, only : shuffle, geometric
 
       real(dp) :: rand
       integer :: ii, jj

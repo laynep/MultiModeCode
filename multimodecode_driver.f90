@@ -13,7 +13,7 @@ program multimodecode
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
   use modpk_reheat, only : use_reheat, reheat_model
-  use modpk_rng, only : init_random_seed
+  use modpk_rng, only : init_random_seed, geometric
 
   implicit none
 
@@ -596,8 +596,8 @@ program multimodecode
           call test_bad(pk_bad, observs, leave)
           if (leave) return
 !DEBUG
-!print*, "Not evaluating second and third evolve routines"
-!stop
+print*, "Not evaluating second and third evolve routines"
+stop
         call evolve(k_pivot*exp(-dlnk), pk1)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
@@ -825,7 +825,7 @@ program multimodecode
     !Gets a new number of inflatons and resets arrays that have already been allocated.
     !Checks for conflicts with other parameter settings.
     subroutine get_new_num_inflaton()
-       real(dp) :: rand
+       real(dp) :: rand, p_val
 
        !Checks
        if (ic_sampling==ic_flags%reg_samp .or. &
@@ -865,6 +865,13 @@ program multimodecode
            + log10(real(num_inflaton_prior_min,dp))
 
          num_inflaton = floor(10.0e0_dp**rand)
+
+       else if (inflaton_sampling==inflaton_flags%geometric) then
+       !Geometric sampling for num_inflaton, which is max ent if mean is known
+
+         p_val = 1.0e0_dp/num_inflaton_prior_max !Using n.._prior_min=mean(num_inflaton)
+         num_inflaton = geometric(p_val)
+
        else
 
          print*, "MODECODE: inflaton_sampling technique=",inflaton_sampling

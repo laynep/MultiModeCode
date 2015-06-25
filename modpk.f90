@@ -116,7 +116,10 @@ CONTAINS
     else
       eval_ps = 1.0e0_dp
     end if
-    useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
+
+    !DEBUG
+    !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
+    useq_ps = 1.0e0_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
 
     !How far inside the horizon to set the modes' (Bunch-Davies) IC; k = k_start*aH
     call set_consistent_BD_scale(k_start)

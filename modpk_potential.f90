@@ -388,6 +388,21 @@ contains
       finv = 1.e0_dp/(10.e0_dp**vparams(2,:))
       V_potential = sum(lambda**4*(1.e0_dp-(cos(finv*phi))**p_exp))
 
+    case(19)
+      ! Saddle point N-quadratic
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      V0=vparams(2,1)
+      m2_V=vparams(1,:)
+
+      V_potential=0e0_dp
+      do ii=1,size(phi) !Not necessarily num_inflaton
+        V_potential = V_potential +&
+          (V0/num_inflaton) +&
+          0.5e0_dp*m2_V(ii)*phi(ii)**2
+      end do
+
 
     case default
       print*, "MODECODE: potential_choice =", potential_choice
@@ -672,6 +687,19 @@ contains
          first_deriv = lambda**4*&
            p_exp*finv*(cos(finv*phi))**(p_exp-1.0e0_dp)*&
            sin(finv*phi)
+
+       case(19)
+         ! Saddle point N-quadratic
+
+         call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+         V0=vparams(2,1)
+         m2_V=vparams(1,:)
+
+         do ii=1,size(phi) !Not necessarily num_inflaton
+           first_deriv(ii) = m2_V(ii)*phi(ii)
+         end do
+
 
 
        !END MULTIFIELD
@@ -1060,6 +1088,19 @@ contains
              (cos(phi(ii)*finv(ii))**(p_exp-2.0e0_dp))*&
              (p_exp-2.0e0_dp+p_exp*cos(2.0e0_dp*phi(ii)*finv(ii)))
          end do
+
+        case(19)
+          ! Saddle point N-quadratic
+
+          call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+          V0=vparams(2,1)
+          m2_V=vparams(1,:)
+
+          second_deriv=0e0_dp
+          do ii=1,size(phi) !Not necessarily num_inflaton
+            second_deriv(ii,ii) = m2_V(ii)
+          end do
 
        case default
 
@@ -1572,13 +1613,6 @@ contains
     power_adiab = dot_product(matmul(power_matrix,omega_z),omega_z)
     power_adiab = (1e0_dp/phi_dot_0_scaled**2)*power_adiab
     !------------------------------------------------------------
-
-    !DEBUG
-    !print*, "from here...", (hubble/2.0e0_dp/pi)**2
-    !do i=1,size(power_matrix,1); do j=1,size(power_matrix,2)
-    !  print*, i, j, power_matrix(i,j)
-    !  end do; end do
-    !stop
 
     !Isocurvature power spectra
     if (numb_infl>1) then

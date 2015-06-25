@@ -505,10 +505,6 @@ contains
      subroutine check_evolution_stop_properly(leave)
        logical, intent(inout) :: leave
 
-       !DEBUG
-       !print*, "i'm checking check_evolution_stop_properly"
-       !stop
-
        leave = .false.
 
        IF(ode_infl_end) THEN
@@ -1138,7 +1134,6 @@ contains
         call powerspectrum(qij, dqij, phi, delphi, &
           scalefac, power_internal, using_q=.true.)
 
-
         power_internal%tensor=tensorpower(y(index_tensor_y) &
            *scalefac/a_switch, scalefac)
       ELSE
@@ -1202,11 +1197,25 @@ contains
 
     subroutine check_evolution_stop_properly_MODES()
 
+      complex(dp), dimension(num_inflaton**2) :: q_modes, dqdN_modes
+
        IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
-             IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
+            IF(getEps(phi, delphi) .GT. 1 .AND. slowroll_start) infl_ended=.TRUE.
           ELSE
-             if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
+            !Modes
+            !\delta \phi_i = 1/a u_i = q_ij \hat a^j = 1/a \psi_ij \hat a^j
+            if (use_q) then
+              q_modes = y(index_ptb_y:index_ptb_vel_y-1)/a_switch/sqrt(2.0e0_dp*k)
+              dqdN_modes =y(index_ptb_vel_y:index_tensor_y-1)/a_switch/sqrt(2.0e0_dp*k)
+
+              if (alternate_infl_end(phi,delphi,q_modes,dqdN_modes,efolds=x)) then
+                infl_ended = .TRUE.
+              end if
+            else
+              if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
+            end if
+
           ENDIF
         end if
 
@@ -1826,17 +1835,25 @@ contains
   !will need to edit.
   !
   !If you want to continue evolving after inflation ends, use the reheating options in modpk_reheat.
-  logical function alternate_infl_end(phi, dphidN) &
+  logical function alternate_infl_end(phi, dphidN, q_modes, dq_modes, efolds) &
     result(stopping)
     use modpkparams, only : potential_choice, phi_init, delsigma, slowroll_start, phidot_sign, phi_infl_end
     use potential, only : geteps
     real(dp), dimension(:), intent(in) :: phi, dphidN
+    complex(dp), intent(in), dimension(:), optional :: q_modes, dq_modes
+    real(dp), intent(in), optional :: efolds
 
     stopping = .false.
 
+
     !When modelling reheating we will not want to stop with epsilon=1
     if (use_reheat) then
-      call reheat_ending_check(phi,dphidN)
+      if (present(q_modes) .and. present(dq_modes) .and. present(efolds)) then
+
+        stopping = reheat_ending_check(phi,dphidN,q_modes,dq_modes,efolds)
+      else
+        stopping = reheat_ending_check(phi,dphidN)
+      end if
       return
     end if
 
