@@ -34,7 +34,7 @@ Parameters to control sampling the number of fields
 &inflaton_sampling_nml
   varying_num_inflaton = .true.
   num_inflaton_prior_min = 200
-  num_inflaton_prior_max = 1000
+  num_inflaton_prior_max = 700
   inflaton_sampling = 1
 /
 
