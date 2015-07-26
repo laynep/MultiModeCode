@@ -91,6 +91,13 @@ module modpk_reheat
         !Connection to Ewan and Joel's \zeta_i = C_ij \delta \phi^j
         C_ij=(imag*exp(-imag))*xi*sqrt(2.0e0_dp*k**3)/hubble
 
+
+
+
+
+
+
+
         !DEBUG
         print*, "from here"
         !if (present(efolds)) print*, efolds, C_ij
@@ -103,6 +110,7 @@ module modpk_reheat
         do ii=1,size(phi)
           print*, "c", C_ij(ii,ii)
           print*, "doesn't work for imag portion..."
+          print*, "Need to save ptb at horiz cross!!!"
         end do
 
 
@@ -145,7 +153,7 @@ module modpk_reheat
 
             !Warning
             call raise%warning("Using reheat testing module.  &
-              Not entirely safe!  &
+              Not safe!  &
               Be vewy, vewy careful.")
 
             !Start counting oscillations

@@ -347,7 +347,7 @@ contains
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
-    real(dp) :: phi_turn, slope
+    real(dp) :: phi_turn, slope, f_decay
 
     select case(turning_choice(1))
     case(0)
@@ -359,8 +359,10 @@ contains
       funct(2) = param**2
     case(2)
       !Helix
-      funct(1) = sin(param)
-      funct(2) = cos(param)
+      f_decay = vparams(4,1)
+
+      funct(1) = f_decay*sin(param)
+      funct(2) =  f_decay*cos(param)
     case(3)
       !One sharp turn
       phi_turn = vparams(4,1)
@@ -390,7 +392,7 @@ contains
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
-    real(dp) :: phi_turn, slope
+    real(dp) :: phi_turn, slope, f_decay
 
     select case(turning_choice(1))
     case(0)
@@ -402,8 +404,10 @@ contains
       funct(2) = 2e0_dp*param
     case(2)
       !Helix
-      funct(1) = cos(param)
-      funct(2) = -sin(param)
+      f_decay = vparams(4,1)
+
+      funct(1) = f_decay*cos(param)
+      funct(2) = -f_decay*sin(param)
     case(3)
       !One sharp turn
       phi_turn = vparams(4,1)
@@ -431,7 +435,7 @@ contains
     real(dp), intent(in) :: param
     real(dp), dimension(num_inflaton) :: funct
 
-    real(dp) :: phi_turn
+    real(dp) :: phi_turn, f_decay
 
     select case(turning_choice(1))
     case(0)
@@ -443,8 +447,10 @@ contains
       funct(2) = 2e0_dp
     case(2)
       !Helix
-      funct(1) = -sin(param)
-      funct(2) = -cos(param)
+      f_decay = vparams(4,1)
+
+      funct(1) = -f_decay*sin(param)
+      funct(2) = -f_decay*cos(param)
     case(3)
       !One sharp turn
       phi_turn = vparams(4,1)
@@ -495,7 +501,7 @@ contains
 
       print*, "MODECODE: turning_choice = ", turning_choice
       call raise%fatal_code(&
-              "MODECODE: dparam_closest_dphi not implemented.",&
+              "dparam_closest_dphi not implemented.",&
               __FILE__, __LINE__)
 
     end select

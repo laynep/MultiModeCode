@@ -528,6 +528,7 @@ program multimodecode
         observs_SR%ic = observs%ic
       end if
 
+      !DEBUG
       !Estimate # of e-folds vs N_pivot
       if (potential_choice==1) then
         if (0.25e0_dp*sum(phi_init0**2)<0.75e0_dp*N_pivot) then
@@ -596,8 +597,8 @@ program multimodecode
           call test_bad(pk_bad, observs, leave)
           if (leave) return
 !DEBUG
-print*, "Not evaluating second and third evolve routines"
-stop
+!print*, "Not evaluating second and third evolve routines"
+!stop
         call evolve(k_pivot*exp(-dlnk), pk1)
           call test_bad(pk_bad, observs, leave)
           if (leave) return

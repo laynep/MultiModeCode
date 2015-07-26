@@ -312,6 +312,7 @@ contains
       !Check not getting too far off line
       if (dist >5e-1_dp) then
       !if (dist >1e0_dp) then
+        print*, "----CHANGE ME TO DV NOT DISTANCE----"
         print*, "MODECODE: dist =", dist
         print*, "MODECODE: param_closest =", param_closest
         print*, "MODECODE: phi =", phi
@@ -605,7 +606,7 @@ contains
          !Numerical QSF
 
          select case(turning_choice(1))
-         case (:3)
+         case (3)
            m_light2 = 10.0e0_dp**vparams(1,1)
            M_heavy2 = 10.0e0_dp**vparams(1,2)
 
@@ -636,7 +637,7 @@ contains
          case default
 
            !Take derivs of potential directly via central diff
-           stepsize = 1.0e-8_dp
+           stepsize = 1.0e-5_dp
            call num_first_deriv(pot, phi, stepsize, numderiv)
            first_deriv = numderiv
 
@@ -953,7 +954,7 @@ contains
        case(15)
 
          select case(turning_choice(1))
-         case (:3)
+         case (3)
 
            !Numerical QSF
            m_light2 = 10.0e0_dp**vparams(1,1)
