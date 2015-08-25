@@ -10,7 +10,7 @@ MODULE modpk_odeint
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : use_reheat, reheat_ending_check
+  use modpk_reheat, only : use_reheat, reheat_ending_check, reheat_saver
   implicit none
 
   interface odeint
@@ -196,7 +196,7 @@ contains
         call raise%fatal_code(&
         "Reached the end of the integration in N. &
         You could try to increase the max number of steps, &
-        but more likely that the integrator is taking steps &
+        but it's more likely that the integrator is taking steps &
         that are too small.  Potentially stiff problem.", &
         __FILE__, __LINE__)
 
@@ -519,7 +519,7 @@ contains
              ENDIF
           ELSE
 
-            if(alternate_infl_end(phi,dphi)) then
+            if(alternate_infl_end(phi,dphi,efolds=x)) then
               infl_ended = .true.
               ystart(:) = y(:)
               if (save_steps) call save_a_step
@@ -1213,7 +1213,7 @@ contains
                 infl_ended = .TRUE.
               end if
             else
-              if (alternate_infl_end(phi,delphi)) infl_ended = .TRUE.
+              if (alternate_infl_end(phi,delphi,efolds=x)) infl_ended = .TRUE.
             end if
 
           ENDIF
@@ -1222,26 +1222,48 @@ contains
     end subroutine check_evolution_stop_properly_MODES
 
     subroutine switch_to_qvar()
+      use potential, only : pot
 
-          use_q = .true.
-          a_switch = scalefac
-          !set intial condition in (Q*a_switch)
-          ytmp(:) = y(:)
+      integer :: ii, jj
+      complex(dp), dimension(num_inflaton**2) :: q_modes
 
-          y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
-          y(index_ptb_vel_y:index_tensor_y-1) = &
-            ytmp(index_ptb_vel_y:index_tensor_y-1) &
-            - y(index_ptb_y:index_ptb_vel_y-1)
+      use_q = .true.
+      a_switch = scalefac
+      !set intial condition in (Q*a_switch)
+      ytmp(:) = y(:)
 
-          y(index_tensor_y) = ytmp(index_tensor_y)
-          y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
-            - y(index_tensor_y)
+      y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
+      y(index_ptb_vel_y:index_tensor_y-1) = &
+        ytmp(index_ptb_vel_y:index_tensor_y-1) &
+        - y(index_ptb_y:index_ptb_vel_y-1)
 
-          if (tech_opt%use_dvode_integrator) then
-            !Reset istate to let integrator know it's a new variable
-            istate=1
+      y(index_tensor_y) = ytmp(index_tensor_y)
+      y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
+        - y(index_tensor_y)
 
-          end if
+      if (tech_opt%use_dvode_integrator) then
+        !Reset istate to let integrator know it's a new variable
+        istate=1
+
+      end if
+
+      if (use_reheat) then
+
+        if (allocated(reheat_saver%q_horizcross)) &
+          deallocate(reheat_saver%q_horizcross)
+        allocate(reheat_saver%q_horizcross(num_inflaton,num_inflaton))
+
+        q_modes = y(index_ptb_y:index_ptb_vel_y-1)/a_switch/sqrt(2.0e0_dp*k)
+
+        !ptb_matrix is \q_ij from 1410.0685
+        !u_i = a \delta \phi_i = a \q_ij \hat a^j
+        forall (ii=1:size(phi), jj=1:size(phi))
+          reheat_saver%q_horizcross(ii,jj) = q_modes((ii-1)*num_inflaton+jj)
+        end forall
+
+        reheat_saver%h_horizcross = getH(phi,delphi)
+
+      end if
 
     end subroutine switch_to_qvar
 
@@ -1837,7 +1859,8 @@ contains
   !If you want to continue evolving after inflation ends, use the reheating options in modpk_reheat.
   logical function alternate_infl_end(phi, dphidN, q_modes, dq_modes, efolds) &
     result(stopping)
-    use modpkparams, only : potential_choice, phi_init, delsigma, slowroll_start, phidot_sign, phi_infl_end
+    use modpkparams, only : potential_choice, phi_init, delsigma, slowroll_start, &
+     slowroll_infl_end, phidot_sign, phi_infl_end
     use potential, only : geteps
     real(dp), dimension(:), intent(in) :: phi, dphidN
     complex(dp), intent(in), dimension(:), optional :: q_modes, dq_modes
@@ -1845,15 +1868,35 @@ contains
 
     stopping = .false.
 
-
     !When modelling reheating we will not want to stop with epsilon=1
+    !But we do want to store the end-of-inflation values, so we can find
+    !the horizon crossing point for the pivot scale
     if (use_reheat) then
-      if (present(q_modes) .and. present(dq_modes) .and. present(efolds)) then
 
+      !Save some things for future use
+      if (.not. slowroll_start) then
+        reheat_saver%reheating_phase = .false.
+      else if(getEps(phi, dphidN) .ge. 1 .and. slowroll_start) then
+        !Started reheating
+
+        if (reheat_saver%reheating_phase .eqv. .false.) then
+          reheat_saver%efolds_end = efolds
+          if (allocated(reheat_saver%phi_infl_end)) &
+            deallocate(reheat_saver%phi_infl_end)
+          allocate(reheat_saver%phi_infl_end(size(phi)))
+          reheat_saver%phi_infl_end = phi
+        end if
+
+        reheat_saver%reheating_phase = .true. !started reheating
+      end if
+
+      if (present(q_modes) .and. present(dq_modes) .and. present(efolds)) then
         stopping = reheat_ending_check(phi,dphidN,q_modes,dq_modes,efolds)
       else
         stopping = reheat_ending_check(phi,dphidN)
       end if
+
+
       return
     end if
 

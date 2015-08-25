@@ -6,11 +6,11 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 2
+  num_inflaton = 1000
 
-  potential_choice = 15
-  vparam_rows = 4
-  more_potential_params = .true.
+  potential_choice = 20
+  vparam_rows = 2
+  more_potential_params = .false.
 
   slowroll_infl_end = .true.
   instreheat = .false.
@@ -23,9 +23,9 @@ sum-separable potentials.  The horizon crossing approximation (HCA)
 ignores the contributions from the end of inflation surface.
 
 &analytical
-  use_deltaN_SR = .false.
+  use_deltaN_SR = .true.
   use_horiz_cross_approx = .false.
-  evaluate_modes = .true.
+  evaluate_modes = .false.
   get_runningofrunning = .false.
 /
 
@@ -34,7 +34,7 @@ Parameters to control sampling the number of fields
 &inflaton_sampling_nml
   varying_num_inflaton = .false.
   num_inflaton_prior_min = 1
-  num_inflaton_prior_max = 2
+  num_inflaton_prior_max = 200
   inflaton_sampling = 1
 /
 
@@ -48,7 +48,7 @@ get almost single-field inflation.  Order fields so that all light fields at sta
 
 &more_params
   effective_V_choice = 1
-  turning_choice = 2
+  turning_choice = 3
 
   number_knots_qsfrandom(:) = 1
   stand_dev_qsfrandom(:) = 1e-2
@@ -67,10 +67,10 @@ Parameters to control how the ICs are sampled
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 9
+  ic_sampling = 2
   numb_samples = 1
 
-  energy_scale = 1.0
+  energy_scale = 0.05
 
   save_iso_N = .false.
   set_Nisoref_by_Npivot = .true.
@@ -84,26 +84,29 @@ The vparams get marginalized --- detailed output is not saved.
 IMPORTANT: If param_sampling/=reg_constant, then this overrides the specific choices of
 vparams in namelist &params.
 
-param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarPast_dist}
+param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior,
+  4=num_QSF, 5=MarPast_dist, 6=wigner_dist}
   NB: Not all combinations of param_sampling and ic_sampling work together.
   NB: To use numerical QSF, set here
   NB: To use only the first vp_prior* column for each row set use_first_priorval=.true.
   NB: If you need priors for other parameters in your model, set them with prior_auxparams_max/min, with the total number of the other params set max(100,2*num_inflaton) (can be alterred in code, but I'm lazy)
 
 &param_sampling_nml
-  param_sampling = 1
+  param_sampling = 6
 
   use_first_priorval = .true.
 
   vp_prior_min(1,:) = -14
-
   vp_prior_max(1,:) = -12
+
+  vp_prior_min(2,:) = -13
+  vp_prior_max(2,:) = -13
 
   varying_N_pivot = .false.
 
-  numb_auxparams = 2
-  prior_auxparams_min(:) = 0.5 5e-6
-  prior_auxparams_max(:) = 0.5 5e-6
+  numb_auxparams = 1
+  prior_auxparams_max(:) = 1e-12
+  prior_auxparams_min(:) = 1e-12
 
 /
   prior_auxparams_min(:) = 0.3333 1e-6
@@ -134,16 +137,13 @@ NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 55.0
+  N_pivot = 40.0
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 1.0 1.0
+  phi_init0 = 1.e-3 5.e-1 10.0 20.0
 
-  vparams(1,:) = -10.0       -9.5
-  vparams(2,:) = 0.0       1.0
-  vparams(3,:) = 17.0       0.0
-  vparams(4,:) = 1.0       0.0
+  vparams(1,:) = 3.224213328870117E-012
 
 
 
@@ -187,14 +187,14 @@ Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
 
 &priors
-  phi0_priors_min = 2.0
+  phi0_priors_min = -1.0
 
-  phi0_priors_max = 30.0
+  phi0_priors_max = 1.0
 
-  dphi0_priors_min = -1.262e0
-  dphi0_priors_max =  1.262e0
+  dphi0_priors_min = -0e0 -0e0
+  dphi0_priors_max =  0e0 0e0
 
-  allow_superplanckian = .true.
+  allow_superplanckian = .false.
 
   N_pivot_prior_min = 40
   N_pivot_prior_max = 70
@@ -218,7 +218,7 @@ Options for output from the code.
 &print_out
 
   out_opt%modpkoutput = .true.
-  out_opt%output_reduced = .false.
+  out_opt%output_reduced = .true.
   out_opt%output_badic =.false.
 
   out_opt%save_traj = .true.
@@ -261,8 +261,8 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%use_integ_with_t= .false.
   tech_opt%automate_singlefield_ic = .false.
 
-  tech_opt%accuracy_setting = 1
-  tech_opt%use_dvode_integrator = .false.
+  tech_opt%accuracy_setting = 2
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7

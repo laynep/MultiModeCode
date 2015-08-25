@@ -359,6 +359,9 @@ program multimodecode
         else if (potential_choice==16) then
           write(*, out_opt%e2_fmt)&
             "r = Pt/Ps =", SR_pred%r, '(', 4.0*vparams(2,1)/N_pivot, ')'
+        else
+          write(*, out_opt%e2_fmt)&
+            "r =", SR_pred%r
         end if
         write(*, out_opt%e2_fmt)&
           "n_s =", SR_pred%ns

@@ -112,7 +112,7 @@ module modpk_errorhandling
         print*, "ERROR: Occured in file ", fname
       if (present(line)) &
         print*, "ERROR: At line number ", line
-      print*, "ERROR: The error is cosmology-related."
+      print*, "ERROR: The error is cosmology related."
       print*, "**********************************************"
 
       print*, "MODECODE: ", trim(msg)

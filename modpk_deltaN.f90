@@ -228,9 +228,18 @@ module modpk_deltaN
       term6 = (-2.0e0_dp/sum_ui_over_epsi)*&
         sum(xi_i_piv*u_i**2/eps_i_piv)
 
+      !DEBUG
+      !print*, "testing!, this is term6", term6
+      !print*, "testing!, this is eps_i_piv", eps_i_piv
+      !print*, "testing!, this is xi_i_piv",  xi_i_piv
+      !print*, "testing!, this is u_i^2", u_i**2
+      !stop
+
+
       alpha_s = term1 + term2 + term3 + term4 + term5 + term6
 
       call assert%check(.not. isnan(alpha_s), __FILE__, __LINE__)
+
 
 
     end function alpha_s_SR

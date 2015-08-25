@@ -42,7 +42,7 @@ contains
     real(dp), intent(in) :: phi(:)
 
     real(dp) :: m2_V(size(phi)) !! m2_V is the diagonal mass square matrix
-    real(dp) :: c1_V(size(phi)) !! some constants for a more flexible potential construction in case 9
+    real(dp) :: c1_V(size(phi)), g_V(size(phi)) !! some constants for a more flexible potential construction in case 9
     real(dp) :: lambda(size(phi)), finv(size(phi)), mu(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
     !real(dp), dimension(size(phi)/2) :: lambda_waterfall, mass_waterfall, &
@@ -51,7 +51,7 @@ contains
       mass_hybrid
 
     integer :: phi_light_index
-    real(dp) :: lambda4(size(phi)), alpha2(num_inflaton)
+    real(dp) :: lambda4(size(phi)), alpha2(size(phi))
 
     real(dp) :: lambda2
     real(dp), dimension(size(phi),size(phi)) :: m2_matrix
@@ -404,8 +404,28 @@ contains
           0.5e0_dp*m2_V(ii)*phi(ii)**2
       end do
 
+    case(20)
+      !For N-flation around a saddle
+      !Need quadratic term so that don't get a negative energy away from origin
+      ! V = V_0,i + 1/2 m_i^2 phi_i^2 + 1/4 g \phi_i^4
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      m2_V = vparams(1,:)
+      c1_V = vparams(2,:)
+      do ii=1, size(g_V)
+        if (m2_V(ii) > 0.0e0_dp) then
+          g_V(ii) = 0.0e0_dp
+        else
+          g_V(ii) = m2_V(ii)**2/c1_V(ii)/4.0e0_dp
+        end if
+      end do
+
+      V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V) &
+        + 0.25e0_dp*sum(g_V*phi**4)
 
     case default
+
       print*, "MODECODE: potential_choice =", potential_choice
       call raise%fatal_code(&
           "Need to set the potential V(phi) for this potential choice.",&
@@ -426,7 +446,8 @@ contains
     real(dp) :: first_deriv(size(phi))
 
     real(dp) :: dphi(size(phi)), phiplus(size(phi))
-    real(dp) :: m2_V(size(phi)),  c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp) :: m2_V(size(phi)),  c1_V(size(phi)), lambda(size(phi)), &
+      finv(size(phi)), mu(size(phi)), g_V(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
     integer :: i,j, temp_choice
 
@@ -701,20 +722,41 @@ contains
            first_deriv(ii) = m2_V(ii)*phi(ii)
          end do
 
+        case(20)
+          !For N-flation around a saddle
+          !Need quadratic term so that don't get a negative energy away from origin
+          ! V = V_0,i + 1/2 m_i^2 phi_i^2 + 1/4 g \phi_i^4
+
+          call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+          m2_V = vparams(1,:)
+          c1_V = vparams(2,:)
+          do ii=1, size(g_V)
+            if (m2_V(ii) > 0.0e0_dp) then
+              g_V(ii) = 0.0e0_dp
+            else
+              g_V(ii) = m2_V(ii)**2/c1_V(ii)/4.0e0_dp
+            end if
+          end do
+
+         do ii=1,size(phi) !Not necessarily num_inflaton
+           first_deriv(ii) = m2_V(ii)*phi(ii) &
+            + g_V(ii)*phi(ii)**3
+         end do
 
 
-       !END MULTIFIELD
-       case default
+          !END MULTIFIELD
+          case default
 
-         print*, "MODECODE: potential_choice =", potential_choice
-         call raise%fatal_code(&
-           "Need to set first derivative for this potential choice &
-           or use numerical derivatives (vnderivs=.true.)",&
-           __FILE__, __LINE__)
+            print*, "MODECODE: potential_choice =", potential_choice
+            call raise%fatal_code(&
+              "Need to set first derivative for this potential choice &
+              or use numerical derivatives (vnderivs=.true.)",&
+              __FILE__, __LINE__)
 
-       end select
+          end select
 
-    end if
+        end if
 
   END FUNCTION dVdphi
 
@@ -728,7 +770,8 @@ contains
     real(dp), INTENT(IN) :: phi(:)
     real(dp) :: second_deriv(size(phi),size(phi))
 
-    real(dp) :: m2_V(size(phi)), c1_V(size(phi)), lambda(size(phi)), finv(size(phi)), mu(size(phi))
+    real(dp) :: m2_V(size(phi)), c1_V(size(phi)), &
+      lambda(size(phi)), finv(size(phi)), mu(size(phi)), g_V(size(phi))
     real(dp) :: M2, theta2, c2, s2, mphi1, potsmall, potlarge, phi1shift ! messy parameters for case 10
     integer :: i,j, temp_choice
 
@@ -1103,6 +1146,28 @@ contains
             second_deriv(ii,ii) = m2_V(ii)
           end do
 
+        case(20)
+          !For N-flation around a saddle
+          !Need quadratic term so that don't get a negative energy away from origin
+          ! V = V_0,i + 1/2 m_i^2 phi_i^2 + 1/4 g \phi_i^4
+
+          call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+          m2_V = vparams(1,:)
+          c1_V = vparams(2,:)
+          do ii=1, size(g_V)
+            if (m2_V(ii) > 0.0e0_dp) then
+              g_V(ii) = 0.0e0_dp
+            else
+              g_V(ii) = m2_V(ii)**2/c1_V(ii)/4.0e0_dp
+            end if
+          end do
+
+          second_deriv=0e0_dp
+          do ii=1,size(phi) !Not necessarily num_inflaton
+            second_deriv(ii,ii) = m2_V(ii) + 3.0e0_dp*g_V(ii)*phi(ii)**2
+          end do
+
        case default
 
          print*, "MODECODE: potential_choice =", potential_choice
@@ -1131,6 +1196,8 @@ contains
     real(dp) :: m2_V(size(phi))
     real(dp) :: lambda(size(phi)), finv(size(phi))
     integer :: ii
+
+    real(dp) :: c1_V(size(phi)), g_V(size(phi))
 
     real(dp) :: p_exp
 
@@ -1187,6 +1254,28 @@ contains
       do ii=1,size(phi)
         third_deriv(ii,ii,ii) = (p_exp-2.0e0_dp)*(p_exp-1.0e0_dp)*&
           m2_V(ii)*abs(phi(ii))**(p_exp-3.0e0_dp)
+      end do
+
+    case(20)
+      !For N-flation around a saddle
+      !Need quadratic term so that don't get a negative energy away from origin
+      ! V = V_0,i + 1/2 m_i^2 phi_i^2 + 1/4 g \phi_i^4
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      m2_V = vparams(1,:)
+      c1_V = vparams(2,:)
+      do ii=1, size(g_V)
+        if (m2_V(ii) > 0.0e0_dp) then
+          g_V(ii) = 0.0e0_dp
+        else
+          g_V(ii) = m2_V(ii)**2/c1_V(ii)/4.0e0_dp
+        end if
+      end do
+
+      third_deriv = 0e0_dp
+      do ii=1,size(phi)
+        third_deriv(ii,ii,ii) = 6.0e0_dp*g_V(ii)*phi(ii)**2
       end do
 
 
@@ -1308,7 +1397,7 @@ contains
          This error might arise if there is a large separation &
          in scales (stiff problem) and the integrator walks &
          to a bad position in parameter space. &
-         Try reducing the integration stepsize or use the DVODE integrator.", &
+         Try reducing the integration stepsize or use the DVODE integration option.", &
         __FILE__, __LINE__)
 
     end if
@@ -1353,6 +1442,8 @@ contains
       3.0e0_dp/M_pl**2
 
     if (getH_with_t < 0.0e0_dp) then
+      print*, "MODECODE: V =", pot(phi)
+      print*, "MODECODE: KE =", 0.5e0_dp*dot_product(dphidt, dphidt)
       call raise%fatal_cosmo(&
         "H is complex.  &
         Try smaller stepsize in integrator.",&

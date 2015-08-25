@@ -345,7 +345,7 @@ CONTAINS
     !END MULTIFIELD
 
     !guessed start stepsize
-    if (potential_choice.eq.6) then
+    if (potential_choice.eq.6 .or. potential_choice == 20) then
       h1 = 0.001e0_dp
     end if
 
@@ -459,6 +459,7 @@ CONTAINS
        !
        nactual_bg=kount
        IF(slowroll_infl_end) THEN
+
           ep = 1.0e0_dp
 
           i=locate(epsarr(1:kount),ep)
@@ -546,6 +547,15 @@ CONTAINS
               alpha_e = lna(nactual_bg)
               V_end = vv(nactual_bg)
               phi_infl_end = phiarr(:,nactual_bg)
+
+              i=locate(lna(1:kount),alpha_e)
+              j=MIN(MAX(i-(4-1)/2,1),nactual_bg+1-4)
+
+              alpha_e = reheat_saver%efolds_end
+              phi_infl_end = reheat_saver%phi_infl_end
+              V_end = pot(phi_infl_end)
+
+
             else
               call raise%fatal_code("Reheating array interpolation not &
                 implemented for this potential.",&
@@ -711,10 +721,12 @@ CONTAINS
 
           !END MULTIFIELD
 
+
           y(size(y)/2+1 : (size(y))) = &
             -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
 
           dphi_init0 = y(size(y)/2+1 : (size(y)))
+
 
         else
 

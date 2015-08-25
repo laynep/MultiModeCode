@@ -2,7 +2,9 @@ module modpk_sampling
   !Module that implements various sampling techniques for the initial conditions
   !and model parameters.  These routines should generally be called prior to
   !doing any integration.  Monte Carlo methodology.
-  use potential, only : norm, pot, getH, getEps_with_t, getEps, getH_with_t
+  use potential, only : norm, pot, &
+    getH, getEps_with_t, getEps, getH_with_t
+  use modpk_deltaN, only : V_i_sum_sep
   use modpk_qsf
   use modpkparams, only : dp, slowroll_start, num_inflaton, &
     potential_choice, vparams
@@ -44,6 +46,7 @@ module modpk_sampling
     integer :: log_prior = 3
     integer :: num_QSF = 4
     integer :: MarPast_dist = 5
+    integer :: wigner_dist = 6
   end type
   type(param_samp_flags) :: param_flags
   real(dp), dimension(:,:), allocatable :: vp_prior_max, vp_prior_min
@@ -56,8 +59,13 @@ module modpk_sampling
   real(dp), dimension(:), allocatable :: phi_iso_N, dphi_iso_N
 
   !For choosing an equal-energy prior
-  integer, parameter, private :: equal_area_prior=1, unif_prior=2
-  integer, parameter, private :: eqen_prior = equal_area_prior
+  type :: eqen_sampling
+    integer :: equal_area_prior=1
+    integer :: unif_prior=2
+    integer :: no_KE=3
+  end type
+  type (eqen_sampling) :: eqen_sampler
+  integer, parameter, private :: eqen_prior = 3
 
 
   contains
@@ -463,18 +471,27 @@ module modpk_sampling
         phi0_priors_min, phi0_priors_max, &
         dphi0_priors_min, dphi0_priors_max,velconst)
 
+      use modpk_rng, only : rand_sign
+
       real(dp), dimension(num_inflaton*2), intent(out) :: y
       real(dp), dimension(num_inflaton), intent(in) :: phi0_priors_min, &
         phi0_priors_max, dphi0_priors_min, dphi0_priors_max
       real(dp), intent(in) :: energy_scale
+      real(dp) :: dummy_energy_scale
       logical, intent(in) :: velconst
 
-      real(dp), dimension(num_inflaton) :: phi, dphi
+      real(dp), dimension(num_inflaton) :: dummy_phi0_priors_min, &
+        dummy_phi0_priors_max, dummy_dphi0_priors_min, dummy_dphi0_priors_max
+
+      real(dp), dimension(num_inflaton) :: phi, dphi, V_i
 
 	    real(dp) :: rand, rho_not_alloc, KE
 
 	    integer :: param_constr, i, ll, j
-      integer, parameter :: maxtry=1000, maxtry_unif=10*maxtry
+      integer, parameter :: maxtry=10000, maxtry_unif=10*maxtry
+
+      real(dp), dimension(num_inflaton) :: c1_V, m2_V
+      real(dp) :: vev, energy_scale_factor
 
       !For unif_prior
       real(dp), dimension(num_inflaton) :: phi0_min, &
@@ -483,7 +500,7 @@ module modpk_sampling
       if(out_opt%modpkoutput) &
         print*, "MODECODE: IC with equal energy and eqen_prior=", eqen_prior
 
-      if (eqen_prior==equal_area_prior) then
+      if (eqen_prior==eqen_sampler%equal_area_prior) then
         !Use the pseudo--"equal-area" prior of Easther-Price (1304.4244)
 
 	      do ll=1,maxtry
@@ -614,7 +631,7 @@ module modpk_sampling
 	      end do
 
 
-      else if (eqen_prior==unif_prior) then
+      else if (eqen_prior==eqen_sampler%unif_prior) then
         !Define the constraint surface with the first velocity
         !v_1^2 = 2E_0^4 - 2V - v_2^2 - v_3^2 - ...
         !Then does a uniform sampling over the remaining fields and velocities.
@@ -669,6 +686,127 @@ module modpk_sampling
 
             return
           end if
+
+        end do
+
+
+      else if (eqen_prior==eqen_sampler%no_KE) then
+        !Sample on surface of constant *potential* energy density
+
+        if (potential_choice /= 20) then
+          print*, "MODECODE: potential_choice = ", potential_choice
+          call raise%fatal_code(&
+             "The no KE prior for the equal energy sampler is &
+             implemented for this potential_choice.",&
+              __FILE__, __LINE__)
+        end if
+
+        !Only worry about defining the first dimn in the phi & dphi priors
+
+        !Only works for potential_choice==20
+        m2_V = vparams(1,:)
+        c1_V = vparams(2,:)
+
+        !Override energy scale to set near saddle point
+        energy_scale_factor = 1.2e1_dp
+        dummy_energy_scale = (sum(c1_V)**0.25)*energy_scale_factor
+
+        !DEBUG
+        print*, "MODECODE: Initializing at energy scale [Mpl]", dummy_energy_scale
+        print*, "MODECODE: which is E_0 = energy_scale_factor*E(phi=0)"
+
+        do ll =1, num_inflaton
+
+          !Don't set IC beyond the "fake" vev
+          if (m2_V(ll)<0.0e0_dp) then
+            vev = 2.0e0_dp*sqrt(c1_V(ll)/abs(m2_V(ll)))
+
+            dummy_phi0_priors_min(ll) = max(-vev,phi0_priors_min(1))
+            dummy_phi0_priors_max(ll) = min(vev,phi0_priors_max(1))
+          else
+            dummy_phi0_priors_min(ll) = phi0_priors_min(1)
+            dummy_phi0_priors_max(ll) = phi0_priors_max(1)
+          end if
+
+        end do
+
+        dummy_dphi0_priors_min = 0.0e0_dp
+        dummy_dphi0_priors_max = 0.0e0_dp
+
+	      do ll=1,maxtry
+
+          y = 0e0_dp
+
+          call unconstrained_ic(y, &
+            dummy_phi0_priors_min, dummy_phi0_priors_max, &
+            dummy_dphi0_priors_min, dummy_dphi0_priors_max)
+
+          !No kinetic energy
+          y(num_inflaton+1:2*num_inflaton) = 0.0e0_dp
+
+          !Pick a field dimn to set by energy constraint
+          call random_number(rand)
+          param_constr = ceiling(rand*num_inflaton)
+
+          phi = y(1:num_inflaton)
+
+          !Only choose massive fields to set constraint by...
+          if (m2_V(param_constr)<0.0e0_dp) cycle
+
+          V_i = V_i_sum_sep(phi)
+          V_i(param_constr) = 0.0e0_dp
+
+	        rho_not_alloc = dummy_energy_scale**4 - sum(V_i)
+
+	        if (rho_not_alloc < 0.0e0_dp .or. isnan(rho_not_alloc)) then
+            if(mod(maxtry,ll)==20) then
+              if (mod(ll,200)==0 .and. out_opt%modpkoutput)&
+                print*, "IC off shell ------------- cycling", ll
+            end if
+            if (ll==maxtry) then
+              if (out_opt%modpkoutput) then
+                print*, "MODECODE: Energy overrun =", rho_not_alloc
+                print*, "MODECODE: E**4 =", dummy_energy_scale**4
+                print*, "MODECODE: KE =", 0.5e0_dp*sum(dphi*dphi)
+                print*, "MODECODE: PE =", pot(phi)
+                call raise%warning(&
+                  'Energy overrun when setting initial conditions &
+                  with equal energy prior',&
+                  __FILE__, __LINE__)
+              end if
+              exit
+            end if
+            cycle
+          end if
+
+
+          !Ignores the g_V term
+          if (m2_V(param_constr) < 0.0e0_dp) then
+
+            !DEBUG
+            print*, "shouldn't ever get here."
+            stop
+
+            if (c1_V(param_constr) < rho_not_alloc) cycle
+
+            y(param_constr) = rand_sign() *&
+              sqrt(2.0e0_dp*(c1_V(param_constr) - rho_not_alloc)/abs(m2_V(param_constr)))
+
+          else
+
+            y(param_constr) = rand_sign() *&
+              sqrt(2.0e0_dp* rho_not_alloc/abs(m2_V(param_constr)))
+
+          end if
+
+
+        !DEBUG
+        !print*, "this is phi = ", y(1:num_inflaton)
+        !print*, "this is phi constraint = ", y(param_constr)
+        !stop
+
+          return
+
 
         end do
 
@@ -1341,7 +1479,7 @@ module modpk_sampling
 
     !Subroutine to setup the vparams based off the chosen sampling technique.
     subroutine get_vparams()
-      use modpk_rng, only : shuffle, geometric
+      use modpk_rng, only : shuffle, geometric, normal
 
       real(dp) :: rand
       integer :: ii, jj
@@ -1350,6 +1488,7 @@ module modpk_sampling
       integer :: mp_M, mp_N, flag_eigvals
       real(dp) :: rand_range, sigma, beta, beta_min, beta_max, sigma_min, sigma_max
       real(dp), dimension(:), allocatable :: work_eigvals
+      real(dp) :: V0
 
       !Don't need to marginalize over vparams
       if (param_sampling == param_flags%num_QSF .or. &
@@ -1486,6 +1625,92 @@ module modpk_sampling
         deallocate(rectang_RM)
         deallocate(square_RM)
         deallocate(eigvals)
+
+
+      !DEBUG
+      !NOT READY FOR PRIMETIME
+      !DEBUG
+
+      !Sample masses from the Wigner semi-circle distribution from random matrix arguments
+      else if (param_sampling == param_flags%wigner_dist) then
+        !other params: 1 = sigma
+
+        !Get sigma from uniform prior
+        sigma_min = prior_auxparams_min(1)
+        sigma_max = prior_auxparams_max(1)
+        call random_number(rand)
+        sigma = rand*(sigma_max-sigma_min)+sigma_min
+
+        !Save this for output
+        auxparams(1) = sigma
+
+        if (allocated(square_RM)) deallocate(square_RM)
+        if (allocated(eigvals)) deallocate(eigvals)
+
+        allocate(square_RM(num_inflaton,num_inflaton))
+        allocate(eigvals(num_inflaton))
+
+        !sigma is stand dev of dist for elements of RM
+        do ii=1,num_inflaton; do jj=ii,num_inflaton
+          rand = normal(mean=0.0e0_dp,std=sigma)
+          square_RM(ii,jj) = rand
+          square_RM(jj,ii) = rand
+        end do; end do
+
+        !Find the eigenvalues
+        if (allocated(work_eigvals)) deallocate(work_eigvals)
+        allocate(work_eigvals(max(1,(3*num_inflaton-1)*10)))
+        call dsyev('N','U', &
+          num_inflaton, square_RM, num_inflaton, &
+          eigvals, &
+          work_eigvals, size(work_eigvals), &
+          flag_eigvals)
+
+        !Mix 'em up
+        call shuffle(eigvals)
+
+        !Set masses to eigenvalues
+        if (potential_choice /= 20) then
+          print*, "MODECODE: potential_choice=", potential_choice
+
+          call raise%fatal_code(&
+              "This potential is not yet supported for the Wigner distribution.",&
+              __FILE__, __LINE__)
+        else
+
+          if (size(eigvals) < size(vparams,2)) then
+
+            print*, "MODECODE: size(eigvals) < num_inflaton"
+
+            call raise%fatal_code(&
+                "Need to increase the size of the matrix (mp_M) that determines &
+                the eigenvalues for the MP distribution.",&
+                __FILE__, __LINE__)
+
+          else
+
+            !Set masses
+            vparams(1,1:size(vparams,2)) = eigvals(1:size(vparams,2))
+
+            !Sample for amplitude at origin with log prior
+            call random_number(rand)
+            V0 = rand*(vp_prior_max(2,1) - vp_prior_min(2,1)) + vp_prior_min(2,1)
+            V0 = 10.0e0_dp**V0
+
+            !Set the amplitude at origin uniformly amongst all fields
+            do ii=1,size(vparams,2)
+              if (vparams(1,ii)<0.0e0_dp) then
+               vparams(2,ii) = V0/count(vparams(1,:)<0.0e0_dp)
+              else
+                vparams(2,ii) = 0.0e0_dp
+              end if
+            end do
+
+          end if
+        end if
+
+        if (allocated(square_RM)) deallocate(square_RM)
+        if (allocated(eigvals)) deallocate(eigvals)
 
 #endif
       else

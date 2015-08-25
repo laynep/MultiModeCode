@@ -646,7 +646,7 @@ contains
 
     real(dp) :: dx
     real(dp), dimension(:,:), allocatable :: length
-    integer(dp), parameter :: maxsteps=1e6
+    integer(dp), parameter :: maxsteps=1e7
 
     integer :: ii, counter
     real(dp) :: x_a, x_b
@@ -687,7 +687,7 @@ contains
         print*, "MODECODE: length of curve=", 2.0e0_dp*phi_start
 
         call raise%fatal_cosmo(&
-          "Couldn't integrate until this point &
+          "Couldn't integrate this far. &
           Either lower phi_start or make maxsteps or stepsize bigger.",&
           __FILE__, __LINE__)
       end if
@@ -842,6 +842,8 @@ contains
     real(dp) :: d_less, d_great, d_turn
     logical :: at_corner, fixing
 
+    real(dp) :: radius
+
     select case(turning_choice(1))
     !case(1)
       !Parabola
@@ -874,7 +876,42 @@ contains
 
     !  end if
 
+    !case(2)
+    !  !Helix
+
+    !  if (num_inflaton > 2) then
+    !    call raise%fatal_code(&
+    !            "Analytic solution for closest parameter &
+    !            not implemented with more than two fields.", &
+    !            __FILE__, __LINE__)
+    !  end if
+
+    !  radius = sqrt(self%phi(1)**2 + self%phi(2)**2)
+    !  if (radius < 0.0e0_dp) then
+    !    call raise%fatal_code(&
+    !      "The radius in field space is negative, which is weird.",&
+    !      __FILE__, __LINE__)
+    !  !else if (radius < 1e-9_dp) then
+    !  !  !Divide by zero protection
+    !  !  radius = 1e-9_dp
+    !  end if
+    !  param_closest = acos(self%phi(1)/radius)
+    !  param_closest = (pi/2.0e0_dp) - param_closest !Since param=0 at f*(0,1)
+
+    !  !Guess winding number
+    !  param_closest = 2.0e0_dp*pi*ceiling(self%param/2.0e0_dp/pi) + param_closest
+
+    !  !DEBUG
+    !  !print*, "this is phi", self%phi, param_closest
+    !  print*, self%phi, param_closest
+    !  !print*, "this is param_closest", param_closest
+    !  !print*, "this is recnostruct", radius*cos(param_closest)
+    !  !print*, "this is self%param", self%param, radius*cos(self%param)
+    !  !stop
+
+
     case(3)
+
       !One sharp turn
       phi_turn = vparams(4,1)
       slope = vparams(4,2)
