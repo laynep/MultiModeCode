@@ -1262,6 +1262,7 @@ contains
         end forall
 
         reheat_saver%h_horizcross = getH(phi,delphi)
+        reheat_saver%eps_horizcross = getEps(phi,delphi)
 
       end if
 
@@ -1880,6 +1881,7 @@ contains
         !Started reheating
 
         if (reheat_saver%reheating_phase .eqv. .false.) then
+          !Save some values at end of inflation
           reheat_saver%efolds_end = efolds
           if (allocated(reheat_saver%phi_infl_end)) &
             deallocate(reheat_saver%phi_infl_end)

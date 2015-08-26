@@ -118,6 +118,8 @@ CONTAINS
     end if
 
     !DEBUG
+    !DEBUG
+    !print*, "Setting useq_ps higher"
     !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
     useq_ps = 1.0e0_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
 

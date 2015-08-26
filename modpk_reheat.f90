@@ -7,6 +7,7 @@ module modpk_reheat
   use internals, only : pi, k
   use potential, only : getH, geteps, getkineticenergy, getw, dVdphi
   use modpk_errorhandling, only : raise
+  use csv_file, only : csv_write
 
   implicit none
 
@@ -26,7 +27,7 @@ module modpk_reheat
   type :: reheat_state
     complex(dp), dimension(:, :), allocatable :: q_horizcross
     real(dp), dimension( :), allocatable :: phi_infl_end
-    real(dp) :: h_horizcross, efolds_end
+    real(dp) :: h_horizcross, eps_horizcross, efolds_end
     logical :: reheating_phase
   end type reheat_state
   type (reheat_state) :: reheat_saver
@@ -57,6 +58,7 @@ module modpk_reheat
       complex(dp), dimension(size(phi),size(phi)) :: xi, test_xi
       real(dp) :: lapse, hubble
       complex(dp), dimension(size(phi)) :: temp_vect
+      complex(dp) :: q_horizcross_sr
       real(dp) :: pk_zeta, pk_zeta2
 
       complex(dp), dimension(size(phi)) :: xi_diag, zeta
@@ -92,36 +94,23 @@ module modpk_reheat
 
         forall (ii=1:size(phi), jj=1:size(phi))
           xi(ii,jj) =(1.0e0_dp/3.0e0_dp)*&
-            (0.0*dptb_matrix(ii,jj)/dphidN(ii) &
-            -0.0*0.5e0_dp*temp_vect(jj) &
+            (dptb_matrix(ii,jj)/dphidN(ii) &
+            -0.5e0_dp*temp_vect(jj) &
             + dV(ii)*ptb_matrix(ii,jj)/hubble**2/dphidN(ii)**2)
         end forall
 
-        do jj=1,size(zeta)
-          zeta(jj) =  0.0e0_dp
-          do ii=1,size(zeta)
-
-            test_phi = 0.0e0_dp
-            test_phi(ii) = phi(ii)
-            rho_i(ii) = 0.5e0_dp*hubble**2*dphidN(ii)**2 + pot(test_phi)
-
-            zeta(jj) =  zeta(jj) +&
-              xi(ii,jj)*rho_i(ii)/3.0e0_dp/hubble**2
-          end do
-        end do
-
         !Connection to Ewan and Joel's \zeta_i = C_ij \delta \phi^j
         !Assume q_ij is diagonal at horizon crossing...
+
+        q_horizcross_sr = - imag*reheat_saver%h_horizcross/&
+            sqrt(2.0e0_dp*k**3)
+
         !forall (ii=1:size(phi), jj=1:size(phi))
         do ii=1,size(phi); do jj=1,size(phi)
 
-          delta_rho(ii,jj) = (0.0*(hubble**2)*dphidN(ii)*dptb_matrix(ii,jj)&
-            +0.0*(hubble**2)*dphidN(ii)**2*0.5e0_dp*temp_vect(jj)&
+          delta_rho(ii,jj) = ((hubble**2)*dphidN(ii)*dptb_matrix(ii,jj)&
+            -(hubble**2)*dphidN(ii)**2*0.5e0_dp*temp_vect(jj)&
             +dV(ii)*ptb_matrix(ii,jj))
-
-          !Only assuming q_ij is diagonal at horizon crossing
-          !C_ij(ii,jj) = delta_rho(ii,jj)/3.0e0_dp/dphidN(ii)**2/hubble**2 &
-          !  /reheat_saver%q_horizcross(jj,jj)
 
           !Ignores background pressure (w=0)
           test_phi = 0.0e0_dp
@@ -129,30 +118,20 @@ module modpk_reheat
           rho_i(ii) = 0.5e0_dp*hubble**2*dphidN(ii)**2 + pot(test_phi)
 
           C_ij(ii,jj) = delta_rho(ii,jj)/3.0e0_dp/rho_i(ii) &
-            /reheat_saver%q_horizcross(jj,jj)
+            !/reheat_saver%q_horizcross(jj,jj)
+            /q_horizcross_sr
 
-          !Add total \zeta
-          C_ij(ii,jj) = C_ij(ii,jj) + zeta(jj)/reheat_saver%q_horizcross(jj,jj)
+          C_ij(ii,jj) = sqrt(C_ij(ii,jj)*conjg(C_ij(ii,jj)))
+
         !end forall
         end do; end do
 
 
-        print*, efolds, real(C_ij(1,1)), real(C_ij(1,2)), real(C_ij(2,2)), real(C_ij(2,1)), geteps(phi,dphidN)
-        ! sum(dphidN(:)**2)
-
-        !print*, "this is ptb_matrix", ptb_matrix
-        !print*, "this is q_horizcross", reheat_saver%q_horizcross
-
-
         !DEBUG
-        !print*, "from here"
-        !!if (present(efolds)) print*, efolds, C_ij
-        !do ii=1,size(phi)
-        !  print*, "c", C_ij(ii,ii)
-        !end do
-        !  print*, "Need to save ptb at horiz cross!!!"
-
-
+        call csv_write(&
+          6,&
+          (/efolds, real(C_ij(1,1)), real(C_ij(1,2)), real(C_ij(2,1)), real(C_ij(2,2)) /)   , &
+          advance=.true.)
 
         !To check
         !pk_zeta=0e0_dp
@@ -163,9 +142,10 @@ module modpk_reheat
         !pk_zeta = pk_zeta*(k**3/2.0e0_dp/pi**2)/sum(dphidN**2)**2
 
         !!DEBUG
-        !print*, "this is pk_zeta", pk_zeta
+        !print*, "this is pk_zeta"
+        !print*, efolds, ',', pk_zeta, ',', (1.0/8.0/pi**2)*reheat_saver%h_horizcross**2/reheat_saver%eps_horizcross
 
-        !!To check
+        !To check
         !pk_zeta=0e0_dp
         !do ii=1,size(phi); do jj=1,size(phi); do kk=1,size(phi)
         !  pk_zeta = pk_zeta +&
@@ -175,10 +155,9 @@ module modpk_reheat
         !pk_zeta = pk_zeta/sum(dphidN**2)**2
         !pk_zeta = pk_zeta*((reheat_saver%h_horizcross/pi)**2)/2.0e0_dp
 
-        !!DEBUG
+        !DEBUG
         !print*, "this is pk_zeta2", pk_zeta
 
-        !print*, c_ij
 
 
 
