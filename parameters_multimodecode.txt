@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 2
+  num_inflaton = 5
 
   potential_choice = 1
   vparam_rows = 1
@@ -67,7 +67,7 @@ Parameters to control how the ICs are sampled
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 1
+  ic_sampling = 6
   numb_samples = 1
 
   energy_scale = 1.0
@@ -91,7 +91,7 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
   NB: If you need priors for other parameters in your model, set them with prior_auxparams_max/min, with the total number of the other params set max(100,2*num_inflaton) (can be alterred in code, but I'm lazy)
 
 &param_sampling_nml
-  param_sampling = 1
+  param_sampling = 5
 
   use_first_priorval = .true.
 
@@ -138,9 +138,10 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 0.1 16.00
+  phi_init0 =   5.5  16.00
 
-  vparams(1,:) = -12e0 -10e0
+
+  vparams(1,:) = -10.5e0 -10e0
 
 
 

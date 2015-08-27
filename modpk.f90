@@ -117,9 +117,10 @@ CONTAINS
       eval_ps = 1.0e0_dp
     end if
 
+    !Initialize reheating
+    if (use_reheat) call reheater%init()
+
     !DEBUG
-    !DEBUG
-    !print*, "Setting useq_ps higher"
     !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
     useq_ps = 1.0e0_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
 

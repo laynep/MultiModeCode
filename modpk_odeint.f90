@@ -10,7 +10,7 @@ MODULE modpk_odeint
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : use_reheat, reheat_ending_check, reheat_saver
+  use modpk_reheat, only : use_reheat, reheat_ending_check, reheater
   implicit none
 
   interface odeint
@@ -1249,20 +1249,9 @@ contains
 
       if (use_reheat) then
 
-        if (allocated(reheat_saver%q_horizcross)) &
-          deallocate(reheat_saver%q_horizcross)
-        allocate(reheat_saver%q_horizcross(num_inflaton,num_inflaton))
-
-        q_modes = y(index_ptb_y:index_ptb_vel_y-1)/a_switch/sqrt(2.0e0_dp*k)
-
-        !ptb_matrix is \q_ij from 1410.0685
-        !u_i = a \delta \phi_i = a \q_ij \hat a^j
-        forall (ii=1:size(phi), jj=1:size(phi))
-          reheat_saver%q_horizcross(ii,jj) = q_modes((ii-1)*num_inflaton+jj)
-        end forall
-
-        reheat_saver%h_horizcross = getH(phi,delphi)
-        reheat_saver%eps_horizcross = getEps(phi,delphi)
+        q_modes = y(index_ptb_y:index_ptb_vel_y-1)&
+          /a_switch/sqrt(2.0e0_dp*k)
+        call reheater%save_horizcross(phi,delphi,q_modes)
 
       end if
 
@@ -1874,28 +1863,14 @@ contains
     !the horizon crossing point for the pivot scale
     if (use_reheat) then
 
-      !Save some things for future use
-      if (.not. slowroll_start) then
-        reheat_saver%reheating_phase = .false.
-      else if(getEps(phi, dphidN) .ge. 1 .and. slowroll_start) then
-        !Started reheating
+      call reheater%did_reheat_start(phi,dphidN,efolds,slowroll_start)
 
-        if (reheat_saver%reheating_phase .eqv. .false.) then
-          !Save some values at end of inflation
-          reheat_saver%efolds_end = efolds
-          if (allocated(reheat_saver%phi_infl_end)) &
-            deallocate(reheat_saver%phi_infl_end)
-          allocate(reheat_saver%phi_infl_end(size(phi)))
-          reheat_saver%phi_infl_end = phi
-        end if
-
-        reheat_saver%reheating_phase = .true. !started reheating
-      end if
-
-      if (present(q_modes) .and. present(dq_modes) .and. present(efolds)) then
-        stopping = reheat_ending_check(phi,dphidN,q_modes,dq_modes,efolds)
+      if (present(q_modes) .and. present(dq_modes) &
+        .and. present(efolds)) then
+        stopping = reheater%ending_check(phi,dphidN, &
+          q_modes,dq_modes,efolds)
       else
-        stopping = reheat_ending_check(phi,dphidN)
+        stopping = reheater%ending_check(phi,dphidN)
       end if
 
 
