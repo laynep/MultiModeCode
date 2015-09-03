@@ -10,7 +10,7 @@ MODULE modpk_odeint
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : use_reheat, reheat_ending_check, reheater
+  use modpk_reheat, only : reheater, reheat_opts, reheat_state
   implicit none
 
   interface odeint
@@ -28,6 +28,7 @@ contains
     use modpk_observables
     use modpkparams
     use potential
+    use modpk_deltaN, only : V_i_sum_sep
     use modpk_utils, only : reallocate_rv, reallocate_rm, bderivs_dvode, &
       jacobian_background_DVODE
     use modpk_qsf
@@ -79,6 +80,8 @@ contains
     logical :: infl_checking
     logical :: leave
 
+    real(dp) :: hubble
+
     !For DVODE integrator
     integer :: neq, istats(31)
     integer :: itask, istate
@@ -113,6 +116,15 @@ contains
     end if
 
     DO nstp=1,MAXSTP
+
+    !DEBUG
+    if (reheater%evolving_gamma) then
+      hubble = getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+      call csv_write(&
+        6,&
+        (/y(2*num_inflaton+1), sum(y(2*num_inflaton+2:3*num_inflaton+1)), sum(0.5e0_dp*hubble**2*y(num_inflaton+1:2*num_inflaton)**2 + V_i_sum_sep(phi)), hubble /)   , &
+        advance=.true.)
+    end if
 
       call check_NaN()
 
@@ -219,7 +231,8 @@ contains
         if (itask/=2) nefold_out = min(x + dN_step, x2)
 
         !Increase accuracy requirements when not in SR
-        if (tech_opt%accuracy_setting>0) then
+        if (tech_opt%accuracy_setting>0 .and. &
+          .not. reheater%evolving_gamma) then
           if (getEps(phi,dphi)>0.2e0_dp) then
             rtol=1e-12_dp
             atol=1e-12_dp
@@ -1247,7 +1260,7 @@ contains
 
       end if
 
-      if (use_reheat) then
+      if (reheat_opts%use_reheat) then
 
         q_modes = y(index_ptb_y:index_ptb_vel_y-1)&
           /a_switch/sqrt(2.0e0_dp*k)
@@ -1861,7 +1874,7 @@ contains
     !When modelling reheating we will not want to stop with epsilon=1
     !But we do want to store the end-of-inflation values, so we can find
     !the horizon crossing point for the pivot scale
-    if (use_reheat) then
+    if (reheat_opts%use_reheat) then
 
       call reheater%did_reheat_start(phi,dphidN,efolds,slowroll_start)
 
@@ -1871,6 +1884,12 @@ contains
           q_modes,dq_modes,efolds)
       else
         stopping = reheater%ending_check(phi,dphidN)
+      end if
+
+      !If ending evolution, perform matching to dN/dphi_i
+      !after evaluating the C_ij
+      if (stopping .and. present(q_modes)) then
+        call reheat_match_to_dNdphi(reheater)
       end if
 
 
@@ -1916,5 +1935,91 @@ contains
     end select
 
   end function alternate_infl_end
+
+  !After calculating the C_ij, evaluate the matching to the
+  !derivatives of the e-folding, dN/dphi_i
+  subroutine reheat_match_to_dNdphi(reheater)
+    use modpkparams
+    use ode_path
+    use modpk_utils, only : bderivs, rkqs_r
+    use potential
+
+    type(reheat_state), intent(inout) :: reheater
+
+    real(dp) :: x1, x2, h1, hmin, accuracy
+    real(dp), dimension(:), allocatable :: y
+
+    if (reheat_opts%reheat_model/=reheat_opts%perturbative) then
+      call raise%fatal_code(&
+        'This reheat model is not implemented.', &
+        __FILE__, __LINE__)
+    end if
+
+    !Get the decay parameters \Gamma_i in the KG equation
+    !\phi'' + (3H+\Gamma_i)\phi' + V' = 0
+    if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
+      call reheater%get_Gamma_uniform()
+    else
+      call raise%fatal_code(&
+        'This sampling technique for gamma is not implemented.', &
+        __FILE__, __LINE__)
+    end if
+
+    !-------------------
+    !NB: Integration variable is t
+    !-------------------
+    !Evolve the background eqns with Gamma and a radiation fluid
+    reheater%evolving_gamma = .true.
+
+    !Set integration bounds in t
+    x1=0e0_dp
+    !DEBUG
+    print*, "setting x2 too high"
+    x2=10e0_dp
+
+    !Accuracy & step sizes
+    h1 = 1.0e-3_dp
+    hmin=1.0e-8_dp
+    accuracy=1.0e-5
+
+    !Set ICs
+    if (allocated(y)) deallocate(y)
+    !Fields + Derivs + Efolds + N Radn Fluids
+    allocate(y(num_inflaton + num_inflaton + 1 + num_inflaton))
+
+    !Fields
+    y(1:num_inflaton) = reheater%phi_infl_end
+    !y(num_inflaton+1:2*num_inflaton) = reheater%dphi_infl_end&
+    !  *reheater%H_end !cosmic time
+    y(num_inflaton+1:2*num_inflaton) = reheater%dphi_infl_end !e-folds
+
+    !Efolds
+    y(2*num_inflaton+1) = reheater%efolds_end
+
+    !Radiation
+    !DEBUG
+    !print*, "Weird radiation IC"
+    y(2*num_inflaton+2:3*num_inflaton+1) = 0.0e0_dp
+
+    ode_underflow = .false.
+    ode_ps_output = .false.
+    ode_infl_end = .false.
+    save_steps = .false.
+    call odeint(y,x1,x2, &
+      accuracy,&
+      h1,hmin,&
+      bderivs,rkqs_r)
+
+    reheater%evolving_gamma = .false.
+    !-------------------
+
+
+    !DEBUG
+    print*, "inside of reheat_match_to_dNdphi"
+    !print*, "c_ij_avg", reheater%c_ij_avg(1,1)
+    print*, "phi_end", reheater%phi_infl_end(:)
+    stop
+
+  end subroutine reheat_match_to_dNdphi
 
 END MODULE modpk_odeint

@@ -1718,7 +1718,9 @@ module modpk_sampling
         print*, "MODECODE: param_sampling=", param_sampling
 
         call raise%fatal_code(&
-            "This choice of param_sampling is not supported.",&
+            "This choice of param_sampling is not supported.  &
+            Check if your param_sampling technique requires &
+            MKL/LAPACK flags in the Makefile.",&
             __FILE__, __LINE__)
 
       end if

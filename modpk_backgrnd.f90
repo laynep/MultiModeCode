@@ -71,7 +71,7 @@ CONTAINS
     dphiarr = 0e0_dp
 
     !Initialize reheating
-    if (use_reheat) call reheater%init()
+    if (reheat_opts%use_reheat) call reheater%init()
 
     if (size(phi_init) .eq. 1 &
       .and. tech_opt%automate_singlefield_ic) then !! for single field
@@ -540,7 +540,7 @@ CONTAINS
           end if
 
           !Reheating experiment
-          if (use_reheat) then
+          if (reheat_opts%use_reheat) then
 
             dalpha = 0e0_dp
             dv = 0e0_dp
@@ -556,6 +556,7 @@ CONTAINS
 
               alpha_e = reheater%efolds_end
               phi_infl_end = reheater%phi_infl_end
+              dphi_infl_end = reheater%dphi_infl_end
               V_end = pot(phi_infl_end)
 
 

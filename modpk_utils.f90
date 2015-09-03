@@ -6,6 +6,8 @@ MODULE modpk_utils
   use modpkparams
   use modpk_sampling, only : ic_sampling, ic_flags
   use modpk_errorhandling, only : raise, run_outcome
+  use modpk_reheat, only : reheater
+  use csv_file, only : csv_write
   IMPLICIT NONE
 
   INTERFACE rkck
@@ -87,34 +89,42 @@ CONTAINS
     USE potential, ONLY: pot,dVdphi,d2Vdphi2,getH,getdHdalpha,getEps, &
       getEps_with_t, getH_with_t
     USE camb_interface, ONLY : pk_bad
+    use modpk_deltaN, only : V_i_sum_sep
     real(dp), INTENT(IN) :: x
     real(dp), DIMENSION(:), INTENT(IN) :: y
     real(dp), DIMENSION(:), INTENT(OUT) :: yprime
 
     !MULTIFIELD
-    real(dp), DIMENSION(size(y)/2) :: phi, delphi
+    !real(dp), DIMENSION(size(y)/2) :: phi, delphi
+    real(dp), DIMENSION(num_inflaton) :: phi, delphi
     real(dp) :: hubble,dhubble, eps
+    real(dp), dimension(num_inflaton) :: rho_radn, rho_fields
     !END MULTIFIEND
 
     integer :: i
     !
     !     x=alpha
-    !     y(FIRST HALF)=phi              dydx(FIRST HALF)=dphi/dalpha
-    !     y(SECOND HALF)=dphi/dalpha      dydx(SECOND HALF)=d^2phi/dalpha^2
+    !     y(1:num_inflaton)=phi
+    !     dydx(1:num_inflaton)=dphi/dalpha
+    !     y(num_inflaton+1:2*num_inflaton)=dphi/dalpha
+    !     dydx(num_inflaton+1:2*num_inflaton)=d^2phi/dalpha^2
     !
+    !     Can also evolve a radiation fluid
+    !     If using_t, then final portion of y is e-folds
 
     !MULTIFIELD
-    phi = y(1 : size(y)/2)
-    delphi = y(size(y)/2+1 : size(y))
+    phi = y(1 : num_inflaton)
+    delphi = y(num_inflaton+1 : 2*num_inflaton)
     !END MULTIFIELD
 
-    if (.not. use_t) then
-      eps = getEps(phi,delphi)
-    else
+    if (use_t) then
       eps = getEps_with_t(phi,delphi)
+    else
+      eps = getEps(phi,delphi)
     end if
 
-    !Instability check since H^2=V/(3-eps) is not numerically stable as V~0 for
+    !Instability check since H^2=V/(3-eps) is not
+    !numerically stable as V~0 for
     !H>0, since requires eps->3
     IF(eps .ge. 3.0e0_dp) THEN
        write(*,*) 'MODECODE: Pot=', pot(phi)
@@ -155,24 +165,66 @@ CONTAINS
     END IF
 
     !MULTIFIELD
-    if (.not. use_t) then
+    if (use_t) then
+      !Derivs in cosmic time
+      hubble = getH_with_t(phi,delphi)
+
+      yprime(1 : num_inflaton) = delphi
+      yprime(num_inflaton+1 : 2*num_inflaton) = &
+        -3.0e0_dp*hubble*delphi - dVdphi(phi)
+
+      !E-folds
+      yprime(2*num_inflaton+1) = hubble
+
+    else if (reheater%evolving_gamma) then
+      !Include a post-inflationary radiation field
+      !Derivs in cosmic time
+
+      !DEBUG
+      rho_radn = y(2*num_inflaton+2:3*num_inflaton+1)
+      hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
+      dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
+
+      rho_fields = 0.5e0_dp*hubble**2*delphi**2 + V_i_sum_sep(phi)
+      !hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
+      !hubble = sqrt((sum(rho_radn + rho_fields))/3.0e0_dp)
+
+      if (any(rho_radn<0) .or. any (rho_fields<0)) then
+        print*, "MODECODE: rho_radn:", rho_radn
+        print*, "MODECODE: rho_fields:", rho_fields
+        call raise%fatal_cosmo(&
+          'The individual energy densities are negative.',&
+          __FILE__, __LINE__)
+      end if
+
+
+      !Fields
+      yprime(1 : num_inflaton) = delphi
+      yprime(num_inflaton+1 : 2*num_inflaton) = &
+        -(3.0e0_dp+ reheater%Gamma_i/hubble + dhubble/hubble)*delphi &
+        - dVdphi(phi)/hubble**2
+
+      !E-folds
+      yprime(2*num_inflaton+1) = hubble
+
+      !Radiation
+      yprime(2*num_inflaton+2:3*num_inflaton+1) = &
+        -4.0e0_dp*rho_radn &
+        + reheater%Gamma_i*rho_fields/hubble
+
+    else
+
+      !Normal
+
       !Derivs wrt e-folds
       hubble=getH(phi,delphi)
       dhubble=getdHdalpha(phi,delphi)
 
-      yprime(1 : size(y)/2) = delphi
-      yprime(size(y)/2+1 : size(y)) = -((3.0e0_dp+dhubble/hubble)*delphi+&
+      yprime(1 : num_inflaton) = delphi
+      yprime(num_inflaton+1 : 2*num_inflaton) = &
+        -((3.0e0_dp+dhubble/hubble)*delphi+&
         dVdphi(phi)/hubble/hubble)
-    else
 
-      !Derivs in cosmic time
-      hubble = getH_with_t(phi,delphi)
-
-      yprime(1 : size(y)/2) = delphi
-      yprime(size(y)/2+1 : size(y)) = -3.0e0_dp*hubble*delphi - dVdphi(phi)
-
-      !E-folds
-      yprime(2*num_inflaton+1) = hubble
     end if
 
     !END MULTIFIELD

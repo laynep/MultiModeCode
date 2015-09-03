@@ -28,7 +28,7 @@ MODULE modpkparams
   INTEGER :: potential_choice
 
   INTEGER*4 :: nactual_bg, nactual_mode
-  INTEGER, PARAMETER :: nsteps=1e5
+  INTEGER, PARAMETER :: nsteps=1e6
   real(dp), PARAMETER :: M_Pl=1.0e0_dp
   real(dp), PARAMETER :: Mpc2Mpl=2.6245e-57_dp
   real(dp) :: k_pivot, N_pivot, N_tot, H_pivot
@@ -50,7 +50,7 @@ MODULE modpkparams
   integer :: numb_auxparams
   real(dp), allocatable :: phi_init0(:), phi_init(:)
   real(dp), allocatable :: dphi_init0(:), dphi_init(:), dphidt_init0(:)
-  real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:)
+  real(dp), allocatable:: phi_pivot(:), dphi_pivot(:), phi_infl_end(:), dphi_infl_end(:)
 
   real(dp), allocatable :: phiarr(:,:), dphiarr(:,:) !The first index is the multifield index
   real(dp), allocatable :: param_arr(:)

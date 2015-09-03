@@ -118,7 +118,7 @@ CONTAINS
     end if
 
     !Initialize reheating
-    if (use_reheat) call reheater%init()
+    if (reheat_opts%use_reheat) call reheater%init()
 
     !DEBUG
     !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)

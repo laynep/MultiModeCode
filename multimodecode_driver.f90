@@ -12,7 +12,7 @@ program multimodecode
   use modpk_observables, only : observables
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : use_reheat, reheat_model
+  use modpk_reheat, only : reheat_opts
   use modpk_rng, only : init_random_seed, geometric
 
   implicit none
@@ -72,7 +72,7 @@ program multimodecode
 
   namelist /technical/ tech_opt, assert
 
-  namelist /reheat/ use_reheat, reheat_model
+  namelist /reheat/ reheat_opts
 
   !------------------------------------------------
 
@@ -252,6 +252,7 @@ program multimodecode
       allocate(dphiarr(num_inflaton, 1:nsteps))
       allocate(param_arr(1:nsteps))
       allocate(phi_infl_end(num_inflaton))
+      allocate(dphi_infl_end(num_inflaton))
       allocate(phi_pivot(num_inflaton))
       allocate(dphi_pivot(num_inflaton))
       allocate(dphi_init0(num_inflaton))
@@ -284,6 +285,7 @@ program multimodecode
       if (allocated(dphiarr)) deallocate(dphiarr)
       if (allocated(param_arr)) deallocate(param_arr)
       if (allocated(phi_infl_end)) deallocate(phi_infl_end)
+      if (allocated(dphi_infl_end)) deallocate(dphi_infl_end)
       if (allocated(phi_pivot)) deallocate(phi_pivot)
       if (allocated(dphi_pivot)) deallocate(dphi_pivot)
       if (allocated(dphi_init0)) deallocate(dphi_init0)

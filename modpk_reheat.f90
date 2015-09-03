@@ -5,17 +5,27 @@ module modpk_reheat
   use modpkparams, only : dp, slowroll_infl_end, vparams, num_inflaton, Mpc2Mpl, &
     k_pivot, N_pivot
   use internals, only : pi, k
-  use potential, only : getH, geteps, getkineticenergy, getw, dVdphi
+  use potential, only : getH, geteps, getkineticenergy, &
+    getw, dVdphi, getH_with_t
   use modpk_errorhandling, only : raise
   use csv_file, only : csv_write
 
   implicit none
 
-  logical :: use_reheat=.false.
-  type :: reheat_model_flags
+  type :: reheat_model_type
+    !Use this module?
+    logical :: use_reheat = .false.
+
+    !Reheating options, only perturbative implemented currently
+    integer :: reheat_model
     integer :: perturbative = 1
-  end type reheat_model_flags
-  integer :: reheat_model
+
+    !Sampling option for reheating decay parameters Gamma
+    integer :: gamma_sampler
+    integer :: uniform = 1
+
+  end type reheat_model_type
+  type (reheat_model_type) :: reheat_opts
 
   type :: oscillation_counter
     real(dp), dimension(:), allocatable :: last_position
@@ -24,16 +34,24 @@ module modpk_reheat
   end type oscillation_counter
   type(oscillation_counter) :: osc_count
 
+  !Would bind options here, but can't use allocatable in namelist
   type :: reheat_state
+
+    logical :: reheating_phase, inflation_ended, evolving_gamma
+
     complex(dp), dimension(:, :), allocatable :: q_horizcross
     real(dp), dimension( :), allocatable :: phi_infl_end
+    real(dp), dimension( :), allocatable :: dphi_infl_end
     real(dp) :: h_horizcross, eps_horizcross, efolds_end
-    logical :: reheating_phase, inflation_ended
+    real(dp) :: h_end
 
     real(dp), dimension(:,:), allocatable :: c_ij_avg, c_ij_min, c_ij_max
     real(dp), dimension(:,:,:), allocatable :: c_ij_moving_avg
     integer :: count_avg, count_moving_avg
     real(dp) :: moving_avg_tol = 1.0e-2_dp
+
+    real(dp), dimension(:), allocatable :: dN, W_i
+    real(dp), dimension(:), allocatable :: Gamma_i
 
     contains
 
@@ -41,6 +59,9 @@ module modpk_reheat
       procedure, public :: did_reheat_start => reheat_did_reheat_start
       procedure, public :: save_horizcross => reheat_save_horizcross
       procedure, public :: init => reheat_initializer
+      procedure, public :: get_Gamma_uniform => reheat_get_Gamma_uniform
+      procedure, public :: getH_with_radn => reheat_getH_with_radn
+      procedure, public :: getdH_with_radn => reheat_getdH_with_radn
 
   end type reheat_state
   type (reheat_state) :: reheater
@@ -83,7 +104,10 @@ module modpk_reheat
 
       stopping = .false.
 
-      call consistency_checks()
+      !Consistency checks
+      if (reheat_opts%use_reheat) then
+        slowroll_infl_end = .false.
+      end if
 
       if (.not. self%reheating_phase) then
         !Haven't tried calculating average yet
@@ -185,7 +209,7 @@ module modpk_reheat
       end if
 
 
-      select case(reheat_model)
+      select case(reheat_opts%reheat_model)
       case default
 
         call raise%fatal_code("Please specify your reheating model.",__FILE__,__LINE__)
@@ -216,8 +240,7 @@ module modpk_reheat
 
             !Warning
             call raise%warning("Using reheat testing module.  &
-              Not safe!  &
-              Be vewy, vewy careful.")
+              Be vewy, vewy careful!")
 
             !Start counting oscillations
             osc_count%init_count = .true.
@@ -291,7 +314,7 @@ module modpk_reheat
         self%c_ij_avg = 0.5e0_dp*(self%c_ij_max + self%c_ij_min)
 
         !DEBUG
-        print*, "this is c_ij_avg", self%c_ij_avg(1,2), c_ij(1,2)
+        !print*, "this is c_ij_avg", self%c_ij_avg(1,2), c_ij(1,2)
 
 
         !if (self%count_avg == 0) then
@@ -364,12 +387,22 @@ module modpk_reheat
 
         !Save some values at end of inflation
         self%inflation_ended = .true.
+
         self%efolds_end = efolds
+
         if (allocated(self%phi_infl_end)) &
           deallocate(self%phi_infl_end)
         allocate(self%phi_infl_end(size(phi)))
         self%phi_infl_end = phi
 
+        if (allocated(self%dphi_infl_end)) &
+          deallocate(self%dphi_infl_end)
+        allocate(self%dphi_infl_end(size(phi)))
+        self%dphi_infl_end = dphidN
+
+        self%H_end = getH(phi,dphidN)
+
+        !Indicate started reheating
         self%reheating_phase = .true.
 
       else if (.not. self%inflation_ended) then
@@ -417,12 +450,23 @@ module modpk_reheat
         deallocate(self%q_horizcross)
       if (allocated(self%phi_infl_end))&
         deallocate(self%phi_infl_end)
+      if (allocated(self%dphi_infl_end))&
+        deallocate(self%dphi_infl_end)
       if (allocated(self%c_ij_avg))&
         deallocate(self%c_ij_avg)
       if (allocated(self%c_ij_moving_avg))&
         deallocate(self%c_ij_moving_avg)
 
-      !Set min and max to ridiculously big/small values
+      if (allocated(self%dN))&
+        deallocate(self%dN)
+      if (allocated(self%W_i))&
+        deallocate(self%W_i)
+
+      if (allocated(self%Gamma_i))&
+        deallocate(self%Gamma_i)
+
+
+      !Set min and max to ridiculously big/small values, respectively
       if (allocated(self%c_ij_min))&
         deallocate(self%c_ij_min)
       allocate(self%c_ij_min(num_inflaton, num_inflaton))
@@ -436,21 +480,95 @@ module modpk_reheat
       self%h_horizcross=0.0e0_dp
       self%eps_horizcross=0.0e0_dp
       self%efolds_end=0.0e0_dp
+      self%H_end=0.0e0_dp
       self%reheating_phase = .false.
       self%inflation_ended = .false.
-
+      self%evolving_gamma = .false.
 
       self%count_avg = 0
       self%count_moving_avg = 0
 
     end subroutine reheat_initializer
 
-    subroutine consistency_checks()
 
-      if (use_reheat) then
-        slowroll_infl_end = .false.
+    !Sample the reheating decay parameters \Gamma_i uniformly
+    subroutine reheat_get_Gamma_uniform(self)
+      class(reheat_state) :: self
+
+      real(dp), dimension(:), allocatable :: rand
+
+      if (reheat_opts%gamma_sampler /= reheat_opts%uniform) then
+        call raise%fatal_code(&
+          'Sampling technique for gamma should be set to 1 &
+          to use this method.', &
+          __FILE__, __LINE__)
       end if
 
-    end subroutine consistency_checks
+      allocate(rand(num_inflaton))
+      call random_number(rand)
+
+      !DEBUG
+      print*, "Warning: Setting \Gamma_i sort of ad hoc..."
+      if (allocated(self%Gamma_i)) deallocate(self%Gamma_i)
+      allocate(self%Gamma_i(num_inflaton))
+      !self%Gamma_i = 3.0e0_dp*self%H_end*rand
+
+      self%Gamma_i = 1e-1* 3.0e0_dp*self%H_end
+
+
+    end subroutine reheat_get_Gamma_uniform
+
+    function reheat_getH_with_radn(self, phi, dphi, rho_radn) &
+        result(hubble)
+      use potential
+      class(reheat_state) :: self
+
+      real(dp), dimension(:), intent(in) :: phi, dphi
+      real(dp), intent(in) :: rho_radn
+
+      real(dp) :: hubble
+
+      !Cosmic time: dphi = dphidt
+      !hubble = sqrt( getH_with_t(phi, dphi)**2 + rho_radn/3.0e0_dp)
+      !E-folds: dphi = dphidN
+      hubble = sqrt((rho_radn + pot(phi))/(3.0e0_dp - 0.5e0_dp*sum(dphi**2)))
+
+    end function reheat_getH_with_radn
+
+    function reheat_getdH_with_radn(self, phi, dphidN, rho_radn) &
+        result(dhubble)
+      use potential
+      use modpk_deltaN, only :V_i_sum_sep
+      class(reheat_state) :: self
+
+      real(dp), dimension(:), intent(in) :: phi, dphidN
+      real(dp), intent(in) :: rho_radn
+
+      real(dp) :: dhubble, eps, hubble, V
+      real(dp) :: denom, numer
+      real(dp), dimension(size(phi)) :: rho_fields, dV
+
+      !E-folds
+
+      hubble = self%getH_with_radn(phi,dphidN,rho_radn)
+      eps = geteps(phi,dphidN)
+      rho_fields = 0.5e0_dp*hubble**2*dphidN**2 + V_i_sum_sep(phi)
+      V = pot(phi)
+      dV = dVdphi(phi)
+
+      denom = 2.0e0_dp*hubble*(3.0e0_dp - eps)**2 &
+        +(2.0e0_dp*eps/hubble)*(V + rho_radn)
+      numer = (3.0e0_dp - eps)*&
+        (sum(dV*dphidN) - 4.0e0_dp*rho_radn +&
+          sum(self%Gamma_i*rho_fields)) &
+        -&
+        (V+rho_radn)*(&
+        sum(dphidN**2 * (3.0e0_dp + self%Gamma_i/hubble)) &
+        + sum(dphidN*dV/hubble**2))
+
+      dhubble = numer/denom
+
+
+    end function reheat_getdH_with_radn
 
 end module modpk_reheat

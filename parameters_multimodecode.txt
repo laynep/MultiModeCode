@@ -240,8 +240,10 @@ The reheat model sets the style of reheating that we will use.
   1 = Perturbative reheating a la 1311.3972
 
 &reheat
-  use_reheat = .true.
-  reheat_model = 1
+  reheat_opts%use_reheat = .true.
+  reheat_opts%reheat_model = 1
+
+  reheat_opts%gamma_sampler = 1
 /
 
 ----------------
