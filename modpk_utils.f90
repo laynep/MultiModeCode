@@ -186,8 +186,6 @@ CONTAINS
       dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
 
       rho_fields = 0.5e0_dp*hubble**2*delphi**2 + V_i_sum_sep(phi)
-      !hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
-      !hubble = sqrt((sum(rho_radn + rho_fields))/3.0e0_dp)
 
       if (any(rho_radn<0) .or. any (rho_fields<0)) then
         print*, "MODECODE: rho_radn:", rho_radn

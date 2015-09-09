@@ -513,7 +513,8 @@ module modpk_reheat
       allocate(self%Gamma_i(num_inflaton))
       !self%Gamma_i = 3.0e0_dp*self%H_end*rand
 
-      self%Gamma_i = 1e-1* 3.0e0_dp*self%H_end
+      self%Gamma_i = 1e-4* 3.0e0_dp*self%H_end
+
 
 
     end subroutine reheat_get_Gamma_uniform

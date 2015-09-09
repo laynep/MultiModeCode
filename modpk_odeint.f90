@@ -118,11 +118,11 @@ contains
     DO nstp=1,MAXSTP
 
     !DEBUG
-    if (reheater%evolving_gamma) then
-      hubble = getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
+    if (reheater%evolving_gamma .and. nstp>1) then
+      hubble = reheater%getH_with_radn(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton),sum(y(2*num_inflaton+2:3*num_inflaton+1)))
       call csv_write(&
         6,&
-        (/y(2*num_inflaton+1), sum(y(2*num_inflaton+2:3*num_inflaton+1)), sum(0.5e0_dp*hubble**2*y(num_inflaton+1:2*num_inflaton)**2 + V_i_sum_sep(phi)), hubble /)   , &
+        (/x, sum(y(2*num_inflaton+2:3*num_inflaton+1)), sum(0.5e0_dp*hubble**2*y(num_inflaton+1:2*num_inflaton)**2 + V_i_sum_sep(y(1:num_inflaton))), hubble /)   , &
         advance=.true.)
     end if
 
@@ -1972,10 +1972,10 @@ contains
     reheater%evolving_gamma = .true.
 
     !Set integration bounds in t
-    x1=0e0_dp
+    x1=reheater%efolds_end
     !DEBUG
     print*, "setting x2 too high"
-    x2=10e0_dp
+    x2=x1 + 10e0_dp
 
     !Accuracy & step sizes
     h1 = 1.0e-3_dp
