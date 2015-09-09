@@ -117,14 +117,8 @@ contains
 
     DO nstp=1,MAXSTP
 
-    !DEBUG
-    if (reheater%evolving_gamma .and. nstp>1) then
-      hubble = reheater%getH_with_radn(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton),sum(y(2*num_inflaton+2:3*num_inflaton+1)))
-      call csv_write(&
-        6,&
-        (/x, sum(y(2*num_inflaton+2:3*num_inflaton+1)), sum(0.5e0_dp*hubble**2*y(num_inflaton+1:2*num_inflaton)**2 + V_i_sum_sep(y(1:num_inflaton))), hubble /)   , &
-        advance=.true.)
-    end if
+      if (reheater%evolving_gamma .and. nstp>1) &
+        call check_for_reheating()
 
       call check_NaN()
 
@@ -272,6 +266,39 @@ contains
     end if
 
   CONTAINS
+
+    subroutine check_for_reheating()
+
+      real(dp) :: hubble
+      real(dp), dimension(num_inflaton) :: phi, dphidN, &
+        rho_fields, rho_radn
+
+      phi = y(1:num_inflaton)
+      dphidN = y(num_inflaton+1:2*num_inflaton)
+      rho_radn = y(2*num_inflaton+2:3*num_inflaton+1)
+      hubble = reheater%getH_with_radn(phi,dphidN,sum(rho_radn))
+      rho_fields = 0.5e0_dp*hubble**2*dphidN**2 + V_i_sum_sep(phi)
+
+      !DEBUG
+      !print out
+      call csv_write(&
+        6,&
+        (/x, sum(rho_radn),&
+        sum(rho_fields), hubble /)   , &
+        advance=.true.)
+
+      !Save the r_ij values
+      call reheater%getr_ij(rho_fields, rho_radn)
+
+      !If all fields have decayed, then calculate the W_i
+      if (all(reheater%fields_decayed)) then
+        print*, "everything has decayed"
+        call reheater%getW_i()
+        print*, "this is W_i:", reheater%W_i
+        stop
+      end if
+
+    end subroutine
 
     subroutine check_NaN()
 
@@ -1966,7 +1993,7 @@ contains
     end if
 
     !-------------------
-    !NB: Integration variable is t
+    !NB: Integration variable is N
     !-------------------
     !Evolve the background eqns with Gamma and a radiation fluid
     reheater%evolving_gamma = .true.
@@ -1997,8 +2024,6 @@ contains
     y(2*num_inflaton+1) = reheater%efolds_end
 
     !Radiation
-    !DEBUG
-    !print*, "Weird radiation IC"
     y(2*num_inflaton+2:3*num_inflaton+1) = 0.0e0_dp
 
     ode_underflow = .false.

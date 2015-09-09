@@ -52,6 +52,9 @@ module modpk_reheat
 
     real(dp), dimension(:), allocatable :: dN, W_i
     real(dp), dimension(:), allocatable :: Gamma_i
+    real(dp), dimension(:,:), allocatable :: r_ij, &
+      rho_field_decay, rho_radn_decay
+    logical, dimension(:), allocatable :: fields_decayed
 
     contains
 
@@ -62,6 +65,8 @@ module modpk_reheat
       procedure, public :: get_Gamma_uniform => reheat_get_Gamma_uniform
       procedure, public :: getH_with_radn => reheat_getH_with_radn
       procedure, public :: getdH_with_radn => reheat_getdH_with_radn
+      procedure, public :: getr_ij => reheat_getr_ij
+      procedure, public :: getW_i => reheat_getW_i
 
   end type reheat_state
   type (reheat_state) :: reheater
@@ -465,6 +470,15 @@ module modpk_reheat
       if (allocated(self%Gamma_i))&
         deallocate(self%Gamma_i)
 
+      if (allocated(self%r_ij))&
+        deallocate(self%r_ij)
+      if (allocated(self%fields_decayed))&
+        deallocate(self%fields_decayed)
+      if (allocated(self%rho_field_decay))&
+        deallocate(self%rho_field_decay)
+      if (allocated(self%rho_radn_decay))&
+        deallocate(self%rho_radn_decay)
+
 
       !Set min and max to ridiculously big/small values, respectively
       if (allocated(self%c_ij_min))&
@@ -513,7 +527,7 @@ module modpk_reheat
       allocate(self%Gamma_i(num_inflaton))
       !self%Gamma_i = 3.0e0_dp*self%H_end*rand
 
-      self%Gamma_i = 1e-4* 3.0e0_dp*self%H_end
+      self%Gamma_i = 1e-3* 3.0e0_dp*self%H_end*rand
 
 
 
@@ -571,5 +585,157 @@ module modpk_reheat
 
 
     end function reheat_getdH_with_radn
+
+    subroutine reheat_getr_ij(self, rho_fields, rho_radn)
+      class (reheat_state) :: self
+
+      real(dp), dimension(:), intent(in) :: rho_fields, rho_radn
+
+      logical, dimension(size(rho_fields)) :: save_field_rij
+      real(dp) :: hubble, rho_decayed, rho_notdecayed
+      integer :: ii, jj
+
+      !Using the sudden decay approximation where scalar fields
+      !are taken to have decayed if H<\Gamma_i, even if they
+      !have some energy left in the scalar field energy
+
+      if (.not. self%evolving_gamma) then
+        call raise%fatal_code("Need to be evolving with radiation fluid &
+          to use this subroutine.",__FILE__,__LINE__)
+      end if
+
+      !Initialize
+      !Start counting which fields have decayed
+      if (.not. allocated(self%fields_decayed)) then
+        allocate(self%fields_decayed(size(rho_fields)))
+        self%fields_decayed = .false.
+      end if
+      if (.not. allocated(self%rho_field_decay)) then
+        allocate(self%rho_field_decay(size(rho_fields),size(rho_fields)))
+        self%rho_field_decay = 0.0e0_dp
+      end if
+      if (.not. allocated(self%rho_radn_decay)) then
+        allocate(self%rho_radn_decay(size(rho_fields),size(rho_fields)))
+        self%rho_radn_decay = 0.0e0_dp
+      end if
+      if (.not. allocated(self%r_ij)) then
+        allocate(self%r_ij(size(rho_fields),size(rho_fields)))
+        self%r_ij = 0.0e0_dp
+      end if
+
+
+      hubble = sqrt( ( sum(rho_fields) + sum(rho_radn))/3.0e0_dp)
+
+      !Find which fields have decayed
+      save_field_rij = .false.
+      do jj=1, size(rho_fields)
+
+        if (hubble <= self%Gamma_i(jj)) then
+          if (.not. self%fields_decayed(jj)) then
+            !This is first time step after decaying
+            !Save everything
+            save_field_rij(jj) = .true.
+
+            !Save energy density in fields and radn
+            !at decay time for this field as a vector
+            self%rho_field_decay(:,jj) = rho_fields
+            self%rho_radn_decay(:,jj) = rho_radn
+          end if
+
+          self%fields_decayed(jj) = .true.
+
+        else
+          self%fields_decayed(jj) = .false.
+          save_field_rij(jj) = .false.
+
+        end if
+      end do
+
+      !Calculate r_ij only at the time step where the field decays
+      !into radiation, ie, whenever save_field_rij is .true.
+
+      !Evaluated at decay time t_jj, ii indexes energy components at
+      !this time
+      do jj=1, size(rho_fields)
+
+        if (save_field_rij(jj)) then
+          !Find energy density decayed and still in fields
+          !Add radiation energy (decayed) and
+          !matter energy (notdecayed) separately
+          rho_decayed = 0.0e0_dp
+          rho_notdecayed = 0.0e0_dp
+          do ii=1,size(rho_fields)
+            if (self%fields_decayed(ii)) then
+              rho_decayed = rho_decayed + &
+                self%rho_field_decay(ii,jj) + &
+                self%rho_radn_decay(ii,jj)
+            else
+              rho_notdecayed = rho_notdecayed + &
+                self%rho_field_decay(ii,jj) + &
+                self%rho_radn_decay(ii,jj)
+            end if
+          end do
+
+          self%r_ij(:,jj) = 3.0e0_dp* &
+            (self%rho_field_decay(:,jj) + self%rho_radn_decay(:,jj))/&
+            (4.0e0_dp*rho_decayed + 3.0e0_dp*rho_notdecayed)
+
+        end if
+
+      end do
+
+    end subroutine reheat_getr_ij
+
+    subroutine reheat_getW_i(self)
+      class(reheat_state) :: self
+
+      real(dp) :: sum_term, product_term
+
+      integer :: ii, jj, kk
+
+      !DEBUG
+      do ii=1,10
+      print*, "evaluating W_i; double check me!!!!!"
+      end do
+
+      if (.not. self%evolving_gamma) then
+        call raise%fatal_code("Need to be evolving with radiation fluid &
+          to use this subroutine.",__FILE__,__LINE__)
+      end if
+
+      if (.not. allocated(self%r_ij)) then
+        call raise%fatal_code("Need to evaluate the r_ij &
+          before the W_i.",__FILE__,__LINE__)
+      end if
+
+      !Initialize
+      if (.not. allocated(self%W_i)) then
+        allocate(self%W_i(num_inflaton))
+        self%W_i = 0.0e0_dp
+      end if
+
+      do ii=1,num_inflaton
+        sum_term=0.0e0_dp
+        do jj=1,num_inflaton-1
+
+          product_term=0.0e0_dp
+          do kk=jj+1, num_inflaton
+            product_term = product_term *&
+              (1.0e0_dp + self%r_ij(kk,kk)/3.0e0_dp)
+          end do
+
+          sum_term = sum_term +&
+            self%r_ij(ii,jj)*product_term
+
+        end do
+
+        self%W_i(ii) = &
+          self%r_ij(num_inflaton,num_inflaton)*sum_term/3.0e0_dp &
+          + self%r_ij(ii,num_inflaton)
+
+      end do
+
+
+    end subroutine reheat_getW_i
 
 end module modpk_reheat
