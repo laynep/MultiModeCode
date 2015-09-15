@@ -6,7 +6,7 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 8
+  num_inflaton = 4
 
   potential_choice = 1
   vparam_rows = 1
@@ -23,8 +23,8 @@ sum-separable potentials.  The horizon crossing approximation (HCA)
 ignores the contributions from the end of inflation surface.
 
 &analytical
-  use_deltaN_SR = .false.
-  use_horiz_cross_approx = .false.
+  use_deltaN_SR = .true.
+  use_horiz_cross_approx = .true.
   evaluate_modes = .true.
   get_runningofrunning = .false.
 /
@@ -138,10 +138,10 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 =   5.5  16.00
+  phi_init0 =   1.0
 
 
-  vparams(1,:) = -10.5e0 -10e0
+  vparams(1,:) = 1.0
 
 
 
@@ -205,7 +205,7 @@ uniform increments in log(k).
 
 &full_pk
   calc_full_pk = .false.
-  steps = 50
+  steps = 10
   kmin = 1.0e-4
   kmax = 5.0e-2
 /

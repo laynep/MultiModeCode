@@ -71,7 +71,7 @@ CONTAINS
     dphiarr = 0e0_dp
 
     !Initialize reheating
-    if (reheat_opts%use_reheat) call reheater%init()
+    if (reheat_opts%use_reheat) call reheater%init(reset_Gamma=.true.)
 
     if (size(phi_init) .eq. 1 &
       .and. tech_opt%automate_singlefield_ic) then !! for single field

@@ -117,8 +117,12 @@ contains
 
     DO nstp=1,MAXSTP
 
-      if (reheater%evolving_gamma .and. nstp>1) &
-        call check_for_reheating()
+      if (reheat_opts%use_reheat) then
+        !if (reheater%evolving_gamma .and. nstp>1) &
+        if (reheater%evolving_gamma) &
+          call check_for_reheating(leave)
+          if (leave) return
+      end if
 
       call check_NaN()
 
@@ -184,6 +188,7 @@ contains
       phi = y(1:num_inflaton)
       dphi = y(num_inflaton+1 : 2*num_inflaton)
 
+
       call check_inflation_started_properly()
 
       !END MULTIFIELD
@@ -225,12 +230,13 @@ contains
         if (itask/=2) nefold_out = min(x + dN_step, x2)
 
         !Increase accuracy requirements when not in SR
-        if (tech_opt%accuracy_setting>0 .and. &
-          .not. reheater%evolving_gamma) then
-          if (getEps(phi,dphi)>0.2e0_dp) then
-            rtol=1e-12_dp
-            atol=1e-12_dp
-            istate=3
+        if (tech_opt%accuracy_setting>0) then
+          if (reheat_opts%use_reheat .and. .not. reheater%evolving_gamma) then
+            if (getEps(phi,dphi)>0.2e0_dp) then
+              rtol=1e-12_dp
+              atol=1e-12_dp
+              istate=3
+            end if
           end if
         end if
 
@@ -267,11 +273,15 @@ contains
 
   CONTAINS
 
-    subroutine check_for_reheating()
+    subroutine check_for_reheating(leave)
+
+      logical, intent(inout) :: leave
 
       real(dp) :: hubble
       real(dp), dimension(num_inflaton) :: phi, dphidN, &
         rho_fields, rho_radn
+
+      leave = .false.
 
       phi = y(1:num_inflaton)
       dphidN = y(num_inflaton+1:2*num_inflaton)
@@ -281,21 +291,20 @@ contains
 
       !DEBUG
       !print out
-      call csv_write(&
-        6,&
-        (/x, sum(rho_radn),&
-        sum(rho_fields), hubble /)   , &
-        advance=.true.)
+      !call csv_write(&
+      !  6,&
+      !  (/x, sum(rho_radn),&
+      !  sum(rho_fields), hubble /)   , &
+      !  advance=.true.)
 
       !Save the r_ij values
       call reheater%getr_ij(rho_fields, rho_radn)
 
-      !If all fields have decayed, then calculate the W_i
+
+      !If all fields have decayed, then calculate the power spectrum and leave
       if (all(reheater%fields_decayed)) then
-        print*, "everything has decayed"
-        call reheater%getW_i()
-        print*, "this is W_i:", reheater%W_i
-        stop
+        call reheater%get_powerspectrum()
+        leave = .true.
       end if
 
     end subroutine
@@ -510,6 +519,10 @@ contains
 
      subroutine check_inflation_started_properly()
 
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_gamma) return
+       end if
+
        IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
 
          if (ic_sampling==ic_flags%slowroll_samp .or. &
@@ -544,6 +557,10 @@ contains
 
      subroutine check_evolution_stop_properly(leave)
        logical, intent(inout) :: leave
+
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_gamma) return
+       end if
 
        leave = .false.
 
@@ -656,6 +673,8 @@ contains
     type (vode_opts) :: ode_integrator_opt
 
     character(1024) :: cname
+
+    logical :: leave
 
 
     !DEBUG
@@ -788,14 +807,20 @@ contains
 
        !Increase accuracy requirements when not in SR
        if (tech_opt%accuracy_setting>0) then
-         if (getEps(phi,delphi)>0.2e0_dp) then
-           eps_adjust=1e-10_dp
-           if (tech_opt%accuracy_setting==2) then
-             if (getEps(phi,delphi)>0.9e0_dp) then
-               eps_adjust=1e-16_dp
+         !Don't give extra accuracy for large eps if evolving
+         !through long reheating phase
+         !if (.not. reheat_opts%use_reheat) then
+
+           if (getEps(phi,delphi)>0.2e0_dp) then
+             eps_adjust=1e-10_dp
+             if (tech_opt%accuracy_setting==2) then
+               if (getEps(phi,delphi)>0.9e0_dp) then
+                 eps_adjust=1e-16_dp
+               end if
              end if
            end if
-         end if
+
+         !end if
        else
          eps_adjust = eps
        end if
@@ -818,9 +843,13 @@ contains
 
        END IF
 
-       call check_evolution_stop_properly_MODES()
+       call check_evolution_stop_properly_MODES(leave)
+       if (leave) return
 
        call check_for_eternal_inflation_MODES()
+       !if (reheat_opts%use_reheat) then
+       !  if (infl_ended) return
+       !end if
 
        IF(ode_infl_end) THEN
           IF (infl_ended) THEN
@@ -1143,6 +1172,10 @@ contains
 
     subroutine check_for_eternal_inflation_MODES()
 
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_gamma) return
+       end if
+
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
           WRITE(*, *) 'MODECODE: vparams: ', (vparams(i,:),i=1, size(vparams,1))
           WRITE(*, *) 'MODECODE: x1, x, x2 :', x1, x, x2
@@ -1235,9 +1268,20 @@ contains
 
     end subroutine write_spectra
 
-    subroutine check_evolution_stop_properly_MODES()
+    subroutine check_evolution_stop_properly_MODES(leave)
+      logical, intent(inout) :: leave
 
       complex(dp), dimension(num_inflaton**2) :: q_modes, dqdN_modes
+
+      leave = .false.
+
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_gamma) then
+           call raise%fatal_code(&
+             "Using odeint_c when evolving post-inflationary background.",&
+             __FILE__, __LINE__)
+         end if
+       end if
 
        IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
@@ -1251,6 +1295,7 @@ contains
 
               if (alternate_infl_end(phi,delphi,q_modes,dqdN_modes,efolds=x)) then
                 infl_ended = .TRUE.
+                if (reheat_opts%use_reheat) leave = .true.
               end if
             else
               if (alternate_infl_end(phi,delphi,efolds=x)) infl_ended = .TRUE.
@@ -1266,6 +1311,7 @@ contains
 
       integer :: ii, jj
       complex(dp), dimension(num_inflaton**2) :: q_modes
+      real(dp) :: hubble
 
       use_q = .true.
       a_switch = scalefac
@@ -1291,7 +1337,15 @@ contains
 
         q_modes = y(index_ptb_y:index_ptb_vel_y-1)&
           /a_switch/sqrt(2.0e0_dp*k)
+
         call reheater%save_horizcross(phi,delphi,q_modes)
+
+        call evaluate_powerspectra()
+        reheater%pk_hc = power_internal
+
+        !Field power spectrum at horizon crossing
+        hubble = getH(phi,delphi)
+        reheater%pk_hc%adiab = (hubble**2)/(4.0e0_dp*pi**2)
 
       end if
 
@@ -1915,10 +1969,11 @@ contains
 
       !If ending evolution, perform matching to dN/dphi_i
       !after evaluating the C_ij
-      if (stopping .and. present(q_modes)) then
+
+      if (stopping .and. present(q_modes) .and. &
+        .not. reheater%evolving_gamma) then
         call reheat_match_to_dNdphi(reheater)
       end if
-
 
       return
     end if
@@ -1998,11 +2053,9 @@ contains
     !Evolve the background eqns with Gamma and a radiation fluid
     reheater%evolving_gamma = .true.
 
-    !Set integration bounds in t
+    !Set integration bounds in N
     x1=reheater%efolds_end
-    !DEBUG
-    print*, "setting x2 too high"
-    x2=x1 + 10e0_dp
+    x2=x1 + 100e0_dp
 
     !Accuracy & step sizes
     h1 = 1.0e-3_dp
@@ -2030,6 +2083,7 @@ contains
     ode_ps_output = .false.
     ode_infl_end = .false.
     save_steps = .false.
+
     call odeint(y,x1,x2, &
       accuracy,&
       h1,hmin,&
@@ -2037,13 +2091,6 @@ contains
 
     reheater%evolving_gamma = .false.
     !-------------------
-
-
-    !DEBUG
-    print*, "inside of reheat_match_to_dNdphi"
-    !print*, "c_ij_avg", reheater%c_ij_avg(1,1)
-    print*, "phi_end", reheater%phi_infl_end(:)
-    stop
 
   end subroutine reheat_match_to_dNdphi
 

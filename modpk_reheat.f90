@@ -3,12 +3,14 @@
 
 module modpk_reheat
   use modpkparams, only : dp, slowroll_infl_end, vparams, num_inflaton, Mpc2Mpl, &
-    k_pivot, N_pivot
+    k_pivot, N_pivot, lna, nactual_bg
+  use modpk_observables, only : power_spectra
   use internals, only : pi, k
   use potential, only : getH, geteps, getkineticenergy, &
     getw, dVdphi, getH_with_t
   use modpk_errorhandling, only : raise
   use csv_file, only : csv_write
+  use modpk_numerics, only : array_polint
 
   implicit none
 
@@ -31,13 +33,16 @@ module modpk_reheat
     real(dp), dimension(:), allocatable :: last_position
     integer, dimension(:), allocatable :: counter
     logical :: init_count=.false.
+    integer :: total_oscillations = 3
   end type oscillation_counter
   type(oscillation_counter) :: osc_count
 
   !Would bind options here, but can't use allocatable in namelist
   type :: reheat_state
 
-    logical :: reheating_phase, inflation_ended, evolving_gamma
+    logical :: reheating_phase = .false.
+    logical :: inflation_ended = .false.
+    logical :: evolving_gamma = .false.
 
     complex(dp), dimension(:, :), allocatable :: q_horizcross
     real(dp), dimension( :), allocatable :: phi_infl_end
@@ -54,7 +59,11 @@ module modpk_reheat
     real(dp), dimension(:), allocatable :: Gamma_i
     real(dp), dimension(:,:), allocatable :: r_ij, &
       rho_field_decay, rho_radn_decay
+    real(dp) :: hubble_prev
+    real(dp), dimension(:), allocatable :: rho_field_prev, rho_radn_prev
     logical, dimension(:), allocatable :: fields_decayed
+
+    type(power_spectra) :: pk, pk_hc
 
     contains
 
@@ -67,6 +76,7 @@ module modpk_reheat
       procedure, public :: getdH_with_radn => reheat_getdH_with_radn
       procedure, public :: getr_ij => reheat_getr_ij
       procedure, public :: getW_i => reheat_getW_i
+      procedure, public :: get_powerspectrum => reheat_get_powerspectrum
 
   end type reheat_state
   type (reheat_state) :: reheater
@@ -92,8 +102,6 @@ module modpk_reheat
 
       logical :: stopping
       integer :: sign_phi, sign_last
-
-      integer, parameter :: total_oscillations = 5
 
       real(dp), dimension(size(phi)) :: dV, rho_i
       complex(dp), dimension(size(phi),size(phi)) :: xi, test_xi
@@ -190,8 +198,8 @@ module modpk_reheat
         !end do; end do; end do
         !pk_zeta = pk_zeta*(k**3/2.0e0_dp/pi**2)/sum(dphidN**2)**2
 
-        !!DEBUG
-        !print*, "this is pk_zeta"
+        !DEBUG
+        !print*, "this is pk_zeta", pk_zeta
         !print*, efolds, ',', pk_zeta, ',', (1.0/8.0/pi**2)*self%h_horizcross**2/self%eps_horizcross
 
         !To check
@@ -206,9 +214,6 @@ module modpk_reheat
 
         !DEBUG
         !print*, "this is pk_zeta2", pk_zeta
-
-
-
 
 
       end if
@@ -238,6 +243,7 @@ module modpk_reheat
           .not. osc_count%init_count) then
           stopping = .false.
           return
+
         else
 
           !Start counting oscillations around the minimum phi_i=0
@@ -278,16 +284,13 @@ module modpk_reheat
           osc_count%last_position = phi
 
           !Stop after certain number of oscillations for every field
-          if (minval(osc_count%counter) >= total_oscillations) then
+          if (minval(osc_count%counter) >= osc_count%total_oscillations) then
             stopping = .true.
             !Reset the counter
             osc_count%init_count=.false.
           end if
 
         end if
-
-
-
 
 
       end select
@@ -303,23 +306,26 @@ module modpk_reheat
 
         if (.not. allocated(self%c_ij_avg)) &
           allocate(self%c_ij_avg(size(c_ij,1),size(c_ij,2)))
-        if (.not. allocated(self%c_ij_moving_avg)) &
-          allocate(self%c_ij_moving_avg(1000,size(c_ij,1),size(c_ij,2)))
 
         !The stupid way seems to work best...
         !Avg = (max + min)/2
         do ii=1,size(c_ij,1); do jj=1,size(c_ij,2)
           if (c_ij(ii,jj) > self%c_ij_max(ii,jj)) &
-            self%c_ij_max(ii,jj) = c_ij(ii,jj) 
+            self%c_ij_max(ii,jj) = c_ij(ii,jj)
 
           if (c_ij(ii,jj) < self%c_ij_min(ii,jj)) &
-            self%c_ij_min(ii,jj) = c_ij(ii,jj) 
+            self%c_ij_min(ii,jj) = c_ij(ii,jj)
         end do; end do
 
         self%c_ij_avg = 0.5e0_dp*(self%c_ij_max + self%c_ij_min)
 
-        !DEBUG
-        !print*, "this is c_ij_avg", self%c_ij_avg(1,2), c_ij(1,2)
+        !call csv_write(&
+        !  6,&
+        !  (/efolds, c_ij, self%c_ij_avg /), &
+        !  advance=.true.)
+
+        !if (.not. allocated(self%c_ij_moving_avg)) &
+        !  allocate(self%c_ij_moving_avg(1000,size(c_ij,1),size(c_ij,2)))
 
 
         !if (self%count_avg == 0) then
@@ -378,6 +384,8 @@ module modpk_reheat
       real(dp), intent(in) :: efolds
       logical, intent(in) :: slowroll_start
 
+      integer :: i, j
+
       if (.not. slowroll_start) then
         !If inflation hasn't started, reheating hasn't started
         self%reheating_phase = .false.
@@ -393,6 +401,9 @@ module modpk_reheat
         !Save some values at end of inflation
         self%inflation_ended = .true.
 
+        !Indicate started reheating
+        self%reheating_phase = .true.
+
         self%efolds_end = efolds
 
         if (allocated(self%phi_infl_end)) &
@@ -407,8 +418,6 @@ module modpk_reheat
 
         self%H_end = getH(phi,dphidN)
 
-        !Indicate started reheating
-        self%reheating_phase = .true.
 
       else if (.not. self%inflation_ended) then
         !Otherwise just keep inflating
@@ -448,8 +457,10 @@ module modpk_reheat
 
     end subroutine reheat_save_horizcross
 
-    subroutine reheat_initializer(self)
+    subroutine reheat_initializer(self, reset_Gamma)
       class(reheat_state) :: self
+
+      logical, intent(in) :: reset_Gamma
 
       if (allocated(self%q_horizcross))&
         deallocate(self%q_horizcross)
@@ -467,8 +478,10 @@ module modpk_reheat
       if (allocated(self%W_i))&
         deallocate(self%W_i)
 
-      if (allocated(self%Gamma_i))&
-        deallocate(self%Gamma_i)
+      if (reset_Gamma) then
+        if (allocated(self%Gamma_i))&
+          deallocate(self%Gamma_i)
+      end if
 
       if (allocated(self%r_ij))&
         deallocate(self%r_ij)
@@ -478,6 +491,12 @@ module modpk_reheat
         deallocate(self%rho_field_decay)
       if (allocated(self%rho_radn_decay))&
         deallocate(self%rho_radn_decay)
+      if (allocated(self%rho_field_prev))&
+        deallocate(self%rho_field_prev)
+      if (allocated(self%rho_radn_prev))&
+        deallocate(self%rho_radn_prev)
+
+      self%hubble_prev = 0.0e0_dp
 
 
       !Set min and max to ridiculously big/small values, respectively
@@ -502,6 +521,9 @@ module modpk_reheat
       self%count_avg = 0
       self%count_moving_avg = 0
 
+      call self%pk%init()
+      call self%pk_hc%init()
+
     end subroutine reheat_initializer
 
 
@@ -518,18 +540,26 @@ module modpk_reheat
           __FILE__, __LINE__)
       end if
 
+      !Don't have any Gamma_i yet
+      if (.not. allocated(self%Gamma_i)) then
+        allocate(self%Gamma_i(num_inflaton))
+      else
+        !Don't get new Gamma_i without deallocating first
+        !ie, need to call init
+        return
+      end if
+
+      !if (allocated(self%Gamma_i)) deallocate(self%Gamma_i)
+
       allocate(rand(num_inflaton))
       call random_number(rand)
 
+
       !DEBUG
-      print*, "Warning: Setting \Gamma_i sort of ad hoc..."
-      if (allocated(self%Gamma_i)) deallocate(self%Gamma_i)
-      allocate(self%Gamma_i(num_inflaton))
+      print*, "Setting Gamma_i ad hoc"
       !self%Gamma_i = 3.0e0_dp*self%H_end*rand
 
       self%Gamma_i = 1e-3* 3.0e0_dp*self%H_end*rand
-
-
 
     end subroutine reheat_get_Gamma_uniform
 
@@ -591,9 +621,13 @@ module modpk_reheat
 
       real(dp), dimension(:), intent(in) :: rho_fields, rho_radn
 
+      real(dp), dimension(size(rho_fields)) :: rho_error
       logical, dimension(size(rho_fields)) :: save_field_rij
       real(dp) :: hubble, rho_decayed, rho_notdecayed
       integer :: ii, jj
+
+      real(dp), dimension(2) :: hubble_vect
+      real(dp), dimension(size(rho_fields),2) :: rho_mat
 
       !Using the sudden decay approximation where scalar fields
       !are taken to have decayed if H<\Gamma_i, even if they
@@ -622,6 +656,14 @@ module modpk_reheat
         allocate(self%r_ij(size(rho_fields),size(rho_fields)))
         self%r_ij = 0.0e0_dp
       end if
+      if (.not. allocated(self%rho_field_prev)) then
+        allocate(self%rho_field_prev(size(rho_fields)))
+        self%rho_field_prev = rho_fields
+      end if
+      if (.not. allocated(self%rho_radn_prev)) then
+        allocate(self%rho_radn_prev(size(rho_fields)))
+        self%rho_radn_prev = rho_radn
+      end if
 
 
       hubble = sqrt( ( sum(rho_fields) + sum(rho_radn))/3.0e0_dp)
@@ -636,10 +678,32 @@ module modpk_reheat
             !Save everything
             save_field_rij(jj) = .true.
 
+
             !Save energy density in fields and radn
+            !self%rho_field_decay(:,jj) = rho_fields
+            !self%rho_radn_decay(:,jj) = rho_radn
             !at decay time for this field as a vector
-            self%rho_field_decay(:,jj) = rho_fields
-            self%rho_radn_decay(:,jj) = rho_radn
+
+            !NB: Use polynomial interpolation on this time step and
+            !previous to get more accurate value
+            hubble_vect(1) = self%hubble_prev
+            hubble_vect(2) = hubble
+            rho_mat(:,1) = self%rho_field_prev
+            rho_mat(:,2) = rho_fields
+            call array_polint(hubble_vect, &
+              rho_mat, &
+              self%Gamma_i(jj),&
+              self%rho_field_decay(:,jj), &
+              rho_error)
+
+            rho_mat(:,1) = self%rho_radn_prev
+            rho_mat(:,2) = rho_radn
+            call array_polint(hubble_vect, &
+              rho_mat, &
+              self%Gamma_i(jj),&
+              self%rho_radn_decay(:,jj), &
+              rho_error)
+
           end if
 
           self%fields_decayed(jj) = .true.
@@ -650,6 +714,12 @@ module modpk_reheat
 
         end if
       end do
+
+      !Save new energy densities
+      self%rho_field_prev = rho_fields
+      self%rho_radn_prev = rho_radn
+      self%hubble_prev = hubble
+
 
       !Calculate r_ij only at the time step where the field decays
       !into radiation, ie, whenever save_field_rij is .true.
@@ -693,11 +763,6 @@ module modpk_reheat
 
       integer :: ii, jj, kk
 
-      !DEBUG
-      do ii=1,10
-      print*, "evaluating W_i; double check me!!!!!"
-      end do
-
       if (.not. self%evolving_gamma) then
         call raise%fatal_code("Need to be evolving with radiation fluid &
           to use this subroutine.",__FILE__,__LINE__)
@@ -716,6 +781,7 @@ module modpk_reheat
 
       do ii=1,num_inflaton
         sum_term=0.0e0_dp
+
         do jj=1,num_inflaton-1
 
           product_term=0.0e0_dp
@@ -735,7 +801,67 @@ module modpk_reheat
 
       end do
 
-
     end subroutine reheat_getW_i
+
+    !Calculate the power spectrum in the sudden decay approximation for
+    !perturbative reheating
+    subroutine reheat_get_powerspectrum(self)
+      class(reheat_state) :: self
+
+      real(dp), dimension(num_inflaton) :: dN
+      real(dp)  :: pk_horizcross
+      integer :: jj
+
+      if (.not. self%evolving_gamma) then
+        call raise%fatal_code("Need to be evolving with radiation fluid &
+          to use this subroutine.",__FILE__,__LINE__)
+      end if
+
+      if (.not. allocated(self%c_ij_avg)) then
+        call raise%fatal_code("Need to evaluate the C_ij &
+          before the power spectrum.",__FILE__,__LINE__)
+      end if
+
+      !Get the W_i vector
+      call self%getW_i()
+
+
+      !Calculate derivatives of e-foldings
+      dN = 0.0e0_dp
+      do jj=1,num_inflaton
+        dN(:) = dN(:) + &
+          self%W_i(jj)*self%c_ij_avg(jj,:)
+      end do
+
+      !Load the power spectrum attributes
+      self%pk%k = self%pk_hc%k
+
+      !Assuming SR
+      !NB: pk_hc%adiab is actually the *field* power spectrum ~ H^2/4 pi^2
+      self%pk%adiab = self%pk_hc%adiab*sum(dN**2)
+      self%pk%tensor = 8.0e0_dp*self%pk_hc%adiab
+
+      !No isocurvature
+      self%pk%isocurv = 0.0e0_dp
+      self%pk%cross_ad_iso = 0.0e0_dp
+      self%pk%pnad = 0.0e0_dp
+      self%pk%pressure = 0.0e0_dp
+      self%pk%press_ad = 0.0e0_dp
+      self%pk%entropy = 0.0e0_dp
+      self%pk%bundle_exp_scalar = 0.0e0_dp
+
+      !DEBUG
+      !print*, "----------------"
+      !print*, "this is k", self%pk%k
+      !print*, "this is pk_hc", self%pk_hc%adiab
+      !print*, "this is pk", self%pk%adiab
+      !print*, "this is", self%pk_hc%adiab, self%pk%adiab
+      !print*, "this is r",  self%pk%tensor/self%pk%adiab
+      !print*, "this is W_i", self%W_i
+      !print*, "this is c_ij", self%c_ij_avg
+      !print*, "this is r_ij", self%r_ij
+      !stop
+
+    end subroutine reheat_get_powerspectrum
 
 end module modpk_reheat

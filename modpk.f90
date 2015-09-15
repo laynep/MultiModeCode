@@ -97,12 +97,8 @@ CONTAINS
     index_uzeta_y = index_tensor_y + 2
 
     ! Make the powerspectrum array.
-    if (allocated(powerspectrum_out%phi_ij)) then
-      deallocate(powerspectrum_out%phi_ij)
-    end if
-    if (allocated(power_internal%phi_ij)) then
-      deallocate(power_internal%phi_ij)
-    end if
+    call powerspectrum_out%init()
+    call power_internal%init()
     allocate(power_internal%phi_ij(num_inflaton,num_inflaton))
     allocate(powerspectrum_out%phi_ij(num_inflaton,num_inflaton))
 
@@ -114,11 +110,12 @@ CONTAINS
     if (num_inflaton==1) then
       eval_ps = 5.0e2_dp
     else
-      eval_ps = 1.0e0_dp
+      !eval_ps = 1.0e0_dp
+      eval_ps = 5.0e2_dp
     end if
 
     !Initialize reheating
-    if (reheat_opts%use_reheat) call reheater%init()
+    if (reheat_opts%use_reheat) call reheater%init(reset_Gamma=.false.)
 
     !DEBUG
     !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
@@ -244,8 +241,12 @@ CONTAINS
     nactual_mode = kount  ! update nactual after evolving the modes
 
     if(.not. ode_underflow) then
-      powerspectrum_out = power_internal
-      powerspectrum_out%bundle_exp_scalar=field_bundle%exp_scalar
+      if (reheat_opts%use_reheat) then
+        powerspectrum_out = reheater%pk
+      else
+        powerspectrum_out = power_internal
+        powerspectrum_out%bundle_exp_scalar=field_bundle%exp_scalar
+      end if
     else
       powerspectrum_out%adiab= 0e0_dp
       powerspectrum_out%isocurv=0e0_dp

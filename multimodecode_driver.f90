@@ -602,8 +602,8 @@ program multimodecode
           call test_bad(pk_bad, observs, leave)
           if (leave) return
 !DEBUG
-print*, "Not evaluating second and third evolve routines"
-stop
+!print*, "Not evaluating second and third evolve routines"
+!stop
         call evolve(k_pivot*exp(-dlnk), pk1)
           call test_bad(pk_bad, observs, leave)
           if (leave) return

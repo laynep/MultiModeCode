@@ -164,6 +164,10 @@ module modpk_observables
     !Expansion scalar for field space bundle width
     real(dp) :: bundle_exp_scalar
 
+    contains
+
+      procedure, public :: init => spectra_initializer
+
   end type
 
   !For temporary calc of spectra in odeint
@@ -434,5 +438,25 @@ module modpk_observables
       end if
 
     end subroutine calculate_observs_finitediff
+
+    subroutine spectra_initializer(self)
+      class(power_spectra) :: self
+
+      self%k = 0.0e0_dp
+      self%adiab = 0.0e0_dp
+      self%tensor = 0.0e0_dp
+      self%powz = 0.0e0_dp
+      self%isocurv = 0.0e0_dp
+      self%cross_ad_iso = 0.0e0_dp
+      self%pnad = 0.0e0_dp
+      self%pressure = 0.0e0_dp
+      self%press_ad = 0.0e0_dp
+      self%entropy = 0.0e0_dp
+      self%bundle_exp_scalar = 0.0e0_dp
+
+      if (allocated(self%phi_ij)) &
+        deallocate(self%phi_ij)
+
+    end subroutine spectra_initializer
 
 end module modpk_observables
