@@ -1,7 +1,7 @@
 !Module that lets us compare the mode evolution to the slow-roll expectation for
 !sum-separable potentials, using the results of Battefeld-Easther astro-ph/0610296
 module modpk_deltaN
-  use modpkparams, only : dp, vparams, N_pivot
+  use modpkparams, only : dp, vparams, N_pivot, potential_choice
   use modpk_observables, only : power_spectra
   use internals, only : pi
   use potential, only : pot, dVdphi, d2Vdphi2, d3Vdphi3
@@ -438,6 +438,8 @@ module modpk_deltaN
     end function dZdphi_ij_BE
 
     !For a sum-separable potential V=\sum_i V_i.  This returns only the V_i part
+    !For sum-separable potentials with different potential for each field, have
+    !to put this in by hand.
     function V_i_sum_sep(phi)
       real(dp), dimension(:), intent(in) :: phi
       real(dp), dimension(size(phi)) :: V_i_sum_sep
@@ -445,6 +447,26 @@ module modpk_deltaN
       real(dp), dimension(:,:), allocatable :: vparams_temp
       integer :: vrows, jj
       real(dp) :: V
+
+      !Sum-separable, but not same potential
+      !Really, really ugly...
+      if (potential_choice == 21) then
+        allocate(vparams_temp(size(vparams,1), size(vparams,2)))
+        vparams_temp = vparams
+
+        !First field
+        vparams(1,2) = 0.e0_dp
+        V_i_sum_sep(1) = pot(phi)
+        vparams = vparams_temp
+
+        !Second field
+        vparams(2,1) = 0.e0_dp
+        V_i_sum_sep(2) = pot(phi)
+
+        vparams = vparams_temp
+        return
+      end if
+
 
       !The idea: make temp copy of vparams; change vparams as if it had only the
       !one field; get V; restore vparams

@@ -300,7 +300,6 @@ contains
       !Save the r_ij values
       call reheater%getr_ij(rho_fields, rho_radn)
 
-
       !If all fields have decayed, then calculate the power spectrum and leave
       if (all(reheater%fields_decayed)) then
         call reheater%get_powerspectrum()
@@ -2039,13 +2038,7 @@ contains
 
     !Get the decay parameters \Gamma_i in the KG equation
     !\phi'' + (3H+\Gamma_i)\phi' + V' = 0
-    if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
-      call reheater%get_Gamma_uniform()
-    else
-      call raise%fatal_code(&
-        'This sampling technique for gamma is not implemented.', &
-        __FILE__, __LINE__)
-    end if
+    call reheater%get_Gamma()
 
     !-------------------
     !NB: Integration variable is N
