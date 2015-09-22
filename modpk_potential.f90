@@ -15,6 +15,8 @@ module potential
        logP_of_observ, fisher_rao_metric, guess_EOI_field, approx_phipiv_SR, &
        getkineticenergy, getw
 
+  public :: getPdot, getrhodot, getcs2
+
   public :: norm
   public :: bundle, field_bundle
 
@@ -2155,45 +2157,49 @@ contains
     end function get_B_vect_Padiab
 
 
-    function getPdot(phi,dphi) result(Pdot)
-
-      real(dp), dimension(:), intent(in) :: phi, dphi
-      real(dp) :: Pdot, H, H2
-      real(dp), dimension(size(phi)) :: Vprime
-
-      Vprime=dVdphi(phi)
-
-      H=getH(phi,dphi)
-      H2=H**2
-
-      Pdot = -H*sum(3.0e0_dp*H2*dphi*dphi + 2e0_dp*Vprime*dphi)
-
-    end function getPdot
-
-
-    function getrhodot(phi,dphi) result(rhodot)
-
-      real(dp), dimension(:), intent(in) :: phi, dphi
-      real(dp) :: rhodot, H, H2
-
-      H=getH(phi,dphi)
-
-      rhodot = -3.0e0_dp*H**3*sum(dphi*dphi)
-
-    end function getrhodot
-
-
-    function getcs2(phi,dphi) result(cs2)
-
-      real(dp), dimension(:), intent(in) :: phi, dphi
-      real(dp) :: cs2
-
-      cs2 = getpdot(phi,dphi)/getrhodot(phi,dphi)
-
-    end function getcs2
-
 
   end subroutine powerspectrum
+
+  !d(pressure)/d(cosmic time)
+  function getPdot(phi,dphidN) result(Pdot)
+
+    real(dp), dimension(:), intent(in) :: phi, dphidN
+    real(dp) :: Pdot, H, H2
+    real(dp), dimension(size(phi)) :: Vprime
+
+    Vprime=dVdphi(phi)
+
+    H=getH(phi,dphidN)
+    H2=H**2
+
+    Pdot = -H*sum(3.0e0_dp*H2*dphidN*dphidN + 2e0_dp*Vprime*dphidN)
+
+  end function getPdot
+
+
+  !d(energy density)/d(cosmic time)
+  function getrhodot(phi,dphidN) result(rhodot)
+
+    real(dp), dimension(:), intent(in) :: phi, dphidN
+    real(dp) :: rhodot, H, H2
+
+    H=getH(phi,dphidN)
+
+    rhodot = -3.0e0_dp*H**3*sum(dphidN*dphidN)
+
+  end function getrhodot
+
+
+  !Speed of sound
+  function getcs2(phi,dphidN) result(cs2)
+
+    real(dp), dimension(:), intent(in) :: phi, dphidN
+    real(dp) :: cs2
+
+    cs2 = getpdot(phi,dphidN)/getrhodot(phi,dphidN)
+
+  end function getcs2
+
 
 
   !Projection of v orthogonally onto line spanned by u

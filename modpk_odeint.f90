@@ -188,7 +188,6 @@ contains
       phi = y(1:num_inflaton)
       dphi = y(num_inflaton+1 : 2*num_inflaton)
 
-
       call check_inflation_started_properly()
 
       !END MULTIFIELD
