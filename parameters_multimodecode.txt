@@ -12,7 +12,7 @@ Set potential and its derivatives in modpk_potential.f90
   vparam_rows = 2
   more_potential_params = .false.
 
-  slowroll_infl_end = .false.
+  slowroll_infl_end = .true.
   instreheat = .false.
 /
 
@@ -192,7 +192,7 @@ The reheat model sets the style of reheating that we will use.
   1 = Perturbative reheating a la 1311.3972
 
 &reheat
-  reheat_opts%use_reheat = .true.
+  reheat_opts%use_reheat = .false.
   reheat_opts%reheat_model = 1
 
   reheat_opts%gamma_sampler = 1

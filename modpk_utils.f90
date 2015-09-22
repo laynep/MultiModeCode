@@ -8,7 +8,10 @@ MODULE modpk_utils
   use modpk_errorhandling, only : raise, run_outcome
   use modpk_reheat, only : reheater
   use csv_file, only : csv_write
-  IMPLICIT NONE
+  implicit none
+
+!Define some macros for global use
+#include 'modpk_macros.f90'
 
   INTERFACE rkck
      module procedure rkck_r
@@ -263,8 +266,8 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2
 
-    phi = real(y(1:num_inflaton),kind=dp)
-    delphi = real(y(num_inflaton+1:2*num_inflaton),kind=dp)
+    phi = real(y(IND_FIELDS),kind=dp)
+    delphi = real(y(IND_VEL),kind=dp)
     dotphi = sqrt(dot_product(delphi, delphi))
 
     !Aliases to potential derivatives
@@ -306,13 +309,13 @@ CONTAINS
 
     ! Alias y's into real variable names
     ! NB: if using_q_superh, psi(i,j)-->q_ptb(i,j)
-    psi = y(index_ptb_y:index_ptb_vel_y-1)
-    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+    psi = y(IND_MODES)
+    dpsi = y(IND_MODES_VEL)
 
-    v_tensor  = y(index_tensor_y)
-    dv_tensor  = y(index_tensor_y+1)
-    u_zeta = y(index_uzeta_y)
-    du_zeta = y(index_uzeta_y+1)
+    v_tensor  = y(IND_TENSOR)
+    dv_tensor  = y(IND_TENSOR_VEL)
+    u_zeta = y(IND_UZETA)
+    du_zeta = y(IND_UZETA_VEL)
 
     ! Build the mass matrix, Cab
     call build_mass_matrix(Cab)
@@ -322,38 +325,37 @@ CONTAINS
     ! -----------------------------
 
     ! background
-    yprime(1:num_inflaton) = cmplx(delphi,kind=dp)
-    yprime(num_inflaton+1:2*num_inflaton) =&
+    yprime(IND_FIELDS) = cmplx(delphi,kind=dp)
+    yprime(IND_VEL) =&
       cmplx(-((3.0e0_dp+dhubble/hubble)*delphi+dVdphi(phi)/hubble/hubble),kind=dp)
 
     ! ptb matrix
-    yprime(index_ptb_y:index_ptb_vel_y-1) = dpsi
+    yprime(IND_MODES) = dpsi
 
     if (using_q_superh) then
-      yprime(index_ptb_vel_y:index_tensor_y-1) = -(3.0e0_dp - epsilon)*dpsi &
+      yprime(IND_MODES_VEL) = -(3.0e0_dp - epsilon)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
         - dot(Cab, psi)/hubble**2
     else
-      yprime(index_ptb_vel_y:index_tensor_y-1) = -(1.0e0_dp - epsilon)*dpsi &
+      yprime(IND_MODES_VEL) = -(1.0e0_dp - epsilon)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
         + (2.0e0_dp - epsilon)*psi - dot(Cab, psi)/hubble**2
     end if
 
-
     ! tensors
-    yprime(index_tensor_y) = dv_tensor
+    yprime(IND_TENSOR) = dv_tensor
     if (using_q_superh) then
-      yprime(index_tensor_y+1) = -(3.0e0_dp - epsilon)*dv_tensor - &
+      yprime(IND_TENSOR_VEL) = -(3.0e0_dp - epsilon)*dv_tensor - &
         (k/scale_factor/hubble)**2*v_tensor
     else
-      yprime(index_tensor_y+1) = -(1.0e0_dp - epsilon)*dv_tensor - &
+      yprime(IND_TENSOR_VEL) = -(1.0e0_dp - epsilon)*dv_tensor - &
         (k/scale_factor/hubble)**2*v_tensor + (2.0e0_dp - epsilon)*v_tensor
     end if
 
     ! adiabatic ptb
-    yprime(index_uzeta_y) = du_zeta
+    yprime(IND_UZETA) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2
-    yprime(index_uzeta_y+1) = -(1.0e0_dp - epsilon)*du_zeta -&
+    yprime(IND_UZETA_VEL) = -(1.0e0_dp - epsilon)*du_zeta -&
       (k/scale_factor/hubble)**2*u_zeta &
       + (2.0e0_dp + 5.0e0_dp*epsilon - 2.0e0_dp*epsilon**2 + &
       2.0e0_dp*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
@@ -369,7 +371,7 @@ CONTAINS
           ! set this in order to prevent numerical error
           mass_matrix = 0e0_dp
         else
-           forall (i=1:num_inflaton, j=1:num_inflaton) &
+           forall (i=IND_FIELDS, j=IND_FIELDS) &
                 mass_matrix(i,j) = d2V(i,j) +  &
                 (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
                 + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
@@ -752,8 +754,8 @@ CONTAINS
     !f(i) = -(3-eps)*y(i-num_inflaton) - H**-2 * dVdphi(i-num_inflaton)
     !                 for   num_inflaton + 1 <= i <= 2*num_inflaton
 
-    phi = y(1:num_inflaton)
-    dphi = y(num_inflaton+1:2*num_inflaton)
+    phi = y(IND_FIELDS)
+    dphi = y(IND_VEL)
 
     eps = getEps(phi,dphi)
     V_pot = pot(phi)
@@ -767,7 +769,7 @@ CONTAINS
     end do
 
     !Derivs wrt phi
-    forall ( ii=1:num_inflaton, jj=1:num_inflaton)&
+    forall ( ii=IND_FIELDS, jj=IND_FIELDS)&
       pd(ii+num_inflaton,jj) = -(3.0e0_dp - eps)*&
         (d2V(ii,jj)/V_pot - (dV(ii)*dV(jj)/V_pot**2))
 
@@ -777,7 +779,7 @@ CONTAINS
       delta(ii,ii) = 1e0_dp
     end do
 
-    forall ( ii=1:num_inflaton, jj=1:num_inflaton)&
+    forall ( ii=IND_FIELDS, jj=IND_FIELDS)&
       pd(ii+num_inflaton,jj+num_inflaton) = &
         -(3.0e0_dp-eps)*delta(ii,jj) &
         + dphi(ii)*dphi(jj) &
@@ -823,10 +825,10 @@ CONTAINS
       ml=ml, mu=mu, pd=pd_back, nrowpd=size(pd_back,1))
     pd(1:size(pd_back,1),1:size(pd_back,2)) = pd_back
 
-    phi = real(y(1:num_inflaton),kind=dp)
-    dphi = real(y(num_inflaton+1:2*num_inflaton),kind=dp)
-    psi = y(index_ptb_y:index_ptb_vel_y-1)
-    dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+    phi = real(y(IND_FIELDS),kind=dp)
+    dphi = real(y(IND_VEL),kind=dp)
+    psi = y(IND_MODES)
+    dpsi = y(IND_MODES_VEL)
 
     delta=0e0_dp
     do ii=1,nrowpd
@@ -847,12 +849,12 @@ CONTAINS
     scale_factor=a_init*EXP(t)
 
     ! Build the mass matrix, Cab and its derivatives
-    forall (ii=1:num_inflaton, jj=1:num_inflaton) &
+    forall (ii=IND_FIELDS, jj=IND_FIELDS) &
          Cab(ii,jj) = d2V(ii,jj) +  &
          (dphi(ii)*dV(jj) + dphi(jj)*dV(ii)) &
          + (3e0_dp-epsilon)*hubble**2 * dphi(ii)*dphi(jj)
 
-    forall (ii=1:num_inflaton, ll=1:num_inflaton, kk=1:num_inflaton)
+    forall (ii=IND_FIELDS, ll=IND_FIELDS, kk=IND_FIELDS)
         dCdphi(ii,ll,kk) = (1.0e0_dp/hubble**2)*&
           (d3V(ii,ll,kk) - (dV(kk)/V_pot)*d2V(ii,ll) &
           - (dV(kk)/V_pot)*(dphi(ii)*dV(ll)+dphi(ll)*dV(ii)) &

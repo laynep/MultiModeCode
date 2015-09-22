@@ -16,6 +16,9 @@ MODULE access_modpk
 	pkspline_p2der(pkspline_n), pkspline_pt(pkspline_n), &
 	pkspline_pt2der(pkspline_n)
 
+!Define some macros for global use
+#include 'modpk_macros.f90'
+
 CONTAINS
 
   SUBROUTINE potinit
@@ -91,10 +94,6 @@ CONTAINS
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2
 
     ! Set aliases for indices for above
-    index_ptb_y = 2*num_inflaton+1
-    index_ptb_vel_y = 2*num_inflaton+1+num_inflaton**2
-    index_tensor_y = 2*num_inflaton+2*num_inflaton**2+1
-    index_uzeta_y = index_tensor_y + 2
 
     ! Make the powerspectrum array.
     call powerspectrum_out%init()
@@ -265,7 +264,7 @@ CONTAINS
 
         identityvector=0e0_dp
 
-        forall (i=1:num_inflaton)&
+        forall (i=IND_FIELDS)&
           identityvector((i-1)*num_inflaton+i)=1e0_dp
 
       end subroutine make_identity
@@ -281,20 +280,22 @@ CONTAINS
         call make_identity(identity)
 
         ! Background - from previous evolution
-        y(1:num_inflaton) = cmplx(p_ik,kind=dp)             !phi(x1)
-        y(num_inflaton+1:2*num_inflaton) = cmplx(dp_ik,kind=dp) !Not in exact SR
+        y(IND_FIELDS) = cmplx(p_ik,kind=dp)             !phi(x1)
+        y(IND_VEL) = cmplx(dp_ik,kind=dp) !Not in exact SR
 
         ! mode matrix - diagonalize, Bunch-Davies
-        y(index_ptb_y:index_ptb_vel_y-1) = (1.e0_dp, 0)*identity  !cmplx(1/sqrt(2*k))
-        y(index_ptb_vel_y:index_tensor_y-1) = cmplx(0., -k/exp(ah),kind=dp)*identity
+        y(IND_MODES) = &
+          (1.e0_dp, 0)*identity  !cmplx(1/sqrt(2*k))
+        y(IND_MODES_VEL) = &
+          cmplx(0., -k/exp(ah),kind=dp)*identity
 
         ! tensors
-        y(index_tensor_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(index_tensor_y+1) = cmplx(0., -k/exp(ah),kind=dp)
+        y(IND_TENSOR) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
+        y(IND_TENSOR_VEL) = cmplx(0., -k/exp(ah),kind=dp)
 
         ! u_zeta
-        y(index_uzeta_y) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(index_uzeta_y+1) = cmplx(0., -k/exp(ah),kind=dp)
+        y(IND_UZETA) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
+        y(IND_UZETA_VEL) = cmplx(0., -k/exp(ah),kind=dp)
 
       end subroutine set_background_and_mode_ic
 
@@ -362,7 +363,7 @@ CONTAINS
           check1 = abs((eps-2.0e0_dp)/(horiz_fract**2))
           check2 = abs( d2V/ (horiz_fract**2 * h_ik**2))
 
-          forall (i=1:num_inflaton, j=1:num_inflaton)
+          forall (i=IND_FIELDS, j=IND_FIELDS)
             check3(i,j) = abs( (dp_ik(i)*dV(j) + &
               dp_ik(j)*dV(j))/(h_ik**2*horiz_fract**2))
             check4(i,j) = abs( (3.0e0_dp - eps)*dp_ik(i)*dp_ik(j)/horiz_fract**2)

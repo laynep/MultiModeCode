@@ -8,7 +8,7 @@ FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8
 
 ifdef DEBUG
 F90C     = gfortran
-FFLAGS = -cpp -O0 -fdefault-real-8 -g -p
+FFLAGS = -cpp -O0 -fdefault-real-8 -g -p # -Wall
 endif
 
 #ifort compile options

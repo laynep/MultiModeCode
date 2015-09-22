@@ -20,6 +20,9 @@ MODULE modpk_odeint
 
   public :: odeint
 
+!Define some macros for global use
+#include 'modpk_macros.f90'
+
 contains
 
   subroutine odeint_r(ystart,x1,x2,eps,h1,hmin,derivs,rkqs_r)
@@ -132,7 +135,7 @@ contains
         field_bundle%dlogThetadN=0e0_dp
         field_bundle%exp_scalar=1e0_dp
       end if
-      call field_bundle%calc_exp_scalar(y(1:num_inflaton),x)
+      call field_bundle%calc_exp_scalar(y(IND_FIELDS),x)
 
       !Record the background trajectory
       if (out_opt%save_traj) call print_traj()
@@ -185,8 +188,8 @@ contains
       call check_for_eternal_inflation()
 
       !MULTIFIELD
-      phi = y(1:num_inflaton)
-      dphi = y(num_inflaton+1 : 2*num_inflaton)
+      phi = y(IND_FIELDS)
+      dphi = y(IND_VEL)
 
       call check_inflation_started_properly()
 
@@ -247,7 +250,7 @@ contains
 
     !It got to the end without going through enough inflation to even be called
     !"slowroll_start"
-    !if (getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+    !if (getEps(y(IND_FIELDS),y(IND_VEL))>1.0e0_dp) then
     if (.not. slowroll_start) then
       pk_bad = run_outcome%infl_didnt_start
 
@@ -261,8 +264,8 @@ contains
       PRINT*, 'MODECODE: nsteps', nstp, MAXSTP
       PRINT*, "MODECODE: E-fold", x
       print*, "MODECODE: Step size", h
-      print*, "MODECODE: epsilon=", getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))
-      print*, "MODECODE: V=", pot(y(1:num_inflaton))
+      print*, "MODECODE: epsilon=", getEps(y(IND_FIELDS),y(IND_VEL))
+      print*, "MODECODE: V=", pot(y(IND_FIELDS))
       PRINT*, "MODECODE: y=", y
       ode_underflow=.TRUE.
 
@@ -282,8 +285,8 @@ contains
 
       leave = .false.
 
-      phi = y(1:num_inflaton)
-      dphidN = y(num_inflaton+1:2*num_inflaton)
+      phi = y(IND_FIELDS)
+      dphidN = y(IND_VEL)
       rho_radn = y(2*num_inflaton+2:3*num_inflaton+1)
       hubble = reheater%getH_with_radn(phi,dphidN,sum(rho_radn))
       rho_fields = 0.5e0_dp*hubble**2*dphidN**2 + V_i_sum_sep(phi)
@@ -400,6 +403,9 @@ contains
           abserr_vector=atol,&
           relerr=rtol,&
           user_supplied_jacobian=.false., &
+          !constrained = (/1,2,3/), &
+          !clower = (/-1e0,-1e0,-1e0/), &
+          !cupper = (/1e0,1e0,1e0/), &
           mxstep=50000,&
           H0=1e-9_dp)
       end if
@@ -472,27 +478,27 @@ contains
 
       call csv_write(&
         out_opt%trajout,&
-        pot(y(1:num_inflaton)),&
+        pot(y(IND_FIELDS)),&
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        getEps(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        getEps(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        getH(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        getH(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        geteta(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        geteta(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        dVdphi(y(1:num_inflaton)), &
+        dVdphi(y(IND_FIELDS)), &
         advance=.true.)
 
     end subroutine print_traj
@@ -795,8 +801,8 @@ contains
        end if
 
        !MULTIFIELD
-       phi = real(y(1:num_inflaton),kind=dp)
-       delphi = real(y(num_inflaton+1 : 2*num_inflaton),kind=dp)
+       phi = real(y(IND_FIELDS),kind=dp)
+       delphi = real(y(IND_VEL),kind=dp)
        dotphi = sqrt(dot_product(delphi, delphi))
 
        if (out_opt%modes) call print_modes()
@@ -854,21 +860,22 @@ contains
             IF (use_q) THEN
                ytmp(:) = y(:)
                ! bckgrd
-               ystart(1:2*num_inflaton) = y(1:2*num_inflaton)
+               ystart(IND_FIELDS) = y(IND_FIELDS)
+               ystart(IND_VEL) = y(IND_VEL)
 
                ! ptbs
-               ystart(index_ptb_y:index_ptb_vel_y-1) = &
-                 ytmp(index_ptb_y:index_ptb_vel_y-1)*scalefac/a_switch
-               ystart(index_ptb_vel_y:index_tensor_y-1) = &
-                 ytmp(index_ptb_vel_y:index_tensor_y-1)&
-                 *scalefac/a_switch + ystart(index_ptb_y:index_ptb_vel_y-1)
+               ystart(IND_MODES) = &
+                 ytmp(IND_MODES)*scalefac/a_switch
+               ystart(IND_MODES_VEL) = &
+                 ytmp(IND_MODES_VEL)*scalefac/a_switch &
+                 + ystart(IND_MODES)
 
                ! tensors
-               ystart(index_tensor_y) =&
-                 ytmp(index_tensor_y)*scalefac/a_switch
-               ystart(index_tensor_y+1) =&
-                 ytmp(index_tensor_y+1)*scalefac/a_switch&
-                 + ystart(index_tensor_y)
+               ystart(IND_TENSOR) =&
+                 ytmp(IND_TENSOR)*scalefac/a_switch
+               ystart(IND_TENSOR_VEL) =&
+                 ytmp(IND_TENSOR_VEL)*scalefac/a_switch&
+                 + ystart(IND_TENSOR)
             ELSE
                ystart(:) = y(:)
             END IF
@@ -949,7 +956,7 @@ contains
 
     print*, 'MODECODE: N =', x
     print*, 'MODECODE: stepsize, h =', h
-    print*, 'MODECODE: background, y =', y(1:num_inflaton)
+    print*, 'MODECODE: background, phi =', y(IND_FIELDS)
     print*, 'MODECODE: accuracy =', eps_adjust, eps
     print*, "MODECODE: epsilon", getEps(phi,delphi)
 
@@ -964,6 +971,9 @@ contains
 
       character(1024) :: cname
       integer :: ii
+      integer :: index_ptb_vel_y
+
+      index_ptb_vel_y = 2*num_inflaton+num_inflaton**2
 
       !Make column headers
       if (out_opt%first_modeout) then
@@ -978,7 +988,7 @@ contains
           advance=.false.)
 
         !Next num_inflaton columns
-        do ii=index_ptb_y,index_ptb_vel_y-1
+        do ii=LOOP_MODES
           write(cname, "(A8,I4.4)") "Re[mode]", ii
           if (ii==index_ptb_vel_y-1) then
             call csv_write(&
@@ -1015,7 +1025,7 @@ contains
           advance=.false.)
 
         !Next num_inflaton columns
-        do ii=index_ptb_y,index_ptb_vel_y-1
+        do ii=LOOP_MODES
           write(cname, "(A8,I4.4)") "Im[mode]", ii
           if (ii==index_ptb_vel_y-1) then
             call csv_write(&
@@ -1048,17 +1058,17 @@ contains
       if (.not. use_q) then
         write(out_opt%modeout(1),'(100E30.22)') &
           x - (n_tot - N_pivot), &
-          real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+          real(y(IND_MODES))/sqrt(2*k)
         write(out_opt%modeout(2),'(100E30.22)') &
           x - (n_tot - N_pivot),&
-          aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+          aimag(y(IND_MODES))/sqrt(2*k)
       else
         write(out_opt%modeout(3),'(100E30.22)') &
           x - (n_tot - N_pivot), &
-          real(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+          real(y(IND_MODES))/sqrt(2*k)
         write(out_opt%modeout(4),'(100E30.22)') &
           x - (n_tot - N_pivot),&
-          aimag(y(index_ptb_y:index_ptb_vel_y-1))/sqrt(2*k)
+          aimag(y(IND_MODES))/sqrt(2*k)
       end if
 
     end subroutine print_modes
@@ -1079,16 +1089,16 @@ contains
 
       IF (use_q) THEN  ! convert from (a_switch*Q) to v
          ytmp(:) = y(:)
-         ptb_tmp =ytmp(index_ptb_y:index_ptb_vel_y-1)
-         dptb_tmp =ytmp(index_ptb_vel_y:index_tensor_y-1)
+         ptb_tmp =ytmp(IND_MODES)
+         dptb_tmp =ytmp(IND_MODES_VEL)
 
-         ytmp(index_ptb_y:index_ptb_vel_y-1) = ptb_tmp*scalefac/a_switch
-         ytmp(index_ptb_vel_y:index_tensor_y-1) = dptb_tmp*scalefac/a_switch + ptb_tmp
+         ytmp(IND_MODES) = ptb_tmp*scalefac/a_switch
+         ytmp(IND_MODES_VEL) = dptb_tmp*scalefac/a_switch + ptb_tmp
 
-         ytmp(index_tensor_y) = &
-           ytmp(index_tensor_y)*scalefac/a_switch
-         ytmp(index_tensor_y+1) = &
-           ytmp(index_tensor_y+1)*scalefac/a_switch + ytmp(index_tensor_y)
+         ytmp(IND_TENSOR) = &
+           ytmp(IND_TENSOR)*scalefac/a_switch
+         ytmp(IND_TENSOR_VEL) = &
+           ytmp(IND_TENSOR_VEL)*scalefac/a_switch + ytmp(IND_TENSOR)
       END IF
 
       yp(1:size(yp,1)/2,kount) = real(ytmp(:),kind=dp)
@@ -1117,27 +1127,11 @@ contains
 
       else
 
-        !Set rtol to 10^-(m+1) where m = # decimal places that are important
+        !Set rtol to 10^-(m+1)
+        !where m = # decimal places that are important
         rtol = 1e-6_dp
 
         !Set atol_i where |y_i| is insignificant
-        !atol(1:num_inflaton) = 1e-8_dp
-        !atol(num_inflaton+1:2*num_inflaton) = 1e-6_dp
-        !atol(neq/2+1:neq/2+num_inflaton) = 1e2_dp !Set to zero exactly in derivs
-        !atol(neq/2+num_inflaton+1:neq/2+2*num_inflaton) = 1e2_dp !Set to zero exactly in derivs
-
-        !atol(index_ptb_y:index_ptb_vel_y-1) = 1e-5_dp
-        !atol(index_ptb_vel_y:index_tensor_y-1) = 1e-5_dp
-        !atol(neq/2+index_ptb_y:neq/2+index_ptb_vel_y-1) = 1e-5_dp
-        !atol(neq/2+index_ptb_vel_y:neq/2+index_tensor_y-1) = 1e-5_dp
-
-        !atol(index_tensor_y:index_tensor_y+1) = 1.0e-8_dp
-        !atol(index_uzeta_y:index_uzeta_y+1) = 1.0e-3_dp
-        !atol(neq/2+index_tensor_y:neq/2+index_tensor_y+1) = 1e0_dp
-        !atol(neq/2+index_uzeta_y:neq/2+index_uzeta_y+1) = 1e0_dp
-
-        !atol((neq/2)+1:neq)=atol(1:neq/2)
-
         atol = 1e-12_dp
 
 
@@ -1177,9 +1171,9 @@ contains
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
           WRITE(*, *) 'MODECODE: vparams: ', (vparams(i,:),i=1, size(vparams,1))
           WRITE(*, *) 'MODECODE: x1, x, x2 :', x1, x, x2
-          WRITE(*, *) 'MODECODE: phi_back :', real(y(1:num_inflaton))
-          WRITE(*, *) 'MODECODE: epsilon :', geteps(real(y(1:num_inflaton)),&
-            real(y(num_inflaton+1:2*num_inflaton)))
+          WRITE(*, *) 'MODECODE: phi_back :', real(y(IND_FIELDS))
+          WRITE(*, *) 'MODECODE: epsilon :', geteps(real(y(IND_FIELDS)),&
+            real(y(IND_VEL)))
           IF (.NOT.instreheat) WRITE(*,*) 'MODECODE: N_pivot: ', N_pivot
 
           call raise%fatal_cosmo(&
@@ -1198,24 +1192,24 @@ contains
       IF (use_q) THEN
 
         !Y's are in \bar{Q}=Q/a_switch
-        qij = y(index_ptb_y:index_ptb_vel_y-1)/a_switch
-        dqij = y(index_ptb_vel_y:index_tensor_y-1)/a_switch
+        qij = y(IND_MODES)/a_switch
+        dqij = y(IND_MODES_VEL)/a_switch
 
         ! with isocurv calculation
         call powerspectrum(qij, dqij, phi, delphi, &
           scalefac, power_internal, using_q=.true.)
 
-        power_internal%tensor=tensorpower(y(index_tensor_y) &
+        power_internal%tensor=tensorpower(y(IND_TENSOR) &
            *scalefac/a_switch, scalefac)
       ELSE
 
-        psi = y(index_ptb_y:index_ptb_vel_y-1)
-        dpsi = y(index_ptb_vel_y:index_tensor_y-1)
+        psi = y(IND_MODES)
+        dpsi = y(IND_MODES_VEL)
 
         call powerspectrum(psi, dpsi, phi, delphi, &
           scalefac, power_internal)
 
-        power_internal%tensor=tensorpower(y(index_tensor_y), scalefac)
+        power_internal%tensor=tensorpower(y(IND_TENSOR), scalefac)
       END IF
 
       !Record spectrum
@@ -1224,7 +1218,7 @@ contains
       end if
 
       if (compute_zpower) then  !! compute only once upon horizon exit
-         power_internal%powz = zpower(y(index_uzeta_y), dotphi, scalefac)
+         power_internal%powz = zpower(y(IND_UZETA), dotphi, scalefac)
          compute_zpower = .false.
       end if
 
@@ -1288,8 +1282,8 @@ contains
             !Modes
             !\delta \phi_i = 1/a u_i = q_ij \hat a^j = 1/a \psi_ij \hat a^j
             if (use_q) then
-              q_modes = y(index_ptb_y:index_ptb_vel_y-1)/a_switch/sqrt(2.0e0_dp*k)
-              dqdN_modes =y(index_ptb_vel_y:index_tensor_y-1)/a_switch/sqrt(2.0e0_dp*k)
+              q_modes = y(IND_MODES)/a_switch/sqrt(2.0e0_dp*k)
+              dqdN_modes =y(IND_MODES_VEL)/a_switch/sqrt(2.0e0_dp*k)
 
               if (alternate_infl_end(phi,delphi,q_modes,dqdN_modes,efolds=x)) then
                 infl_ended = .TRUE.
@@ -1316,14 +1310,12 @@ contains
       !set intial condition in (Q*a_switch)
       ytmp(:) = y(:)
 
-      y(index_ptb_y:index_ptb_vel_y-1) = ytmp(index_ptb_y:index_ptb_vel_y-1)
-      y(index_ptb_vel_y:index_tensor_y-1) = &
-        ytmp(index_ptb_vel_y:index_tensor_y-1) &
-        - y(index_ptb_y:index_ptb_vel_y-1)
+      y(IND_MODES) = ytmp(IND_MODES)
+      y(IND_MODES_VEL) = ytmp(IND_MODES_VEL) - y(IND_MODES)
 
-      y(index_tensor_y) = ytmp(index_tensor_y)
-      y(index_tensor_y+1) = ytmp(index_tensor_y+1) &
-        - y(index_tensor_y)
+      y(IND_TENSOR) = ytmp(IND_TENSOR)
+      y(IND_TENSOR_VEL) = ytmp(IND_TENSOR_VEL) &
+        - y(IND_TENSOR)
 
       if (tech_opt%use_dvode_integrator) then
         !Reset istate to let integrator know it's a new variable
@@ -1333,8 +1325,7 @@ contains
 
       if (reheat_opts%use_reheat) then
 
-        q_modes = y(index_ptb_y:index_ptb_vel_y-1)&
-          /a_switch/sqrt(2.0e0_dp*k)
+        q_modes = y(IND_MODES)/a_switch/sqrt(2.0e0_dp*k)
 
         call reheater%save_horizcross(phi,delphi,q_modes)
 
@@ -1584,10 +1575,10 @@ contains
     !checking for eternal inflation
 
        !MULTIFIELD
-       p = y(1:num_inflaton)
-       delp = y(num_inflaton+1 : 2*num_inflaton) !dphi/dt
+       p = y(IND_FIELDS)
+       delp = y(IND_VEL) !dphi/dt
 
-       Nefolds = y(2*num_inflaton+1)
+       Nefolds = y(IND_EFOLDS)
 
 
        !Check to see if we're inflating or not
@@ -1691,7 +1682,7 @@ contains
 
     !It got to the end without going through enough inflation to even be called
     !"slowroll_start"
-    !if (getEps_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton))>1.0e0_dp) then
+    !if (getEps_with_t(y(IND_FIELDS),y(IND_VEL))>1.0e0_dp) then
     if (.not. slowroll_start) then
 
       call raise%fatal_code(&
@@ -1816,38 +1807,38 @@ contains
 
       call csv_write(&
         out_opt%trajout,&
-        y(1:num_inflaton), &
+        y(IND_FIELDS), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        y(num_inflaton+1:2*num_inflaton)/&
-        getH_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        y(IND_VEL)/&
+        getH_with_t(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        pot(y(1:num_inflaton)),&
+        pot(y(IND_FIELDS)),&
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        getEps_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        getEps_with_t(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        getH_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        getH_with_t(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        geteta_with_t(y(1:num_inflaton),y(num_inflaton+1:2*num_inflaton)), &
+        geteta_with_t(y(IND_FIELDS),y(IND_VEL)), &
         advance=.false.)
 
       call csv_write(&
         out_opt%trajout,&
-        dVdphi(y(1:num_inflaton)), &
+        dVdphi(y(IND_FIELDS)), &
         advance=.true.)
 
     end subroutine print_traj
@@ -2060,16 +2051,14 @@ contains
     allocate(y(num_inflaton + num_inflaton + 1 + num_inflaton))
 
     !Fields
-    y(1:num_inflaton) = reheater%phi_infl_end
-    !y(num_inflaton+1:2*num_inflaton) = reheater%dphi_infl_end&
-    !  *reheater%H_end !cosmic time
-    y(num_inflaton+1:2*num_inflaton) = reheater%dphi_infl_end !e-folds
+    y(IND_FIELDS) = reheater%phi_infl_end
+    y(IND_VEL) = reheater%dphi_infl_end !e-folds
 
     !Efolds
-    y(2*num_inflaton+1) = reheater%efolds_end
+    y(IND_EFOLDS) = reheater%efolds_end
 
     !Radiation
-    y(2*num_inflaton+2:3*num_inflaton+1) = 0.0e0_dp
+    y(IND_RADN) = 0.0e0_dp
 
     ode_underflow = .false.
     ode_ps_output = .false.

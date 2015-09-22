@@ -222,7 +222,9 @@ module modpk_reheat
       select case(reheat_opts%reheat_model)
       case default
 
-        call raise%fatal_code("Please specify your reheating model.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Please specify your reheating model.",&
+          __FILE__,__LINE__)
 
       case(1)
 
@@ -648,8 +650,10 @@ module modpk_reheat
       !have some energy left in the scalar field energy
 
       if (.not. self%evolving_gamma) then
-        call raise%fatal_code("Need to be evolving with radiation fluid &
-          to use this subroutine.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Need to be evolving with radiation fluid &
+          to use this subroutine.",&
+          __FILE__,__LINE__)
       end if
 
       !Initialize
@@ -778,13 +782,17 @@ module modpk_reheat
       integer :: ii, jj, kk
 
       if (.not. self%evolving_gamma) then
-        call raise%fatal_code("Need to be evolving with radiation fluid &
-          to use this subroutine.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Need to be evolving with radiation fluid &
+          to use this subroutine.",&
+          __FILE__,__LINE__)
       end if
 
       if (.not. allocated(self%r_ij)) then
-        call raise%fatal_code("Need to evaluate the r_ij &
-          before the W_i.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Need to evaluate the r_ij &
+          before the W_i.",&
+          __FILE__,__LINE__)
       end if
 
       !Initialize
@@ -827,13 +835,17 @@ module modpk_reheat
       integer :: jj
 
       if (.not. self%evolving_gamma) then
-        call raise%fatal_code("Need to be evolving with radiation fluid &
-          to use this subroutine.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Need to be evolving with radiation fluid &
+          to use this subroutine.",&
+          __FILE__,__LINE__)
       end if
 
       if (.not. allocated(self%c_ij_avg)) then
-        call raise%fatal_code("Need to evaluate the C_ij &
-          before the power spectrum.",__FILE__,__LINE__)
+        call raise%fatal_code(&
+          "Need to evaluate the C_ij &
+          before the power spectrum.",&
+          __FILE__,__LINE__)
       end if
 
       !Get the W_i vector

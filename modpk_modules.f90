@@ -116,7 +116,7 @@ MODULE internals
   real(dp), PARAMETER :: PI=3.141592653589793238462643383279502884197e0_dp
   real(dp) :: h_ik
   !MULTIFIELD
-  integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y
+  !integer :: index_ptb_y, index_ptb_vel_y, index_tensor_y, index_uzeta_y
   !END MULTIFIELD
   real(dp) :: k, a_ik
 

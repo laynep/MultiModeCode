@@ -17,6 +17,9 @@ program multimodecode
 
   implicit none
 
+!Define some macros for global use
+#include 'modpk_macros.f90'
+
   !Run-specific input params
   integer :: sample_looper, vparam_rows
 
@@ -526,8 +529,8 @@ program multimodecode
 
       !Load ics
       allocate(observs%ic(2*num_inflaton))
-      observs%ic(1:num_inflaton)=phi_init0
-      observs%ic(num_inflaton+1:2*num_inflaton)=dphi_init0
+      observs%ic(IND_FIELDS)=phi_init0
+      observs%ic(IND_VEL)=dphi_init0
       if (use_deltaN_SR) then
         allocate(observs_SR%ic(2*num_inflaton))
         observs_SR%ic = observs%ic
@@ -674,12 +677,12 @@ program multimodecode
       end if
 
       if (save_iso_N) then
-        observs%ic(1:num_inflaton) = phi_iso_N
-        observs%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+        observs%ic(IND_FIELDS) = phi_iso_N
+        observs%ic(IND_VEL) = dphi_iso_N
         if (use_deltaN_SR) &
-          observs_SR%ic(1:num_inflaton) = phi_iso_N
+          observs_SR%ic(IND_FIELDS) = phi_iso_N
         if (use_deltaN_SR) &
-          observs_SR%ic(num_inflaton+1:2*num_inflaton) = dphi_iso_N
+          observs_SR%ic(IND_VEL) = dphi_iso_N
 
         if (out_opt%output_badic .or. pk_bad==run_outcome%success) then
 

@@ -13,6 +13,9 @@ module modpk_sampling
   use modpk_io, only : out_opt
   implicit none
 
+!Define some macros for global use
+#include 'modpk_macros.f90'
+
   integer :: ic_sampling
   type :: ic_samp_flags
     integer :: reg_samp = 1
@@ -159,7 +162,7 @@ module modpk_sampling
 
         ic_radius = sqrt(2.0e0_dp * N_iso_ref * p_exp)
 
-        call sample_nsphere(y_background(1:num_inflaton),ic_radius)
+        call sample_nsphere(y_background(IND_FIELDS),ic_radius)
 
 
       !-----------------------------------------
@@ -227,8 +230,8 @@ module modpk_sampling
         with_eqen = .true.
         if (num_inflaton==1) then
 
-          y_background(1:num_inflaton) = 20.0e0_dp
-          y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+          y_background(IND_FIELDS) = 20.0e0_dp
+          y_background(IND_VEL) = 0e0_dp
 
         else if (with_eqen) then
           !Set IC with equal energy over pre-defined field range
@@ -284,8 +287,8 @@ module modpk_sampling
         !Get IC
         if (num_inflaton==1) then
 
-          y_background(1:num_inflaton) = 25.0e0_dp
-          y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+          y_background(IND_FIELDS) = 25.0e0_dp
+          y_background(IND_VEL) = 0e0_dp
 
         else
           !Set IC with equal energy over pre-defined field range
@@ -384,8 +387,8 @@ module modpk_sampling
         call qsf_runref%get_param(phi_light=phi_light0)
 
         !Set initial condition from this parameter in the valley
-        y_background(1:num_inflaton) = turning_function_parametric(qsf_runref%param)
-        y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+        y_background(IND_FIELDS) = turning_function_parametric(qsf_runref%param)
+        y_background(IND_VEL) = 0e0_dp
 
       else if (ic_sampling == ic_flags%single_axion) then
         !Kinetic-dominated initial condition for single-field axion
@@ -416,25 +419,25 @@ module modpk_sampling
 
         !Something weird with the clock in init_random_seed_serial?
         call random_number(rand); call random_number(rand)
-        y_background(1:num_inflaton) = rand*&
+        y_background(IND_FIELDS) = rand*&
             (2.0e0_dp*pi/finv)-(pi/finv)
 
         !Set velocity much higher than the "axion scale"=lambda
-        !y_background(num_inflaton+1:2*num_inflaton) = &
+        !y_background(IND_VEL) = &
         !    1.0e6_dp*2.0e0_dp*lambda**2
 
         !Set KE at SSB scale f^4
-        y_background(num_inflaton+1:2*num_inflaton) = &
+        y_background(IND_VEL) = &
             !finv**(-2)
             1.0e0_dp
 
 
-        !y_background(num_inflaton+1:2*num_inflaton) = sqrt(2.0e0_dp)
-        !y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+        !y_background(IND_VEL) = sqrt(2.0e0_dp)
+        !y_background(IND_VEL) = 0e0_dp
 
 
-        y_background(1:num_inflaton) = (0.95*pi/2.0e0_dp)/finv
-        y_background(num_inflaton+1:2*num_inflaton) = 0e0_dp
+        y_background(IND_FIELDS) = (0.95*pi/2.0e0_dp)/finv
+        y_background(IND_VEL) = 0e0_dp
 
 
 
@@ -446,12 +449,12 @@ module modpk_sampling
       end if
 
       !Load initial vals from sample
-      phi0 = y_background(1:num_inflaton)
-      dphidt_init0 = y_background(num_inflaton+1:2*num_inflaton)
+      phi0 = y_background(IND_FIELDS)
+      dphidt_init0 = y_background(IND_VEL)
 
       !Convert dphidt-->dphidN
       H=getH_with_t(phi0, dphidt_init0)
-      dphi0 = (1.0e0/H)*y_background(num_inflaton+1:2*num_inflaton)
+      dphi0 = (1.0e0/H)*y_background(IND_VEL)
 
       !Check if any fields are super-Planckian, if that's not allowed
       if (.not. allow_superplanckian .and. any(abs(phi0)>1.0e0_dp)) then
@@ -522,13 +525,13 @@ module modpk_sampling
 
 
 	          !Energy density not allocated
-            phi = y(1:num_inflaton)
-            dphi=y(num_inflaton+1:2*num_inflaton)
+            phi = y(IND_FIELDS)
+            dphi=y(IND_VEL)
 	          KE = energy_scale**4 - pot(phi)
 
             call sample_nsphere(dphi,sqrt(2.0e0_dp*KE))
 
-            y(num_inflaton+1:2*num_inflaton) = dphi
+            y(IND_VEL) = dphi
 
     	      !Energy density not allocated
     	      rho_not_alloc = energy_scale**4 - pot(phi) -&
@@ -564,8 +567,8 @@ module modpk_sampling
             !Set y(constraint) to minim energy value
             y(param_constr) = min_fixed_energy(param_constr)
 
-            phi = y(1:num_inflaton)
-            dphi = y(num_inflaton+1:2*num_inflaton)
+            phi = y(IND_FIELDS)
+            dphi = y(IND_VEL)
 
 	      	  !Energy density not allocated
 	      	  rho_not_alloc = energy_scale**4 - pot(phi) -&
@@ -591,8 +594,8 @@ module modpk_sampling
 
 	            !Set y(constraint) to fix total energy
               call set_y_by_energy_constraint(y, param_constr, energy_scale)
-              phi = y(1:num_inflaton)
-              dphi = y(num_inflaton+1:2*num_inflaton)
+              phi = y(IND_FIELDS)
+              dphi = y(IND_VEL)
 
               !DEBUG
               return
@@ -649,8 +652,8 @@ module modpk_sampling
             phi0_priors_min, phi0_priors_max, &
             dphi0_priors_min, dphi0_priors_max)
 
-          phi = y(1:num_inflaton)
-          dphi = y(num_inflaton+1:2*num_inflaton)
+          phi = y(IND_FIELDS)
+          dphi = y(IND_VEL)
 
           !Constrain first velocity
           dphi(1) = 0e0_dp
@@ -681,8 +684,8 @@ module modpk_sampling
           else
 	          !Set y(constraint) to fix total energy
             call set_y_by_energy_constraint(y, num_inflaton+1, energy_scale)
-            phi = y(1:num_inflaton)
-            dphi = y(num_inflaton+1:2*num_inflaton)
+            phi = y(IND_FIELDS)
+            dphi = y(IND_VEL)
 
             return
           end if
@@ -742,13 +745,13 @@ module modpk_sampling
             dummy_dphi0_priors_min, dummy_dphi0_priors_max)
 
           !No kinetic energy
-          y(num_inflaton+1:2*num_inflaton) = 0.0e0_dp
+          y(IND_VEL) = 0.0e0_dp
 
           !Pick a field dimn to set by energy constraint
           call random_number(rand)
           param_constr = ceiling(rand*num_inflaton)
 
-          phi = y(1:num_inflaton)
+          phi = y(IND_FIELDS)
 
           !Only choose massive fields to set constraint by...
           if (m2_V(param_constr)<0.0e0_dp) cycle
@@ -801,7 +804,7 @@ module modpk_sampling
 
 
         !DEBUG
-        !print*, "this is phi = ", y(1:num_inflaton)
+        !print*, "this is phi = ", y(IND_FIELDS)
         !print*, "this is phi constraint = ", y(param_constr)
         !stop
 
@@ -845,8 +848,8 @@ module modpk_sampling
 	    integer :: i
 
 
-      delta_prior(1:num_inflaton) = phi0_priors_max-phi0_priors_min
-      delta_prior(num_inflaton+1:2*num_inflaton) = &
+      delta_prior(IND_FIELDS) = phi0_priors_max-phi0_priors_min
+      delta_prior(IND_VEL) = &
         dphi0_priors_max-dphi0_priors_min
 
 
@@ -911,8 +914,8 @@ module modpk_sampling
       !Force y(constraint)=0 in case this isn't the min
       y(constraint) = 0e0_dp
 
-      phi = y(1:num_inflaton)
-      dphi = y(num_inflaton+1:2*num_inflaton)
+      phi = y(IND_FIELDS)
+      dphi = y(IND_VEL)
 
 
       !w/y(constraint)=0
@@ -984,7 +987,7 @@ module modpk_sampling
         !Masses
         m2 = 10.e0_dp**(vparams(1,:))
 
-        y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
+        y(IND_FIELDS) = sqrt(2.0e0_dp*E4/m2(:))
 
       else if (potential_choice==2) then
         !N-flation axions
@@ -992,7 +995,7 @@ module modpk_sampling
         l4 = 10.e0_dp**vparams(1,:)
         f = 10.e0_dp**vparams(2,:)
 
-        y(1:num_inflaton) = acos(E4/l4 - 1.0e0_dp)*f
+        y(IND_FIELDS) = acos(E4/l4 - 1.0e0_dp)*f
         if (any(isnan(y))) then
           call raise%fatal_code(&
             "The variable y has a NaN in equal_displacement_ic.",&
@@ -1005,7 +1008,7 @@ module modpk_sampling
         !Masses
         m2 = 10.e0_dp**(vparams(1,:))
 
-        y(1:num_inflaton) = sqrt(2.0e0_dp*E4/m2(:))
+        y(IND_FIELDS) = sqrt(2.0e0_dp*E4/m2(:))
       else
         write(*,*) "MODECODE: potential_choice=",potential_choice
 
@@ -1014,7 +1017,7 @@ module modpk_sampling
             __FILE__, __LINE__)
       end if
 
-      y(num_inflaton+1:2*num_inflaton) = 0e0_dp
+      y(IND_VEL) = 0e0_dp
 
     end subroutine equal_displacement_ic
 
@@ -1028,11 +1031,11 @@ module modpk_sampling
       real(dp) :: KE
       !real(dp), dimension(num_inflaton) :: phi, dphi
 
-      y(1:num_inflaton) = 0.1e-10
+      y(IND_FIELDS) = 0.1e-10
 
-      KE = energy_scale**4 - pot(y(1:num_inflaton))
+      KE = energy_scale**4 - pot(y(IND_FIELDS))
 
-      call sample_nsphere(y(num_inflaton+1:2*num_inflaton),&
+      call sample_nsphere(y(IND_VEL),&
         sqrt(2.0e0_dp*KE))
 
     end subroutine zero_potential_ic

@@ -15,8 +15,11 @@ MODULE background_evolution
   use modpk_qsf
   use modpk_errorhandling, only : raise, run_outcome
 
-  IMPLICIT NONE
-  PUBLIC :: backgrnd
+  implicit none
+  public :: backgrnd
+
+!Define some macros for global use
+#include 'modpk_macros.f90'
 
 CONTAINS
 
@@ -620,8 +623,8 @@ CONTAINS
         !If unstable, then integrate in cosmic time t until reach stable region
         !for e-fold integrator
         numer_stable = .false.
-        call stability_check_numer(numer_stable,y(1:num_inflaton),&
-          y(num_inflaton+1:2*num_inflaton), slowroll=slowroll_start,&
+        call stability_check_numer(numer_stable,y(IND_FIELDS),&
+          y(IND_VEL), slowroll=slowroll_start,&
           using_t=.false.)
 
         if (.not. numer_stable) then
@@ -634,10 +637,10 @@ CONTAINS
           hmin = 0.0e0_dp
 
           !Convert from using N to using t as integ variable
-          z_int_with_t(1:num_inflaton) = y(1:num_inflaton)
-          !z_int_with_t(num_inflaton+1:2*num_inflaton) = &
-          !  h_init*y(num_inflaton+1:2*num_inflaton)
-          z_int_with_t(num_inflaton+1:2*num_inflaton) = &
+          z_int_with_t(IND_FIELDS) = y(IND_FIELDS)
+          !z_int_with_t(IND_VEL) = &
+          !  h_init*y(IND_VEL)
+          z_int_with_t(IND_VEL) = &
             dphidt_init0
           z_int_with_t(2*num_inflaton+1) = 0e0_dp !e-folds
 
@@ -651,8 +654,8 @@ CONTAINS
               pk_bad/=run_outcome%success) return
 
           call stability_check_numer(numer_stable,&
-              z_int_with_t(1:num_inflaton), &
-              z_int_with_t(num_inflaton+1:2*num_inflaton),&
+              z_int_with_t(IND_FIELDS), &
+              z_int_with_t(IND_VEL),&
               slowroll=slowroll_start,&
               using_t=.true.)
 
@@ -670,9 +673,9 @@ CONTAINS
           use_t=.false.
 
           !Convert back to N
-          h_init =getH_with_t(z_int_with_t(1:num_inflaton),z_int_with_t(num_inflaton+1:2*num_inflaton))
-          y(1:num_inflaton) = z_int_with_t(1:num_inflaton)
-          y(num_inflaton+1:2*num_inflaton) =z_int_with_t(num_inflaton+1:2*num_inflaton)/h_init
+          h_init =getH_with_t(z_int_with_t(IND_FIELDS),z_int_with_t(IND_VEL))
+          y(IND_FIELDS) = z_int_with_t(IND_FIELDS)
+          y(IND_VEL) =z_int_with_t(IND_VEL)/h_init
 
           !Start N-integration at e-fold=z_int_with_t(last)
           x1=z_int_with_t(2*num_inflaton+1)
