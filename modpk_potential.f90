@@ -66,6 +66,8 @@ contains
 
     real(dp) :: p_exp
 
+    real(dp) :: W0, mass, f_decay, lambda_ax
+
     real(dp) :: V0
     real(dp), dimension(size(phi)) :: A_i
     real(dp), dimension(size(phi),size(phi)) :: B_ij
@@ -426,6 +428,20 @@ contains
       V_potential = 0.5e0_dp*sum(m2_V*phi*phi) + sum(c1_V) &
         + 0.25e0_dp*sum(g_V*phi**4)
 
+    case(21)
+      !Matches Meyers-Tarrant Sect 5
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      W0 = vparams(1,1)
+      lambda_ax = vparams(1,2)
+      mass = vparams(2,1)
+      f_decay = vparams(2,2)
+
+      V_potential = 0.5e0_dp*(mass**2)*(phi(1)**2) &
+        +(lambda_ax**4) * (1.0e0_dp - cos(2.0e0_dp*pi*phi(2)/f_decay))
+      V_potential = W0*V_potential
+
     case default
 
       print*, "MODECODE: potential_choice =", potential_choice
@@ -480,6 +496,8 @@ contains
     real(dp), dimension(size(phi)) :: A_i
     real(dp), dimension(size(phi),size(phi)) :: B_ij
     integer :: alpha, beta
+
+    real(dp) :: W0, mass, f_decay, lambda_ax
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -746,6 +764,29 @@ contains
             + g_V(ii)*phi(ii)**3
          end do
 
+         case(21)
+           !Matches Meyers-Tarrant Sect 5
+
+           call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+           W0 = vparams(1,1)
+           lambda_ax = vparams(1,2)
+           mass = vparams(2,1)
+           f_decay = vparams(2,2)
+
+
+           first_deriv = 0.0e0_dp
+           first_deriv(1) = W0*(mass**2)*phi(1)
+           first_deriv(2) = W0*lambda_ax**4*(2.0e0_dp*pi/f_decay)*sin((2.0e0_dp*pi/f_decay)*phi(2))
+
+           !!DEBUG
+           !print*, "testing W0:", W0
+           !print*, "testing lambda_ax:", lambda_ax
+           !print*, "testing mass:", mass
+           !print*, "testing f_decay:", f_decay
+           !print*, "testing first_deriv:", first_deriv
+           !stop
+
 
           !END MULTIFIELD
           case default
@@ -807,6 +848,8 @@ contains
     real(dp), dimension(size(phi)) :: A_i
     real(dp), dimension(size(phi),size(phi)) :: B_ij
     integer :: alpha, beta
+
+    real(dp) :: W0, mass, f_decay, lambda_ax
 
     if (vnderivs) then
        !MULTIFIELD
@@ -1170,6 +1213,20 @@ contains
             second_deriv(ii,ii) = m2_V(ii) + 3.0e0_dp*g_V(ii)*phi(ii)**2
           end do
 
+         case(21)
+           !Matches Meyers-Tarrant Sect 5
+
+           call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+           W0 = vparams(1,1)
+           lambda_ax = vparams(1,2)
+           mass = vparams(2,1)
+           f_decay = vparams(2,2)
+
+           second_deriv = 0.0e0_dp
+           second_deriv(1,1) = W0*(mass**2)
+           second_deriv(2,2) = W0*(lambda_ax**4)*((2.0e0_dp*pi/f_decay)**2) * cos((2.0e0_dp*pi/f_decay)*phi(2))
+
        case default
 
          print*, "MODECODE: potential_choice =", potential_choice
@@ -1204,6 +1261,8 @@ contains
     real(dp) :: p_exp
 
     real(dp), dimension(size(phi)) :: location_phi, step_size, step_slope
+
+    real(dp) :: W0, mass, f_decay, lambda_ax
 
     third_deriv = 0e0_dp
 
@@ -1279,6 +1338,20 @@ contains
       do ii=1,size(phi)
         third_deriv(ii,ii,ii) = 6.0e0_dp*g_V(ii)*phi(ii)**2
       end do
+
+    case(21)
+      !Matches Meyers-Tarrant Sect 5
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      W0 = vparams(1,1)
+      lambda_ax = vparams(1,2)
+      mass = vparams(2,1)
+      f_decay = vparams(2,2)
+
+      third_deriv = 0e0_dp
+      third_deriv(1,1,1) = 0.0e0_dp
+      third_deriv(2,2,2) = -W0*(lambda_ax**4)*((2.0e0_dp*pi/f_decay)**3) * sin((2.0e0_dp*pi/f_decay)*phi(2))
 
 
     case default

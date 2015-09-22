@@ -3,7 +3,7 @@
 
 module modpk_reheat
   use modpkparams, only : dp, slowroll_infl_end, vparams, num_inflaton, Mpc2Mpl, &
-    k_pivot, N_pivot, lna, nactual_bg
+    k_pivot, N_pivot, lna, nactual_bg, potential_choice
   use modpk_observables, only : power_spectra
   use internals, only : pi, k
   use potential, only : getH, geteps, getkineticenergy, &
@@ -71,7 +71,7 @@ module modpk_reheat
       procedure, public :: did_reheat_start => reheat_did_reheat_start
       procedure, public :: save_horizcross => reheat_save_horizcross
       procedure, public :: init => reheat_initializer
-      procedure, public :: get_Gamma_uniform => reheat_get_Gamma_uniform
+      procedure, public :: get_Gamma => reheat_get_Gamma
       procedure, public :: getH_with_radn => reheat_getH_with_radn
       procedure, public :: getdH_with_radn => reheat_getdH_with_radn
       procedure, public :: getr_ij => reheat_getr_ij
@@ -528,17 +528,11 @@ module modpk_reheat
 
 
     !Sample the reheating decay parameters \Gamma_i uniformly
-    subroutine reheat_get_Gamma_uniform(self)
+    subroutine reheat_get_Gamma(self)
       class(reheat_state) :: self
 
       real(dp), dimension(:), allocatable :: rand
-
-      if (reheat_opts%gamma_sampler /= reheat_opts%uniform) then
-        call raise%fatal_code(&
-          'Sampling technique for gamma should be set to 1 &
-          to use this method.', &
-          __FILE__, __LINE__)
-      end if
+      real(dp) :: R_ratio
 
       !Don't have any Gamma_i yet
       if (.not. allocated(self%Gamma_i)) then
@@ -549,19 +543,38 @@ module modpk_reheat
         return
       end if
 
-      !if (allocated(self%Gamma_i)) deallocate(self%Gamma_i)
+      if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
 
-      allocate(rand(num_inflaton))
-      call random_number(rand)
+        allocate(rand(num_inflaton))
+        call random_number(rand)
 
 
-      !DEBUG
-      print*, "Setting Gamma_i ad hoc"
-      !self%Gamma_i = 3.0e0_dp*self%H_end*rand
+        !DEBUG
+        print*, "Setting Gamma_i ad hoc"
+        !self%Gamma_i = 3.0e0_dp*self%H_end*rand
 
-      self%Gamma_i = 1e-3* 3.0e0_dp*self%H_end*rand
+        self%Gamma_i = 1e-3* 3.0e0_dp*self%H_end*rand
 
-    end subroutine reheat_get_Gamma_uniform
+        if (potential_choice==21) then
+          R_ratio = 1e1_dp
+          self%Gamma_i(1) = 1e-3*3.0* self%H_end
+          self%Gamma_i(2) = self%Gamma_i(1)/R_ratio
+        end if
+
+        !!DEBUG
+        !print*, "this is gamma", self%Gamma_i
+        !stop
+
+      else
+        call raise%fatal_code(&
+          'Sampling technique for gamma should be set to 1 &
+          to use this method.', &
+          __FILE__, __LINE__)
+      end if
+
+
+
+    end subroutine reheat_get_Gamma
 
     function reheat_getH_with_radn(self, phi, dphi, rho_radn) &
         result(hubble)
@@ -575,6 +588,7 @@ module modpk_reheat
 
       !Cosmic time: dphi = dphidt
       !hubble = sqrt( getH_with_t(phi, dphi)**2 + rho_radn/3.0e0_dp)
+
       !E-folds: dphi = dphidN
       hubble = sqrt((rho_radn + pot(phi))/(3.0e0_dp - 0.5e0_dp*sum(dphi**2)))
 
