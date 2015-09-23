@@ -9,7 +9,7 @@ MODULE background_evolution
   USE modpk_observables
   USE potential, ONLY : pot,getH, getdHdalpha, dVdphi, getEps, d2Vdphi2, &
     getH_with_t, stability_check_numer, getEps_with_t
-  USE modpk_utils, ONLY : bderivs, rkqs_r, use_t
+  USE modpk_utils, ONLY : bderivs, rkqs_r, use_t, dvode_constraints
   use modpk_numerics, only : locate, polint, array_polint
   use modpk_io, only : out_opt
   use modpk_qsf
@@ -294,13 +294,11 @@ CONTAINS
     use modpk_sampling, only : ic_sampling, ic_flags
 
     INTEGER*4 :: i,j
-    INTEGER*4, PARAMETER :: BNVAR=2
+    !INTEGER*4, PARAMETER :: BNVAR=2
 
     !! MULTIFIELD
-    real(dp), DIMENSION(:), INTENT(INOUT) :: phi_init_trial
-    real(dp), DIMENSION(:) :: y(BNVAR*size(phi_init_trial))
-
-    real(dp), DIMENSION(:) :: z_int_with_t(BNVAR*size(phi_init_trial)+1)
+    real(dp), dimension(:), INTENT(INOUT) :: phi_init_trial
+    real(dp), dimension(:), allocatable :: y, z_int_with_t
 
     logical :: numer_stable, slowroll_init
     !! END MULTIFIELD
@@ -321,9 +319,36 @@ CONTAINS
     CHARACTER(19) :: array_fmt
     CHARACTER(len=5) :: ci
 
+    integer :: num_constraints
+
     write(ci, '(I5)'), size(phi_init_trial)
     ci = adjustl(ci)
     array_fmt = '(a25,'//trim(ci)//'es13.5)'
+
+    !Make the ODE vectors
+    !fields + field vels + number of aux constraints
+    !Initialize the constraints
+    if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+
+      num_constraints = 1 !0<epsilon<3
+      call dvode_constraints%init(num_constraints)
+
+      call dvode_constraints%set_eps_limits(evolve_modes=.false., &
+        evolve_radn_back = .false.)
+
+    else
+
+      num_constraints = 0
+      call dvode_constraints%init(num_constraints)
+
+    end if
+
+    if (allocated(y)) deallocate(y)
+    allocate( y(num_inflaton + num_inflaton &
+     + dvode_constraints%num_constraints ))
+    allocate(z_int_with_t(2*size(phi_init_trial)+1))
+
     !END MULTIFIELD
 
     x1=0.0 !starting value
@@ -689,10 +714,9 @@ CONTAINS
 
         !MULTIFIELD
         !Set the ICS
-        y(1 : size(y)/2) = phi_init_trial  !phi(x1)
+        y(IND_FIELDS) = phi_init_trial  !phi(x1)
 
         vv = 0e0_dp
-
 
         if (ic_sampling==ic_flags%slowroll_samp .or. ic_sampling==ic_flags%iso_N .or.&
           ic_sampling==ic_flags%reg_samp .or. &
@@ -729,10 +753,10 @@ CONTAINS
           !END MULTIFIELD
 
 
-          y(size(y)/2+1 : (size(y))) = &
+          y(IND_VEL) = &
             -dVdphi(phi_init_trial)/3.e0_dp/h_init/h_init
 
-          dphi_init0 = y(size(y)/2+1 : (size(y)))
+          dphi_init0 = y(IND_VEL)
 
 
         else
@@ -740,9 +764,17 @@ CONTAINS
           h_init = getH(phi_init_trial,dphi_init0)
 
           !Set not necess close to SR
-          y(size(y)/2+1 : (size(y))) = dphi_init0
+          y(IND_VEL) = dphi_init0
 
         end if
+
+        ! auxiliary constraints
+        if (tech_opt%use_dvode_integrator .and. &
+          tech_opt%use_ode_constraints) then
+          y(IND_CONST_EPS_BACK) = cmplx( &
+            getEps(y(IND_FIELDS), y(IND_VEL)),kind=dp)
+        end if
+
         !END MULTIFIELD
 
       end subroutine set_background_ICs

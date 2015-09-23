@@ -13,10 +13,10 @@ MODULE modpk_utils
 !Define some macros for global use
 #include 'modpk_macros.f90'
 
-  INTERFACE rkck
+  interface rkck
      module procedure rkck_r
      module procedure rkck_c
-  END INTERFACE
+  end interface
 
   !If true, then switch to using Q variable
   logical, private :: using_q_superh=.false.
@@ -24,6 +24,23 @@ MODULE modpk_utils
   logical, private :: using_cosmic_time=.false.
 
   logical :: use_t
+
+  !Constraints to place on the ODE solutions, for use with the
+  !DVODE integrator
+  type :: ode_constraints
+    integer, dimension(:), allocatable :: vect_indices
+    logical, dimension(:), allocatable :: indices_ready
+    integer :: num_constraints
+    real(dp), dimension(:), allocatable :: lower_bound, upper_bound
+
+    contains
+
+      procedure, public :: init => constraint_initializer
+      procedure, public :: set_eps_limits => constraint_set_eps_limits
+
+  end type ode_constraints
+
+  type(ode_constraints) :: dvode_constraints
 
 CONTAINS
 
@@ -116,8 +133,8 @@ CONTAINS
     !     If using_t, then final portion of y is e-folds
 
     !MULTIFIELD
-    phi = y(1 : num_inflaton)
-    delphi = y(num_inflaton+1 : 2*num_inflaton)
+    phi = y(IND_FIELDS)
+    delphi = y(IND_VEL)
     !END MULTIFIELD
 
     if (use_t) then
@@ -172,19 +189,25 @@ CONTAINS
       !Derivs in cosmic time
       hubble = getH_with_t(phi,delphi)
 
-      yprime(1 : num_inflaton) = delphi
-      yprime(num_inflaton+1 : 2*num_inflaton) = &
-        -3.0e0_dp*hubble*delphi - dVdphi(phi)
+      yprime(IND_FIELDS) = delphi
+      yprime(IND_VEL) = -3.0e0_dp*hubble*delphi - dVdphi(phi)
 
       !E-folds
-      yprime(2*num_inflaton+1) = hubble
+      yprime(IND_EFOLDS) = hubble
+
+      !Auxiliary constraints
+      if (tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints) then
+       call raise%fatal_cosmo(&
+         'Auxiliary constraints not yet implemented with t-derivs.', &
+         __FILE__, __LINE__)
+      end if
 
     else if (reheater%evolving_gamma) then
       !Include a post-inflationary radiation field
       !Derivs in cosmic time
 
-      !DEBUG
-      rho_radn = y(2*num_inflaton+2:3*num_inflaton+1)
+      rho_radn = y(IND_RADN)
       hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
       dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
 
@@ -198,20 +221,26 @@ CONTAINS
           __FILE__, __LINE__)
       end if
 
-
       !Fields
-      yprime(1 : num_inflaton) = delphi
-      yprime(num_inflaton+1 : 2*num_inflaton) = &
+      yprime(IND_FIELDS) = delphi
+      yprime(IND_VEL) = &
         -(3.0e0_dp+ reheater%Gamma_i/hubble + dhubble/hubble)*delphi &
         - dVdphi(phi)/hubble**2
 
       !E-folds
-      yprime(2*num_inflaton+1) = hubble
+      yprime(IND_EFOLDS) = hubble
 
       !Radiation
-      yprime(2*num_inflaton+2:3*num_inflaton+1) = &
+      yprime(IND_RADN) = &
         -4.0e0_dp*rho_radn &
         + reheater%Gamma_i*rho_fields/hubble
+
+      !Auxiliary constraints
+      if (tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints) then
+        yprime(IND_CONST_EPS_RADN) = &
+          sum(yprime(IND_FIELDS)*yprime(IND_VEL))
+      end if
 
     else
 
@@ -221,12 +250,20 @@ CONTAINS
       hubble=getH(phi,delphi)
       dhubble=getdHdalpha(phi,delphi)
 
-      yprime(1 : num_inflaton) = delphi
-      yprime(num_inflaton+1 : 2*num_inflaton) = &
+      yprime(IND_FIELDS) = delphi
+      yprime(IND_VEL) = &
         -((3.0e0_dp+dhubble/hubble)*delphi+&
         dVdphi(phi)/hubble/hubble)
 
+      !Auxiliary constraints
+      if (tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints) then
+        yprime(IND_CONST_EPS_BACK) = &
+          sum(yprime(IND_FIELDS)*yprime(IND_VEL))
+      end if
+
     end if
+
 
     !END MULTIFIELD
 
@@ -245,7 +282,7 @@ CONTAINS
     COMPLEX(KIND=DP), DIMENSION(:), INTENT(OUT) :: yprime
 
     ! background quantity
-    real(dp) :: hubble, dhubble, scale_factor, epsilon, dotphi, eta
+    real(dp) :: hubble, dhubble, scale_factor, epsilon_, dotphi, eta
     real(dp) :: thetaN2, Vzz, Vz, grad_V  !! thetaN2 = (d\theta/dNe)^2
     real(dp), dimension(num_inflaton) :: phi, delphi, Vp
     real(dp), dimension(num_inflaton, num_inflaton) :: Cab, d2V
@@ -271,7 +308,7 @@ CONTAINS
     dotphi = sqrt(dot_product(delphi, delphi))
 
     !Aliases to potential derivatives
-    epsilon = getEps(phi, delphi)
+    epsilon_ = getEps(phi, delphi)
     eta = geteta(phi, delphi)
     d2V = d2Vdphi2(phi)
     Vp = dVdphi(phi)
@@ -333,32 +370,38 @@ CONTAINS
     yprime(IND_MODES) = dpsi
 
     if (using_q_superh) then
-      yprime(IND_MODES_VEL) = -(3.0e0_dp - epsilon)*dpsi &
+      yprime(IND_MODES_VEL) = -(3.0e0_dp - epsilon_)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
         - dot(Cab, psi)/hubble**2
     else
-      yprime(IND_MODES_VEL) = -(1.0e0_dp - epsilon)*dpsi &
+      yprime(IND_MODES_VEL) = -(1.0e0_dp - epsilon_)*dpsi &
         - (k/scale_factor/hubble)**2*psi &
-        + (2.0e0_dp - epsilon)*psi - dot(Cab, psi)/hubble**2
+        + (2.0e0_dp - epsilon_)*psi - dot(Cab, psi)/hubble**2
     end if
 
     ! tensors
     yprime(IND_TENSOR) = dv_tensor
     if (using_q_superh) then
-      yprime(IND_TENSOR_VEL) = -(3.0e0_dp - epsilon)*dv_tensor - &
+      yprime(IND_TENSOR_VEL) = -(3.0e0_dp - epsilon_)*dv_tensor - &
         (k/scale_factor/hubble)**2*v_tensor
     else
-      yprime(IND_TENSOR_VEL) = -(1.0e0_dp - epsilon)*dv_tensor - &
-        (k/scale_factor/hubble)**2*v_tensor + (2.0e0_dp - epsilon)*v_tensor
+      yprime(IND_TENSOR_VEL) = -(1.0e0_dp - epsilon_)*dv_tensor - &
+        (k/scale_factor/hubble)**2*v_tensor + (2.0e0_dp - epsilon_)*v_tensor
     end if
 
     ! adiabatic ptb
     yprime(IND_UZETA) = du_zeta
     thetaN2 = (grad_V + Vz)*(grad_V - Vz)/(dotphi*hubble**2)**2
-    yprime(IND_UZETA_VEL) = -(1.0e0_dp - epsilon)*du_zeta -&
+    yprime(IND_UZETA_VEL) = -(1.0e0_dp - epsilon_)*du_zeta -&
       (k/scale_factor/hubble)**2*u_zeta &
-      + (2.0e0_dp + 5.0e0_dp*epsilon - 2.0e0_dp*epsilon**2 + &
-      2.0e0_dp*epsilon*eta + thetaN2 - Vzz/hubble**2)*u_zeta
+      + (2.0e0_dp + 5.0e0_dp*epsilon_ - 2.0e0_dp*epsilon_**2 + &
+      2.0e0_dp*epsilon_*eta + thetaN2 - Vzz/hubble**2)*u_zeta
+
+    if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+      yprime(IND_CONST_EPS_MODES) = &
+        cmplx(sum(yprime(IND_FIELDS)*yprime(IND_VEL)),kind=dp)
+    end if
 
     contains
 
@@ -374,7 +417,7 @@ CONTAINS
            forall (i=IND_FIELDS, j=IND_FIELDS) &
                 mass_matrix(i,j) = d2V(i,j) +  &
                 (delphi(i)*Vp(j) + delphi(j)*Vp(i)) &
-                + (3e0_dp-epsilon)*hubble**2 * delphi(i)*delphi(j)
+                + (3e0_dp-epsilon_)*hubble**2 * delphi(i)*delphi(j)
         end if
 
       end subroutine build_mass_matrix
@@ -812,7 +855,7 @@ CONTAINS
     real(dp), dimension(nrowpd,neq) :: delta
     integer :: ii, jj, kk, ll
 
-    real(dp) :: hubble, dhubble, scale_factor, epsilon, dotphi, eta
+    real(dp) :: hubble, dhubble, scale_factor, epsilon_, dotphi, eta
     real(dp) :: Vzz, Vz, grad_V, V_pot
     real(dp), dimension(num_inflaton) :: dV
     real(dp), dimension(num_inflaton, num_inflaton) :: Cab, d2V
@@ -836,7 +879,7 @@ CONTAINS
     end do
 
     !Aliases to potential derivatives
-    epsilon = getEps(phi, dphi)
+    epsilon_ = getEps(phi, dphi)
     V_pot = pot(phi)
     d3V = d3Vdphi3(phi)
     d2V = d2Vdphi2(phi)
@@ -852,7 +895,7 @@ CONTAINS
     forall (ii=IND_FIELDS, jj=IND_FIELDS) &
          Cab(ii,jj) = d2V(ii,jj) +  &
          (dphi(ii)*dV(jj) + dphi(jj)*dV(ii)) &
-         + (3e0_dp-epsilon)*hubble**2 * dphi(ii)*dphi(jj)
+         + (3e0_dp-epsilon_)*hubble**2 * dphi(ii)*dphi(jj)
 
     forall (ii=IND_FIELDS, ll=IND_FIELDS, kk=IND_FIELDS)
         dCdphi(ii,ll,kk) = (1.0e0_dp/hubble**2)*&
@@ -863,10 +906,10 @@ CONTAINS
         dCddelphi(ii,ll,kk) = (1.0e0_dp/V_pot)*&
           (-dphi(kk)*d2V(ii,ll) &
           -dphi(kk)*(dphi(ii)*dV(ll) + dphi(ll)*dV(ii)) &
-          +(3.0e0_dp - epsilon)*(delta(ii,kk)*dV(ll) + delta(ll,kk)*dV(ii))&
+          +(3.0e0_dp - epsilon_)*(delta(ii,kk)*dV(ll) + delta(ll,kk)*dV(ii))&
           -dphi(kk)*dphi(ii)*dphi(ll) &
-          +(3.0e0_dp - epsilon)*delta(ii,kk)*dphi(ll)&
-          +(3.0e0_dp - epsilon)*dphi(ii)*delta(ll,kk))
+          +(3.0e0_dp - epsilon_)*delta(ii,kk)*dphi(ll)&
+          +(3.0e0_dp - epsilon_)*dphi(ii)*delta(ll,kk))
 
     end forall
 
@@ -887,6 +930,85 @@ CONTAINS
 
 
   end subroutine jacobian_psi_modes_DVODE
+
+  subroutine constraint_initializer(self, num_constraints)
+    class(ode_constraints) :: self
+    integer, intent(in) :: num_constraints
+
+    !Only for use with DVODE integrator
+    if (.not. tech_opt%use_dvode_integrator) then
+      call raise%fatal_code(&
+        "Need to use DVODE integrator if &
+        you require auxiliary constraints.",&
+        __FILE__,__LINE__)
+    end if
+
+    !Initialize
+    self%num_constraints = num_constraints
+    if (allocated(self%vect_indices)) deallocate(self%vect_indices)
+    if (allocated(self%indices_ready)) deallocate(self%indices_ready)
+    if (allocated(self%lower_bound)) deallocate(self%lower_bound)
+    if (allocated(self%upper_bound)) deallocate(self%upper_bound)
+    allocate(self%vect_indices(self%num_constraints))
+    allocate(self%lower_bound(self%num_constraints))
+    allocate(self%upper_bound(self%num_constraints))
+    allocate(self%indices_ready(self%num_constraints))
+
+    self%indices_ready = .false.
+    self%vect_indices = -1
+
+  end subroutine constraint_initializer
+
+  subroutine constraint_set_eps_limits(self, &
+      evolve_modes, evolve_radn_back)
+    class(ode_constraints) :: self
+    logical, intent(in) :: evolve_modes, evolve_radn_back
+
+    integer :: ii
+
+    !Consistency
+    if (.not. allocated(self%vect_indices) .or. &
+        .not. allocated(self%lower_bound) .or. &
+        .not. allocated(self%upper_bound)) then
+      call raise%fatal_code(&
+        "Initialize DVODE constraints &
+        prior to using this subroutine.",&
+        __FILE__,__LINE__)
+    end if
+
+    !Find next available position in vect_indices
+    do ii=1,size(self%vect_indices)
+      if (.not. self%indices_ready(ii)) then
+        !Set the constraint on this index
+        self%indices_ready(ii) = .true.
+
+        if (evolve_modes) then
+          self%vect_indices(ii) = IND_CONST_EPS_MODES
+        else if (evolve_radn_back) then
+          self%vect_indices(ii) = IND_CONST_EPS_RADN
+        else
+          self%vect_indices(ii) = IND_CONST_EPS_BACK
+        end if
+
+        !Set upper and lower limits for epsilon
+        self%lower_bound(ii) = 0.0e0_dp
+        self%upper_bound(ii) = 3.0e0_dp
+
+        exit
+      end if
+
+      !If get to end of vect_indices, then they're already all set
+      if (ii==size(self%vect_indices)) then
+        call raise%fatal_code(&
+          "All constraint indices used prior to setting &
+          epsilon<3 constraint.",&
+          __FILE__,__LINE__)
+      end if
+
+    end do
+
+
+  end subroutine constraint_set_eps_limits
 
 
 end module modpk_utils

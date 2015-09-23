@@ -11,6 +11,7 @@ MODULE modpk_odeint
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
   use modpk_reheat, only : reheater, reheat_opts, reheat_state
+  use modpk_utils, only : dvode_constraints
   implicit none
 
   interface odeint
@@ -151,7 +152,8 @@ contains
 
         if (tech_opt%use_analytical_jacobian) then
           call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
-            itask,istate,ode_integrator_opt,J_FCN=jacobian_background_DVODE)
+            itask,istate,ode_integrator_opt, &
+            J_FCN=jacobian_background_DVODE)
         else
           call dvode_f90(bderivs_dvode,neq,y,x,nefold_out, &
             itask,istate,ode_integrator_opt)
@@ -392,22 +394,43 @@ contains
 
       !Force initial step-size guess very small
       if (tech_opt%use_analytical_jacobian) then
-        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
-          abserr_vector=atol,&
-          relerr=rtol,&
-          user_supplied_jacobian=.true., &
-          mxstep=50000,&
-          H0=1e-9_dp)
+        if (tech_opt%use_ode_constraints) then
+          ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+            abserr_vector=atol,&
+            constrained=dvode_constraints%vect_indices,&
+            clower=dvode_constraints%lower_bound,&
+            cupper=dvode_constraints%upper_bound,&
+            relerr=rtol,&
+            user_supplied_jacobian=.true., &
+            mxstep=50000,&
+            H0=1e-9_dp)
+        else
+          ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+            abserr_vector=atol,&
+            relerr=rtol,&
+            user_supplied_jacobian=.true., &
+            mxstep=50000,&
+            H0=1e-9_dp)
+        end if
       else
-        ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
-          abserr_vector=atol,&
-          relerr=rtol,&
-          user_supplied_jacobian=.false., &
-          !constrained = (/1,2,3/), &
-          !clower = (/-1e0,-1e0,-1e0/), &
-          !cupper = (/1e0,1e0,1e0/), &
-          mxstep=50000,&
-          H0=1e-9_dp)
+        if (tech_opt%use_ode_constraints) then
+          ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+            abserr_vector=atol,&
+            constrained=dvode_constraints%vect_indices,&
+            clower=dvode_constraints%lower_bound,&
+            cupper=dvode_constraints%upper_bound,&
+            relerr=rtol,&
+            user_supplied_jacobian=.false., &
+            mxstep=50000,&
+            H0=1e-9_dp)
+        else
+          ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
+            abserr_vector=atol,&
+            relerr=rtol,&
+            user_supplied_jacobian=.false., &
+            mxstep=50000,&
+            H0=1e-9_dp)
+        end if
       end if
 
     end subroutine initialize_dvode
@@ -473,7 +496,12 @@ contains
 
       call csv_write(&
         out_opt%trajout,&
-        y(:), &
+        y(IND_FIELDS), &
+        advance=.false.)
+
+      call csv_write(&
+        out_opt%trajout,&
+        y(IND_VEL), &
         advance=.false.)
 
       call csv_write(&
@@ -1151,13 +1179,35 @@ contains
       end if
 
       if (tech_opt%use_analytical_jacobian) then
-        ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
-          relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
-          mxhnil=1)
+        if (tech_opt%use_ode_constraints) then
+          ode_integrator_opt = set_intermediate_opts(&
+            dense_j=.true., abserr_vector=atol,&
+            constrained=dvode_constraints%vect_indices,&
+            clower=dvode_constraints%lower_bound,&
+            cupper=dvode_constraints%upper_bound,&
+            relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
+            mxhnil=1)
+        else
+          ode_integrator_opt = set_intermediate_opts(&
+            dense_j=.true., abserr_vector=atol,&
+            relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
+            mxhnil=1)
+        end if
       else
-        ode_integrator_opt = set_intermediate_opts(dense_j=.true., abserr_vector=atol,&
-          relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
-          mxhnil=1)
+        if (tech_opt%use_ode_constraints) then
+          ode_integrator_opt = set_intermediate_opts(&
+            dense_j=.true., abserr_vector=atol,&
+            constrained=dvode_constraints%vect_indices,&
+            clower=dvode_constraints%lower_bound,&
+            cupper=dvode_constraints%upper_bound,&
+            relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
+            mxhnil=1)
+        else
+          ode_integrator_opt = set_intermediate_opts(&
+            dense_j=.true., abserr_vector=atol,&
+            relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
+            mxhnil=1)
+        end if
       end if
 
     end subroutine initialize_dvode_MODES
@@ -1889,6 +1939,12 @@ contains
         t_out = t_max
       end if
 
+      if (tech_opt%use_ode_constraints) then
+       call raise%fatal_code(&
+         'ODE constraints not yet implemented with t-integrator.', &
+         __FILE__, __LINE__)
+      end if
+
       !Force initial step-size guess very small
       if (tech_opt%use_analytical_jacobian) then
         ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
@@ -2020,6 +2076,8 @@ contains
     real(dp) :: x1, x2, h1, hmin, accuracy
     real(dp), dimension(:), allocatable :: y
 
+    integer :: num_constraints
+
     if (reheat_opts%reheat_model/=reheat_opts%perturbative) then
       call raise%fatal_code(&
         'This reheat model is not implemented.', &
@@ -2047,8 +2105,27 @@ contains
 
     !Set ICs
     if (allocated(y)) deallocate(y)
-    !Fields + Derivs + Efolds + N Radn Fluids
-    allocate(y(num_inflaton + num_inflaton + 1 + num_inflaton))
+    !Initialize the constraints
+    if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+
+      num_constraints = 1 !0<epsilon<3
+      call dvode_constraints%init(num_constraints)
+
+      call dvode_constraints%set_eps_limits(evolve_modes=.false., &
+        evolve_radn_back = .false.)
+
+    else
+
+      num_constraints = 0
+      call dvode_constraints%init(num_constraints)
+
+    end if
+    !Fields + Derivs + Efolds + N Radn Fluids + Auxiliary Constraints
+
+    allocate(y(num_inflaton + num_inflaton &
+      + 1 + num_inflaton &
+      + dvode_constraints%num_constraints))
 
     !Fields
     y(IND_FIELDS) = reheater%phi_infl_end
@@ -2059,6 +2136,12 @@ contains
 
     !Radiation
     y(IND_RADN) = 0.0e0_dp
+
+    !Auxiliary constraints
+    if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+      y(IND_CONST_EPS_BACK) = getEps(y(IND_FIELDS), y(IND_VEL))
+    end if
 
     ode_underflow = .false.
     ode_ps_output = .false.

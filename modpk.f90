@@ -1,6 +1,7 @@
 MODULE access_modpk
   use modpkparams, only : dp
   USE camb_interface
+  use modpk_utils, only : dvode_constraints
   use modpk_io, only : out_opt
   use modpk_errorhandling, only : raise, run_outcome
   implicit none
@@ -19,7 +20,7 @@ MODULE access_modpk
 !Define some macros for global use
 #include 'modpk_macros.f90'
 
-CONTAINS
+contains
 
   SUBROUTINE potinit
     USE modpkparams
@@ -61,14 +62,17 @@ CONTAINS
 
     integer*4 :: i,j
     real(dp) :: accuracy,h1,hmin,x1,x2
-    complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
+    !complex(kind=dp), dimension(2*num_inflaton + 2*(num_inflaton**2)+4) :: y
+    complex(kind=dp), dimension(:), allocatable :: y
     real(dp), INTENT(IN) :: kin
     real(dp) :: pow_isocurvature
     real(dp) :: pow_adiabatic,  powt, powz
     real(dp), dimension(:,:), allocatable :: power_matrix
-    real(dp) :: dum, ah, alpha_ik, dalpha, dh
+    real(dp) :: ah, alpha_ik, dalpha, dh
     real(dp), DIMENSION(num_inflaton) :: p_ik,delphi
     real(dp), DIMENSION(num_inflaton) :: dp_ik
+
+    integer :: num_constraints
 
     character(36) :: e2_fmt = '(a25, es12.4, a3, es11.4, a1)'
 
@@ -93,7 +97,33 @@ CONTAINS
     !     y(2n+2n**2+3) = u_zeta     dydx(4n+4)=d^2u_zeta/dalpha^2
     !     y(2n+2n**2+4) = du_zeta/dalpha     dydx(4n+4)=d^2u_zeta/dalpha^2
 
-    ! Set aliases for indices for above
+    !Make the main ODE vector
+    !fields + field vels + modes + mode vels + tensors + tensor vel
+    !+ uzeta + uzeta vel + number of aux constraints
+
+    !Initialize the constraints
+    if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+
+      num_constraints = 1 !0<epsilon<3
+      call dvode_constraints%init(num_constraints)
+
+      call dvode_constraints%set_eps_limits(evolve_modes=.true., &
+        evolve_radn_back = .false.)
+
+    else
+
+      num_constraints = 0
+      call dvode_constraints%init(num_constraints)
+
+    end if
+
+    if (allocated(y)) deallocate(y)
+    allocate( y( &
+      num_inflaton + num_inflaton &
+      + (num_inflaton**2) + (num_inflaton**2) &
+      + 1 + 1 + 1 + 1 + &
+     dvode_constraints%num_constraints ))
 
     ! Make the powerspectrum array.
     call powerspectrum_out%init()
@@ -116,11 +146,11 @@ CONTAINS
     !Initialize reheating
     if (reheat_opts%use_reheat) call reheater%init(reset_Gamma=.false.)
 
-    !DEBUG
-    !useq_ps = 1.0e2_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
-    useq_ps = 1.0e0_dp !When switch variables to q=\delta \phi (k<aH/useq_ps)
+    !When to switch variables to q=\delta \phi (k<aH/useq_ps)
+    useq_ps = 1.0e0_dp 
 
-    !How far inside the horizon to set the modes' (Bunch-Davies) IC; k = k_start*aH
+    !How far inside the horizon to set the
+    !modes' (Bunch-Davies) IC; k = k_start*aH
     call set_consistent_BD_scale(k_start)
 
     !! start where k = k_start* aH, deep in the horizon, ah = log(aH)
@@ -128,9 +158,9 @@ CONTAINS
     i= locate(log_aharr(1:nactual_bg), ah)
 
     IF(i.eq.0.) THEN
-       PRINT*,'MODECODE: The background solution worked,'
-       PRINT*,'MODECODE: but the k you requested', k,' is outside'
-       PRINT*,'MODECODE: the bounds of the background you solved for.'
+       print*,'MODECODE: The background solution worked,'
+       print*,'MODECODE: but the k you requested', k,' is outside'
+       print*,'MODECODE: the bounds of the background you solved for.'
 
        !Override the stop.
        if (ic_sampling/=ic_flags%reg_samp) then
@@ -285,17 +315,23 @@ CONTAINS
 
         ! mode matrix - diagonalize, Bunch-Davies
         y(IND_MODES) = &
-          (1.e0_dp, 0)*identity  !cmplx(1/sqrt(2*k))
+          (1.e0_dp, 0e0_dp)*identity  !cmplx(1/sqrt(2*k))
         y(IND_MODES_VEL) = &
-          cmplx(0., -k/exp(ah),kind=dp)*identity
+          cmplx(0.e0_dp, -k/exp(ah),kind=dp)*identity
 
         ! tensors
-        y(IND_TENSOR) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(IND_TENSOR_VEL) = cmplx(0., -k/exp(ah),kind=dp)
+        y(IND_TENSOR) = (1.e0_dp, 0e0_dp) !cmplx(1/sqrt(2*k))
+        y(IND_TENSOR_VEL) = cmplx(0.e0_dp, -k/exp(ah),kind=dp)
 
         ! u_zeta
-        y(IND_UZETA) = (1.e0_dp, 0) !cmplx(1/sqrt(2*k))
-        y(IND_UZETA_VEL) = cmplx(0., -k/exp(ah),kind=dp)
+        y(IND_UZETA) = (1.e0_dp, 0e0_dp) !cmplx(1/sqrt(2*k))
+        y(IND_UZETA_VEL) = cmplx(0.e0_dp, -k/exp(ah),kind=dp)
+
+        ! auxiliary constraints
+        if (tech_opt%use_dvode_integrator .and. &
+          tech_opt%use_ode_constraints) then
+          y(IND_CONST_EPS_MODES) = cmplx(getEps(p_ik, dp_ik),kind=dp)
+        end if
 
       end subroutine set_background_and_mode_ic
 
@@ -332,19 +368,23 @@ CONTAINS
           ah_index= locate(log_aharr(1:nactual_bg), ah)
 
           if (ah_index==0) then
-            !The background isn't able to set this IC
-            !Set the start scale so far inside, that it fails
-            !when it returns from this function.
+            !The background isn't able to set this IC.
+            !Set the start scale so far inside the horizon
+            !that it fails when it returns from this function.
             k_start = 1e20_dp
             return
           end if
 
           j=min(max(ah_index-(4-1)/2,1),nactual_bg+1-4)
-          call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), ah, p_ik, delphi)
-          call array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), ah, dp_ik, delphi)
+          call array_polint(log_aharr(j:j+4), phiarr(:,j:j+4), &
+            ah, p_ik, delphi)
+          call array_polint(log_aharr(j:j+4), dphiarr(:,j:j+4), &
+            ah, dp_ik, delphi)
 
-          call polint(log_aharr(j:j+4), lna(j:j+4), ah,  alpha_ik, dalpha)
-          call polint(log_aharr(j:j+4), hubarr(j:j+4), ah,  h_ik, dh)
+          call polint(log_aharr(j:j+4), lna(j:j+4), &
+            ah,  alpha_ik, dalpha)
+          call polint(log_aharr(j:j+4), hubarr(j:j+4), &
+            ah,  h_ik, dh)
 
           if (ic_sampling == ic_flags%qsf_parametric) &
             call get_param_guess(ah)

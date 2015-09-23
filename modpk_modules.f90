@@ -73,6 +73,8 @@ MODULE modpkparams
     !Which integrator to use
     logical :: use_dvode_integrator
     logical :: use_integ_with_t
+    !Employ scalar constraints on auxiliary parameters
+    logical :: use_ode_constraints
     !Whether we have an analytic Jacobian (not yet ready)
     logical :: use_analytical_jacobian
     !Use option to find appropriate IC for single-field inflation
