@@ -7,7 +7,7 @@ module modpk_reheat
   use modpk_observables, only : power_spectra
   use internals, only : pi, k
   use potential, only : getH, geteps, getkineticenergy, &
-    getw, dVdphi, getH_with_t
+    getw, dVdphi, getH_with_t, pot, d2Vdphi2
   use modpk_errorhandling, only : raise
   use csv_file, only : csv_write
   use modpk_numerics, only : array_polint
@@ -33,7 +33,12 @@ module modpk_reheat
     real(dp), dimension(:), allocatable :: last_position
     integer, dimension(:), allocatable :: counter
     logical :: init_count=.false.
-    integer :: total_oscillations = 3
+    integer :: total_oscillations = 5
+    contains
+      procedure, public :: init => osc_count_initializer
+      procedure, public :: count_oscillations => &
+        osc_count_count_oscillations
+
   end type oscillation_counter
   type(oscillation_counter) :: osc_count
 
@@ -42,26 +47,32 @@ module modpk_reheat
 
     logical :: reheating_phase = .false.
     logical :: inflation_ended = .false.
-    logical :: evolving_gamma = .false.
+    logical :: evolving_fluids = .false.
 
     complex(dp), dimension(:, :), allocatable :: q_horizcross
+    real(dp), dimension(:, :), allocatable ::  eta_horizcross
     real(dp), dimension( :), allocatable :: phi_infl_end
     real(dp), dimension( :), allocatable :: dphi_infl_end
     real(dp) :: h_horizcross, eps_horizcross, efolds_end
     real(dp) :: h_end
 
     real(dp), dimension(:,:), allocatable :: c_ij_avg, c_ij_min, c_ij_max
-    real(dp), dimension(:,:,:), allocatable :: c_ij_moving_avg
     integer :: count_avg, count_moving_avg
-    real(dp) :: moving_avg_tol = 1.0e-2_dp
 
     real(dp), dimension(:), allocatable :: dN, W_i
     real(dp), dimension(:), allocatable :: Gamma_i
     real(dp), dimension(:,:), allocatable :: r_ij, &
-      rho_field_decay, rho_radn_decay
+      rho_matter_decay, rho_radn_decay
     real(dp) :: hubble_prev
-    real(dp), dimension(:), allocatable :: rho_field_prev, rho_radn_prev
+    real(dp), dimension(:), allocatable :: rho_matter_prev, rho_radn_prev
     logical, dimension(:), allocatable :: fields_decayed
+    integer, dimension(:), allocatable :: fields_decay_order
+
+    real(dp) :: decay_factor_H
+
+    !DEBUG
+    real(dp) :: Omega_phi
+    logical :: int_with_t
 
     type(power_spectra) :: pk, pk_hc
 
@@ -101,7 +112,6 @@ module modpk_reheat
         dptb_matrix
 
       logical :: stopping
-      integer :: sign_phi, sign_last
 
       real(dp), dimension(size(phi)) :: dV, rho_i
       complex(dp), dimension(size(phi),size(phi)) :: xi, test_xi
@@ -188,7 +198,7 @@ module modpk_reheat
 
         !Calculate the average of the C_ij during reheating period
         !Necessary for the Meyers-Tarrant matching
-        call average_cij(real(c_ij,dp))
+        !call average_cij(real(c_ij,dp))
 
         !To check
         !pk_zeta=0e0_dp
@@ -212,12 +222,12 @@ module modpk_reheat
         !pk_zeta = pk_zeta/sum(dphidN**2)**2
         !pk_zeta = pk_zeta*((self%h_horizcross/pi)**2)/2.0e0_dp
 
-        !DEBUG
+        !!DEBUG
         !print*, "this is pk_zeta2", pk_zeta
+        !stop
 
 
       end if
-
 
       select case(reheat_opts%reheat_model)
       case default
@@ -255,35 +265,18 @@ module modpk_reheat
             call raise%warning("Using reheat testing module.  &
               Be vewy, vewy careful!")
 
-            !Start counting oscillations
-            osc_count%init_count = .true.
-
-            !Save inflation ending position in order to normalize modes
-            !slowroll_infl_end = .true.
-
-            !Make the counting arrays
-            if (allocated(osc_count%last_position)) deallocate(osc_count%last_position)
-            if (allocated(osc_count%counter)) deallocate(osc_count%counter)
-            allocate(osc_count%counter(size(phi)))
-            allocate(osc_count%last_position(size(phi)))
-
-            osc_count%counter = 0
-            osc_count%last_position = phi
+            call osc_count%init(phi)
 
           end if
 
           !Check to see if fields have passed zero
-          do ii=1,size(phi)
-            sign_phi = int(phi(ii)/abs(phi(ii)))
-            sign_last = int(osc_count%last_position(ii)/abs(osc_count%last_position(ii)))
-            if (sign_phi /= sign_last ) then
-              osc_count%counter(ii) =osc_count%counter(ii)+1
-              !print*, "counting new one", ii, osc_count%counter(ii)
-            end if
-          end do
+          call osc_count%count_oscillations(phi)
 
-          !Save latest field-space position
-          osc_count%last_position = phi
+          !Calculate the average of the C_ij during reheating period
+          !Necessary for the Meyers-Tarrant matching
+          if (present(q_modes) .and.  all(osc_count%counter>0)) then
+            call average_cij(real(c_ij,dp))
+          end if
 
           !Stop after certain number of oscillations for every field
           if (minval(osc_count%counter) >= osc_count%total_oscillations) then
@@ -293,7 +286,6 @@ module modpk_reheat
           end if
 
         end if
-
 
       end select
 
@@ -321,54 +313,10 @@ module modpk_reheat
 
         self%c_ij_avg = 0.5e0_dp*(self%c_ij_max + self%c_ij_min)
 
+        !DEBUG
         !call csv_write(&
         !  6,&
         !  (/efolds, c_ij, self%c_ij_avg /), &
-        !  advance=.true.)
-
-        !if (.not. allocated(self%c_ij_moving_avg)) &
-        !  allocate(self%c_ij_moving_avg(1000,size(c_ij,1),size(c_ij,2)))
-
-
-        !if (self%count_avg == 0) then
-        !  self%c_ij_avg(:,:) = c_ij(:,:)
-        !else
-        !  self%c_ij_avg(:,:) = (c_ij(:,:) + &
-        !    self%count_avg*self%c_ij_avg(:,:))&
-        !    /(self%count_avg + 1)
-        !end if
-
-        !call random_number(rand)
-        !if (rand < self%moving_avg_tol) then
-        !  !Reset the count for individual average
-        !  self%count_avg = 0
-
-        !  !Perform binning on average
-        !  self%count_moving_avg = self%count_moving_avg + 1
-
-        !  self%c_ij_moving_avg(self%count_moving_avg,:,:) = &
-        !    self%c_ij_avg(:,:)
-
-        !  !self%c_ij_moving_avg(self%count_moving_avg,:,:) = &
-        !  !  (self%c_ij_avg(:,:) + &
-        !  !  (self%count_moving_avg-1)*self%c_ij_moving_avg(:,:))&
-        !  !  /(self%count_moving_avg)
-        !else
-        !  self%count_avg = self%count_avg + 1
-        !end if
-
-        !if (self%count_moving_avg ==0) &
-        !  self%c_ij_moving_avg(1,:,:)=self%c_ij_avg(:,:)
-
-        !call csv_write(&
-        !  6,&
-        !  (/efolds, real(C_ij(1,1)), real(C_ij(1,2)), &
-        !  real(C_ij(2,1)), real(C_ij(2,2)) /)   , &
-        !  advance=.false.)
-
-        !call csv_write(&
-        !  6,&
-        !  dphidN   , &
         !  advance=.true.)
 
       end subroutine average_cij
@@ -446,6 +394,9 @@ module modpk_reheat
       if (allocated(self%q_horizcross)) &
         deallocate(self%q_horizcross)
       allocate(self%q_horizcross(num_inflaton,num_inflaton))
+      if (allocated(self%eta_horizcross)) &
+        deallocate(self%eta_horizcross)
+      allocate(self%eta_horizcross(num_inflaton,num_inflaton))
 
 
       !ptb_matrix is \q_ij from 1410.0685
@@ -456,6 +407,7 @@ module modpk_reheat
 
       self%h_horizcross = getH(phi,dphidN)
       self%eps_horizcross = getEps(phi,dphidN)
+      self%eta_horizcross = d2Vdphi2(phi)/pot(phi)
 
     end subroutine reheat_save_horizcross
 
@@ -472,8 +424,6 @@ module modpk_reheat
         deallocate(self%dphi_infl_end)
       if (allocated(self%c_ij_avg))&
         deallocate(self%c_ij_avg)
-      if (allocated(self%c_ij_moving_avg))&
-        deallocate(self%c_ij_moving_avg)
 
       if (allocated(self%dN))&
         deallocate(self%dN)
@@ -489,12 +439,14 @@ module modpk_reheat
         deallocate(self%r_ij)
       if (allocated(self%fields_decayed))&
         deallocate(self%fields_decayed)
-      if (allocated(self%rho_field_decay))&
-        deallocate(self%rho_field_decay)
+      if (allocated(self%fields_decay_order))&
+        deallocate(self%fields_decay_order)
+      if (allocated(self%rho_matter_decay))&
+        deallocate(self%rho_matter_decay)
       if (allocated(self%rho_radn_decay))&
         deallocate(self%rho_radn_decay)
-      if (allocated(self%rho_field_prev))&
-        deallocate(self%rho_field_prev)
+      if (allocated(self%rho_matter_prev))&
+        deallocate(self%rho_matter_prev)
       if (allocated(self%rho_radn_prev))&
         deallocate(self%rho_radn_prev)
 
@@ -512,19 +464,31 @@ module modpk_reheat
       allocate(self%c_ij_max(num_inflaton, num_inflaton))
       self%c_ij_max=-huge(1.0e0_dp)
 
+      if (allocated(self%q_horizcross)) &
+        deallocate(self%q_horizcross)
+      if (allocated(self%eta_horizcross)) &
+        deallocate(self%eta_horizcross)
+
       self%h_horizcross=0.0e0_dp
       self%eps_horizcross=0.0e0_dp
       self%efolds_end=0.0e0_dp
       self%H_end=0.0e0_dp
       self%reheating_phase = .false.
       self%inflation_ended = .false.
-      self%evolving_gamma = .false.
+      self%evolving_fluids = .false.
 
       self%count_avg = 0
-      self%count_moving_avg = 0
 
       call self%pk%init()
       call self%pk_hc%init()
+
+      !Say a field has decayed into radiation whenever
+      !Gamma_i >= 3*H*decay_factor_H
+      self%decay_factor_H = 1.0e0_dp/3.0e0_dp
+
+      self%Omega_phi = 0.0_dp
+
+      self%int_with_t = .false.
 
     end subroutine reheat_initializer
 
@@ -534,7 +498,8 @@ module modpk_reheat
       class(reheat_state) :: self
 
       real(dp), dimension(:), allocatable :: rand
-      real(dp) :: R_ratio
+      real(dp) :: R_ratio, R_min, R_max
+      integer :: ii
 
       !Don't have any Gamma_i yet
       if (.not. allocated(self%Gamma_i)) then
@@ -549,23 +514,54 @@ module modpk_reheat
 
         allocate(rand(num_inflaton))
         call random_number(rand)
+        call random_number(rand)
 
 
-        !DEBUG
-        print*, "Setting Gamma_i ad hoc"
-        !self%Gamma_i = 3.0e0_dp*self%H_end*rand
+        if (potential_choice==21 .or. potential_choice==1) then
 
-        self%Gamma_i = 1e-3* 3.0e0_dp*self%H_end*rand
+          !DEBUG
+          if (num_inflaton>2) then
+            print*, "testing only works for n=2"
+            stop
+          end if
 
-        if (potential_choice==21) then
-          R_ratio = 1e1_dp
-          self%Gamma_i(1) = 1e-3*3.0* self%H_end
+          R_min = 1e-4_dp
+          R_max = 1e-2_dp
+
+          call random_number(R_ratio)
+          R_ratio = (log10(R_max) - log10(R_min))*R_ratio + log10(R_min)
+          R_ratio = 10.0**R_ratio
+
+          !R_ratio = 1.0
+          !R_ratio = 0.88339277E+00
+          !R_ratio = 0.53798383E+00
+          !R_ratio = 5.896011367980829E-002
+          !R_ratio = 2.0e-2_dp
+
+          !R_ratio = 1.0e1_dp
+
+          !R_ratio = 2.0e2_dp
+          !R_ratio = 2.0e-4_dp
+
+          !R_ratio = 0.94825048E-01
+
+          !R_ratio = 2e-3
+          !R_ratio = 1e-4
+
+          !R_ratio = 2.872678536340861E-003
+          !R_ratio = 2.8e-3
+
+
+          !DEBUG
+          print*, "this is R", R_ratio
+
+          !self%Gamma_i(1) = 1e-14_dp
+          self%Gamma_i(1) = 5e-1 * R_min * self%H_end
           self%Gamma_i(2) = self%Gamma_i(1)/R_ratio
         end if
 
-        !!DEBUG
+        !DEBUG
         !print*, "this is gamma", self%Gamma_i
-        !stop
 
       else
         call raise%fatal_code(&
@@ -578,21 +574,35 @@ module modpk_reheat
 
     end subroutine reheat_get_Gamma
 
-    function reheat_getH_with_radn(self, phi, dphi, rho_radn) &
+    function reheat_getH_with_radn(self, phi, dphi, rho_radn, use_t) &
         result(hubble)
       use potential
       class(reheat_state) :: self
 
       real(dp), dimension(:), intent(in) :: phi, dphi
       real(dp), intent(in) :: rho_radn
+      logical, intent(in), optional :: use_t
+
+      logical :: use_t_local
 
       real(dp) :: hubble
 
-      !Cosmic time: dphi = dphidt
-      !hubble = sqrt( getH_with_t(phi, dphi)**2 + rho_radn/3.0e0_dp)
+      if (present(use_t)) then
+        use_t_local = use_t
+      else
+        use_t_local = .false.
+      end if
 
-      !E-folds: dphi = dphidN
-      hubble = sqrt((rho_radn + pot(phi))/(3.0e0_dp - 0.5e0_dp*sum(dphi**2)))
+      if (use_t_local) then
+
+        !Cosmic time: dphi = dphidt
+        hubble = sqrt((sum(0.5_dp*dphi**2) + pot(phi) + rho_radn)/3.0)
+
+      else
+
+        !E-folds: dphi = dphidN
+        hubble = sqrt((rho_radn + pot(phi))/(3.0e0_dp - 0.5e0_dp*sum(dphi**2)))
+      end if
 
     end function reheat_getH_with_radn
 
@@ -632,12 +642,14 @@ module modpk_reheat
 
     end function reheat_getdH_with_radn
 
-    subroutine reheat_getr_ij(self, rho_fields, rho_radn)
+    subroutine reheat_getr_ij(self, rho_fields, rho_matter, rho_radn, &
+        all_fluid_descr)
       class (reheat_state) :: self
 
-      real(dp), dimension(:), intent(in) :: rho_fields, rho_radn
+      real(dp), dimension(:), intent(in) :: rho_fields, rho_radn, rho_matter
+      logical, intent(in) :: all_fluid_descr
 
-      real(dp), dimension(size(rho_fields)) :: rho_error
+      real(dp), dimension(size(rho_fields)) :: rho_error, real_rho_matter
       logical, dimension(size(rho_fields)) :: save_field_rij
       real(dp) :: hubble, rho_decayed, rho_notdecayed
       integer :: ii, jj
@@ -649,69 +661,49 @@ module modpk_reheat
       !are taken to have decayed if H<\Gamma_i, even if they
       !have some energy left in the scalar field energy
 
-      if (.not. self%evolving_gamma) then
+      if (.not. self%evolving_fluids) then
         call raise%fatal_code(&
           "Need to be evolving with radiation fluid &
           to use this subroutine.",&
           __FILE__,__LINE__)
       end if
 
-      !Initialize
-      !Start counting which fields have decayed
-      if (.not. allocated(self%fields_decayed)) then
-        allocate(self%fields_decayed(size(rho_fields)))
-        self%fields_decayed = .false.
-      end if
-      if (.not. allocated(self%rho_field_decay)) then
-        allocate(self%rho_field_decay(size(rho_fields),size(rho_fields)))
-        self%rho_field_decay = 0.0e0_dp
-      end if
-      if (.not. allocated(self%rho_radn_decay)) then
-        allocate(self%rho_radn_decay(size(rho_fields),size(rho_fields)))
-        self%rho_radn_decay = 0.0e0_dp
-      end if
-      if (.not. allocated(self%r_ij)) then
-        allocate(self%r_ij(size(rho_fields),size(rho_fields)))
-        self%r_ij = 0.0e0_dp
-      end if
-      if (.not. allocated(self%rho_field_prev)) then
-        allocate(self%rho_field_prev(size(rho_fields)))
-        self%rho_field_prev = rho_fields
-      end if
-      if (.not. allocated(self%rho_radn_prev)) then
-        allocate(self%rho_radn_prev(size(rho_fields)))
-        self%rho_radn_prev = rho_radn
-      end if
+      call initialize()
 
-
-      hubble = sqrt( ( sum(rho_fields) + sum(rho_radn))/3.0e0_dp)
+      if (all_fluid_descr) then
+        !Ignore the rho_fields and use only rho_matter
+        real_rho_matter = rho_matter
+      else
+        !Ignore the rho_matter and use only rho_fields
+        real_rho_matter = rho_fields
+      end if
+      hubble = sqrt( ( sum(real_rho_matter) + sum(rho_radn))/3.0e0_dp)
 
       !Find which fields have decayed
       save_field_rij = .false.
       do jj=1, size(rho_fields)
 
-        if (hubble <= self%Gamma_i(jj)) then
+        if (3.0e0_dp*hubble*self%decay_factor_H &
+          <= self%Gamma_i(jj)) then
           if (.not. self%fields_decayed(jj)) then
             !This is first time step after decaying
             !Save everything
             save_field_rij(jj) = .true.
 
-
             !Save energy density in fields and radn
-            !self%rho_field_decay(:,jj) = rho_fields
-            !self%rho_radn_decay(:,jj) = rho_radn
             !at decay time for this field as a vector
-
             !NB: Use polynomial interpolation on this time step and
             !previous to get more accurate value
-            hubble_vect(1) = self%hubble_prev
-            hubble_vect(2) = hubble
-            rho_mat(:,1) = self%rho_field_prev
-            rho_mat(:,2) = rho_fields
+            hubble_vect(1) = &
+              3.0e0_dp*self%hubble_prev*self%decay_factor_H
+            hubble_vect(2) = &
+              3.0e0_dp*hubble*self%decay_factor_H
+            rho_mat(:,1) = self%rho_matter_prev
+            rho_mat(:,2) = real_rho_matter
             call array_polint(hubble_vect, &
               rho_mat, &
               self%Gamma_i(jj),&
-              self%rho_field_decay(:,jj), &
+              self%rho_matter_decay(:,jj), &
               rho_error)
 
             rho_mat(:,1) = self%rho_radn_prev
@@ -724,7 +716,6 @@ module modpk_reheat
 
           end if
 
-          self%fields_decayed(jj) = .true.
 
         else
           self%fields_decayed(jj) = .false.
@@ -734,7 +725,7 @@ module modpk_reheat
       end do
 
       !Save new energy densities
-      self%rho_field_prev = rho_fields
+      self%rho_matter_prev = real_rho_matter
       self%rho_radn_prev = rho_radn
       self%hubble_prev = hubble
 
@@ -755,22 +746,64 @@ module modpk_reheat
           do ii=1,size(rho_fields)
             if (self%fields_decayed(ii)) then
               rho_decayed = rho_decayed + &
-                self%rho_field_decay(ii,jj) + &
+                self%rho_matter_decay(ii,jj) + &
                 self%rho_radn_decay(ii,jj)
             else
               rho_notdecayed = rho_notdecayed + &
-                self%rho_field_decay(ii,jj) + &
+                self%rho_matter_decay(ii,jj) + &
                 self%rho_radn_decay(ii,jj)
             end if
           end do
 
+
           self%r_ij(:,jj) = 3.0e0_dp* &
-            (self%rho_field_decay(:,jj) + self%rho_radn_decay(:,jj))/&
+            (self%rho_matter_decay(:,jj) +self%rho_radn_decay(:,jj))/&
             (4.0e0_dp*rho_decayed + 3.0e0_dp*rho_notdecayed)
+
+          !Label this field as having decayed into radiation
+          !for next time
+          self%fields_decayed(jj) = .true.
+          self%fields_decay_order(jj) = count(self%fields_decayed)
 
         end if
 
       end do
+
+      contains
+
+        subroutine initialize()
+
+          !Start counting which fields have decayed
+          if (.not. allocated(self%fields_decayed)) then
+            allocate(self%fields_decayed(size(rho_fields)))
+            self%fields_decayed = .false.
+          end if
+          if (.not. allocated(self%fields_decay_order)) then
+            allocate(self%fields_decay_order(size(rho_fields)))
+            self%fields_decay_order = -1
+          end if
+          if (.not. allocated(self%rho_matter_decay)) then
+            allocate(self%rho_matter_decay(size(rho_fields),size(rho_fields)))
+            self%rho_matter_decay = 0.0e0_dp
+          end if
+          if (.not. allocated(self%rho_radn_decay)) then
+            allocate(self%rho_radn_decay(size(rho_fields),size(rho_fields)))
+            self%rho_radn_decay = 0.0e0_dp
+          end if
+          if (.not. allocated(self%r_ij)) then
+            allocate(self%r_ij(size(rho_fields),size(rho_fields)))
+            self%r_ij = 0.0e0_dp
+          end if
+          if (.not. allocated(self%rho_matter_prev)) then
+            allocate(self%rho_matter_prev(size(rho_fields)))
+            self%rho_matter_prev = rho_fields
+          end if
+          if (.not. allocated(self%rho_radn_prev)) then
+            allocate(self%rho_radn_prev(size(rho_fields)))
+            self%rho_radn_prev = rho_radn
+          end if
+        end subroutine initialize
+
 
     end subroutine reheat_getr_ij
 
@@ -778,10 +811,14 @@ module modpk_reheat
       class(reheat_state) :: self
 
       real(dp) :: sum_term, product_term
+      real(dp), dimension(num_inflaton,num_inflaton) :: r_proper
+      real(dp), dimension(num_inflaton) :: W_i_temp
+      real(dp), dimension(0:num_inflaton-1) :: a_vect
 
       integer :: ii, jj, kk
+      real(dp) :: summer
 
-      if (.not. self%evolving_gamma) then
+      if (.not. self%evolving_fluids) then
         call raise%fatal_code(&
           "Need to be evolving with radiation fluid &
           to use this subroutine.",&
@@ -795,33 +832,75 @@ module modpk_reheat
           __FILE__,__LINE__)
       end if
 
+      if (.not. all(self%fields_decayed)) then
+        call raise%fatal_code(&
+          "Not all fields have decayed to radiation &
+          before calculating the W_i.",&
+          __FILE__,__LINE__)
+      end if
+
       !Initialize
       if (.not. allocated(self%W_i)) then
         allocate(self%W_i(num_inflaton))
         self%W_i = 0.0e0_dp
       end if
 
-      do ii=1,num_inflaton
-        sum_term=0.0e0_dp
+      !The definition of the W_i relies on ordering the fields
+      !according to when they decay to radiation.
+      !We want to identify the "right" W_i by this criterion, then
+      !reorder them back so that they match the same field basis
+      !we are using in the rest of the code.
 
-        do jj=1,num_inflaton-1
+      !Define the "properly ordered" r_ij
+      do ii=1,size(self%fields_decay_order)
+        do jj=1,size(self%fields_decay_order)
+          r_proper(&
+            self%fields_decay_order(ii), &
+            self%fields_decay_order(jj)) = &
+            self%r_ij(ii,jj)
+        end do
+      end do
 
-          product_term=0.0e0_dp
-          do kk=jj+1, num_inflaton
-            product_term = product_term *&
-              (1.0e0_dp + self%r_ij(kk,kk)/3.0e0_dp)
-          end do
-
-          sum_term = sum_term +&
-            self%r_ij(ii,jj)*product_term
-
+      !Updated 12/17/15
+      call define_a_vect(a_vect)
+      do ii=1, num_inflaton
+        summer = 0.0_dp
+        do jj=0, num_inflaton-1
+          summer = summer + &
+            a_vect(jj)*r_proper(ii,num_inflaton-jj)
         end do
 
-        self%W_i(ii) = &
-          self%r_ij(num_inflaton,num_inflaton)*sum_term/3.0e0_dp &
-          + self%r_ij(ii,num_inflaton)
+        self%W_i(ii) = summer
 
       end do
+
+      !Reorder the W_i so that it aligns with the original field
+      !space basis
+      W_i_temp = self%W_i
+      do ii=1, num_inflaton
+        self%W_i(self%fields_decay_order(ii)) = W_i_temp(ii)
+      end do
+
+      contains
+
+        subroutine define_a_vect(a_vect)
+
+          real(dp), dimension(0:num_inflaton-1), intent(out) :: a_vect
+          integer :: jj, kk
+          real(dp) :: summer
+
+          a_vect(0) = 1.0_dp
+
+          do jj=1, num_inflaton-1
+            summer = 0.0_dp
+            do kk=0, jj-1
+              summer = summer + &
+                a_vect(kk)*r_proper(num_inflaton-jj,num_inflaton-kk)
+            end do
+            a_vect(jj) = summer/3.0_dp
+          end do
+
+        end subroutine define_a_vect
 
     end subroutine reheat_getW_i
 
@@ -831,10 +910,16 @@ module modpk_reheat
       class(reheat_state) :: self
 
       real(dp), dimension(num_inflaton) :: dN
-      real(dp)  :: pk_horizcross
-      integer :: jj
+      real(dp)  :: pk_horizcross, sum_term
+      integer :: jj, ii
+      integer :: jj_decay, ii_decay
 
-      if (.not. self%evolving_gamma) then
+      !DEBUG
+      real(dp) :: phi_piv_test, chi_piv_test, X_test
+      real(dp) :: dV_test(num_inflaton)
+      real(dp) :: v_debug, q_debug, p_debug, R_debug
+
+      if (.not. self%evolving_fluids) then
         call raise%fatal_code(&
           "Need to be evolving with radiation fluid &
           to use this subroutine.",&
@@ -848,16 +933,78 @@ module modpk_reheat
           __FILE__,__LINE__)
       end if
 
+      !DEBUG
+      !print*, "this is r_ij", self%r_ij(1,1), self%r_ij(1,2), self%r_ij(2,1), self%r_ij(2,2)
+      v_debug = 0.60_dp
+      q_debug = 0.63_dp*log(self%Omega_phi)/log(1.0_dp-self%Omega_phi)
+      p_debug = ((4.0_dp*self%Omega_phi)/(3.0_dp+self%Omega_phi))**(-1.0_dp/v_debug) - q_debug
+      R_debug = self%Gamma_i(1)/self%Gamma_i(2)
+      !print*, "this is r_ij prediction:", 1.0_dp - (p_debug + q_debug/R_debug)**(-v_debug), self%Omega_phi
+
+      !print*, "Overriding r_ij!!!"
+      !self%r_ij(1,1) = 1.0_dp - (p_debug + q_debug/R_debug)**(-v_debug)
+      !self%r_ij(1,2) = 0.0
+      !self%r_ij(2,1) = 0.0
+      !self%r_ij(2,2) = self%Omega_phi
+
       !Get the W_i vector
       call self%getW_i()
 
-
       !Calculate derivatives of e-foldings
+      !in "our" basis
       dN = 0.0e0_dp
       do jj=1,num_inflaton
         dN(:) = dN(:) + &
           self%W_i(jj)*self%c_ij_avg(jj,:)
       end do
+
+
+
+      !DEBUG
+      !phi_piv_test = 0.499002
+      phi_piv_test = 0.1
+      !phi_piv_test=1.60830E-01
+      chi_piv_test = 1.5006E+01
+      !C_{\phi\phi} = 2 / (3 \phi_*),
+      !C_{\phi\chi} \approx \chi_* / (2Mp^2),
+      !C_{\chi\phi} = 0,                      
+      !C_{\chi\chi} \approx \chi_* / (2Mp^2),
+
+
+
+      !DEBUG
+      !print*, "this is dN:", dN
+      !print*, "this is expected:", "???", chi_piv_test/2.0
+      !print*, "these are c's", self%c_ij_avg(1,1), self%c_ij_avg(1,2), self%c_ij_avg(2,1), self%c_ij_avg(2,2)
+      !print*, "this is c_ij prediction:", 7.50, -4.8, 7.50, 476.0
+      !print*, "this is W_i", self%W_i
+      !print*, "this is W_i summed",self%W_i(1) + self%W_i(2)
+
+
+
+      !print*, "overriding c's", self%c_ij_avg(1,2)
+      !!self%c_ij_avg(1,1) = 2.0/3.0/phi_piv_test
+      !!self%c_ij_avg(1,2) = chi_piv_test/2.0e0_dp
+      !!self%c_ij_avg(2,1) = 0.0
+      !!self%c_ij_avg(2,2) = chi_piv_test/2.0e0_dp
+      !!!self%c_ij_avg(1,1) = chi_piv_test/2.0e0_dp
+      !self%c_ij_avg(1,2) = 0.0e0_dp
+      !!!self%c_ij_avg(2,1) = chi_piv_test/2.0e0_dp
+      !!!self%c_ij_avg(2,2) = 2.0/3.0/phi_piv_test
+      !!print*, "these are new c's", self%c_ij_avg
+      !dN = 0.0e0_dp
+      !do jj=1,num_inflaton
+      !  dN(:) = dN(:) + &
+      !    self%W_i(jj)*self%c_ij_avg(jj,:)
+      !end do
+      !print*, "this is new dN:", dN
+
+
+      !dN(1) = 0.75074301E+01
+      !dN(2) = 0.90297275E+02
+      !print*, "this is fake dN:", dN
+
+
 
       !Load the power spectrum attributes
       self%pk%k = self%pk_hc%k
@@ -866,6 +1013,26 @@ module modpk_reheat
       !NB: pk_hc%adiab is actually the *field* power spectrum ~ H^2/4 pi^2
       self%pk%adiab = self%pk_hc%adiab*sum(dN**2)
       self%pk%tensor = 8.0e0_dp*self%pk_hc%adiab
+
+      sum_term = 0.0e0_dp
+      do ii=1,num_inflaton; do jj=1,num_inflaton
+        sum_term = sum_term + &
+          self%eta_horizcross(ii,jj)*dN(ii)*dN(jj)
+      end do; end do
+      !print*, "this is ns:", &
+      !  1.0e0_dp+&
+      !  -2.0e0_dp*self%eps_horizcross &
+      !  -(2.0e0_dp/sum(dN**2))*&
+      !  (1.0e0_dp - sum_term)
+
+      print*, "this is r, ns:", & self%pk%tensor/self%pk%adiab, &
+      !print*, "this is r, ns:", 8.0/sum(dN**2), &
+        1.0e0_dp+&
+        -2.0e0_dp*self%eps_horizcross &
+        -(2.0e0_dp/sum(dN**2))*&
+        (1.0e0_dp -  sum_term)
+
+
 
       !No isocurvature
       self%pk%isocurv = 0.0e0_dp
@@ -881,13 +1048,56 @@ module modpk_reheat
       !print*, "this is k", self%pk%k
       !print*, "this is pk_hc", self%pk_hc%adiab
       !print*, "this is pk", self%pk%adiab
-      !print*, "this is", self%pk_hc%adiab, self%pk%adiab
       !print*, "this is r",  self%pk%tensor/self%pk%adiab
+      !print*, "this is r_hc",  self%pk%tensor/self%pk_hc%adiab
       !print*, "this is W_i", self%W_i
-      !print*, "this is c_ij", self%c_ij_avg
       !print*, "this is r_ij", self%r_ij
-      !stop
+      !print*, "this is eta_horizcross", self%eta_horizcross
+
+      !print*, "----------------"
+      !print*, "this is c_ij", self%c_ij_avg(1,1),self%c_ij_avg(1,2), &
+      !  self%c_ij_avg(2,1),self%c_ij_avg(2,2)
+      !print*, "this is c_ij expected", chi_piv_test/2.0, 0.0,  chi_piv_test/2.0, 2.0/3.0/phi_piv_test
+      stop
 
     end subroutine reheat_get_powerspectrum
+
+    subroutine osc_count_initializer(self, phi)
+      class(oscillation_counter) :: self
+      real(dp), dimension(:), intent(in) :: phi
+
+      !Start counting oscillations
+      osc_count%init_count = .true.
+
+      !Make the counting arrays
+      if (allocated(osc_count%last_position)) deallocate(osc_count%last_position)
+      if (allocated(osc_count%counter)) deallocate(osc_count%counter)
+      allocate(osc_count%counter(size(phi)))
+      allocate(osc_count%last_position(size(phi)))
+
+      osc_count%counter = 0
+      osc_count%last_position = phi
+
+    end subroutine osc_count_initializer
+
+    subroutine osc_count_count_oscillations(self, phi)
+      class(oscillation_counter) :: self
+      real(dp), dimension(:), intent(in) :: phi
+
+      integer :: ii
+      integer :: sign_phi, sign_last
+
+      do ii=1,size(phi)
+        sign_phi = int(phi(ii)/abs(phi(ii)))
+        sign_last = int(osc_count%last_position(ii)/abs(osc_count%last_position(ii)))
+        if (sign_phi /= sign_last ) then
+          osc_count%counter(ii) =osc_count%counter(ii)+1
+        end if
+      end do
+
+      !Save latest field-space position
+      osc_count%last_position = phi
+
+    end subroutine osc_count_count_oscillations
 
 end module modpk_reheat

@@ -8,8 +8,8 @@ Set potential and its derivatives in modpk_potential.f90
 &init
   num_inflaton = 2
 
-  potential_choice = 21
-  vparam_rows = 2
+  potential_choice = 1
+  vparam_rows = 1
   more_potential_params = .false.
 
   slowroll_infl_end = .false.
@@ -113,24 +113,24 @@ NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 57.2
+  N_pivot = 55.0
   k_pivot = 0.002
   dlnk = 0.4
 
+  phi_init0 = 0.1 16.00
 
-  phi_init0 =   17.0 0.49924
-
-  vparams(1,1) = 1e-12
-  vparams(1,2) = 0.485865135232383
-  vparams(2,1) = 1.0
-  vparams(2,2) = 1.0
+  vparams(1,:) = -12e0 -10e0
 
 
 
 /
-  N_pivot = 64.5
 
-  phi_init0 =   16.6 0.4999
+  vparams(5,:) = 0.0       .050
+  vparams(6,:) = 0.0       0.416481652821956
+
+  vparams(1,:) = -12.0       -12.5
+  vparams(2,:) = 1.66666 1.66666
+
 ----------------
 Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
@@ -156,9 +156,9 @@ uniform increments in log(k).
 
 &full_pk
   calc_full_pk = .false.
-  steps = 15
+  steps = 50
   kmin = 1.0e-4
-  kmax = 1.0e-1
+  kmax = 5.0e-2
 /
 
 ----------------
@@ -166,7 +166,7 @@ Options for output from the code.
 
 &print_out
 
-  out_opt%modpkoutput = .false.
+  out_opt%modpkoutput = .true.
   out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
@@ -211,17 +211,16 @@ Set atol_i where |y_i| is insignificant.
 
   tech_opt%use_integ_with_t= .false.
   tech_opt%automate_singlefield_ic = .false.
-
-  tech_opt%accuracy_setting = 1
-  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_ode_constraints = .false.
 
+  tech_opt%accuracy_setting = 2
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_analytical_jacobian = .false.
 
   tech_opt%rk_accuracy_modes = 1.0e-7
   tech_opt%rk_accuracy_back = 1.0e-9
 
-  tech_opt%dvode_rtol_back = 1.0e-9
+  tech_opt%dvode_rtol_back = 1.0e-6
   tech_opt%dvode_rtol_modes = 1.0e-6
 
   tech_opt%dvode_atol_back = 1.0e-14, 1.0e-14, 1.0e-14, 1.0e-14
@@ -244,3 +243,4 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%dvode_dN_c = 1e-3
   tech_opt%dvode_dt = 1e16
 /
+  tech_opt%dvode_rtol_back = 1.0e-10

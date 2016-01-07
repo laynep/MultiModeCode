@@ -114,7 +114,8 @@ contains
     else
 
       num_constraints = 0
-      call dvode_constraints%init(num_constraints)
+      if (tech_opt%use_dvode_integrator) &
+        call dvode_constraints%init(num_constraints)
 
     end if
 

@@ -1448,32 +1448,45 @@ contains
 
   end function getw
 
-  FUNCTION getEps(phi,dphi)
+  FUNCTION getEps(phi,dphidN)
     !
     !     Returns epsilon given phi and dphi/dalpha, alpha=ln(a)
     !     for single field, slowroll parameter epsilon_H = 2 M_pl^2 [(dH/dphi)/H]^2
     !     for canonical multi-field,
     !
     real(dp) :: getEps
-    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp), INTENT(IN) :: phi(:), dphidN(:)
 
     !MULTIFIELD
-    getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphi,dphi)
+    getEps = 0.5e0_dp*(M_Pl)**2 * dot_product(dphidN,dphidN)
 
     if (getEps >=3.0e0_dp) then
-      print*, "MODECODE: epsilon =", getEps
-      print*, "MODECODE: phi =", phi
-      print*, "MODECODE: dphi =", dphi
+      !This condition should now be enforced inside
+      !the DVODE integrator
+      if (tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints) then
+        return
 
-      call raise%fatal_cosmo(&
-        "Epsilon is >3.0 in subroutine getEps. &
-         This means H is complex.  &
-         (This is not a universe I'd like to live in.) &
-         This error might arise if there is a large separation &
-         in scales (stiff problem) and the integrator walks &
-         to a bad position in parameter space. &
-         Try reducing the integration stepsize or use the DVODE integration option.", &
-        __FILE__, __LINE__)
+      !DEBUG
+      !else
+      !  getEps = 2.99999_dp
+      !end if
+
+      else
+        print*, "MODECODE: epsilon =", getEps
+        print*, "MODECODE: phi =", phi
+        print*, "MODECODE: dphidN =", dphidN
+
+        call raise%fatal_cosmo(&
+          "Epsilon is >3.0 in subroutine getEps. &
+           This means H is complex.  &
+           (This is not a universe I'd like to live in.) &
+           This error might arise if there is a large separation &
+           in scales (stiff problem) and the integrator walks &
+           to a bad position in parameter space. &
+           Try reducing the integration stepsize or use the DVODE integration option.", &
+          __FILE__, __LINE__)
+      end if
 
     end if
 
@@ -1482,21 +1495,28 @@ contains
   END FUNCTION getEps
 
 
-  FUNCTION getH(phi,dphi)
+  FUNCTION getH(phi,dphidN)
     !
     !     Returns H given phi and dphi/dalpha
     !
     real(dp) :: getH
-    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp), INTENT(IN) :: phi(:), dphidN(:)
 
     getH=pot(phi)/3.0e0_dp/M_Pl**2 / &
-      (1.0e0_dp - dot_product(dphi, dphi)/6.0e0_dp/M_Pl**2)
+      (1.0e0_dp - dot_product(dphidN, dphidN)/6.0e0_dp/M_Pl**2)
 
     if (getH < 0.0e0_dp) then
-      call raise%fatal_cosmo(&
-        "H is complex. &
-        Try smaller stepsize in integrator.",&
-        __FILE__,__LINE__)
+      if (tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints) then
+        !Make it look like it's really unstable,
+        !which forces smaller stepsizes in the integrator
+        getH = huge(1d0)
+      else
+        call raise%fatal_cosmo(&
+          "H is complex. &
+          Try smaller stepsize in integrator.",&
+          __FILE__,__LINE__)
+      end if
     else
       getH = sqrt(getH)
     end if
@@ -1576,46 +1596,46 @@ contains
   END FUNCTION getEps_with_t
 
 
-  FUNCTION getdHdalpha(phi,dphi)
+  FUNCTION getdHdalpha(phi,dphidN)
     !
     !     Returns dH/dalpha given phi and dphi/dalpha
     !
     real(dp) :: getdHdalpha
-    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp), INTENT(IN) :: phi(:), dphidN(:)
     ! MULTIFIELD
-    getdHdalpha = -dot_product(dphi, dphi) * getH(phi,dphi)/2.0e0_dp/M_Pl**2
+    getdHdalpha = -dot_product(dphidN, dphidN) * getH(phi,dphidN)/2.0e0_dp/M_Pl**2
     ! END MULTIFIELD
   END FUNCTION getdHdalpha
 
 
-  FUNCTION getdepsdalpha(phi,dphi)
+  FUNCTION getdepsdalpha(phi,dphidN)
     !
     !    Returns depsilon/dalpha given phi and dphi/dalpha
     !    Gets this by differentiating Peiris et al Eq A3 (2003)
     !
     real(dp) :: getdepsdalpha, H, dHdalpha, eps
-    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp), INTENT(IN) :: phi(:), dphidN(:)
 
-    H=getH(phi,dphi)
-    dHdalpha=getdHdalpha(phi,dphi)
-    eps=getEps(phi,dphi)
+    H=getH(phi,dphidN)
+    dHdalpha=getdHdalpha(phi,dphidN)
+    eps=getEps(phi,dphidN)
 
     ! MULTIFIELD
     getdepsdalpha=6.0e0_dp*dHdalpha/H*(1.0e0_dp-eps/3.0e0_dp) &
-      -dot_product(dVdphi(phi), dphi)/(H**2*M_Pl**2)
+      -dot_product(dVdphi(phi), dphidN)/(H**2*M_Pl**2)
     ! END MULTIFIELD
 
   END FUNCTION getdepsdalpha
 
-  FUNCTION geteta(phi, dphi)
+  FUNCTION geteta(phi, dphidN)
     !
     !    Return the eta parameter eta = deps/dalpha / eps
     !
-    real(dp), INTENT(IN) :: phi(:), dphi(:)
+    real(dp), INTENT(IN) :: phi(:), dphidN(:)
     real(dp) :: geteta, eps
 
-    eps = getEps(phi, dphi)
-    geteta = getdepsdalpha(phi, dphi) / eps
+    eps = getEps(phi, dphidN)
+    geteta = getdepsdalpha(phi, dphidN) / eps
 
   END FUNCTION geteta
 

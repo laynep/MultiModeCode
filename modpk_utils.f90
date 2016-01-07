@@ -6,7 +6,7 @@ MODULE modpk_utils
   use modpkparams
   use modpk_sampling, only : ic_sampling, ic_flags
   use modpk_errorhandling, only : raise, run_outcome
-  use modpk_reheat, only : reheater
+  use modpk_reheat, only : reheater, osc_count
   use csv_file, only : csv_write
   implicit none
 
@@ -37,6 +37,7 @@ MODULE modpk_utils
 
       procedure, public :: init => constraint_initializer
       procedure, public :: set_eps_limits => constraint_set_eps_limits
+      procedure, public :: set_rho_limits => constraint_set_rho_limits
 
   end type ode_constraints
 
@@ -117,11 +118,13 @@ CONTAINS
     !MULTIFIELD
     !real(dp), DIMENSION(size(y)/2) :: phi, delphi
     real(dp), DIMENSION(num_inflaton) :: phi, delphi
-    real(dp) :: hubble,dhubble, eps
-    real(dp), dimension(num_inflaton) :: rho_radn, rho_fields
+    real(dp) :: hubble,dhubble, eps, hubble_matter
+    real(dp), dimension(num_inflaton) :: rho_radn, rho_fields, rho_matter
+    real(dp), dimension(num_inflaton) :: gamma_
+    real(dp), dimension(num_inflaton) :: factor, dV
     !END MULTIFIEND
 
-    integer :: i
+    integer :: i, ii
     !
     !     x=alpha
     !     y(1:num_inflaton)=phi
@@ -139,49 +142,62 @@ CONTAINS
 
     if (use_t) then
       eps = getEps_with_t(phi,delphi)
+    else if (tech_opt%use_dvode_integrator .and. &
+      tech_opt%use_ode_constraints) then
+      if (reheater%evolving_fluids) then
+        eps = y(IND_CONST_EPS_RADN)
+      else
+        eps = y(IND_CONST_EPS_BACK)
+      end if
     else
       eps = getEps(phi,delphi)
     end if
+
 
     !Instability check since H^2=V/(3-eps) is not
     !numerically stable as V~0 for
     !H>0, since requires eps->3
     IF(eps .ge. 3.0e0_dp) THEN
-       write(*,*) 'MODECODE: Pot=', pot(phi)
-       write(*,*) 'MODECODE: Eps=',eps
-       write(*,*) 'MODECODE: Using t?', use_t
-       if (use_t) then
-         write(*,*) 'MODECODE: t=',x
-       else
-         write(*,*) 'MODECODE: E-fold=',x
-       end if
-       write(*,*) "MODECODE: Phi=",phi
-       write(*,*) "MODECODE: Dphi=",delphi
-       write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
-       if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
+      !This condition should now be enforced inside
+      !the DVODE integrator
+      if (.not.(tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints)) then
+        write(*,*) 'MODECODE: Pot=', pot(phi)
+        write(*,*) 'MODECODE: Eps=',eps
+        write(*,*) 'MODECODE: Using t?', use_t
+        if (use_t) then
+          write(*,*) 'MODECODE: t=',x
+        else
+          write(*,*) 'MODECODE: E-fold=',x
+        end if
+        write(*,*) "MODECODE: Phi=",phi
+        write(*,*) "MODECODE: Dphi=",delphi
+        write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+        if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
 
-       !Can sometimes get here when IC sampling
-       !close to the point where V=0, since H^2=V/(3-eps)
-       !Might override this error
-       call raise%fatal_cosmo(&
-         'H is imaginary in bderivs.  &
-         Check if V~=0, since makes H unstable.  &
-         Or check if start step-size too large.  &
-         You might be able to override this error if &
-         you know how to auto-correct it.',&
-         __FILE__, __LINE__)
+        !Can sometimes get here when IC sampling
+        !close to the point where V=0, since H^2=V/(3-eps)
+        !Might override this error
+        call raise%fatal_cosmo(&
+          'H is imaginary in bderivs.  &
+          Check if V~=0, since makes H unstable.  &
+          Or check if start step-size too large.  &
+          You might be able to override this error if &
+          you know how to auto-correct it.',&
+          __FILE__, __LINE__)
 
-       !In the case of the hilltop potential, the integrator
-       !in a trial step can go here very occasionally because
-       !the trial step is too large and it has come too close to V=0.
-       !We will stop it going this way, and the code will find the
-       !correct epsilon=1 point which has, by definition, to be
-       !before this problematic region is reached.
-       IF(potential_choice.eq.6) THEN
-          yprime(1)=0.0e0_dp
-          yprime(2)=0.0e0_dp
-          RETURN
-       ENDIF
+        !In the case of the hilltop potential, the integrator
+        !in a trial step can go here very occasionally because
+        !the trial step is too large and it has come too close to V=0.
+        !We will stop it going this way, and the code will find the
+        !correct epsilon=1 point which has, by definition, to be
+        !before this problematic region is reached.
+        IF(potential_choice.eq.6) THEN
+           yprime(1)=0.0e0_dp
+           yprime(2)=0.0e0_dp
+           RETURN
+        ENDIF
+      end if
     END IF
 
     !MULTIFIELD
@@ -203,44 +219,96 @@ CONTAINS
          __FILE__, __LINE__)
       end if
 
-    else if (reheater%evolving_gamma) then
-      !Include a post-inflationary radiation field
-      !Derivs in cosmic time
+    else if (reheater%evolving_fluids) then
+      !Include a post-inflationary fluid description
+      !Derivs in e-folds or cosmic time
 
+
+      !gamma_ = reheater%Gamma_i
+      !Only allow decay into radiation after \phi_i = 0 the first time
+      do ii=1, num_inflaton
+        if (osc_count%counter(ii)>0) then
+          gamma_(ii) = reheater%Gamma_i(ii)
+        else
+          !gamma_(ii)= 1e-6_dp*reheater%Gamma_i(ii)
+          gamma_(ii)= 0e0_dp
+        end if
+      end do
+
+
+      !Radn energy density
       rho_radn = y(IND_RADN)
-      hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
-      dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
 
-      rho_fields = 0.5e0_dp*hubble**2*delphi**2 + V_i_sum_sep(phi)
+      if (all(osc_count%counter > 0)) then
+        !Start evaluating matter fluid separately
 
-      if (any(rho_radn<0) .or. any (rho_fields<0)) then
-        print*, "MODECODE: rho_radn:", rho_radn
-        print*, "MODECODE: rho_fields:", rho_fields
-        call raise%fatal_cosmo(&
-          'The individual energy densities are negative.',&
-          __FILE__, __LINE__)
+        !Stop evolving KG equations
+        yprime(IND_FIELDS) = 0.0_dp
+        yprime(IND_VEL) = 0.0_dp
+
+        hubble = sqrt(sum(y(IND_MATTER) + y(IND_RADN))/3.0_dp)
+        rho_fields = y(IND_MATTER)
+
+        !Default choice
+        if (reheater%int_with_t) then
+          yprime(IND_MATTER) = &
+            -3.0e0_dp*hubble*y(IND_MATTER) &
+            - gamma_*y(IND_MATTER)
+        else
+          yprime(IND_MATTER) = &
+            -3.0e0_dp*y(IND_MATTER) &
+            - gamma_*y(IND_MATTER)/hubble
+        end if
+      else
+
+        !Don't evolve matter fluid
+        yprime(IND_MATTER) = 0.0_dp
+
+        !KG equation for fields (close to matter fluid)
+        if (reheater%int_with_t) then
+          hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn),.true.)
+
+          yprime(IND_FIELDS) = delphi
+          yprime(IND_VEL) = &
+            -(3.0e0_dp*hubble+ gamma_)*delphi - dVdphi(phi)
+
+          rho_fields = 0.5e0_dp*delphi**2 + V_i_sum_sep(phi)
+
+        else
+          hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
+          dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
+
+          rho_fields = 0.5e0_dp*hubble**2*delphi**2 + V_i_sum_sep(phi)
+
+          yprime(IND_FIELDS) = delphi
+          yprime(IND_VEL) = &
+            -(3.0e0_dp+ gamma_/hubble + dhubble/hubble)*delphi &
+            - dVdphi(phi)/hubble**2
+        end if
       end if
 
-      !Fields
-      yprime(IND_FIELDS) = delphi
-      yprime(IND_VEL) = &
-        -(3.0e0_dp+ reheater%Gamma_i/hubble + dhubble/hubble)*delphi &
-        - dVdphi(phi)/hubble**2
-
-      !E-folds
-      yprime(IND_EFOLDS) = hubble
-
       !Radiation
-      yprime(IND_RADN) = &
-        -4.0e0_dp*rho_radn &
-        + reheater%Gamma_i*rho_fields/hubble
+      if (reheater%int_with_t) then
+        yprime(IND_RADN) = &
+          -4.0e0_dp*hubble*rho_radn &
+          + gamma_*rho_fields
+      else
+        yprime(IND_RADN) = &
+          -4.0e0_dp*rho_radn &
+          + gamma_*rho_fields/hubble
+      end if
 
       !Auxiliary constraints
       if (tech_opt%use_dvode_integrator .and. &
         tech_opt%use_ode_constraints) then
+
         yprime(IND_CONST_EPS_RADN) = &
           sum(yprime(IND_FIELDS)*yprime(IND_VEL))
       end if
+
+      !Cosmic time
+      yprime(IND_EFOLDS) = hubble !Useless for e-folds
+
 
     else
 
@@ -317,25 +385,31 @@ CONTAINS
     grad_V = sqrt(dot_product(Vp, Vp))
 
     IF(dot_product(delphi, delphi) .GT. 6.e0_dp) THEN
-       write(*,*) 'MODECODE: Using t?', use_t
-       if (use_t) then
-         write(*,*) 'MODECODE: t=',x
-       else
-         write(*,*) 'MODECODE: E-fold=',x
-       end if
-       write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
-       if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
+      !This condition should now be enforced inside
+      !the DVODE integrator
+      if (.not.(tech_opt%use_dvode_integrator .and. &
+        tech_opt%use_ode_constraints)) then
 
-       !Can sometimes get here when IC sampling
-       !close to the point where V=0, since H^2=V/(3-eps)
-       !Might override this error
-       call raise%fatal_cosmo(&
-         'H is imaginary in derivs.  &
-         Check if V~=0, since makes H unstable.  &
-         Or check if start step-size too large.  &
-         You might be able to override this error if &
-         you know how to auto-correct it.',&
-         __FILE__, __LINE__)
+        write(*,*) 'MODECODE: Using t?', use_t
+        if (use_t) then
+          write(*,*) 'MODECODE: t=',x
+        else
+          write(*,*) 'MODECODE: E-fold=',x
+        end if
+        write(*,*) 'MODECODE: vparams= ', (vparams(i,:),i=1,size(vparams,1))
+        if (.not.instreheat) write(*,*) 'MODECODE: N_pivot: ', N_pivot
+
+        !Can sometimes get here when IC sampling
+        !close to the point where V=0, since H^2=V/(3-eps)
+        !Might override this error
+        call raise%fatal_cosmo(&
+          'H is imaginary in derivs.  &
+          Check if V~=0, since makes H unstable.  &
+          Or check if start step-size too large.  &
+          You might be able to override this error if &
+          you know how to auto-correct it.',&
+          __FILE__, __LINE__)
+      end if
 
 
     END IF
@@ -1009,6 +1083,90 @@ CONTAINS
 
 
   end subroutine constraint_set_eps_limits
+
+  subroutine constraint_set_rho_limits(self)
+    class(ode_constraints) :: self
+
+    integer :: ii, jj, ref_index
+
+    !Consistency
+    if (.not. allocated(self%vect_indices) .or. &
+        .not. allocated(self%lower_bound) .or. &
+        .not. allocated(self%upper_bound)) then
+      call raise%fatal_code(&
+        "Initialize DVODE constraints &
+        prior to using this subroutine.",&
+        __FILE__,__LINE__)
+    end if
+
+    !Set radiation constraint rho_radn>0
+    ref_index = 2*num_inflaton+2
+    do jj=1,num_inflaton
+
+      !Find next available position in vect_indices
+      do ii=1,size(self%vect_indices)
+        if (.not. self%indices_ready(ii)) then
+          !Set the constraint on this index
+          self%indices_ready(ii) = .true.
+
+          self%vect_indices(ii) = ref_index
+
+          ref_index = ref_index + 1
+
+          !Set upper and lower limits for epsilon
+          self%lower_bound(ii) = 0.0e0_dp
+          self%upper_bound(ii) = huge(1.0_dp)
+
+          exit
+        end if
+
+        !If get to end of vect_indices, then they're already all set
+        if (ii==size(self%vect_indices)) then
+          call raise%fatal_code(&
+            "All constraint indices used prior to setting &
+            rho>0 constraint.",&
+            __FILE__,__LINE__)
+        end if
+
+      end do
+
+    end do
+
+    !Set matter constraint rho_matter>0
+    ref_index = 3*num_inflaton+2
+    do jj=1,num_inflaton
+
+      !Find next available position in vect_indices
+      do ii=1,size(self%vect_indices)
+        if (.not. self%indices_ready(ii)) then
+          !Set the constraint on this index
+          self%indices_ready(ii) = .true.
+
+          self%vect_indices(ii) = ref_index
+
+          ref_index = ref_index + 1
+
+          !Set upper and lower limits for epsilon
+          self%lower_bound(ii) = 0.0e0_dp
+          self%upper_bound(ii) = huge(1.0_dp)
+
+          exit
+        end if
+
+        !If get to end of vect_indices, then they're already all set
+        if (ii==size(self%vect_indices)) then
+          call raise%fatal_code(&
+            "All constraint indices used prior to setting &
+            epsilon<3 constraint.",&
+            __FILE__,__LINE__)
+        end if
+
+      end do
+
+    end do
+
+
+  end subroutine constraint_set_rho_limits
 
 
 end module modpk_utils

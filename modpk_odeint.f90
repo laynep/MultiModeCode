@@ -10,7 +10,7 @@ MODULE modpk_odeint
   use modpk_io, only : out_opt
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : reheater, reheat_opts, reheat_state
+  use modpk_reheat, only : reheater, reheat_opts, reheat_state, osc_count
   use modpk_utils, only : dvode_constraints
   implicit none
 
@@ -122,10 +122,14 @@ contains
     DO nstp=1,MAXSTP
 
       if (reheat_opts%use_reheat) then
-        !if (reheater%evolving_gamma .and. nstp>1) &
-        if (reheater%evolving_gamma) &
+        !if (reheater%evolving_fluids .and. nstp>1) &
+        if (reheater%evolving_fluids) then
           call check_for_reheating(leave)
           if (leave) return
+
+          !DEBUG
+          !print*, "this is nstp", nstp, x, y(IND_MATTER)
+        end if
       end if
 
       call check_NaN()
@@ -235,7 +239,7 @@ contains
 
         !Increase accuracy requirements when not in SR
         if (tech_opt%accuracy_setting>0) then
-          if (reheat_opts%use_reheat .and. .not. reheater%evolving_gamma) then
+          if (reheat_opts%use_reheat .and. .not. reheater%evolving_fluids) then
             if (getEps(phi,dphi)>0.2e0_dp) then
               rtol=1e-12_dp
               atol=1e-12_dp
@@ -283,32 +287,99 @@ contains
 
       real(dp) :: hubble
       real(dp), dimension(num_inflaton) :: phi, dphidN, &
-        rho_fields, rho_radn
+        rho_fields, rho_radn, rho_matter
+
+      logical :: check_eps
+
+      integer, dimension(:), allocatable :: old_counter
 
       leave = .false.
 
       phi = y(IND_FIELDS)
       dphidN = y(IND_VEL)
-      rho_radn = y(2*num_inflaton+2:3*num_inflaton+1)
-      hubble = reheater%getH_with_radn(phi,dphidN,sum(rho_radn))
-      rho_fields = 0.5e0_dp*hubble**2*dphidN**2 + V_i_sum_sep(phi)
+
+      !Check the oscillation count
+      allocate(old_counter(size(osc_count%counter)))
+      old_counter = osc_count%counter
+      call osc_count%count_oscillations(phi)
+
+      rho_radn = y(IND_RADN)
 
       !DEBUG
-      !print out
+      if (reheater%int_with_t) then
+        check_eps = .false.
+      else
+        !Only works with N
+        check_eps = getEps(phi,dphidN) > 2.8_dp
+      end if
+      !print*, "this is eps", getEps(phi,dphidN), x
+
+      if (all(osc_count%counter>0) .or. check_eps) then
+
+        if (.not. all(old_counter>0)) then
+          !Initialize
+
+          !Hack for starting Gamma evolution a bit early
+          !to bypass epsilon instability
+          if (check_eps) then
+            old_counter = old_counter +1
+          end if
+
+          if(reheater%int_with_t) then
+            hubble = reheater%getH_with_radn(phi, dphidN, sum(rho_radn), .true.)
+            rho_fields = 0.5e0_dp*dphidN**2 + V_i_sum_sep(phi)
+          else
+            hubble = reheater%getH_with_radn(phi, dphidN, sum(rho_radn))
+            rho_fields = 0.5e0_dp*hubble**2*dphidN**2 + V_i_sum_sep(phi)
+          end if
+
+          !Start evolving the scalar sector as matter fluid with
+          !Gamma coupling to radiation fluid
+          y(IND_MATTER) = rho_fields
+          !y(IND_FIELDS) = 0.0_dp
+          !y(IND_VEL) = 0.0_dp
+
+          if (tech_opt%use_dvode_integrator) then
+            !Reset istate to let integrator know it's a new variable
+            istate=1
+          end if
+
+          !Go back to integration in N
+          reheater%int_with_t = .false.
+
+          !DEBUG
+          reheater%Omega_phi = rho_fields(2)/sum(rho_fields)
+          !print*, "setting Omega", reheater%Omega_phi
+
+
+        end if
+
+        rho_matter = y(IND_MATTER)
+
+        !Save the r_ij values
+        call reheater%getr_ij(rho_fields, rho_matter, rho_radn, &
+          all_fluid_descr=.true.)
+
+        !If all fields have decayed, then calculate the power spectrum and leave
+        if (all(reheater%fields_decayed)) then
+          call reheater%get_powerspectrum()
+          leave = .true.
+        end if
+
+      end if
+
+      !DEBUG
       !call csv_write(&
       !  6,&
       !  (/x, sum(rho_radn),&
-      !  sum(rho_fields), hubble /)   , &
+      !  sum(rho_fields), reheater%gamma_i/hubble /)   , &
       !  advance=.true.)
 
-      !Save the r_ij values
-      call reheater%getr_ij(rho_fields, rho_radn)
-
-      !If all fields have decayed, then calculate the power spectrum and leave
-      if (all(reheater%fields_decayed)) then
-        call reheater%get_powerspectrum()
-        leave = .true.
-      end if
+      !call csv_write(&
+      !  6,&
+      !  (/x, rho_radn,&
+      !  rho_fields /)   , &
+      !  advance=.true.)
 
     end subroutine
 
@@ -359,6 +430,13 @@ contains
       if (tech_opt%accuracy_setting==2) then
         rtol = 1.e-10_dp
         atol = 1.0e-14_dp
+
+        !if (reheater%evolving_fluids) then
+        !  atol(IND_MATTER) = 1.0e-27
+        !  rtol = 1.e-16_dp
+        !  atol(IND_RADN) = 1.0e-14
+        !end if
+
       else if (tech_opt%accuracy_setting==1) then
         rtol = 1.e-6_dp
         atol = 1.0e-6_dp
@@ -402,15 +480,15 @@ contains
             cupper=dvode_constraints%upper_bound,&
             relerr=rtol,&
             user_supplied_jacobian=.true., &
-            mxstep=50000,&
-            H0=1e-9_dp)
+            mxstep=100000,&
+            H0=1e-4_dp)
         else
           ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
             abserr_vector=atol,&
             relerr=rtol,&
             user_supplied_jacobian=.true., &
-            mxstep=50000,&
-            H0=1e-9_dp)
+            mxstep=100000,&
+            H0=1e-4_dp)
         end if
       else
         if (tech_opt%use_ode_constraints) then
@@ -421,15 +499,15 @@ contains
             cupper=dvode_constraints%upper_bound,&
             relerr=rtol,&
             user_supplied_jacobian=.false., &
-            mxstep=50000,&
-            H0=1e-9_dp)
+            mxstep=100000,&
+            H0=1e-4_dp)
         else
           ode_integrator_opt = set_intermediate_opts(dense_j=.true.,&
             abserr_vector=atol,&
             relerr=rtol,&
             user_supplied_jacobian=.false., &
-            mxstep=50000,&
-            H0=1e-9_dp)
+            mxstep=100000,&
+            H0=1e-4_dp)
         end if
       end if
 
@@ -533,6 +611,10 @@ contains
 
     subroutine check_for_eternal_inflation
 
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_fluids) return
+       end if
+
        IF ((x-x2)*(x2-x1) > 0.0e0_dp) THEN
 
           WRITE(*, *) 'MODECODE: x, x1, x2 :', x, x1, x2
@@ -552,7 +634,7 @@ contains
      subroutine check_inflation_started_properly()
 
        if (reheat_opts%use_reheat) then
-         if (reheater%evolving_gamma) return
+         if (reheater%evolving_fluids) return
        end if
 
        IF(getEps(phi,dphi) .LT. 1 .AND. .NOT.(slowroll_start)) then
@@ -590,11 +672,11 @@ contains
      subroutine check_evolution_stop_properly(leave)
        logical, intent(inout) :: leave
 
-       if (reheat_opts%use_reheat) then
-         if (reheater%evolving_gamma) return
-       end if
-
        leave = .false.
+
+       if (reheat_opts%use_reheat) then
+         if (reheater%evolving_fluids) return
+       end if
 
        IF(ode_infl_end) THEN
           IF (slowroll_infl_end) THEN
@@ -1185,12 +1267,13 @@ contains
             constrained=dvode_constraints%vect_indices,&
             clower=dvode_constraints%lower_bound,&
             cupper=dvode_constraints%upper_bound,&
-            relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
+            relerr=rtol, user_supplied_jacobian=.true., &
+            mxstep=10000, &
             mxhnil=1)
         else
           ode_integrator_opt = set_intermediate_opts(&
             dense_j=.true., abserr_vector=atol,&
-            relerr=rtol, user_supplied_jacobian=.true., mxstep=1000, &
+            relerr=rtol, user_supplied_jacobian=.true., mxstep=10000, &
             mxhnil=1)
         end if
       else
@@ -1200,12 +1283,12 @@ contains
             constrained=dvode_constraints%vect_indices,&
             clower=dvode_constraints%lower_bound,&
             cupper=dvode_constraints%upper_bound,&
-            relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
+            relerr=rtol, user_supplied_jacobian=.false., mxstep=50000, &
             mxhnil=1)
         else
           ode_integrator_opt = set_intermediate_opts(&
             dense_j=.true., abserr_vector=atol,&
-            relerr=rtol, user_supplied_jacobian=.false., mxstep=10000, &
+            relerr=rtol, user_supplied_jacobian=.false., mxstep=50000, &
             mxhnil=1)
         end if
       end if
@@ -1215,7 +1298,7 @@ contains
     subroutine check_for_eternal_inflation_MODES()
 
        if (reheat_opts%use_reheat) then
-         if (reheater%evolving_gamma) return
+         if (reheater%evolving_fluids) return
        end if
 
        IF ((x-x2)*(x2-x1) >= 0.0) THEN
@@ -1318,7 +1401,7 @@ contains
       leave = .false.
 
        if (reheat_opts%use_reheat) then
-         if (reheater%evolving_gamma) then
+         if (reheater%evolving_fluids) then
            call raise%fatal_code(&
              "Using odeint_c when evolving post-inflationary background.",&
              __FILE__, __LINE__)
@@ -2016,7 +2099,7 @@ contains
       !after evaluating the C_ij
 
       if (stopping .and. present(q_modes) .and. &
-        .not. reheater%evolving_gamma) then
+        .not. reheater%evolving_fluids) then
         call reheat_match_to_dNdphi(reheater)
       end if
 
@@ -2070,10 +2153,11 @@ contains
     use ode_path
     use modpk_utils, only : bderivs, rkqs_r
     use potential
+    use modpk_deltaN, only : V_i_sum_sep
 
     type(reheat_state), intent(inout) :: reheater
 
-    real(dp) :: x1, x2, h1, hmin, accuracy
+    real(dp) :: x1, x2, h1, hmin, accuracy, hubble
     real(dp), dimension(:), allocatable :: y
 
     integer :: num_constraints
@@ -2089,14 +2173,20 @@ contains
     call reheater%get_Gamma()
 
     !-------------------
-    !NB: Integration variable is N
+    !NB: Integration variable is N or t
     !-------------------
     !Evolve the background eqns with Gamma and a radiation fluid
-    reheater%evolving_gamma = .true.
+    reheater%evolving_fluids = .true.
 
-    !Set integration bounds in N
-    x1=reheater%efolds_end
-    x2=x1 + 100e0_dp
+    if (reheater%int_with_t) then
+      !Set integration bounds in N
+      x1=0.0_dp
+      x2=x1 + 1e6_dp
+    else
+      !Set integration bounds in N
+      x1=reheater%efolds_end
+      x2=x1 + 100e0_dp
+    end if
 
     !Accuracy & step sizes
     h1 = 1.0e-3_dp
@@ -2109,27 +2199,43 @@ contains
     if (tech_opt%use_dvode_integrator .and. &
       tech_opt%use_ode_constraints) then
 
-      num_constraints = 1 !0<epsilon<3
+      num_constraints = 1 + num_inflaton*2 !0<epsilon<3 and rho_radn, rho_matter>0
+      !num_constraints = 1 !0<epsilon<3 only
       call dvode_constraints%init(num_constraints)
 
       call dvode_constraints%set_eps_limits(evolve_modes=.false., &
         evolve_radn_back = .false.)
 
+      call dvode_constraints%set_rho_limits()
+
     else
 
       num_constraints = 0
-      call dvode_constraints%init(num_constraints)
+      if (tech_opt%use_dvode_integrator) &
+        call dvode_constraints%init(num_constraints)
 
     end if
-    !Fields + Derivs + Efolds + N Radn Fluids + Auxiliary Constraints
 
+    !Fields + Derivs + Efolds
+    !+ N Radn Fluids + N Matter Fluids + Auxiliary Constraints
     allocate(y(num_inflaton + num_inflaton &
-      + 1 + num_inflaton &
+      + 1 + num_inflaton + num_inflaton &
       + dvode_constraints%num_constraints))
+
+    !No aux constraints
+    !allocate(y(num_inflaton + num_inflaton &
+    !  + 1 + num_inflaton &
+    !  + dvode_constraints%num_constraints))
 
     !Fields
     y(IND_FIELDS) = reheater%phi_infl_end
-    y(IND_VEL) = reheater%dphi_infl_end !e-folds
+    if (reheater%int_with_t) then
+      y(IND_VEL) = reheater%dphi_infl_end*&
+        reheater%getH_with_radn(y(IND_FIELDS),reheater%dphi_infl_end,&
+        0.0_dp,use_t = .false.) !time
+    else
+      y(IND_VEL) = reheater%dphi_infl_end !e-folds
+    end if
 
     !Efolds
     y(IND_EFOLDS) = reheater%efolds_end
@@ -2137,11 +2243,19 @@ contains
     !Radiation
     y(IND_RADN) = 0.0e0_dp
 
+    !Matter
+    y(IND_MATTER) = 0.0e0_dp
+
+
     !Auxiliary constraints
     if (tech_opt%use_dvode_integrator .and. &
       tech_opt%use_ode_constraints) then
-      y(IND_CONST_EPS_BACK) = getEps(y(IND_FIELDS), y(IND_VEL))
+      y(IND_CONST_EPS_RADN) = getEps(y(IND_FIELDS), y(IND_VEL))
     end if
+
+
+    !Restart oscillation counter
+    call osc_count%init(y(IND_FIELDS))
 
     ode_underflow = .false.
     ode_ps_output = .false.
@@ -2153,7 +2267,7 @@ contains
       h1,hmin,&
       bderivs,rkqs_r)
 
-    reheater%evolving_gamma = .false.
+    reheater%evolving_fluids = .false.
     !-------------------
 
   end subroutine reheat_match_to_dNdphi

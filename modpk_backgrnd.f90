@@ -328,8 +328,8 @@ CONTAINS
     !Make the ODE vectors
     !fields + field vels + number of aux constraints
     !Initialize the constraints
-    if (tech_opt%use_dvode_integrator .and. &
-      tech_opt%use_ode_constraints) then
+    if (tech_opt%use_dvode_integrator) then
+      if(tech_opt%use_ode_constraints) then
 
       num_constraints = 1 !0<epsilon<3
       call dvode_constraints%init(num_constraints)
@@ -337,10 +337,12 @@ CONTAINS
       call dvode_constraints%set_eps_limits(evolve_modes=.false., &
         evolve_radn_back = .false.)
 
-    else
+      else
 
-      num_constraints = 0
-      call dvode_constraints%init(num_constraints)
+        num_constraints = 0
+        if (tech_opt%use_dvode_integrator) &
+          call dvode_constraints%init(num_constraints)
+      end if
 
     end if
 
