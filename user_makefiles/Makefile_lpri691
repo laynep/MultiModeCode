@@ -4,12 +4,14 @@ ifdef GFORTRAN
 LINKFLAGS = -llapack -lblas
 
 F90C     = gfortran
-FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8
+FFLAGS = -O3 -funroll-loops -cpp -fopenmp -ffast-math -fdefault-real-8 -ffree-line-length-none
 
 ifdef DEBUG
 F90C     = gfortran
-FFLAGS = -cpp -O0 -fdefault-real-8 -g -p  -Wall
+FFLAGS = -cpp -O0 -fdefault-real-8 -g -p  #-Wall
 endif
+
+FFLAGS += -ffree-line-length-none
 
 #ifort compile options
 else

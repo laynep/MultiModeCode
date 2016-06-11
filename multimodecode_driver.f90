@@ -12,13 +12,13 @@ program multimodecode
   use modpk_observables, only : observables
   use csv_file, only : csv_write
   use modpk_errorhandling, only : raise, run_outcome, assert
-  use modpk_reheat, only : reheat_opts
+  use modpk_reheat, only : reheat_opts, reheater
   use modpk_rng, only : init_random_seed, geometric
 
   implicit none
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
   !Run-specific input params
   integer :: sample_looper, vparam_rows
@@ -502,6 +502,9 @@ program multimodecode
       character(1024) :: cname
       integer :: ii
 
+      call observs%set_zero()
+      call observs_SR%set_zero()
+
       pk_bad = run_outcome%success
       leave = .false.
 
@@ -604,41 +607,50 @@ program multimodecode
         call evolve(k_pivot, pk0)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
-!DEBUG
-print*, "Not evaluating second and third evolve routines"
-stop
-        call evolve(k_pivot*exp(-dlnk), pk1)
-          call test_bad(pk_bad, observs, leave)
-          if (leave) return
-        call evolve(k_pivot*exp(dlnk), pk2)
-          call test_bad(pk_bad, observs, leave)
-          if (leave) return
 
-        if (get_runningofrunning) then
-          !Alpha_s from 5-pt stencil
-          !or running of running
-          call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
-            call test_bad(pk_bad, observs, leave)
-            if (leave) return
-          call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
-            call test_bad(pk_bad, observs, leave)
-            if (leave) return
-        end if
-
-        !Construct the observables
-        if (get_runningofrunning) then
-          call observs%set_finite_diff(dlnk, &
-            pk0,pk1,pk2,pk3,pk4, &
-            field_bundle%exp_scalar)
+        if (reheat_opts%use_reheat) then
+          !Set observables from the sudden decay calculation
+          observs%As = reheater%observs%As
+          observs%ns = reheater%observs%ns
+          observs%r  = reheater%observs%r
         else
-          call observs%set_finite_diff(dlnk, &
-            pk0,pk1,pk2,&
-            bundle_width=field_bundle%exp_scalar)
+!DEBUG
+!print*, "Not evaluating second and third evolve routines"
+!stop
+          call evolve(k_pivot*exp(-dlnk), pk1)
+            call test_bad(pk_bad, observs, leave)
+            if (leave) return
+          call evolve(k_pivot*exp(dlnk), pk2)
+            call test_bad(pk_bad, observs, leave)
+            if (leave) return
+
+          if (get_runningofrunning) then
+            !Alpha_s from 5-pt stencil
+            !or running of running
+            call evolve(k_pivot*exp(-2.0e0_dp*dlnk), pk3)
+              call test_bad(pk_bad, observs, leave)
+              if (leave) return
+            call evolve(k_pivot*exp(2.0e0_dp*dlnk), pk4)
+              call test_bad(pk_bad, observs, leave)
+              if (leave) return
+          end if
+
+          !Construct the observables
+          if (get_runningofrunning) then
+            call observs%set_finite_diff(dlnk, &
+              pk0,pk1,pk2,pk3,pk4, &
+              field_bundle%exp_scalar)
+          else
+            call observs%set_finite_diff(dlnk, &
+              pk0,pk1,pk2,&
+              bundle_width=field_bundle%exp_scalar)
+          end if
+
+
+          !Get full spectrum for adiab and isocurv at equal intvs in lnk
+          call get_full_pk(pk_arr,calc_full_pk)
+
         end if
-
-
-        !Get full spectrum for adiab and isocurv at equal intvs in lnk
-        call get_full_pk(pk_arr,calc_full_pk)
 
       end if
 

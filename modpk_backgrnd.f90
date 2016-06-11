@@ -19,7 +19,7 @@ MODULE background_evolution
   public :: backgrnd
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
 CONTAINS
 

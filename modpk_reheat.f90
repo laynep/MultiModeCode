@@ -3,7 +3,8 @@
 
 module modpk_reheat
   use modpkparams, only : dp, slowroll_infl_end, vparams, num_inflaton, Mpc2Mpl, &
-    k_pivot, N_pivot, lna, nactual_bg, potential_choice
+    k_pivot, N_pivot, lna, nactual_bg, potential_choice, &
+    auxparams
   use modpk_observables, only : power_spectra
   use internals, only : pi, k
   use potential, only : getH, geteps, getkineticenergy, &
@@ -11,6 +12,8 @@ module modpk_reheat
   use modpk_errorhandling, only : raise
   use csv_file, only : csv_write
   use modpk_numerics, only : array_polint
+  use modpk_observables, only : observables
+  use modpk_sampling, only : prior_auxparams_min, prior_auxparams_max
 
   implicit none
 
@@ -25,6 +28,7 @@ module modpk_reheat
     !Sampling option for reheating decay parameters Gamma
     integer :: gamma_sampler
     integer :: uniform = 1
+    integer :: fixed_mass = 2
 
   end type reheat_model_type
   type (reheat_model_type) :: reheat_opts
@@ -68,10 +72,14 @@ module modpk_reheat
     logical, dimension(:), allocatable :: fields_decayed
     integer, dimension(:), allocatable :: fields_decay_order
 
+    real(dp), dimension(:), allocatable :: y_radn_0
+
     real(dp) :: decay_factor_H
 
+    type(observables) :: observs
+
     !DEBUG
-    real(dp) :: Omega_phi
+    real(dp) :: Omega_phi, Omega_chi
     logical :: int_with_t
 
     type(power_spectra) :: pk, pk_hc
@@ -90,6 +98,7 @@ module modpk_reheat
       procedure, public :: get_powerspectrum => reheat_get_powerspectrum
 
   end type reheat_state
+
   type (reheat_state) :: reheater
 
   contains
@@ -452,7 +461,6 @@ module modpk_reheat
 
       self%hubble_prev = 0.0e0_dp
 
-
       !Set min and max to ridiculously big/small values, respectively
       if (allocated(self%c_ij_min))&
         deallocate(self%c_ij_min)
@@ -487,6 +495,7 @@ module modpk_reheat
       self%decay_factor_H = 1.0e0_dp/3.0e0_dp
 
       self%Omega_phi = 0.0_dp
+      self%Omega_chi = 0.0_dp
 
       self%int_with_t = .false.
 
@@ -501,6 +510,9 @@ module modpk_reheat
       real(dp) :: R_ratio, R_min, R_max
       integer :: ii
 
+      real(dp) :: A_var, B_var
+      real(dp) :: m2_V(num_inflaton)
+
       !Don't have any Gamma_i yet
       if (.not. allocated(self%Gamma_i)) then
         allocate(self%Gamma_i(num_inflaton))
@@ -510,7 +522,35 @@ module modpk_reheat
         return
       end if
 
-      if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
+      if (reheat_opts%gamma_sampler == reheat_opts%fixed_mass) then
+        !The decay rates are fixed wrt the masses with the relationship
+        !\Gamma_i ~ A m_i^B
+
+        if (size(auxparams)<2 &
+          .or. size(prior_auxparams_max)<2 &
+          .or. size(prior_auxparams_min)<2) then
+          call raise%fatal_code(&
+            'Not enough auxparams to sample reheat parameters.', &
+            __FILE__, __LINE__)
+        end if
+
+        allocate(rand(2))
+        call random_number(rand)
+        rand = rand*(prior_auxparams_max-prior_auxparams_min)&
+          +prior_auxparams_min
+        A_var = 10.0**rand(1)
+        B_var = rand(2)
+
+        m2_V = 10.e0_dp**(vparams(1,:))
+
+
+        self%Gamma_i(:) = A_var * self%H_end * sqrt(m2_V/maxval(m2_V))**B_var
+
+        print*, "This is A and B", A_var, B_var
+        print*, "This is Gamma_i", self%Gamma_i
+        print*, "This is H_end", self%H_end
+
+      else if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
 
         allocate(rand(num_inflaton))
         call random_number(rand)
@@ -525,39 +565,38 @@ module modpk_reheat
             stop
           end if
 
-          R_min = 1e-4_dp
-          R_max = 1e-2_dp
+          !R_min = 1e-4_dp
+          !R_max = 1e-2_dp
+
+          R_min = 1e-3_dp
+          R_max = 1e2_dp
 
           call random_number(R_ratio)
           R_ratio = (log10(R_max) - log10(R_min))*R_ratio + log10(R_min)
           R_ratio = 10.0**R_ratio
 
-          !R_ratio = 1.0
-          !R_ratio = 0.88339277E+00
-          !R_ratio = 0.53798383E+00
-          !R_ratio = 5.896011367980829E-002
-          !R_ratio = 2.0e-2_dp
 
-          !R_ratio = 1.0e1_dp
-
-          !R_ratio = 2.0e2_dp
-          !R_ratio = 2.0e-4_dp
-
-          !R_ratio = 0.94825048E-01
-
-          !R_ratio = 2e-3
-          !R_ratio = 1e-4
-
-          !R_ratio = 2.872678536340861E-003
-          !R_ratio = 2.8e-3
+          !R_ratio = 1.01
+          !R_ratio = 1.0e-4
+          R_ratio = 0.10545737E+02
 
 
           !DEBUG
-          print*, "this is R", R_ratio
+          !print*, "this is R", R_ratio
 
           !self%Gamma_i(1) = 1e-14_dp
-          self%Gamma_i(1) = 5e-1 * R_min * self%H_end
+          !self%Gamma_i(1) = 5e-1 * R_min * self%H_end
+
+          if (R_ratio<1.0) then
+            self%Gamma_i(1) = 5e-1 * R_ratio * self%H_end
+          else
+            self%Gamma_i(1) = 1e-3 * self%H_end
+          end if
+
+          !DEBUG
+          !self%Gamma_i(1) = 5e-1 *  self%H_end
           self%Gamma_i(2) = self%Gamma_i(1)/R_ratio
+
         end if
 
         !DEBUG
@@ -705,6 +744,11 @@ module modpk_reheat
               self%Gamma_i(jj),&
               self%rho_matter_decay(:,jj), &
               rho_error)
+            if (any(rho_error >1e-3)) then
+              call raise%fatal_code(&
+                "Interpolation error.",&
+                __FILE__,__LINE__)
+            end if
 
             rho_mat(:,1) = self%rho_radn_prev
             rho_mat(:,2) = rho_radn
@@ -713,6 +757,11 @@ module modpk_reheat
               self%Gamma_i(jj),&
               self%rho_radn_decay(:,jj), &
               rho_error)
+            if (any(rho_error >1e-3)) then
+              call raise%fatal_code(&
+                "Interpolation error.",&
+                __FILE__,__LINE__)
+            end if
 
           end if
 
@@ -738,6 +787,7 @@ module modpk_reheat
       do jj=1, size(rho_fields)
 
         if (save_field_rij(jj)) then
+
           !Find energy density decayed and still in fields
           !Add radiation energy (decayed) and
           !matter energy (notdecayed) separately
@@ -764,6 +814,9 @@ module modpk_reheat
           !for next time
           self%fields_decayed(jj) = .true.
           self%fields_decay_order(jj) = count(self%fields_decayed)
+
+          !DEBUG
+          print*, "This field decayed:", jj
 
         end if
 
@@ -934,18 +987,41 @@ module modpk_reheat
       end if
 
       !DEBUG
-      !print*, "this is r_ij", self%r_ij(1,1), self%r_ij(1,2), self%r_ij(2,1), self%r_ij(2,2)
-      v_debug = 0.60_dp
-      q_debug = 0.63_dp*log(self%Omega_phi)/log(1.0_dp-self%Omega_phi)
-      p_debug = ((4.0_dp*self%Omega_phi)/(3.0_dp+self%Omega_phi))**(-1.0_dp/v_debug) - q_debug
-      R_debug = self%Gamma_i(1)/self%Gamma_i(2)
-      !print*, "this is r_ij prediction:", 1.0_dp - (p_debug + q_debug/R_debug)**(-v_debug), self%Omega_phi
+      !if (self%Gamma_i(1)/self%Gamma_i(2)<1.0_dp) then
+      !  !print*, "this is r_ij", self%r_ij(1,1), self%r_ij(1,2), self%r_ij(2,1), self%r_ij(2,2)
+      !  v_debug = 0.60_dp
+      !  q_debug = 0.63_dp*log(self%Omega_phi)/log(1.0_dp-self%Omega_phi)
+      !  p_debug = ((4.0_dp*self%Omega_phi)/(3.0_dp+self%Omega_phi))**(-1.0_dp/v_debug) - q_debug
+      !  R_debug = self%Gamma_i(1)/self%Gamma_i(2)
 
-      !print*, "Overriding r_ij!!!"
-      !self%r_ij(1,1) = 1.0_dp - (p_debug + q_debug/R_debug)**(-v_debug)
-      !self%r_ij(1,2) = 0.0
-      !self%r_ij(2,1) = 0.0
-      !self%r_ij(2,2) = self%Omega_phi
+      !  print*, "this is r_ij prediction for R<1:",&
+      !  1.0_dp - (p_debug + q_debug/R_debug)**(-v_debug),&
+      !  self%Omega_phi,&
+      !  abs(self%Omega_phi-self%Omega_chi),&
+      !  self%Omega_chi
+
+      !else
+      !  !print*, "this is r_ij", self%r_ij(1,1), self%r_ij(1,2), self%r_ij(2,1), self%r_ij(2,2)
+
+      !  v_debug = 1.6666_dp
+      !  q_debug = (4.0*(1.0-self%Omega_phi)/(4.0-self%Omega_phi))**(-1.0/v_debug) - 1.0
+      !  R_debug = self%Gamma_i(1)/self%Gamma_i(2)
+
+      !  print*, "this is r_ij prediction for R>1:", &
+      !    self%Omega_chi, &
+      !    abs(self%Omega_phi-self%Omega_chi), &
+      !    self%Omega_phi, &
+      !    1.0_dp - (1.0 + q_debug*sqrt(R_debug))**(-v_debug)
+
+
+      !end if
+
+      !DEBUG
+      !print*, "OVERRIDING r_ij!"
+      !self%r_ij(1,1) = self%r_ij(2,1)
+      !self%r_ij(1,2) = self%r_ij(1,1)
+      !self%r_ij(2,1) = self%r_ij(1,2)
+      !self%r_ij(2,2) = self%r_ij(2,2)
 
       !Get the W_i vector
       call self%getW_i()
@@ -962,9 +1038,9 @@ module modpk_reheat
 
       !DEBUG
       !phi_piv_test = 0.499002
-      phi_piv_test = 0.1
+      !phi_piv_test = 0.1
       !phi_piv_test=1.60830E-01
-      chi_piv_test = 1.5006E+01
+      !chi_piv_test = 1.5006E+01
       !C_{\phi\phi} = 2 / (3 \phi_*),
       !C_{\phi\chi} \approx \chi_* / (2Mp^2),
       !C_{\chi\phi} = 0,                      
@@ -974,37 +1050,15 @@ module modpk_reheat
 
       !DEBUG
       !print*, "this is dN:", dN
+
+      !print*, "OVERRIDING dN"
+      !dN(1) = 0.75074301E+01
+      !dN(2) = 0.18677625E+03
       !print*, "this is expected:", "???", chi_piv_test/2.0
       !print*, "these are c's", self%c_ij_avg(1,1), self%c_ij_avg(1,2), self%c_ij_avg(2,1), self%c_ij_avg(2,2)
       !print*, "this is c_ij prediction:", 7.50, -4.8, 7.50, 476.0
       !print*, "this is W_i", self%W_i
       !print*, "this is W_i summed",self%W_i(1) + self%W_i(2)
-
-
-
-      !print*, "overriding c's", self%c_ij_avg(1,2)
-      !!self%c_ij_avg(1,1) = 2.0/3.0/phi_piv_test
-      !!self%c_ij_avg(1,2) = chi_piv_test/2.0e0_dp
-      !!self%c_ij_avg(2,1) = 0.0
-      !!self%c_ij_avg(2,2) = chi_piv_test/2.0e0_dp
-      !!!self%c_ij_avg(1,1) = chi_piv_test/2.0e0_dp
-      !self%c_ij_avg(1,2) = 0.0e0_dp
-      !!!self%c_ij_avg(2,1) = chi_piv_test/2.0e0_dp
-      !!!self%c_ij_avg(2,2) = 2.0/3.0/phi_piv_test
-      !!print*, "these are new c's", self%c_ij_avg
-      !dN = 0.0e0_dp
-      !do jj=1,num_inflaton
-      !  dN(:) = dN(:) + &
-      !    self%W_i(jj)*self%c_ij_avg(jj,:)
-      !end do
-      !print*, "this is new dN:", dN
-
-
-      !dN(1) = 0.75074301E+01
-      !dN(2) = 0.90297275E+02
-      !print*, "this is fake dN:", dN
-
-
 
       !Load the power spectrum attributes
       self%pk%k = self%pk_hc%k
@@ -1019,19 +1073,22 @@ module modpk_reheat
         sum_term = sum_term + &
           self%eta_horizcross(ii,jj)*dN(ii)*dN(jj)
       end do; end do
-      !print*, "this is ns:", &
-      !  1.0e0_dp+&
-      !  -2.0e0_dp*self%eps_horizcross &
-      !  -(2.0e0_dp/sum(dN**2))*&
-      !  (1.0e0_dp - sum_term)
-
-      print*, "this is r, ns:", & self%pk%tensor/self%pk%adiab, &
+      print*, "this is R, r, ns:", self%Gamma_i(1)/self%Gamma_i(2), &
+        self%pk%tensor/self%pk%adiab, &
       !print*, "this is r, ns:", 8.0/sum(dN**2), &
-        1.0e0_dp+&
+        1.0e0_dp&
         -2.0e0_dp*self%eps_horizcross &
         -(2.0e0_dp/sum(dN**2))*&
         (1.0e0_dp -  sum_term)
 
+
+      call self%observs%set_zero()
+      self%observs%As = self%pk%adiab
+      self%observs%ns = 1.0e0_dp&
+        -2.0e0_dp*self%eps_horizcross &
+        -(2.0e0_dp/sum(dN**2))*&
+        (1.0e0_dp -  sum_term)
+      self%observs%r  = self%pk%tensor/self%pk%adiab
 
 
       !No isocurvature
@@ -1043,22 +1100,10 @@ module modpk_reheat
       self%pk%entropy = 0.0e0_dp
       self%pk%bundle_exp_scalar = 0.0e0_dp
 
-      !DEBUG
-      !print*, "----------------"
-      !print*, "this is k", self%pk%k
-      !print*, "this is pk_hc", self%pk_hc%adiab
-      !print*, "this is pk", self%pk%adiab
-      !print*, "this is r",  self%pk%tensor/self%pk%adiab
-      !print*, "this is r_hc",  self%pk%tensor/self%pk_hc%adiab
-      !print*, "this is W_i", self%W_i
-      !print*, "this is r_ij", self%r_ij
-      !print*, "this is eta_horizcross", self%eta_horizcross
 
-      !print*, "----------------"
-      !print*, "this is c_ij", self%c_ij_avg(1,1),self%c_ij_avg(1,2), &
-      !  self%c_ij_avg(2,1),self%c_ij_avg(2,2)
-      !print*, "this is c_ij expected", chi_piv_test/2.0, 0.0,  chi_piv_test/2.0, 2.0/3.0/phi_piv_test
-      stop
+      !DEBUG
+      !print*, "Stopping here"
+      !stop
 
     end subroutine reheat_get_powerspectrum
 

@@ -1510,7 +1510,7 @@ contains
         tech_opt%use_ode_constraints) then
         !Make it look like it's really unstable,
         !which forces smaller stepsizes in the integrator
-        getH = huge(1d0)
+        getH = huge(1e0_dp)
       else
         call raise%fatal_cosmo(&
           "H is complex. &

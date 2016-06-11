@@ -18,7 +18,7 @@ MODULE access_modpk
 	pkspline_pt2der(pkspline_n)
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
 contains
 

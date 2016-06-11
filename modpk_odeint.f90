@@ -22,7 +22,7 @@ MODULE modpk_odeint
   public :: odeint
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
 contains
 
@@ -126,9 +126,6 @@ contains
         if (reheater%evolving_fluids) then
           call check_for_reheating(leave)
           if (leave) return
-
-          !DEBUG
-          !print*, "this is nstp", nstp, x, y(IND_MATTER)
         end if
       end if
 
@@ -292,6 +289,7 @@ contains
       logical :: check_eps
 
       integer, dimension(:), allocatable :: old_counter
+      integer :: ii
 
       leave = .false.
 
@@ -304,15 +302,47 @@ contains
       call osc_count%count_oscillations(phi)
 
       rho_radn = y(IND_RADN)
+      !rho_radn = y(IND_RADN)*reheater%y_radn_0
+      !rho_radn = exp(y(IND_RADN))
+
+      !DEBUG
+      print*, "This is rho radn:", rho_radn
+      !print*, "This is y(IND_RADN):", y(IND_RADN)
+      !print*, "This is y(IND_MATTER):", y(IND_MATTER)
+      !print*, "This is rho_matter:", exp(y(IND_MATTER))
+      !print*, "This is y(IND_FIELDS):", y(IND_FIELDS)
+      !if (y(2*num_inflaton+2)>1e-45) stop 'stopping here'
+
+      !DEBUG
+      if (any(rho_radn<0.0_dp)) then
+        print*, "stopping here bc y_radn < 0"
+        print*, "RADN:", rho_radn
+        print*, reheater%getH_with_radn(phi, dphidN, sum(rho_radn)), reheater%gamma_i
+        stop
+      end if
 
       !DEBUG
       if (reheater%int_with_t) then
         check_eps = .false.
       else
         !Only works with N
-        check_eps = getEps(phi,dphidN) > 2.8_dp
+        if (.not. all(old_counter>0)) then
+          check_eps = getEps(phi,dphidN) > 2.9_dp
+        else
+          check_eps = .true.
+        end if
       end if
-      !print*, "this is eps", getEps(phi,dphidN), x
+
+      !When field passes its minimum for first time, we allow
+      !it to start decaying into radiation, which instantaneously
+      !gives a source term to the i^th radiation fluid.  Since
+      !this happens stiffly, we want to restart the dvode integrator
+      !by giving istate=1
+      do ii=1, num_inflaton
+        if (osc_count%counter(ii)>0 .and. old_counter(ii)==0) then
+          istate = 3
+        end if
+      end do
 
       if (all(osc_count%counter>0) .or. check_eps) then
 
@@ -322,7 +352,7 @@ contains
           !Hack for starting Gamma evolution a bit early
           !to bypass epsilon instability
           if (check_eps) then
-            old_counter = old_counter +1
+            osc_count%counter = osc_count%counter +1
           end if
 
           if(reheater%int_with_t) then
@@ -335,7 +365,7 @@ contains
 
           !Start evolving the scalar sector as matter fluid with
           !Gamma coupling to radiation fluid
-          y(IND_MATTER) = rho_fields
+          y(IND_MATTER) = log(rho_fields)
           !y(IND_FIELDS) = 0.0_dp
           !y(IND_VEL) = 0.0_dp
 
@@ -344,17 +374,29 @@ contains
             istate=1
           end if
 
+          !DEBUG
+          print*, "------------------------------"
+          print*, "------------------------------"
+          print*, "------------------------------"
+          print*, "resetting here!"
+          print*, "------------------------------"
+          print*, "------------------------------"
+          print*, "------------------------------"
+          print*, "matter---", y(IND_MATTER)
+          print*, "radiation---", y(IND_RADN)
+
           !Go back to integration in N
           reheater%int_with_t = .false.
 
           !DEBUG
           reheater%Omega_phi = rho_fields(2)/sum(rho_fields)
+          reheater%Omega_chi = rho_fields(1)/sum(rho_fields)
           !print*, "setting Omega", reheater%Omega_phi
 
 
         end if
 
-        rho_matter = y(IND_MATTER)
+        rho_matter = exp(y(IND_MATTER))
 
         !Save the r_ij values
         call reheater%getr_ij(rho_fields, rho_matter, rho_radn, &
@@ -367,6 +409,7 @@ contains
         end if
 
       end if
+
 
       !DEBUG
       !call csv_write(&
@@ -432,9 +475,9 @@ contains
         atol = 1.0e-14_dp
 
         !if (reheater%evolving_fluids) then
-        !  atol(IND_MATTER) = 1.0e-27
-        !  rtol = 1.e-16_dp
-        !  atol(IND_RADN) = 1.0e-14
+        !  !atol(IND_MATTER) = 1.0e-17
+        !  rtol = 1.e-19_dp
+        !  atol(IND_RADN) = 1.0e-26
         !end if
 
       else if (tech_opt%accuracy_setting==1) then
@@ -2159,6 +2202,7 @@ contains
 
     real(dp) :: x1, x2, h1, hmin, accuracy, hubble
     real(dp), dimension(:), allocatable :: y
+    real(dp), dimension(:), allocatable :: yrad0
 
     integer :: num_constraints
 
@@ -2241,11 +2285,17 @@ contains
     y(IND_EFOLDS) = reheater%efolds_end
 
     !Radiation
-    y(IND_RADN) = 0.0e0_dp
+    y(IND_RADN) = 0.0e0_dp !rho
+    !y(IND_RADN) = -150.0e0_dp !Log rho
+
+    !DEBUG
+    !print*, "dividing out IND_RADN IC"
+    !if (allocated(reheater%y_radn_0)) deallocate(reheater%y_radn_0)
+    !allocate(reheater%y_radn_0(num_inflaton))
+    !reheater%y_radn_0 = (0.5e0_dp*(V_i_sum_sep(y(IND_FIELDS))/2.0)*y(IND_VEL)**2 + V_i_sum_sep(y(IND_FIELDS)))*reheater%Gamma_i/sqrt((V_i_sum_sep(y(IND_FIELDS))/2.0))
 
     !Matter
     y(IND_MATTER) = 0.0e0_dp
-
 
     !Auxiliary constraints
     if (tech_opt%use_dvode_integrator .and. &

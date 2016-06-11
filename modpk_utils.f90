@@ -11,7 +11,7 @@ MODULE modpk_utils
   implicit none
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
   interface rkck
      module procedure rkck_r
@@ -235,9 +235,10 @@ CONTAINS
         end if
       end do
 
-
       !Radn energy density
       rho_radn = y(IND_RADN)
+      !rho_radn = y(IND_RADN)*reheater%y_radn_0
+      !rho_radn = exp(y(IND_RADN))
 
       if (all(osc_count%counter > 0)) then
         !Start evaluating matter fluid separately
@@ -246,19 +247,20 @@ CONTAINS
         yprime(IND_FIELDS) = 0.0_dp
         yprime(IND_VEL) = 0.0_dp
 
-        hubble = sqrt(sum(y(IND_MATTER) + y(IND_RADN))/3.0_dp)
-        rho_fields = y(IND_MATTER)
+        !hubble = sqrt(sum(exp(y(IND_MATTER)) + rho_radn)/3.0_dp)
+        rho_fields = exp(y(IND_MATTER))
+        hubble = sqrt(sum(rho_fields + rho_radn)/3.0_dp)
 
-        !Default choice
         if (reheater%int_with_t) then
           yprime(IND_MATTER) = &
-            -3.0e0_dp*hubble*y(IND_MATTER) &
-            - gamma_*y(IND_MATTER)
+            -3.0e0_dp*hubble &
+            - gamma_
         else
           yprime(IND_MATTER) = &
-            -3.0e0_dp*y(IND_MATTER) &
-            - gamma_*y(IND_MATTER)/hubble
+            -3.0e0_dp &
+            - gamma_/hubble
         end if
+
       else
 
         !Don't evolve matter fluid
@@ -267,7 +269,6 @@ CONTAINS
         !KG equation for fields (close to matter fluid)
         if (reheater%int_with_t) then
           hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn),.true.)
-
           yprime(IND_FIELDS) = delphi
           yprime(IND_VEL) = &
             -(3.0e0_dp*hubble+ gamma_)*delphi - dVdphi(phi)
@@ -287,6 +288,12 @@ CONTAINS
         end if
       end if
 
+      !DEBUG
+      !print*, "this is rho_fields", rho_fields
+      !print*, "this is hubble", hubble
+      !print*, "this is gamma", gamma_
+      !print*, "rad source term", gamma_*rho_fields/hubble
+
       !Radiation
       if (reheater%int_with_t) then
         yprime(IND_RADN) = &
@@ -296,7 +303,19 @@ CONTAINS
         yprime(IND_RADN) = &
           -4.0e0_dp*rho_radn &
           + gamma_*rho_fields/hubble
+          !+ gamma_*rho_fields/hubble/reheater%y_radn_0
       end if
+      !if (reheater%int_with_t) then
+      !  call raise%fatal_code(&
+      !   'Integrating with t is broken right now.', __FILE__, __LINE__)
+      !else
+      !  !Integrate \rho_gamma = e^f - 1
+      !  yprime(IND_RADN) = &
+      !    -4.0_dp + exp(-y(IND_RADN))*gamma_*rho_fields/hubble
+      !end if
+
+      !DEBUG
+      !print*, "this is yprime(IND_RADN)", yprime(IND_RADN)
 
       !Auxiliary constraints
       if (tech_opt%use_dvode_integrator .and. &

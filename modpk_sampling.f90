@@ -14,7 +14,7 @@ module modpk_sampling
   implicit none
 
 !Define some macros for global use
-#include 'modpk_macros.f90'
+#include "modpk_macros.f90"
 
   integer :: ic_sampling
   type :: ic_samp_flags

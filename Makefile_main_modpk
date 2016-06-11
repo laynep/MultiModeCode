@@ -32,7 +32,7 @@ modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o modpk_errorha
 modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorhandling.o
 modpk_sampling.o: modpk_modules.o modpk_potential.o modpk_rng.o modpk_sampling.f90 \
 	modpk_errorhandling.o modpk_io.o modpk_deltaN.o modpk_macros.f90
-modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o modpk_deltaN.o
+modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o modpk_deltaN.o modpk_macros.f90 modpk_sampling.o
 modpk_utils.o: modpk_modules.o modpk_potential.o modpk_sampling.o modpk_utils.f90 \
  	modpk_errorhandling.o modpk_reheat.o modpk_deltaN.o modpk_macros.f90
 modpk_odeint.o:  modpk_modules.o modpk_io.o modpk_io.o modpk_potential.o modpk_sampling.o \
