@@ -236,9 +236,16 @@ CONTAINS
       end do
 
       !Radn energy density
+      !Assuming not using log(rho) as variable
       rho_radn = y(IND_RADN)
-      !rho_radn = y(IND_RADN)*reheater%y_radn_0
-      !rho_radn = exp(y(IND_RADN))
+      !Correct it to log(rho) if you are:
+      do ii=1,size(rho_radn)
+        if (reheater%use_radnfluid_log(ii)) then
+          rho_radn(ii) = exp(rho_radn(ii))
+        !else
+        !  rho_radn(ii) = max(0.0_dp,rho_radn(ii)) !Regularize
+        end if
+      end do
 
       if (all(osc_count%counter > 0)) then
         !Start evaluating matter fluid separately
@@ -296,26 +303,42 @@ CONTAINS
 
       !Radiation
       if (reheater%int_with_t) then
-        yprime(IND_RADN) = &
-          -4.0e0_dp*hubble*rho_radn &
-          + gamma_*rho_fields
+        call raise%fatal_code(&
+         'Integrating with t is broken right now.', __FILE__, __LINE__)
+        !yprime(IND_RADN) = &
+        !  -4.0e0_dp*hubble*rho_radn &
+        !  + gamma_*rho_fields
+
       else
+
+        !Default var is rho_radn
         yprime(IND_RADN) = &
           -4.0e0_dp*rho_radn &
           + gamma_*rho_fields/hubble
-          !+ gamma_*rho_fields/hubble/reheater%y_radn_0
+
+        !Check to see if we should use log(rho) or rho as variable
+        do ii=1,size(rho_radn)
+          if (reheater%use_radnfluid_log(ii)) then
+            yprime(2*num_inflaton+1 + ii) = &
+              -4.0e0_dp &
+              + (gamma_(ii)/hubble)*(rho_fields(ii)/rho_radn(ii))
+          end if
+        end do
       end if
-      !if (reheater%int_with_t) then
-      !  call raise%fatal_code(&
-      !   'Integrating with t is broken right now.', __FILE__, __LINE__)
-      !else
-      !  !Integrate \rho_gamma = e^f - 1
-      !  yprime(IND_RADN) = &
-      !    -4.0_dp + exp(-y(IND_RADN))*gamma_*rho_fields/hubble
-      !end if
+
+      !Regularize the deriv for rho radn
+      do ii=1, num_inflaton
+        if (osc_count%counter(ii)==0) then
+          yprime(2*num_inflaton+1 + ii) = 0.0
+        end if
+      end do
 
       !DEBUG
       !print*, "this is yprime(IND_RADN)", yprime(IND_RADN)
+      !print*, "this is gamma", gamma_
+      !print*, "this is yprime(IND_RADN) #1", -4.0e0_dp*rho_radn
+      !print*, "this is yprime(IND_RADN) #2", gamma_*rho_fields/hubble
+
 
       !Auxiliary constraints
       if (tech_opt%use_dvode_integrator .and. &

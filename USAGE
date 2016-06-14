@@ -11,7 +11,7 @@ we will refer to as multimodecode_source.
 
 Documentation
 -------------
-Some general usage documentation can be found in Appendix B of 1410.XXXX.
+Some general usage documentation can be found in Appendix B of 1410.0685.
 
 
 Compile/Build
@@ -198,7 +198,7 @@ the namespace concept.
 
 ---New mode ICs:
 We set the background and mode initial conditions in the subroutine
-set_background_and_mode_ic in modpk.f90.  See 1410.XXXX for more information
+set_background_and_mode_ic in modpk.f90.  See 1410.0685 for more information
 about the method.  You will need to update these here.
 We find the mode k at which we can initially set the Bunch-Davies initial
 condition for the mode equations in the subroutine set_consistent_BD_scale

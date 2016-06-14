@@ -78,6 +78,9 @@ module modpk_reheat
 
     type(observables) :: observs
 
+    logical, dimension(:), allocatable :: use_radnfluid_log
+    integer, dimension(:), allocatable :: use_radnfluid_counter
+
     !DEBUG
     real(dp) :: Omega_phi, Omega_chi
     logical :: int_with_t
@@ -96,6 +99,7 @@ module modpk_reheat
       procedure, public :: getr_ij => reheat_getr_ij
       procedure, public :: getW_i => reheat_getW_i
       procedure, public :: get_powerspectrum => reheat_get_powerspectrum
+      procedure, public :: check_radnfluid_log => reheat_check_radnfluid_log
 
   end type reheat_state
 
@@ -499,6 +503,12 @@ module modpk_reheat
 
       self%int_with_t = .false.
 
+      if (allocated(self%use_radnfluid_log)) &
+        deallocate(self%use_radnfluid_log)
+
+      if (allocated(self%use_radnfluid_counter)) &
+        deallocate(self%use_radnfluid_counter)
+
     end subroutine reheat_initializer
 
 
@@ -815,9 +825,6 @@ module modpk_reheat
           self%fields_decayed(jj) = .true.
           self%fields_decay_order(jj) = count(self%fields_decayed)
 
-          !DEBUG
-          print*, "This field decayed:", jj
-
         end if
 
       end do
@@ -1106,6 +1113,46 @@ module modpk_reheat
       !stop
 
     end subroutine reheat_get_powerspectrum
+
+
+    !Check to see if we should start integrating the radiation
+    !energy density in terms of log(rho) rather than just rho.
+    subroutine reheat_check_radnfluid_log(self, upcount)
+      class(reheat_state) :: self
+      logical, dimension(:), intent(in) :: upcount
+      integer :: nfields, ii
+
+      nfields = size(upcount)
+
+      !Initialize the logical telling when to use log(rho) as var
+      if (.not. allocated(self%use_radnfluid_log) .or. &
+        size(self%use_radnfluid_log) /= nfields) then
+        allocate(self%use_radnfluid_log(nfields))
+        self%use_radnfluid_log = .false.
+      end if
+
+      !Initialize integers telling me how many times the numerical
+      !integrator has taken a step without using log(rho)
+      if (.not. allocated(self%use_radnfluid_counter) .or. &
+        size(self%use_radnfluid_counter) /= nfields) then
+        allocate(self%use_radnfluid_counter(nfields))
+        self%use_radnfluid_counter = 0
+      end if
+
+      !If we've decided to use log(rho) as var, don't evaluate rest
+      if (all(self%use_radnfluid_log)) return
+
+      do ii=1,nfields
+        if (upcount(ii)) then
+          self%use_radnfluid_counter(ii) = 1 + &
+            self%use_radnfluid_counter(ii)
+        end if
+        if (self%use_radnfluid_counter(ii) > 5) then
+          self%use_radnfluid_log(ii) = .true.
+        end if
+      end do
+
+    end subroutine reheat_check_radnfluid_log
 
     subroutine osc_count_initializer(self, phi)
       class(oscillation_counter) :: self

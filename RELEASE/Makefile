@@ -1,6 +1,6 @@
 #gfortran compile options
 F90C     = gfortran
-FFLAGS = -O3 -funroll-loops -cpp ffast-math -fdefault-real-8
+FFLAGS = -O3 -funroll-loops -cpp -ffast-math -fdefault-real-8
 #FFLAGS = -O0 -cpp -fdefault-real-8
 
 #ifort compile options

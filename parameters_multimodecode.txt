@@ -120,7 +120,7 @@ the smallest mass; others are discarded.
 
   phi_init0 =   11.0 2.0 12.0 12.0 1.0
 
-  vparams(1,:) = -11.0 -13 -12.5 -12 -12.5
+  vparams(1,:) = -10.0 -13 -12.5 -12 -12.5
 
 
 

@@ -287,8 +287,11 @@ contains
         rho_fields, rho_radn, rho_matter
 
       logical :: check_eps
+      logical :: use_fluid_eqns_firsttime, use_fluid_eqns
 
       integer, dimension(:), allocatable :: old_counter
+      logical, dimension(:), allocatable :: upcount
+      logical, dimension(:), allocatable :: used_radnfluid_log_lasttime
       integer :: ii
 
       leave = .false.
@@ -301,12 +304,51 @@ contains
       old_counter = osc_count%counter
       call osc_count%count_oscillations(phi)
 
+      !Check to see if should be integrating the log
+      !of the radiation density (happens a few
+      !steps after turning on Gamma_i)
+      allocate(upcount(size(phi)))
+      do ii=1,size(phi)
+        if (osc_count%counter(ii)>0) then
+          !Now Gamma_i > 0 here
+          upcount(ii) = .true.
+        else
+          upcount(ii) = .false.
+        end if
+      end do
+
+      if (allocated(reheater%use_radnfluid_log)) then
+        used_radnfluid_log_lasttime = reheater%use_radnfluid_log
+      else
+        allocate(used_radnfluid_log_lasttime(size(phi)))
+        used_radnfluid_log_lasttime = .false.
+      end if
+      call reheater%check_radnfluid_log(upcount)
+
+      !If changing variables, then reinitialize integrator and
+      !change variable initial condition
+      do ii=1,size(phi)
+        if (.not. used_radnfluid_log_lasttime(ii) .and. &
+          reheater%use_radnfluid_log(ii)) then
+
+            y(2*num_inflaton+1+ii) = log(y(2*num_inflaton+1+ii))
+            call initialize_dvode()
+
+        end if
+      end do
+
+
+      !Assuming not using log(rho) as variable
       rho_radn = y(IND_RADN)
-      !rho_radn = y(IND_RADN)*reheater%y_radn_0
-      !rho_radn = exp(y(IND_RADN))
+      !Correct it to log(rho) if you are:
+      do ii=1,size(rho_radn)
+        if (reheater%use_radnfluid_log(ii)) then
+          rho_radn(ii) = exp(rho_radn(ii))
+        end if
+      end do
 
       !DEBUG
-      print*, "This is rho radn:", rho_radn
+      !print*, "This is rho radn:", rho_radn
       !print*, "This is y(IND_RADN):", y(IND_RADN)
       !print*, "This is y(IND_MATTER):", y(IND_MATTER)
       !print*, "This is rho_matter:", exp(y(IND_MATTER))
@@ -314,12 +356,12 @@ contains
       !if (y(2*num_inflaton+2)>1e-45) stop 'stopping here'
 
       !DEBUG
-      if (any(rho_radn<0.0_dp)) then
-        print*, "stopping here bc y_radn < 0"
-        print*, "RADN:", rho_radn
-        print*, reheater%getH_with_radn(phi, dphidN, sum(rho_radn)), reheater%gamma_i
-        stop
-      end if
+      !if (any(rho_radn<0.0_dp)) then
+      !  print*, "stopping here bc y_radn < 0"
+      !  print*, "RADN:", rho_radn
+      !  print*, reheater%getH_with_radn(phi, dphidN, sum(rho_radn)), reheater%gamma_i
+      !  stop
+      !end if
 
       !DEBUG
       if (reheater%int_with_t) then
@@ -337,16 +379,23 @@ contains
       !it to start decaying into radiation, which instantaneously
       !gives a source term to the i^th radiation fluid.  Since
       !this happens stiffly, we want to restart the dvode integrator
-      !by giving istate=1
+      !by re-initializing integrator
       do ii=1, num_inflaton
         if (osc_count%counter(ii)>0 .and. old_counter(ii)==0) then
-          istate = 3
+          call initialize_dvode()
         end if
       end do
 
-      if (all(osc_count%counter>0) .or. check_eps) then
+      !Condition to check when we want to activate the "fluid" equations
+      !as opposed to integrating the expensive Klein Gordon equations
 
-        if (.not. all(old_counter>0)) then
+      use_fluid_eqns = all(osc_count%counter>0) .or. check_eps
+      use_fluid_eqns_firsttime = use_fluid_eqns .and. &
+        ( .not. all(old_counter>0))
+
+      if (use_fluid_eqns) then
+
+        if (use_fluid_eqns_firsttime) then
           !Initialize
 
           !Hack for starting Gamma evolution a bit early
@@ -371,19 +420,9 @@ contains
 
           if (tech_opt%use_dvode_integrator) then
             !Reset istate to let integrator know it's a new variable
-            istate=1
+            call initialize_dvode()
+            !istate=1
           end if
-
-          !DEBUG
-          print*, "------------------------------"
-          print*, "------------------------------"
-          print*, "------------------------------"
-          print*, "resetting here!"
-          print*, "------------------------------"
-          print*, "------------------------------"
-          print*, "------------------------------"
-          print*, "matter---", y(IND_MATTER)
-          print*, "radiation---", y(IND_RADN)
 
           !Go back to integration in N
           reheater%int_with_t = .false.
@@ -424,7 +463,7 @@ contains
       !  rho_fields /)   , &
       !  advance=.true.)
 
-    end subroutine
+    end subroutine check_for_reheating
 
     subroutine check_NaN()
 
@@ -463,6 +502,8 @@ contains
 
     subroutine initialize_dvode()
 
+      integer :: ii
+
       neq = size(y)
 
       if (allocated(atol)) deallocate(atol)
@@ -474,11 +515,27 @@ contains
         rtol = 1.e-10_dp
         atol = 1.0e-14_dp
 
-        !if (reheater%evolving_fluids) then
-        !  !atol(IND_MATTER) = 1.0e-17
-        !  rtol = 1.e-19_dp
-        !  atol(IND_RADN) = 1.0e-26
-        !end if
+        if (reheater%evolving_fluids) then
+          rtol = 1.e-12_dp
+          if (allocated(reheater%use_radnfluid_log)) then
+            do ii=1,num_inflaton
+              if( reheater%use_radnfluid_log(ii)) then
+                 atol(2*num_inflaton+1+ii) = 1.0e-32
+              end if
+            end do
+
+            !If guaranteed to be using rho as var, then
+            if (.not. any(reheater%use_radnfluid_log)) then
+              rtol = 1.e-23_dp
+            end if
+
+          end if
+
+
+          !atol(IND_MATTER) = 1.0e-17
+          !rtol = 1.e-23_dp
+          !atol(IND_RADN) = 1.0e-32
+        end if
 
       else if (tech_opt%accuracy_setting==1) then
         rtol = 1.e-6_dp
@@ -2286,13 +2343,6 @@ contains
 
     !Radiation
     y(IND_RADN) = 0.0e0_dp !rho
-    !y(IND_RADN) = -150.0e0_dp !Log rho
-
-    !DEBUG
-    !print*, "dividing out IND_RADN IC"
-    !if (allocated(reheater%y_radn_0)) deallocate(reheater%y_radn_0)
-    !allocate(reheater%y_radn_0(num_inflaton))
-    !reheater%y_radn_0 = (0.5e0_dp*(V_i_sum_sep(y(IND_FIELDS))/2.0)*y(IND_VEL)**2 + V_i_sum_sep(y(IND_FIELDS)))*reheater%Gamma_i/sqrt((V_i_sum_sep(y(IND_FIELDS))/2.0))
 
     !Matter
     y(IND_MATTER) = 0.0e0_dp
