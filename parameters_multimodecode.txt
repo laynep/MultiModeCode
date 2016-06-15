@@ -63,11 +63,12 @@ Parameters to control how the ICs are sampled
   ic_sampling = {1=reg_samp, 2=eqen_samp, 3=slowroll_samp,
   4=fromfile_samp,5=parameter_loop_samp,6=isoN,
   7=param_unif_prior, 8=qsf_random, 9=qsf_parametric}
+  10=fisher_inf, 11=single_axion, 12=iterate_reheat_only}
 
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 1
+  ic_sampling = 12
   numb_samples = 1
 
   energy_scale = 1.0
@@ -118,9 +119,9 @@ the smallest mass; others are discarded.
   dlnk = 0.4
 
 
-  phi_init0 =   11.0 2.0 12.0 12.0 1.0
+  phi_init0 = 10.0 10.0 10.0 10.0 10.0
 
-  vparams(1,:) = -10.0 -13 -12.5 -12 -12.5
+  vparams(1,:) = -11.00 -11.05 -11.10 -11.15 -11.20
 
 
 
@@ -174,6 +175,8 @@ Options for output from the code.
   out_opt%spectra = .false.
   out_opt%modes = .false.
 
+  out_opt%save_reheat = .true.
+
   out_opt%detailed%needmoreopts = .true.
   out_opt%detailed%write_Npiv = .true.
   out_opt%detailed%write_num_inflaton = .true.
@@ -187,7 +190,11 @@ Sets parameters for reheating.
 The reheat model sets the style of reheating that we will use.
   1 = Perturbative reheating a la 1311.3972
 
+The gamma_sampler integer sets the way by which the decay constants
+are sampled.
+
 &reheat
+
   reheat_opts%use_reheat = .true.
   reheat_opts%reheat_model = 1
 

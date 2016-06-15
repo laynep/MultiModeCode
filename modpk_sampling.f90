@@ -29,6 +29,7 @@ module modpk_sampling
     integer :: qsf_parametric = 9
     integer :: fisher_inf = 10
     integer :: single_axion = 11
+    integer :: iterate_reheat_only = 12
   end type
   type(ic_samp_flags) :: ic_flags
 

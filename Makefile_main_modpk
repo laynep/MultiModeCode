@@ -38,7 +38,7 @@ modpk_utils.o: modpk_modules.o modpk_potential.o modpk_sampling.o modpk_utils.f9
 modpk_odeint.o:  modpk_modules.o modpk_io.o modpk_io.o modpk_potential.o modpk_sampling.o \
  	modpk_utils.o dvode_f90_m.o modpk_errorhandling.o modpk_reheat.o modpk_odeint.f90 modpk_modules.f90
 modpk_backgrnd.o: modpk_odeint.o modpk_backgrnd.f90 modpk_errorhandling.o
-modpk.o: modpk_backgrnd.o modpk.f90 modpk_errorhandling.o modpk_macros.f90
+modpk.o: modpk_backgrnd.o modpk.f90 modpk_errorhandling.o modpk_macros.f90 modpk_reheat.o
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
 	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER)  $(LINKFLAGS) -o $@

@@ -19,7 +19,7 @@ MODULE modpk_odeint
      module procedure odeint_c
   end interface
 
-  public :: odeint
+  public :: odeint, reheat_match_to_dNdphi
 
 !Define some macros for global use
 #include "modpk_macros.f90"
@@ -2353,6 +2353,9 @@ contains
       y(IND_CONST_EPS_RADN) = getEps(y(IND_FIELDS), y(IND_VEL))
     end if
 
+    !Save important vals for future use
+    if (ic_sampling /= 12 ) &
+      call reheater%write_to_file()
 
     !Restart oscillation counter
     call osc_count%init(y(IND_FIELDS))

@@ -6,7 +6,7 @@ MODULE access_modpk
   use modpk_errorhandling, only : raise, run_outcome
   implicit none
   private
-  public :: potinit, evolve
+  public :: potinit, evolve, reheat_evolve
 
 ! Number of k values for computing spline of P(k).
 ! Set to lower numbers for smoother potentials.
@@ -442,5 +442,17 @@ contains
       end subroutine get_param_guess
 
   end subroutine evolve
+
+  subroutine reheat_evolve()
+    use modpk_reheat, only : reheater
+    use modpk_odeint, only : reheat_match_to_dNdphi
+
+    !Remove the Gamma_i
+    deallocate(reheater%Gamma_i)
+
+    !Evolve only the post-inflationary reheating scenario
+    call reheat_match_to_dNdphi(reheater)
+
+  end subroutine reheat_evolve
 
 end module access_modpk

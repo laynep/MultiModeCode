@@ -4,7 +4,7 @@ program multimodecode
   use background_evolution
   use modpk_utils
   use camb_interface
-  use access_modpk, only : evolve, potinit
+  use access_modpk, only : evolve, potinit, reheat_evolve
   use internals
   use modpk_sampling
   use modpk_io, only : out_opt
@@ -149,6 +149,12 @@ program multimodecode
     end do
 
     call out_opt%close_files(ICs=.true., SR=use_deltaN_SR)
+
+  else if (ic_sampling == ic_flags%iterate_reheat_only) then
+    !Iterating only over reheating params
+    !requires us to bypass some of the more typical functionality
+
+    call calculate_pk_reheating(k_pivot)
 
   else
     print*, "MODECODE: sampling technique=",ic_sampling
@@ -718,6 +724,77 @@ program multimodecode
       end if
 
     end subroutine calculate_pk_observables
+
+    !Calculate observables when only reheating parameters are being altered
+    !each time this routine is called.  Loads background and mode solutions
+    !from file
+    subroutine calculate_pk_reheating(k_pivot)
+
+      real(dp), intent(in) :: k_pivot
+      real(dp), dimension(:,:), allocatable :: pk_arr
+      logical :: calc_full_pk, leave
+
+      type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
+      type(observables) :: observs, observs_SR
+
+      character(1024) :: cname
+      integer :: ii
+
+      !Get previously tabulated data from file
+      call reheater%load_from_file('out_reheaterfile.csv')
+
+      call observs%set_zero()
+      call observs_SR%set_zero()
+
+      pk_bad = run_outcome%success
+      leave = .false.
+
+      !Don't vary anything else!
+
+      !Evaluate the post reheating epoch
+      call reheat_evolve()
+        call test_bad(pk_bad, observs, leave)
+        if (leave) return
+
+      observs%As = reheater%observs%As
+      observs%ns = reheater%observs%ns
+      observs%r  = reheater%observs%r
+
+      !Write output to stdout
+      if (out_opt%modpkoutput) then
+        if (evaluate_modes) then
+          call output_observables(pk_arr, &
+            calc_full_pk, observs, observs_SR)
+        else
+          call output_observables(pk_arr, &
+            calc_full_pk, observ_SR = observs_SR)
+        end if
+      end if
+
+      !Print output array
+      !Only get the SR arrays if use_deltaN_SR
+      !Only print observs if evaluated modes
+      if (out_opt%output_badic .or. pk_bad==run_outcome%success) then
+
+        if (evaluate_modes) then
+          if (out_opt%first_outsamp) then
+            call observs%print_header(out_opt%outsamp)
+            out_opt%first_outsamp = .false.
+          end if
+          call observs%printout(out_opt%outsamp)
+        end if
+
+        if (use_deltaN_SR) then
+          if (out_opt%first_outsamp_SR) then
+            call observs%print_header(out_opt%outsamp_SR)
+            out_opt%first_outsamp_SR=.false.
+          end if
+          call observs_SR%printout(out_opt%outsamp_SR)
+        end if
+
+      end if
+
+    end subroutine calculate_pk_reheating
 
     !Calculate observables for the power spectrum, as well as fNL, using the
     !delta-N formalism in slow-roll

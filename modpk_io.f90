@@ -31,6 +31,7 @@ module modpk_io
     logical :: spectra
     logical :: modes
     logical :: phi0
+    logical :: save_reheat
 
     !File unit numbers for output
     integer :: trajout
@@ -42,6 +43,7 @@ module modpk_io
     integer :: outsamp_N_iso
     integer :: outsamp_N_iso_SR
     integer, dimension(4) :: modeout
+    integer :: out_reheaterfile
 
     !If first write, then make column headers
     logical :: first_trajout = .true.
@@ -53,6 +55,7 @@ module modpk_io
     logical :: first_outsamp_N_iso = .true.
     logical :: first_outsamp_N_iso_SR = .true.
     logical :: first_modeout = .true.
+    logical :: first_reheatout = .true.
 
     !Writing fmts
     character(16) :: e_fmt = '(a25, 900es12.4)'
@@ -119,6 +122,11 @@ module modpk_io
           file="out_ic_isoN_SR.csv")
       end if
 
+      if (self%save_reheat) then
+        open(newunit=self%out_reheaterfile, &
+          file="out_reheaterfile.csv")
+      end if
+
     end subroutine output_file_open
 
     !Close output files
@@ -149,6 +157,10 @@ module modpk_io
       if (present(SR) .and. SR) then
         close(self%outsamp_SR)
         close(self%outsamp_N_iso_SR)
+      end if
+
+      if (self%save_reheat) then
+        close(self%out_reheaterfile)
       end if
 
     end subroutine output_file_close
