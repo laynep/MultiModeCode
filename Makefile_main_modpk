@@ -11,6 +11,7 @@ MODPKOBJ = dvode_f90_m.o \
 					 modpk_errorhandling.o \
 					 modpk_io.o \
 					 modpk_modules.o modpk_numerics.o \
+					 modpk_observables.o \
 					 modpk_qsf.o modpk_rng.o \
 					 modpk_reheat.o \
   				 modpk_potential.o modpk_sampling.o \
@@ -25,20 +26,21 @@ csv_file.o: csv_file.f90 csv_file_1d.f90 csv_file_2d.f90
 modpk_io.o: modpk_io.f90 csv_file.o
 modpk_errorhandling.o: modpk_errorhandling.f90 modpk_io.o
 modpk_modules.o: modpk_modules.f90 csv_file.o modpk_io.o modpk_errorhandling.o
+modpk_observables.o: modpk_observables.f90 modpk_io.o modpk_errorhandling.o csv_file.o
 modpk_rng.o: modpk_modules.o modpk_rng.f90 modpk_errorhandling.o
 modpk_numerics.o: modpk_numerics.f90 modpk_modules.o modpk_errorhandling.o
 modpk_qsf.o: modpk_qsf.f90 modpk_modules.o modpk_numerics.o modpk_errorhandling.o
-modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o modpk_errorhandling.o modpk_macros.f90
-modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorhandling.o
+modpk_potential.o: modpk_modules.o modpk_potential.f90 modpk_qsf.o modpk_errorhandling.o modpk_macros.f90 modpk_observables.o
+modpk_deltaN.o: modpk_deltaN.f90 modpk_modules.o modpk_potential.o modpk_errorhandling.o modpk_observables.o
 modpk_sampling.o: modpk_modules.o modpk_potential.o modpk_rng.o modpk_sampling.f90 \
 	modpk_errorhandling.o modpk_io.o modpk_deltaN.o modpk_macros.f90
-modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o modpk_deltaN.o modpk_macros.f90 modpk_sampling.o
+modpk_reheat.o: modpk_reheat.f90 modpk_errorhandling.o modpk_modules.o modpk_potential.o modpk_deltaN.o modpk_macros.f90 modpk_sampling.o modpk_observables.o
 modpk_utils.o: modpk_modules.o modpk_potential.o modpk_sampling.o modpk_utils.f90 \
  	modpk_errorhandling.o modpk_reheat.o modpk_deltaN.o modpk_macros.f90
 modpk_odeint.o:  modpk_modules.o modpk_io.o modpk_io.o modpk_potential.o modpk_sampling.o \
- 	modpk_utils.o dvode_f90_m.o modpk_errorhandling.o modpk_reheat.o modpk_odeint.f90 modpk_modules.f90
-modpk_backgrnd.o: modpk_odeint.o modpk_backgrnd.f90 modpk_errorhandling.o
-modpk.o: modpk_backgrnd.o modpk.f90 modpk_errorhandling.o modpk_macros.f90 modpk_reheat.o
+ 	modpk_utils.o dvode_f90_m.o modpk_errorhandling.o modpk_reheat.o modpk_odeint.f90 modpk_modules.f90 modpk_observables.o
+modpk_backgrnd.o: modpk_odeint.o modpk_backgrnd.f90 modpk_errorhandling.o modpk_observables.o
+modpk.o: modpk_backgrnd.o modpk.f90 modpk_errorhandling.o modpk_macros.f90 modpk_reheat.o modpk_observables.o
 
 powspec : $(MODPKOBJ) $(PKDRIVER)
 	$(F90C) $(F90FLAGS) $(MODPKOBJ) $(PKDRIVER)  $(LINKFLAGS) -o $@

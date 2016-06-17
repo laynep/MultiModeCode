@@ -133,6 +133,7 @@ module modpk_io
     subroutine output_file_close(self,ICs,SR)
       class(print_options) :: self
       logical, intent(in), optional :: ICs, SR
+      logical :: file_open
 
       if (self%save_traj) &
         close(self%trajout)
@@ -160,7 +161,9 @@ module modpk_io
       end if
 
       if (self%save_reheat) then
-        close(self%out_reheaterfile)
+        inquire(unit=out_opt%out_reheaterfile,opened=file_open)
+        if (file_open) &
+          close(self%out_reheaterfile)
       end if
 
     end subroutine output_file_close

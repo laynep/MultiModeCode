@@ -564,6 +564,9 @@ module modpk_reheat
         print*, "This is Gamma_i", self%Gamma_i
         print*, "This is H_end", self%H_end
 
+        auxparams(1) = A_var
+        auxparams(2) = B_var
+
       else if (reheat_opts%gamma_sampler == reheat_opts%uniform) then
 
         allocate(rand(num_inflaton))
@@ -582,7 +585,7 @@ module modpk_reheat
           !R_min = 1e-4_dp
           !R_max = 1e-2_dp
 
-          R_min = 1e-3_dp
+          R_min = 1e-6_dp
           R_max = 1e2_dp
 
           call random_number(R_ratio)
@@ -592,7 +595,7 @@ module modpk_reheat
 
           !R_ratio = 1.01
           !R_ratio = 1.0e-4
-          R_ratio = 0.10545737E+02
+          !R_ratio = 0.10545737E+02
 
 
           !DEBUG
@@ -623,7 +626,8 @@ module modpk_reheat
           __FILE__, __LINE__)
       end if
 
-
+      !Save the Gamma_i in the last row of vparams
+      vparams(size(vparams,1),1:num_inflaton) = self%Gamma_i(1:num_inflaton)
 
     end subroutine reheat_get_Gamma
 
@@ -1021,13 +1025,13 @@ module modpk_reheat
         sum_term = sum_term + &
           self%eta_horizcross(ii,jj)*dN(ii)*dN(jj)
       end do; end do
-      print*, "this is R, r, ns:", self%Gamma_i(1)/self%Gamma_i(2), &
-        self%pk%tensor/self%pk%adiab, &
-      !print*, "this is r, ns:", 8.0/sum(dN**2), &
-        1.0e0_dp&
-        -2.0e0_dp*self%eps_horizcross &
-        -(2.0e0_dp/sum(dN**2))*&
-        (1.0e0_dp -  sum_term)
+      !print*, "this is R, r, ns:", self%Gamma_i(1)/self%Gamma_i(2), &
+      !  self%pk%tensor/self%pk%adiab, &
+      !!print*, "this is r, ns:", 8.0/sum(dN**2), &
+      !  1.0e0_dp&
+      !  -2.0e0_dp*self%eps_horizcross &
+      !  -(2.0e0_dp/sum(dN**2))*&
+      !  (1.0e0_dp -  sum_term)
 
       call self%observs%set_zero()
       self%observs%As = self%pk%adiab
@@ -1133,15 +1137,21 @@ module modpk_reheat
     end subroutine osc_count_count_oscillations
 
     !Routine to load the reheater object from a file
-    subroutine reheat_load_from_file(self,fname)
+    subroutine reheat_load_from_file(self,fname,firsttime)
       class(reheat_state) :: self
+      logical, intent(in) :: firsttime
       character(*), intent(in) :: fname
       character(5), parameter :: lform='(1L3)', iform='(I10)'
       character(13), parameter :: rform = '(50000G20.12)'
 
+      logical :: file_open
+
       !Load the reheater object from this file
-      open(newunit=out_opt%out_reheaterfile,file=fname, &
-        status='old',action='read')
+      inquire(unit=out_opt%out_reheaterfile,opened=file_open)
+      if (.not. file_open) then
+        open(newunit=out_opt%out_reheaterfile,file=fname, &
+          status='old',action='read')
+      end if
 
       read(out_opt%out_reheaterfile,lform), self%reheating_phase
       read(out_opt%out_reheaterfile,lform), self%inflation_ended
@@ -1239,6 +1249,8 @@ module modpk_reheat
       read(out_opt%out_reheaterfile,rform), self%pk_hc%press_ad
       read(out_opt%out_reheaterfile,rform), self%pk_hc%entropy
       read(out_opt%out_reheaterfile,rform), self%pk_hc%bundle_exp_scalar
+
+      close(out_opt%out_reheaterfile)
 
       contains
 

@@ -154,7 +154,26 @@ program multimodecode
     !Iterating only over reheating params
     !requires us to bypass some of the more typical functionality
 
-    call calculate_pk_reheating(k_pivot)
+    call out_opt%open_files(ICs=.true.)
+
+    do sample_looper=1,numb_samples
+
+      if (out_opt%modpkoutput) write(*,*) &
+        "---------------------------------------------"
+      if (out_opt%modpkoutput) write(*,*) &
+        "Sample numb", sample_looper, "of", numb_samples
+      if (out_opt%modpkoutput) write(*,*) &
+        "---------------------------------------------"
+
+      if (sample_looper==1) then
+        call calculate_pk_reheating(k_pivot,firsttime=.true.)
+      else
+        call calculate_pk_reheating(k_pivot,firsttime=.false.)
+      end if
+
+    end do
+
+    call out_opt%close_files(ICs=.true.)
 
   else
     print*, "MODECODE: sampling technique=",ic_sampling
@@ -186,6 +205,9 @@ program multimodecode
         status="old", delim = "apostrophe")
       read(unit=u, nml=full_pk)
       close(u)
+
+      !DEBUG
+      print*, "testing calc_full_pk", calc_full_pk
 
       !If don't want full spectrum, return
       if (.not. calc_full_pk) return
@@ -438,6 +460,7 @@ program multimodecode
       write(*, out_opt%e2_fmt)&
         "Slow-roll tau_NL =", observ_modes%tau_NL, &
         '(>', ((6.0/5.0)*observ_modes%f_NL)**2, ')'
+
 
       if (calc_full_pk .and. evaluate_modes) then
 
@@ -728,11 +751,12 @@ program multimodecode
     !Calculate observables when only reheating parameters are being altered
     !each time this routine is called.  Loads background and mode solutions
     !from file
-    subroutine calculate_pk_reheating(k_pivot)
+    subroutine calculate_pk_reheating(k_pivot,firsttime)
 
       real(dp), intent(in) :: k_pivot
       real(dp), dimension(:,:), allocatable :: pk_arr
       logical :: calc_full_pk, leave
+      logical, intent(in) :: firsttime
 
       type(power_spectra) :: pk0, pk1, pk2, pk3, pk4
       type(observables) :: observs, observs_SR
@@ -741,13 +765,15 @@ program multimodecode
       integer :: ii
 
       !Get previously tabulated data from file
-      call reheater%load_from_file('out_reheaterfile.csv')
+      call reheater%load_from_file('out_reheaterfile.csv',firsttime)
 
       call observs%set_zero()
       call observs_SR%set_zero()
 
       pk_bad = run_outcome%success
       leave = .false.
+
+      calc_full_pk = .false.
 
       !Don't vary anything else!
 
@@ -771,10 +797,12 @@ program multimodecode
         end if
       end if
 
+
       !Print output array
       !Only get the SR arrays if use_deltaN_SR
       !Only print observs if evaluated modes
       if (out_opt%output_badic .or. pk_bad==run_outcome%success) then
+
 
         if (evaluate_modes) then
           if (out_opt%first_outsamp) then

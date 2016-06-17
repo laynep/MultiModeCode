@@ -6,10 +6,10 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 5
+  num_inflaton = 2
 
-  potential_choice = 1
-  vparam_rows = 1
+  potential_choice = 21
+  vparam_rows = 3
   more_potential_params = .false.
 
   slowroll_infl_end = .false.
@@ -69,7 +69,7 @@ Parameters to control how the ICs are sampled
 
 &ic_sampling_nml
   ic_sampling = 12
-  numb_samples = 1
+  numb_samples = 100
 
   energy_scale = 1.0
 
@@ -96,9 +96,9 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
 
   use_first_priorval = .true.
 
-  vp_prior_min(1,:) = -12
+  vp_prior_min(1,:) = -14
 
-  vp_prior_max(1,:) = -10
+  vp_prior_max(1,:) = -12
 
   varying_N_pivot = .false.
 
@@ -114,14 +114,17 @@ NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 55.0
+  N_pivot = 57.2
   k_pivot = 0.002
   dlnk = 0.4
 
 
-  phi_init0 = 10.0 10.0 10.0 10.0 10.0
+  phi_init0 =   17.0 0.49924
 
-  vparams(1,:) = -11.00 -11.05 -11.10 -11.15 -11.20
+  vparams(1,1) = 1e-12
+  vparams(1,2) = 0.485865135232383
+  vparams(2,1) = 1.0
+  vparams(2,2) = 1.0
 
 
 
@@ -164,7 +167,7 @@ Options for output from the code.
 
 &print_out
 
-  out_opt%modpkoutput = .true.
+  out_opt%modpkoutput = .false.
   out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
@@ -180,7 +183,7 @@ Options for output from the code.
   out_opt%detailed%needmoreopts = .true.
   out_opt%detailed%write_Npiv = .true.
   out_opt%detailed%write_num_inflaton = .true.
-  out_opt%detailed%write_vparams = .false.
+  out_opt%detailed%write_vparams = .true.
   out_opt%detailed%write_auxparams = .true.
 /
 
@@ -198,8 +201,9 @@ are sampled.
   reheat_opts%use_reheat = .true.
   reheat_opts%reheat_model = 1
 
-  reheat_opts%gamma_sampler = 2
+  reheat_opts%gamma_sampler = 1
 /
+  reheat_opts%gamma_sampler = 2
 
 ----------------
 Advanced options for technical features.
