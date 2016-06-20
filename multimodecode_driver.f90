@@ -637,6 +637,9 @@ program multimodecode
           call test_bad(pk_bad, observs, leave)
           if (leave) return
 
+      !DEBUG
+      print*, "debugging here 4"
+
         if (reheat_opts%use_reheat) then
           !Set observables from the sudden decay calculation
           observs%As = reheater%observs%As
