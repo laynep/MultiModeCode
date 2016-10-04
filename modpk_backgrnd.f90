@@ -576,7 +576,8 @@ CONTAINS
             dv = 0e0_dp
             bb = 0e0_dp
 
-            if (potential_choice==1 .or. potential_choice==21) then
+            if (potential_choice==1 .or. potential_choice==21 &
+              .or. potential_choice==19) then
               alpha_e = lna(nactual_bg)
               V_end = vv(nactual_bg)
               phi_infl_end = phiarr(:,nactual_bg)

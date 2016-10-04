@@ -214,7 +214,20 @@ module modpk_reheat
 
         !Calculate the average of the C_ij during reheating period
         !Necessary for the Meyers-Tarrant matching
-        !call average_cij(real(c_ij,dp))
+        call average_cij(real(c_ij,dp))
+
+        if (out_opt%save_cij) then
+          !DEBUG
+          print*, "writing c_ij to file"
+          call csv_write(&
+            out_opt%out_cij,&
+            (/efolds, real(c_ij) /), &
+            advance=.true.)
+          call csv_write(&
+            out_opt%out_cij_avg,&
+            (/efolds, self%c_ij_avg /), &
+            advance=.true.)
+        end if
 
         !To check
         !pk_zeta=0e0_dp
@@ -330,6 +343,13 @@ module modpk_reheat
         self%c_ij_avg = 0.5e0_dp*(self%c_ij_max + self%c_ij_min)
 
         !DEBUG
+        !print*, "using stupid c_ij_avg"
+        !Don't try averaging anything, just use the value
+        !of c_ij as is as a rough guess
+        !self%c_ij_avg = c_ij
+
+        !DEBUG
+        !print*, "writing c_ij_avg to file 6"
         !call csv_write(&
         !  6,&
         !  (/efolds, c_ij, self%c_ij_avg /), &
@@ -555,7 +575,16 @@ module modpk_reheat
         A_var = 10.0**rand(1)
         B_var = rand(2)
 
-        m2_V = 10.e0_dp**(vparams(1,:))
+        if (potential_choice==1) then
+          m2_V = 10.e0_dp**(vparams(1,:))
+        else if (potential_choice==19) then
+          m2_V = 4.e0_dp*(vparams(1,:)**2)*(vparams(2,:)**4)
+        else
+          call raise%fatal_code(&
+            'This sampling technique for gamma currently only works &
+            for potential_choice={1,19}.', &
+            __FILE__, __LINE__)
+        end if
 
 
         self%Gamma_i(:) = A_var * self%H_end * sqrt(m2_V/maxval(m2_V))**B_var
@@ -1025,13 +1054,25 @@ module modpk_reheat
         sum_term = sum_term + &
           self%eta_horizcross(ii,jj)*dN(ii)*dN(jj)
       end do; end do
-      !print*, "this is R, r, ns:", self%Gamma_i(1)/self%Gamma_i(2), &
-      !  self%pk%tensor/self%pk%adiab, &
-      !!print*, "this is r, ns:", 8.0/sum(dN**2), &
-      !  1.0e0_dp&
-      !  -2.0e0_dp*self%eps_horizcross &
-      !  -(2.0e0_dp/sum(dN**2))*&
-      !  (1.0e0_dp -  sum_term)
+      print*, "this is R, r, ns:", self%Gamma_i(1)/self%Gamma_i(2), &
+        self%pk%tensor/self%pk%adiab, &
+      !print*, "this is r, ns:", 8.0/sum(dN**2), &
+        1.0e0_dp&
+        -2.0e0_dp*self%eps_horizcross &
+        -(2.0e0_dp/sum(dN**2))*&
+        (1.0e0_dp -  sum_term)
+
+      !DEBUG
+      print*, "this is tensor:",self%pk%tensor
+      print*, "this is adiab", self%pk%adiab
+      print*, "this is tensor_hc:",self%pk_hc%tensor
+      print*, "this is adiab_hc", self%pk_hc%adiab
+      print*, "this is eps_hc", self%eps_horizcross
+      print*, "this is dN", dN
+      print*, "this is sum(dN**2)", sum(dN**2)
+      print*, "this is W_i", self%W_i
+      print*, "this is sum W_i", sum(self%W_i)
+      !print*, "this is cij", self%c_ij_avg
 
       call self%observs%set_zero()
       self%observs%As = self%pk%adiab
@@ -1123,12 +1164,32 @@ module modpk_reheat
       integer :: ii
       integer :: sign_phi, sign_last
 
+      real(dp), dimension(size(phi)) :: phi_min
+
+      if (potential_choice==1) then
+        phi_min = 0.0_dp
+      else if (potential_choice==19) then
+        phi_min = vparams(1,:)
+      else
+        call raise%fatal_code(&
+          'Need to specify the minimum of the potential here.', &
+          __FILE__, __LINE__)
+      end if
+
       do ii=1,size(phi)
-        sign_phi = int(phi(ii)/abs(phi(ii)))
-        sign_last = int(osc_count%last_position(ii)/abs(osc_count%last_position(ii)))
-        if (sign_phi /= sign_last ) then
-          osc_count%counter(ii) =osc_count%counter(ii)+1
+        if ((phi(ii) > phi_min(ii) .and. &
+          osc_count%last_position(ii) < phi_min(ii)) .or. &
+          (phi(ii) < phi_min(ii) .and. &
+          osc_count%last_position(ii) > phi_min(ii)) .or. &
+          (phi(ii) > -phi_min(ii) .and. &
+          osc_count%last_position(ii) < -phi_min(ii)) .or. &
+          (phi(ii) < -phi_min(ii) .and. &
+          osc_count%last_position(ii) > -phi_min(ii))) then
+
+            osc_count%counter(ii) =osc_count%counter(ii)+1
+
         end if
+
       end do
 
       !Save latest field-space position

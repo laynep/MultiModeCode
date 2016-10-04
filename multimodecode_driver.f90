@@ -350,7 +350,7 @@ program multimodecode
 
       if (.not. out_opt%output_reduced) then
         do i=1,size(vparams,1)
-          print*, "vparams", vparams(i,:)
+          print*, "vparams =", vparams(i,:)
         end do
       end if
 
@@ -636,9 +636,6 @@ program multimodecode
         call evolve(k_pivot, pk0)
           call test_bad(pk_bad, observs, leave)
           if (leave) return
-
-      !DEBUG
-      print*, "debugging here 4"
 
         if (reheat_opts%use_reheat) then
           !Set observables from the sudden decay calculation

@@ -300,6 +300,7 @@ CONTAINS
       !print*, "this is hubble", hubble
       !print*, "this is gamma", gamma_
       !print*, "rad source term", gamma_*rho_fields/hubble
+      !print*, "this is epsilon", getEps(y(IND_FIELDS),y(IND_VEL))
 
       !Radiation
       if (reheater%int_with_t) then
@@ -319,8 +320,7 @@ CONTAINS
         !Check to see if we should use log(rho) or rho as variable
         do ii=1,size(rho_radn)
           if (reheater%use_radnfluid_log(ii)) then
-            yprime(2*num_inflaton+1 + ii) = &
-              -4.0e0_dp &
+            yprime(2*num_inflaton+1 + ii) = -4.0e0_dp &
               + (gamma_(ii)/hubble)*(rho_fields(ii)/rho_radn(ii))
           end if
         end do
@@ -352,6 +352,11 @@ CONTAINS
       yprime(IND_EFOLDS) = hubble !Useless for e-folds
 
 
+      !DEBUG
+      !print*, "this is velocities:", y(IND_VEL)
+      !print*, "this is dvelocities:", yprime(IND_VEL)
+
+
     else
 
       !Normal
@@ -364,6 +369,9 @@ CONTAINS
       yprime(IND_VEL) = &
         -((3.0e0_dp+dhubble/hubble)*delphi+&
         dVdphi(phi)/hubble/hubble)
+
+      !Enforce slow roll
+      !yprime(IND_FIELDS) = -dVdphi(phi)/3.0/hubble/hubble
 
       !Auxiliary constraints
       if (tech_opt%use_dvode_integrator .and. &

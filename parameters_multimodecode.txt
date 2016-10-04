@@ -6,9 +6,9 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 100
+  num_inflaton = 20
 
-  potential_choice = 1
+  potential_choice = 19
   vparam_rows = 2
   more_potential_params = .false.
 
@@ -23,9 +23,9 @@ sum-separable potentials.  The horizon crossing approximation (HCA)
 ignores the contributions from the end of inflation surface.
 
 &analytical
-  use_deltaN_SR = .false.
+  use_deltaN_SR = .true.
   use_horiz_cross_approx = .false.
-  evaluate_modes = .true.
+  evaluate_modes = .false.
   get_runningofrunning = .false.
 /
 
@@ -103,8 +103,8 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
   varying_N_pivot = .false.
 
   numb_auxparams = 2
-  prior_auxparams_min(:) = -2. -1.0
-  prior_auxparams_max(:) = -2. 2.0
+  prior_auxparams_min(:) = -2. 1.0
+  prior_auxparams_max(:) = -2. 1.0
 
 /
 
@@ -118,15 +118,17 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
+  phi_init0 = 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20
 
-  phi_init0 = 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5 2.5
 
+ vparams(1,:) = 1.e-2          1.05263158e-2  1.10526316e-2  1.15789474e-2  1.21052632e-2 1.26315789e-2  1.31578947e-2  1.36842105e-2  1.42105263e-2  1.47368421e-2 1.52631579e-2  1.57894737e-2  1.63157895e-2  1.68421053e-2  1.73684211e-2 1.78947368e-2  1.84210526e-2  1.89473684e-2  1.94736842e-2  2.e-2
+ vparams(2,:) = 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0
 
- vparams(1,:) = -12.         -11.97959184 -11.95918367 -11.93877551 -11.91836735 -11.89795918 -11.87755102 -11.85714286 -11.83673469 -11.81632653 -11.79591837 -11.7755102 -11.75510204 -11.73469388 -11.71428571 -11.69387755 -11.67346939 -11.65306122 -11.63265306 -11.6122449 -11.59183673 -11.57142857 -11.55102041 -11.53061224 -11.51020408 -11.48979592 -11.46938776 -11.44897959 -11.42857143 -11.40816327 -11.3877551  -11.36734694 -11.34693878 -11.32653061 -11.30612245 -11.28571429 -11.26530612 -11.24489796 -11.2244898  -11.20408163 -11.18367347 -11.16326531 -11.14285714 -11.12244898 -11.10204082 -11.08163265 -11.06122449 -11.04081633 -11.02040816 -11.
 
 
 
 /
+  phi_init0 = 1.00000000e-02   1.51415778e-02   2.28694209e-02 3.44630167e-02   5.18266554e-02   7.77913530e-02 1.16561420e-01   1.74374472e-01   2.60476206e-01 3.88559080e-01   5.78884292e-01   8.61409702e-01 1.28039785e+00   1.90120066e+00   2.82024381e+00 4.17971210e+00   6.18913895e+00   9.15713098e+00 1.35379650e+01   2.00000000e+01
   N_pivot = 64.5
 
   phi_init0 =   16.6 0.4999
@@ -176,7 +178,7 @@ Options for output from the code.
   out_opt%spectra = .false.
   out_opt%modes = .false.
 
-  out_opt%save_reheat = .true.
+  out_opt%save_reheat = .false.
 
   out_opt%detailed%needmoreopts = .true.
   out_opt%detailed%write_Npiv = .true.
@@ -219,7 +221,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%automate_singlefield_ic = .false.
 
   tech_opt%accuracy_setting = 2
-  tech_opt%use_dvode_integrator = .false.
+  tech_opt%use_dvode_integrator = .true.
   tech_opt%use_ode_constraints = .false.
 
   tech_opt%use_analytical_jacobian = .false.

@@ -66,5 +66,6 @@ cleanoutput:
 	-rm out_ic_eqen_SR.csv
 	-rm out_ic_isoN.csv
 	-rm out_ic_isoN_SR.csv
-	-rm out_reheater.csv
+	#-rm out_reheaterfile.csv
+	-rm out_pk.csv
 	-rm gmon.out

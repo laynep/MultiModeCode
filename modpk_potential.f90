@@ -73,6 +73,8 @@ contains
     real(dp), dimension(size(phi),size(phi)) :: B_ij
     integer :: ii, jj
 
+    real(dp), dimension(size(phi)) :: lambda_i, mu_i
+
     !Make sure that vparams is set up properly
     if (.not. allocated(vparams)) then
       call raise%fatal_code(&
@@ -398,14 +400,16 @@ contains
 
       call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
-      V0=vparams(2,1)
-      m2_V=vparams(1,:)
+      mu_i=vparams(1,:)
+      !lambda_i=vparams(2,:)
+      m2_V = vparams(1,:)
+
+      lambda_i=m2_V/4.0e0_dp/mu_i**2
 
       V_potential=0e0_dp
       do ii=1,size(phi) !Not necessarily num_inflaton
         V_potential = V_potential +&
-          (V0/num_inflaton) +&
-          0.5e0_dp*m2_V(ii)*phi(ii)**2
+          (lambda_i(ii)**4)*(phi(ii)**2 - mu_i(ii)**2)**2
       end do
 
     case(20)
@@ -498,6 +502,7 @@ contains
     integer :: alpha, beta
 
     real(dp) :: W0, mass, f_decay, lambda_ax
+    real(dp), dimension(size(phi)) :: lambda_i, mu_i
 
     if (vnderivs) then
        ! MULTIFIELD
@@ -735,11 +740,16 @@ contains
 
          call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
-         V0=vparams(2,1)
-         m2_V=vparams(1,:)
+         mu_i=vparams(1,:)
+         !lambda_i=vparams(2,:)
+         m2_V = vparams(1,:)
 
+         lambda_i=m2_V/4.0e0_dp/mu_i**2
+
+         first_deriv = 0.0_dp
          do ii=1,size(phi) !Not necessarily num_inflaton
-           first_deriv(ii) = m2_V(ii)*phi(ii)
+           first_deriv(ii) = (4.0_dp*(lambda_i(ii))**4)*&
+             (phi(ii)**2 - mu_i(ii)**2)*phi(ii)
          end do
 
         case(20)
@@ -850,6 +860,8 @@ contains
     integer :: alpha, beta
 
     real(dp) :: W0, mass, f_decay, lambda_ax
+
+    real(dp), dimension(size(phi)) :: lambda_i, mu_i
 
     if (vnderivs) then
        !MULTIFIELD
@@ -1183,12 +1195,17 @@ contains
 
           call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
 
-          V0=vparams(2,1)
-          m2_V=vparams(1,:)
+          mu_i=vparams(1,:)
+          !lambda_i=vparams(2,:)
+          m2_V = vparams(1,:)
+
+          lambda_i=m2_V/4.0e0_dp/mu_i**2
 
           second_deriv=0e0_dp
           do ii=1,size(phi) !Not necessarily num_inflaton
-            second_deriv(ii,ii) = m2_V(ii)
+            second_deriv(ii,ii) = &
+              4.0_dp*(lambda_i(ii)**4)*&
+              (3.0_dp*phi(ii)**2 - mu_i(ii)**2)
           end do
 
         case(20)
@@ -1264,6 +1281,8 @@ contains
 
     real(dp) :: W0, mass, f_decay, lambda_ax
 
+    real(dp), dimension(size(phi)) :: lambda_i, mu_i
+
     third_deriv = 0e0_dp
 
     select case(potential_choice)
@@ -1315,6 +1334,20 @@ contains
       do ii=1,size(phi)
         third_deriv(ii,ii,ii) = (p_exp-2.0e0_dp)*(p_exp-1.0e0_dp)*&
           m2_V(ii)*abs(phi(ii))**(p_exp-3.0e0_dp)
+      end do
+
+    case(19)
+      ! Saddle point N-quadratic
+
+      call assert%check(size(vparams,1)>=2,__FILE__,__LINE__)
+
+      mu_i=vparams(1,:)
+      lambda_i=vparams(2,:)
+
+      third_deriv = 0e0_dp
+      do ii=1,size(phi) !Not necessarily num_inflaton
+        third_deriv(ii,ii,ii) = &
+          24.0_dp*(lambda_i(ii)**4)*phi(ii)
       end do
 
     case(20)

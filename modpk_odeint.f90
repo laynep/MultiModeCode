@@ -2347,6 +2347,7 @@ contains
     !Matter
     y(IND_MATTER) = 0.0e0_dp
 
+
     !Auxiliary constraints
     if (tech_opt%use_dvode_integrator .and. &
       tech_opt%use_ode_constraints) then

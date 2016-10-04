@@ -32,6 +32,7 @@ module modpk_io
     logical :: modes
     logical :: phi0
     logical :: save_reheat
+    logical :: save_cij
 
     !File unit numbers for output
     integer :: trajout
@@ -44,6 +45,8 @@ module modpk_io
     integer :: outsamp_N_iso_SR
     integer, dimension(4) :: modeout
     integer :: out_reheaterfile
+    integer :: out_cij
+    integer :: out_cij_avg
 
     !If first write, then make column headers
     logical :: first_trajout = .true.
@@ -127,6 +130,13 @@ module modpk_io
           file="out_reheaterfile.csv")
       end if
 
+      if (self%save_cij) then
+        open(newunit=self%out_cij, &
+          file="out_cij.csv")
+        open(newunit=self%out_cij_avg, &
+          file="out_cij_avg.csv")
+      end if
+
     end subroutine output_file_open
 
     !Close output files
@@ -164,6 +174,15 @@ module modpk_io
         inquire(unit=out_opt%out_reheaterfile,opened=file_open)
         if (file_open) &
           close(self%out_reheaterfile)
+      end if
+
+      if (self%save_cij) then
+        inquire(unit=out_opt%out_cij,opened=file_open)
+        if (file_open) &
+          close(self%out_cij)
+        inquire(unit=out_opt%out_cij_avg,opened=file_open)
+        if (file_open) &
+          close(self%out_cij_avg)
       end if
 
     end subroutine output_file_close
