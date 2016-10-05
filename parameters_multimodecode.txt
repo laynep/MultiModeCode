@@ -9,10 +9,10 @@ Set potential and its derivatives in modpk_potential.f90
   num_inflaton = 20
 
   potential_choice = 19
-  vparam_rows = 2
+  vparam_rows = 3
   more_potential_params = .false.
 
-  slowroll_infl_end = .true.
+  slowroll_infl_end = .false.
   instreheat = .false.
 /
 
@@ -23,9 +23,9 @@ sum-separable potentials.  The horizon crossing approximation (HCA)
 ignores the contributions from the end of inflation surface.
 
 &analytical
-  use_deltaN_SR = .true.
+  use_deltaN_SR = .false.
   use_horiz_cross_approx = .false.
-  evaluate_modes = .false.
+  evaluate_modes = .true.
   get_runningofrunning = .false.
 /
 
@@ -103,8 +103,8 @@ param_sampling are {1=reg_constant, 2=unif_prior, 3=log_prior, 4=num_QSF, 5=MarP
   varying_N_pivot = .false.
 
   numb_auxparams = 2
-  prior_auxparams_min(:) = -2. 1.0
-  prior_auxparams_max(:) = -2. 1.0
+  prior_auxparams_min(:) = -2. 0.0
+  prior_auxparams_max(:) = -2. 0.0
 
 /
 
@@ -118,17 +118,17 @@ the smallest mass; others are discarded.
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 = 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20 1e-20
 
+  phi_init0 = 1.00000000e-02   1.51415778e-02   2.28694209e-02 3.44630167e-02   5.18266554e-02   7.77913530e-02 1.16561420e-01   1.74374472e-01   2.60476206e-01 3.88559080e-01   5.78884292e-01   8.61409702e-01 1.28039785e+00   1.90120066e+00   2.82024381e+00 4.17971210e+00   6.18913895e+00   9.15713098e+00 1.35379650e+01   2.00000000e+01
 
- vparams(1,:) = 1.e-2          1.05263158e-2  1.10526316e-2  1.15789474e-2  1.21052632e-2 1.26315789e-2  1.31578947e-2  1.36842105e-2  1.42105263e-2  1.47368421e-2 1.52631579e-2  1.57894737e-2  1.63157895e-2  1.68421053e-2  1.73684211e-2 1.78947368e-2  1.84210526e-2  1.89473684e-2  1.94736842e-2  2.e-2
- vparams(2,:) = 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0 1.0e0
+ vparams(1,:) = 1.          1.05263158  1.10526316  1.15789474  1.21052632 1.26315789  1.31578947  1.36842105  1.42105263  1.47368421 1.52631579  1.57894737  1.63157895  1.68421053  1.73684211 1.78947368  1.84210526  1.89473684  1.94736842  2.        
+ vparams(2,:) = 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3 1.0e-3
 
 
 
 
 /
-  phi_init0 = 1.00000000e-02   1.51415778e-02   2.28694209e-02 3.44630167e-02   5.18266554e-02   7.77913530e-02 1.16561420e-01   1.74374472e-01   2.60476206e-01 3.88559080e-01   5.78884292e-01   8.61409702e-01 1.28039785e+00   1.90120066e+00   2.82024381e+00 4.17971210e+00   6.18913895e+00   9.15713098e+00 1.35379650e+01   2.00000000e+01
+  phi_init0 = 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3 1e-3
   N_pivot = 64.5
 
   phi_init0 =   16.6 0.4999
@@ -178,7 +178,8 @@ Options for output from the code.
   out_opt%spectra = .false.
   out_opt%modes = .false.
 
-  out_opt%save_reheat = .false.
+  out_opt%save_reheat = .true.
+  out_opt%save_cij = .true.
 
   out_opt%detailed%needmoreopts = .true.
   out_opt%detailed%write_Npiv = .true.
@@ -198,7 +199,7 @@ are sampled.
 
 &reheat
 
-  reheat_opts%use_reheat = .false.
+  reheat_opts%use_reheat = .true.
   reheat_opts%reheat_model = 1
 
   reheat_opts%gamma_sampler = 2
