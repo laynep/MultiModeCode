@@ -36,12 +36,12 @@ fundamentals.c = 1.0
 #----------------------------------------------------------------
 #################################################################
 reheater = collections.namedtuple('reheater',('phi_infl_end',
-											  'dphi_infl_end',
-											  'c_ij_avg',
-											  'Gamma_i',
-											  'efolds_end',
-											  'h_end',
-											  'vparams'))
+					      'dphi_infl_end',
+					      'c_ij_avg',
+					      'Gamma_i',
+					      'efolds_end',
+					      'h_end',
+					      'vparams'))
 
 #################################################################
 #---part 1.1.1---------------------------------------------------
@@ -244,7 +244,7 @@ def	get_vparams(reheater,evolve_with_N):
 	#vparams_priors_min[1,:] = -20.0*np.ones(inflaton_number)
 	#vparams_priors_max[1,:] = -10.0*np.ones(inflaton_number)
 	#
-	#reheater.vparams = np.empty((2,inflaton_number),dtype=float)
+	reheater.vparams = np.empty((2,inflaton_number),dtype=float)
 	#for i in range(0,2):
 	#	for j in range(0,inflaton_number):
 	#		reheater.vparams[i,j]=((vparams_priors_max[i,j]-
