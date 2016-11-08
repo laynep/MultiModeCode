@@ -1,11 +1,11 @@
 ####################################################################
 ####################################################################
 ####################################################################
-################									################
-################	      REHEATING CODE			################
-################									################
-################	  .(very) draft version.		################
-################									################
+################			  	    ################
+################	      REHEATING CODE        ################
+################				    ################
+################	  .(very) draft version.    ################
+################				    ################
 ####################################################################
 ####################################################################
 ####################################################################
@@ -615,51 +615,6 @@ def reheating_checks(reheat,evolve,oc,y):
 		#############################################################
 		for j in range(0,inflaton_number):
 			if evolve.save_decay[j]:
-				
-				#############################################################
-				#
-				#	Calculate the decayed energy density (radiation)
-				#	and not decayed energy density (matter)
-				#
-				#############################################################
-				#rho_decayed		= 0.0
-				#rho_not_decayed	= 0.0
-				#for i in range(0,inflaton_number):
-				#	if evolve.fields_decayed[i] :
-				#		rho_decayed = (rho_decayed + evolve.rho_matter_decay[i,j]
-				#					   + evolve.rho_radn_decay[i,j])
-				#	else :
-				#		rho_not_decayed = (rho_not_decayed + evolve.rho_matter_decay[i,j]
-				#						   + evolve.rho_radn_decay[i,j])
-				#print "rho_decayed = " , rho_decayed
-				#print "sum(rho_radn)    = " , np.sum(evolve.rho_radn)
-				#print "rho_not_decayed = " , rho_not_decayed
-				#print "sum(rho_matter) = " , np.sum(evolve.rho_matter)
-				#
-				#############################################################
-				#
-				#	Suspect there is something wrong with this equation!
-				#
-				#############################################################
-				#evolve.r_ij[:,j] = 3.0*(evolve.rho_matter_decay[:,j]
-				#					 + evolve.rho_radn_decay[:,j]
-				#					 ) / (4.0*rho_decayed + 3.0*rho_not_decayed)
-				#############################################################
-				#evolve.r_ij[:,j] = ((3.0*(evolve.rho_radn_decay[:,j]+evolve.rho_matter_decay[:,j]))
-				#					/np.sum( 4.0*(evolve.rho_radn_decay[:,j] +
-				#								  evolve.rho_matter_decay[:,j])*evolve.fields_decayed[j] +
-				#							 3.0*(evolve.rho_radn_decay[:,j]*(evolve.fields_decayed==False) +
-				#								  evolve.rho_matter_decay[:,j])))
-				#
-				#evolve.r_ij[:,j] = (3.0 * (evolve.rho_radn_decay[:,j] + evolve.rho_matter_decay[:,j]) /
-				#					np.sum( 4.0*evolve.rho_radn_decay[:,j] + 3.0*evolve.rho_matter_decay[:,j]))
-				#
-				#evolve.r_ij[:,j] = (3.0*(evolve.rho_radn_decay[:,j] * evolve.fields_decayed +
-				#						 evolve.rho_matter_decay[:,j] * (evolve.fields_decayed == False)) /
-				#					(3.0*np.sum(evolve.rho_radn_decay[:,j])
-				#						+4.0*np.sum(evolve.rho_matter_decay[:,j])))
-				#############################################################
-
 				
 				evolve.r_ij[:,j] = (3.0*(evolve.rho_radn_decay[:,j] + evolve.rho_matter_decay[:,j])
 									/np.sum(4.0*(evolve.rho_radn_decay[:,j] +
