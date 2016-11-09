@@ -39,6 +39,9 @@ reheater = collections.namedtuple('reheater',('phi_infl_end',
 					      'dphi_infl_end',
 					      'c_ij_avg',
 					      'Gamma_i',
+					      'eps_pivot',
+					      'eta_pivot',
+					      'P_inf_end',
 					      'efolds_end',
 					      'h_end',
 					      'vparams'))
@@ -77,6 +80,11 @@ evolve_with_N = collections.namedtuple('evolve_with_N',('phi',
 							'save_decay',
 							'r_ij',
 							'W_i',
+							'dN_i',
+							'n_s',
+							'r_T',
+							'eta_ij',
+							'P_Xi',
 							'h_end',
 							'x_1',
 							'x_2',
@@ -134,16 +142,30 @@ def reheat_getdH_with_radn(reheater,evolve):
 	dhubble = numer/denom
 	return dhubble;
 
-def getEps(evolve_with_N):
+def getEta(vparams,phi):
+	eta = np.zeros((inflaton_number,inflaton_number),dtype='float')
+	############################################################
+	#
+	#	\eta_ij = d(m2_V_i\phi_i)/dphi_j = diag(m2_V)_ij
+	#
+	############################################################
+	m2_V = 10.0**vparams
+	V = potential(vparams,phi)
+	print "\sum potential ", V
+	for i in range(0,inflaton_number):
+		eta[i,i] = m2_V[i] / V
+	return eta
+
+def getEps(dphidN):
 	############################################################
 	#
 	#	\eps = 1/2 * M_pl^2 * (dphi/dN)\cdot(dphi/dN)
 	#
 	############################################################
-	eps = 0.5*(fundamentals.M_pl)**2*np.dot(evolve_with_N.dphidN,evolve_with_N.dphidN)
+	eps = 0.5*(1.0)**2*np.dot(dphidN,dphidN)
 	return eps;
 
-def potential(reheater,evolve):
+def potential(vparams,phi):
 	############################################################
 	#Random sampling for mass values in MODECODE is as follows:
 	#!Some inspiration for these priors from 1112.0326
@@ -168,8 +190,8 @@ def potential(reheater,evolve):
 	#	V = 1/2 * \sum( m_i^2 * \phi_i^2 )
 	#
 	############################################################
-	m2_V = 10.0**reheater.vparams[0,:]
-	V_potential = 0.5*np.sum(m2_V*evolve.phi**2)
+	m2_V = 10.0**vparams
+	V_potential = 0.5*np.sum(m2_V*phi**2)
 	return V_potential;
 
 ################################################################
@@ -188,7 +210,7 @@ def V_i_sum_sep(evolve_with_N):
 	#vrows = size(vparams,1)
 	#
 	#allocate(vparams_temp(size(vparams,1), size(vparams,2)))
-    #vparams_temp = vparams
+    	#vparams_temp = vparams
 	#
 	#do jj=1,size(phi)
 	#deallocate(vparams)
@@ -284,7 +306,7 @@ def calc_derivs(y,x,evolve,oc):
 	evolve.phi = y[index_phi] #define index_phi = 0:inflation
 	evolve.dphidN = y[index_dphi]
 
-	evolve.eps = getEps(evolve)
+	evolve.eps = getEps(evolve.dphidN)
 	#############################################################
 	#						STABILITY CHECK
 	#				check for eps --> 3.0 since in eqn
@@ -467,9 +489,8 @@ def reheating_checks(reheat,evolve,oc,y):
 	use_fluid_equations = False
 	use_fluid_equations_first_time = False
 
-	# if not all the counters are >0  ...
 	if np.any(last_counter == 0) :
-		check_eps = getEps(evolve) > 2.9
+		check_eps = getEps(evolve.dphidN) > 2.9
 
 	if (np.all(oc.counter > 2) or check_eps or max_Gamma > 1.2*evolve.hubble):
 		use_fluid_equations = True
@@ -483,15 +504,8 @@ def reheating_checks(reheat,evolve,oc,y):
 	#############################################################
 	if ( use_fluid_equations ):
 		if ( use_fluid_equations_first_time ):
-			#############################################################
-			#
-			# 	Trick to hack epsilon stability and also for large \Gamma_i!
-			#	Will make so that this won't be necessery.
-			#
-			#############################################################
-			
 			if ( check_eps or max_Gamma > 1.2*evolve.hubble):
-				oc.counter		= oc.counter + 2
+				oc.counter = oc.counter + 2 # ~Hack~ if have to decay quite early.
 
 			#############################################################
 			#
@@ -499,18 +513,19 @@ def reheating_checks(reheat,evolve,oc,y):
 			#	\rho_\phi = 0.5 * H**2 *(dphi/dN)**2 + V(\phi_i)
 			#
 			#############################################################
-			evolve.hubble		= reheat_getH_with_radn(reheater,evolve)
-			evolve.rho_fields	= 0.5*(evolve.hubble*evolve.dphidN)**2+V_i_sum_sep(evolve)
+			evolve.hubble = reheat_getH_with_radn(reheater,evolve)
+			evolve.rho_fields = 0.5*(evolve.hubble*evolve.dphidN)**2+V_i_sum_sep(evolve)
 
 			#############################################################
 			#
 			#	Begin evolving the scalar sector as matter fluid with \Gamma coupled to radiation fluid
 			#
 			#############################################################
-			y[index_matter]		= np.log(evolve.rho_fields) #matter
-			evolve.rho_matter	= evolve.rho_fields
+			y[index_matter] = np.log(evolve.rho_fields)
+			evolve.rho_matter = evolve.rho_fields
 
 			use_fluid_equations_first_time = False
+
 
 		oc.last_counter = oc.counter
 		#################################################################
@@ -518,7 +533,9 @@ def reheating_checks(reheat,evolve,oc,y):
 		#-------------------SUDDEN DECAY APPROXIMATION-------------------
 		#----------------------------------------------------------------
 		#################################################################
+
 		evolve.hubble = np.sqrt(np.sum(evolve.rho_matter) + np.sum(evolve.rho_radn)/3.0)
+
 		#############################################################
 		#
 		#	Initialize temp. parameters and only use \rho_matter rather than \rho_fields
@@ -556,31 +573,19 @@ def reheating_checks(reheat,evolve,oc,y):
 					rho_matrix[:,0] = evolve.rho_matter_temp
 					rho_matrix[:,1] = evolve.rho_matter
 
-					print "hubble vector = " , hubble_vector
-					print "gamma [ ", j ,"] " , evolve.gamma[j]
-
-					print "rho_matter_temp = " , evolve.rho_matter_temp
-					print "rho_matter = " , evolve.rho_matter
-
 					for k in range(0,inflaton_number):
 						evolve.rho_matter_decay[k,j] = interpolate.barycentric_interpolate(hubble_vector,
 																						   rho_matrix[k,:],
 																						   evolve.gamma[j])
 					
-					print "rho_matter_decay(",j,") = ",	evolve.rho_matter_decay[:,j]
-					
 					rho_matrix[:,0] = evolve.rho_radn_temp
 					rho_matrix[:,1] = evolve.rho_radn
 					
-					print "rho_radn_temp = " , evolve.rho_radn_temp
-					print "rho_radn = " , evolve.rho_radn
-
 
 					for k in range(0,inflaton_number):
 						evolve.rho_radn_decay[k,j] = interpolate.barycentric_interpolate(hubble_vector,
 																						 rho_matrix[k,:],
 																						evolve.gamma[j])
-					print "rho_radn_decay(",j,") = ",	evolve.rho_radn_decay[:,j]
 					
 					#############################################################
 					#
@@ -591,10 +596,10 @@ def reheating_checks(reheat,evolve,oc,y):
 					#			for the following evolution of the matter fluid eqns.
 					#
 					#############################################################
-					evolve.rho_radn[j]		 = evolve.rho_radn[j] + evolve.rho_matter[j]
-					y[2*inflaton_number+1+j] = evolve.rho_radn[j]
-					evolve.rho_matter[j]	 = 0.0
-					y[3*inflaton_number+1+j] = 0.0
+					evolve.rho_radn[j]		= evolve.rho_radn[j] + evolve.rho_matter[j]
+					y[2*inflaton_number+1+j]= evolve.rho_radn[j]
+					evolve.rho_matter[j]	= 0.0
+					y[3*inflaton_number+1+j]= 0.0
 																						
 
 
@@ -617,14 +622,14 @@ def reheating_checks(reheat,evolve,oc,y):
 			if evolve.save_decay[j]:
 				
 				evolve.r_ij[:,j] = (3.0*(evolve.rho_radn_decay[:,j] + evolve.rho_matter_decay[:,j])
-									/np.sum(4.0*(evolve.rho_radn_decay[:,j] +
-												 evolve.rho_matter_decay[:,j])*(evolve.fields_decayed) +
-											3.0*(evolve.rho_radn_decay[:,j] +
-												 evolve.rho_matter_decay[:,j])*(evolve.fields_decayed == False)))
-												 
+									 /np.sum(4.0*(evolve.rho_radn_decay[:,j] +
+												  evolve.rho_matter_decay[:,j])*(evolve.fields_decayed) +
+											 3.0*(evolve.rho_radn_decay[:,j] +
+												  evolve.rho_matter_decay[:,j])*(evolve.fields_decayed == False)))
 				
 				evolve.fields_decayed[j]	 = True
 				evolve.fields_decay_order[j] = np.count_nonzero(evolve.fields_decayed)
+
 
 		evolve.not_decayed = np.nonzero(evolve.fields_decayed == False)
 		#############################################################
@@ -643,6 +648,7 @@ def reheating_checks(reheat,evolve,oc,y):
 		evolve.rho_matter = np.zeros(inflaton_number,dtype='float')
 		evolve.rho_matter[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
 
+
 		#############################################################
 		#
 		#	If all fields have decayed, calculate the W_i and leave.
@@ -650,9 +656,6 @@ def reheating_checks(reheat,evolve,oc,y):
 		#############################################################
 		if all(evolve.fields_decayed) and evolve.flag_down:
 			
-			for i in range(0,inflaton_number):
-				for j in range(0,inflaton_number):
-					print "evolve r_",i,j," =", evolve.r_ij[i,j]
 			#############################################################
 			#
 			#	At this point the fields are ordered w.r.t. how they take position in the
@@ -669,12 +672,7 @@ def reheating_checks(reheat,evolve,oc,y):
 				for j in range(0,inflaton_number):
 					r_ij_proper[(evolve.fields_decay_order[i]-1),
 								(evolve.fields_decay_order[j]-1)] = evolve.r_ij[i,j]
-					print "r_proper[",(evolve.fields_decay_order[i]-1),",",(evolve.fields_decay_order[j]-1),"]=r_[",i,",",j,"]"
-			
 
-			print "evolve r_proper_ij" , r_ij_proper
-			print "sum(r_ij) = " , np.sum(evolve.r_ij)
-			print "sum(r_ij_proper) = " , np.sum(r_ij_proper)
 			#############################################################
 			#
 			#	Calculate the a vector as defined in the paper. (check)
@@ -688,16 +686,15 @@ def reheating_checks(reheat,evolve,oc,y):
 				for k in range(0,j):
 					a_sum	= a_sum + a_vector[k]*r_ij_proper[(inflaton_number-1)-j,(inflaton_number-1)-k]
 				a_vector[j] = a_sum / 3.0
-			print "a_vector = ", a_vector
-			print "sum(a_vector) = " , np.sum(a_vector)
+
 			#############################################################
 			#
 			#	Calculate the W_i as defined in the paper. (check)
 			#
 			#############################################################
-			for i in range(0,inflaton_number):
+			for i in range(0,inflaton_number): #	CORRECT THIS
 				W_sum	= 0.0
-				for j in range(0,inflaton_number):
+				for j in range(0,inflaton_number): #	CORRECT THIS
 					W_sum  = W_sum + a_vector[j] * r_ij_proper[i,(inflaton_number-1)-j]
 				evolve.W_i[i] = W_sum
 
@@ -708,50 +705,119 @@ def reheating_checks(reheat,evolve,oc,y):
 			#############################################################
 			W_temp = evolve.W_i
 			for i in range(0,inflaton_number):
-				evolve.W_i[evolve.fields_decay_order[i]-1] = W_temp[i]
-
-			#############################################################
-			#
-			#					TODO: POWERSPECTRUM
-			#
-			#############################################################
-
-
+				evolve.W_i = W_temp[index_range]
+			print gamma_sorted_index
 			evolve.flag_down = False
 			#############################################################
 			#
 			#	Leave iterating the field equations since all the fields have decayed.
 			#
 			#############################################################
+			#	evolve.remain = False # <---- INSTEAD, WILL GO (Nefold->0-10) ON A WHILE FOR PLOTTING PURPOSES.
+
+			#################################################################
+			#---ADDED SINCE--------------------------------------------------
+			#-----------------------ADDED TO THE PART BELOW------------------
+			#----------------------------------------------------------------
+			#################################################################
+			#
+			#############################################################
+			#
+			#	Calculating the power spectrum and other observables of interest.
+			#
+			#############################################################
+
+			#############################################################
+			#
+			#	Following also Ewan's & Layne's notes
+			#
+			#	Xi_i(t_N,x) = \sum_i^N W_i * Xi_i(t_osc,x)
+			#	Xi(t_N,x) = \sum_i^N N_,i(t_N) * dphi_i(t_*,x)
+			#	N_,i(t_N) = \sum_j^N W_j * C_ji(t_osc)
+			#
+			#	Observables are then:
+			#	 P_Xi  = P_* \sum_i^N (N_,i)^2
+			#	 n_Xi - 1  = -2 eps_* - 2/( \sum_i (N_,i)^2 )
+			#				* [ 1 - \sum_ij eta*_ij N_,i N_,j ]
+			#	r_T  = 8 P_* / P_Xi
+			#
+			#############################################################
+			#
+			#	In the code: N_,i  = evolve.dN_i[:]
+			#		  eta*_ij  = reheat.eta_end_inf
+			#		 eps_*	   = reheat.eps_end_inf
+			#		   k^3P_Xi = evolve.P_Xi
+			#		    k^3P_* = reheat.P_inf_end
+			#
+			#############################################################
+
+			for i in range(0,inflaton_number):
+				evolve.dN_i[i] = np.sum( evolve.W_i[:] * reheat.c_ij_avg[i,:] )
+
+			dN2_sum		= np.sum(evolve.dN_i**2)
+			evolve.P_Xi	= reheat.P_inf_end * dN2_sum
+
+			print "dN**2 = " , dN2_sum
+
+			sum_Neta = 0.0
+			for i in range(0,inflaton_number):
+				for j in range(0,inflaton_number):
+					sum_Neta = sum_Neta + reheat.eta_pivot[i,j]*evolve.dN_i[i]*evolve.dN_i[j]
+
+			print " sum_Neta = " , sum_Neta
+
+			evolve.n_s = 1.0 -  2.0 * reheat.eps_pivot - (2.0 / dN2_sum) * (1.0 - sum_Neta )
+			evolve.r_T = 8.0 * reheat.P_inf_end / evolve.P_Xi
+
+			print "evolve.dN_i = " , evolve.dN_i
+			print "evolve.n_s  = " , evolve.n_s
+			print "evolve.r_T  = " , evolve.r_T
+
+
+
 
 #################################################################
 #---part 1.2-----------------------------------------------------
 #--------Take multimodecode data from end of inflation-----------
 #----------------------------------------------------------------
 #################################################################
-#!!!!!!!!!!!!!!!!!!!MUCH TO IMPROVE HERE!!!!!!!!!!!!!!!!!!!!!!!!!
-reheat_IC_data_file		= np.loadtxt('out_reheaterfile.txt')
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
+reheat_IC_data_file	= np.loadtxt('out_reheaterfile.txt')
 reheater.phi_infl_end	= reheat_IC_data_file[0]
 reheater.dphi_infl_end	= reheat_IC_data_file[1]
-reheater.Gamma_i		= reheat_IC_data_file[2]
-reheater.h_end			= reheater.Gamma_i[0]*100.0
-#reheater.Gamma_i 		= reheater.Gamma_i*(reheater.vparams[0,:]**4)#+np.random.random(inflaton_number)*0.0001376
-reheater.c_ij_avg		= reheat_IC_data_file[3::]
-reheater.efolds_end		= 91.690  #	example value from MultiModeCode run
+reheater.Gamma_i	= reheat_IC_data_file[2]
+#reheater.Gamma_i	= reheater.Gamma_i*(reheater.vparams[0,:]**4)#+np.random.random(inflaton_number)*0.0001376
+reheater.c_ij_avg	= np.transpose(reheat_IC_data_file[3::])
+#reheater.c_ij_avg	= reheat_IC_data_file[3::]
+reheater.efolds_end 	= 91.690
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
 
-inflaton_number			= reheater.phi_infl_end.size
+inflaton_number = reheater.phi_infl_end.size
 
-index_phi				= np.array(range(0,inflaton_number))
-index_dphi				= np.array(range(inflaton_number,2*inflaton_number))
-index_radn				= np.array(range((2*inflaton_number+1),(3*inflaton_number+1)))
-index_matter			= np.array(range((3*inflaton_number+1),(4*inflaton_number+1)))
-index_hubble			= 2*inflaton_number
+#################################################################
+#	Was here in case if had to fix for Fortran matrix format.
+#print "reheater.c_ij_avg before : " , reheater.c_ij_avg
+#reheater.c_ij_avg = np.reshape(reheater.c_ij_avg,
+#							   (inflaton_number,inflaton_number),
+#							   order='F')
+#print "reheater.c_ij_avg after : " , reheater.c_ij_avg
+#################################################################
 
-aux_constaints			= 0
+index_phi	= np.array(range(0,inflaton_number))
+index_dphi	= np.array(range(inflaton_number,2*inflaton_number))
+index_radn	= np.array(range((2*inflaton_number+1),(3*inflaton_number+1)))
+index_matter	= np.array(range((3*inflaton_number+1),(4*inflaton_number+1)))
+index_hubble	= 2*inflaton_number
 
-y		= np.empty(inflaton_number + inflaton_number + 1 +
+aux_constaints = 0
+
+
+y 	= np.empty(inflaton_number + inflaton_number + 1 +
 			 inflaton_number + inflaton_number + aux_constaints, dtype=float)
 y_init	= np.empty(y.size,dtype=float)
+
 
 # Setting up the integration bounds in N
 evolve_with_N.x_1 = reheater.efolds_end
@@ -767,149 +833,162 @@ evolve_with_N.flag_down = True
 #				Initializing sudden decay parameters
 #
 #################################################################
-evolve_with_N.fields_decayed		= np.zeros(inflaton_number,dtype=bool)
-evolve_with_N.fields_decay_order	= np.zeros(inflaton_number, dtype=np.int)
-evolve_with_N.rho_radn_decay		= np.zeros((inflaton_number,inflaton_number),dtype='float')
-evolve_with_N.rho_matter_decay		= np.zeros((inflaton_number,inflaton_number),dtype='float')
-evolve_with_N.r_ij					= np.zeros((inflaton_number,inflaton_number),dtype='float')
-evolve_with_N.rho_radn_temp			= np.zeros(inflaton_number,dtype='float')
-evolve_with_N.W_i					= np.zeros(inflaton_number,dtype='float')
-evolve_with_N.rho_matter_temp		= np.zeros(inflaton_number,dtype='float')
-evolve_with_N.save_decay			= np.zeros(inflaton_number,dtype=bool)
-evolve_with_N.hubble_temp			= 0.0
+evolve_with_N.fields_decayed	 = np.zeros(inflaton_number,dtype=bool)
+evolve_with_N.fields_decay_order = np.zeros(inflaton_number, dtype=np.int)
+evolve_with_N.rho_radn_decay	 = np.zeros((inflaton_number,inflaton_number),dtype='float')
+evolve_with_N.rho_matter_decay   = np.zeros((inflaton_number,inflaton_number),dtype='float')
+evolve_with_N.r_ij		 = np.zeros((inflaton_number,inflaton_number),dtype='float')
+evolve_with_N.rho_radn_temp	 = np.zeros(inflaton_number,dtype='float')
+evolve_with_N.W_i		 = np.zeros(inflaton_number,dtype='float')
+evolve_with_N.rho_matter_temp	 = np.zeros(inflaton_number,dtype='float')
+evolve_with_N.save_decay	 = np.zeros(inflaton_number,dtype=bool)
+evolve_with_N.hubble_temp	 = 0.0
+#################################################################
+#---ADDED SINCE--------------------------------------------------
+#----------------------ADDED TO THE PARTS BELOW------------------
+#----------------------------------------------------------------
+#################################################################
+evolve_with_N.dN_i = np.zeros(inflaton_number,dtype='float')
 
-oscillation_counter.last_counter	= np.zeros(inflaton_number,dtype=np.int)
-oscillation_counter.init_count		= np.zeros(inflaton_number,dtype=np.int)
-oscillation_counter.counter			= np.zeros(inflaton_number,dtype=np.int)
-oscillation_counter.total_osc		= np.zeros(inflaton_number,dtype=np.int)
-oscillation_counter.last_position	= reheater.phi_infl_end
+oscillation_counter.last_counter   = np.zeros(inflaton_number,dtype=np.int)
+oscillation_counter.init_count	   = np.zeros(inflaton_number,dtype=np.int)
+oscillation_counter.counter	   = np.zeros(inflaton_number,dtype=np.int)
+oscillation_counter.total_osc	   = np.zeros(inflaton_number,dtype=np.int)
+oscillation_counter.last_position  = reheater.phi_infl_end
 
-evolve_with_N.gamma					= np.zeros(inflaton_number,dtype='float')
-evolve_with_N.rho_radn				= np.zeros(inflaton_number,dtype='float')
-evolve_with_N.rho_matter			= np.zeros(inflaton_number,dtype='float')
+evolve_with_N.gamma	 = np.zeros(inflaton_number,dtype='float')
+evolve_with_N.rho_radn	 = np.zeros(inflaton_number,dtype='float')
+evolve_with_N.rho_matter = np.zeros(inflaton_number,dtype='float')
 
 get_vparams(reheater,evolve_with_N)
 
-nsteps = 0
+nsteps	= 0
 maxstep = 10000
 
-x_init = reheater.efolds_end
-x = np.array([x_init,x_init+0.001])
+x_init	= reheater.efolds_end
+x	= np.array([x_init,x_init+0.001])
+
+reheater.Gamma_i = reheater.Gamma_i/(reheater.vparams[0,:]+(4-3.0*np.random.random(inflaton_number)))**3
+index_range	 = np.zeros(inflaton_number,dtype='int')
+gamma_sorted_index = reheater.Gamma_i.argsort()
+
 
 #################################################################
 #
-#				Randomizing decay constants for experimenting
+#			Sorting the reheating fields with respect to \Gamma
 #
 #################################################################
-reheater.Gamma_i		= reheater.Gamma_i/(reheater.vparams[0,:]+(4-3.0*np.random.random(inflaton_number)))**3
-print reheater.Gamma_i
 
-gamma_sorted_index		= reheater.Gamma_i.argsort()
-reheater.phi_infl_end	=reheater.phi_infl_end[gamma_sorted_index[::-1]]
-reheater.dphi_infl_end	= reheater.dphi_infl_end[gamma_sorted_index[::-1]]
-reheater.Gamma_i		= reheater.Gamma_i[gamma_sorted_index[::-1]]
-reheater.vparams[0,:]	= reheater.vparams[0,gamma_sorted_index[::-1]]
+for i in range(0,inflaton_number):
+	intval = gamma_sorted_index[::-1][i]
+	index_range[intval] = i
 
-print gamma_sorted_index[::-1]
+reheater.phi_infl_end  =reheater.phi_infl_end[gamma_sorted_index[::-1]]
+reheater.dphi_infl_end = reheater.dphi_infl_end[gamma_sorted_index[::-1]]
+reheater.Gamma_i       = reheater.Gamma_i[gamma_sorted_index[::-1]]
+reheater.vparams[0,:]  = reheater.vparams[0,gamma_sorted_index[::-1]]
+
+#################################################################
+#print "gamma_sorted_index[::-1] = " , gamma_sorted_index[::-1]
+#print "index_range = " , index_range
+#print "reheater after = " , reheater.phi_infl_end
+#reheater.phi_infl_end = reheater.phi_infl_end[index_range]
+#print "reheater backagain = " , reheater.phi_infl_end
+#reheater.phi_infl_end =reheater.phi_infl_end[gamma_sorted_index]
+#################################################################
 
 max_Gamma = np.amax(reheater.Gamma_i)
 
-#################################################################
-#
-#				Initializing the parameters with the values at the end of inflation
-#
-#################################################################
-evolve_with_N.phi		= reheater.phi_infl_end
+evolve_with_N.phi	= reheater.phi_infl_end
 evolve_with_N.dphidN	= reheater.dphi_infl_end
 evolve_with_N.hubble	= reheat_getH_with_radn(reheater,evolve_with_N)
 evolve_with_N.rho_radn	= np.zeros(inflaton_number,dtype='float')
 evolve_with_N.rho_matter= np.zeros(inflaton_number,dtype='float')
+#evolve_with_N.hubble	= reheater.Gamma_i[0]*100.0
 
-y_init[index_phi]		= reheater.phi_infl_end
-y_init[index_dphi]		= reheater.dphi_infl_end
+y_init[index_phi]	= reheater.phi_infl_end
+y_init[index_dphi]	= reheater.dphi_infl_end
 y_init[index_hubble]	= reheat_getH_with_radn(reheater,evolve_with_N)
-y_init[index_radn]		= evolve_with_N.rho_radn #radiation
+y_init[index_radn]	= evolve_with_N.rho_radn #radiation
 y_init[index_matter]	= evolve_with_N.rho_matter #matter
 
 y = y_init
 
 #################################################################
-#y_file			 = open('y_data_reheating_largersep.txt', 		  'w')
-#y_prime_file	 = open('y_prime_data_reheating_largersep.txt',	  'w')
-#rho_fields_file = open('rho_fields_data_reheating_largersep.txt','w')
-#rho_matter_file = open('rho_matter_data_reheating_largersep.txt','w')
-#hubble_file	 = open('hubble_data_reheating_largersep.txt',	  'w')
+#---ADDED SINCE--------------------------------------------------
+#-----------------------ADDED THE PART BELOW---------------------
+#----------------------------------------------------------------
 #################################################################
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
+############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
+reheater.phi_pivot =  np.array([9.34740E-03,  1.40309E-02,  2.09848E-02,  3.12745E-02,  4.64468E-02,  6.87384E-02,  1.01367E-01,  1.48939E-01,  2.18005E-01,  3.17826E-01,  4.61395E-01,  6.66790E-01,  9.58920E-01,  1.37174E+00,  1.95096E+00,  2.75718E+00,  3.86935E+00,  5.38822E+00,  7.43900E+00,  1.01724E+01])
+reheater.phi_pivot = reheater.phi_pivot[gamma_sorted_index[::-1]]
+
+reheater.eps_pivot = getEps(0)
+reheater.eta_pivot = getEta(reheater.vparams[0,:],reheater.phi_pivot)
+reheater.P_inf_end = evolve_with_N.hubble**2/4.0*math.pi**2
+
+#####################  PRINTING THE DATA   #####################
+#	y_file			= open('y_data_reheating_largersep.txt','w')
+#	y_prime_file	= open('y_prime_data_reheating_largersep.txt','w')
+#	rho_fields_file = open('rho_fields_data_reheating_largersep.txt','w')
+#	rho_matter_file = open('rho_matter_data_reheating_largersep.txt','w')
+#	hubble_file		= open('hubble_data_reheating_largersep.txt','w')
+################################################################
 
 #################################################################
 #---part 2-------------------------------------------------------
 #-----------------------PERTURBATIVE REHEATING-------------------
 #----------------------------------------------------------------
 #################################################################
+
 while ( nsteps < maxstep and evolve_with_N.remain ):
 
 	#############################################################
-	#						REHEATING CHECKS
-	#					(has to be incorporated)
-	#					using 'oscillation counters'
-	#			decide whether to use matter fluid description
-	#			or the KG equations. etc.
+	#		REHEATING CHECKS
+	#	(has to be incorporated)
+	#	using 'oscillation counters'
+	#	decide whether to use matter fluid description
+	#	or the KG equations. etc.
 	#############################################################
 	
 	reheating_checks(reheater,
-					 evolve_with_N,
-					 oscillation_counter,
-					 y)
+			 evolve_with_N,
+			 oscillation_counter,
+			 y)
 					 
 	#############################################################
 	#
-	#			Check whether cacl_derivs gives an OK result!
+	#	check whether cacl_derivs gives an OK result!
 	#
-	#						Havent yet done this!
-	#
-	#			CALLING DERIVS OUTSIDE! THIS MIGHT INDEED BE AN ISSUE!
+	#		havent yet done this!
 	#
 	#############################################################
 	y_prime_test = calc_derivs(y,x,evolve_with_N,
-							   oscillation_counter)
-							   
+				   oscillation_counter)
+
 	y = odeint(calc_derivs, y, x, args=(evolve_with_N,
-										oscillation_counter))[1,:]
-
-	#################################################################
-	#
-	#				Writing data files for plotting
-	#
-	#################################################################
-	#np.savetxt(y_file, y ,delimiter=',',newline="\n")
-	#np.savetxt(y_prime_file, y_prime_test ,delimiter=',',newline="\n")
-	#np.savetxt(rho_fields_file, evolve_with_N.rho_fields, delimiter=',',newline="\n")
-	#np.savetxt(rho_matter_file, evolve_with_N.rho_matter, delimiter=',',newline="\n")
-	#################################################################
-
+					    oscillation_counter))[1,:]
+										
+###################  PRINTING THE DATA   ####################
+#	np.savetxt(y_file, y ,delimiter=',',newline="\n")
+#	np.savetxt(y_prime_file, y_prime_test ,delimiter=',',newline="\n")
+#	np.savetxt(rho_fields_file, evolve_with_N.rho_fields, delimiter=',',newline="\n")
+#	np.savetxt(rho_matter_file, evolve_with_N.rho_matter, delimiter=',',newline="\n")
+#############################################################
 
 	x = x + 0.001
-	
 	#############################################################
 	#
-	#			check for eternal inflation
-	#
-	#				Havent yet done this!
+	#	Will implement further checks etc. soon
 	#
 	#############################################################
-
 	nsteps = nsteps + 1
 
-print "nstep end: " , nsteps
-
-#################################################################
+###################  PRINTING THE DATA   ####################
 #y_file.close()
 #y_prime_file.close()
 #rho_fields_file.close()
 #hubble_file.close()
 #rho_matter_file.close()
-#################################################################
-
-
-
-
+#############################################################
