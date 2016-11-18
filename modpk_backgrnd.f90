@@ -268,7 +268,10 @@ CONTAINS
           !   RETURN
           !ENDIF
        END IF
-
+	   reheater%phi_pivot = phi_pivot !--------- ADDED! 
+	   print*, "This is reheater%phi_pivot = " , reheater%phi_pivot
+	   print*, "This is reheater%dphi_infl_end = ", reheater%dphi_infl_end
+	   print*, "This is reheater%H_end = " , reheater%H_end
        a_pivot = EXP(alpha_pivot)*a_init
 
        N_tot = alpha_e - lna(1)

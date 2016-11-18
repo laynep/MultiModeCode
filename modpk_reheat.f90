@@ -60,6 +60,9 @@ module modpk_reheat
     real(dp), dimension( :), allocatable :: dphi_infl_end
     real(dp) :: h_horizcross, eps_horizcross, efolds_end
     real(dp) :: h_end
+	real(dp), dimension( :), allocatable :: phi_pivot !------------ ADDED
+	real(dp), dimension( :), allocatable :: vaddedpar !------------ ADDED
+
 
     real(dp), dimension(:,:), allocatable :: c_ij_avg, c_ij_min, c_ij_max
     integer :: count_avg, count_moving_avg
@@ -218,16 +221,29 @@ module modpk_reheat
 
         if (out_opt%save_cij) then
           !DEBUG
-          print*, "writing c_ij to file"
-          call csv_write(&
-            out_opt%out_cij,&
-            (/efolds, real(c_ij) /), &
-            advance=.true.)
-          call csv_write(&
-            out_opt%out_cij_avg,&
-            (/efolds, self%c_ij_avg /), &
-            advance=.true.)
+          print*, "(not) writing c_ij to file"
+		  print*, "(not) efolds = " , efolds
+          !call csv_write(&
+            !out_opt%out_cij,&
+            !(/efolds, real(c_ij) /), &
+            !advance=.true.)
+          !call csv_write(&
+            !out_opt%out_cij_avg,&
+            !(/efolds, self%c_ij_avg /), &
+            !advance=.true.)
         end if
+
+		!if (out_opt%save_reheat) then
+		  !DEBUG
+		  !print*, "writing reheat_concise values to file"
+		  !call read_real_vector_concise(self%phi_infl_end)
+		  !call read_real_vector_concise(self%dphi_infl_end)
+		  !call write_real_vector_concise(self%Gamma_i)
+		  !call write_real_vector_concise(self%phi_infl_end)
+		  !call write_real_vector_concise(self%dphi_infl_end)
+		  !write(out_opt%out_reheatconcise,rform), self%h_end
+		  !call write_real_array_concise(self%c_ij_avg)
+		!end if
 
         !To check
         !pk_zeta=0e0_dp
@@ -444,6 +460,8 @@ module modpk_reheat
       self%h_horizcross = getH(phi,dphidN)
       self%eps_horizcross = getEps(phi,dphidN)
       self%eta_horizcross = d2Vdphi2(phi)/pot(phi)
+	  !print*, "pot(phi) = " , pot(phi)
+	  !print*, "d2Vdphi2(phi) = " , d2Vdphi2(phi)
 
     end subroutine reheat_save_horizcross
 
@@ -547,6 +565,7 @@ module modpk_reheat
       real(dp) :: A_var, B_var
       real(dp) :: m2_V(num_inflaton)
 
+	  self%vaddedpar = vparams(1,:) !-------- ADDED!
       !Don't have any Gamma_i yet
       if (.not. allocated(self%Gamma_i)) then
         allocate(self%Gamma_i(num_inflaton))
@@ -588,11 +607,16 @@ module modpk_reheat
 
 
         self%Gamma_i(:) = A_var * self%H_end * sqrt(m2_V/maxval(m2_V))**B_var
+		self%Gamma_i(:) = self%Gamma_i(:) * (vparams(1,:)**3)
 
-        print*, "This is A and B", A_var, B_var
-        print*, "This is Gamma_i", self%Gamma_i
-        print*, "This is H_end", self%H_end
-
+		!print*, "This is H at the horizon", self%h_horizcross
+        !print*, "This is A and B", A_var, B_var
+        !print*, "This is Gamma_i", self%Gamma_i
+        !print*, "This is H_end", self%H_end
+		print*, "This is vparams(1,:)", vparams(1,:)
+		print*, "This is phi_pivot in reheater", self%phi_pivot
+		!print*, "This is phi_pivot " , phi_pivot
+		!print*, "This is dphi_pivot " , dphi_pivot
         auxparams(1) = A_var
         auxparams(2) = B_var
 
@@ -765,6 +789,8 @@ module modpk_reheat
       end if
       hubble = sqrt( ( sum(real_rho_matter) + sum(rho_radn))/3.0e0_dp)
 
+	  !print*, "matter fluid approximation hubble = " , hubble
+
       !Find which fields have decayed
       save_field_rij = .false.
       do jj=1, size(rho_fields)
@@ -775,6 +801,8 @@ module modpk_reheat
             !This is first time step after decaying
             !Save everything
             save_field_rij(jj) = .true.
+			!print*, "field decayed for the first time hubble = " , hubble
+			!print*, "field decayed for the first time gamma = " ,  self%Gamma_i(jj)
 
             !Save energy density in fields and radn
             !at decay time for this field as a vector
@@ -796,6 +824,7 @@ module modpk_reheat
                 "Interpolation error.",&
                 __FILE__,__LINE__)
             end if
+			!print*,"self%rho_matter_decay(:,",jj,")",self%rho_matter_decay(:,jj)
 
             rho_mat(:,1) = self%rho_radn_prev
             rho_mat(:,2) = rho_radn
@@ -809,6 +838,7 @@ module modpk_reheat
                 "Interpolation error.",&
                 __FILE__,__LINE__)
             end if
+			!print*,"self%rho_radn_decay(:,",jj,")",self%rho_radn_decay(:,jj)
 
           end if
 
@@ -861,6 +891,8 @@ module modpk_reheat
           !for next time
           self%fields_decayed(jj) = .true.
           self%fields_decay_order(jj) = count(self%fields_decayed)
+		  !print*,"self%fields_decayed = " , self%fields_decayed
+		  !print*,"self%fields_decay_order = " , self%fields_decay_order
 
         end if
 
@@ -947,6 +979,11 @@ module modpk_reheat
       !We want to identify the "right" W_i by this criterion, then
       !reorder them back so that they match the same field basis
       !we are using in the rest of the code.
+	  !do ii=1,size(self%fields_decay_order)
+		!do jj=1,size(self%fields_decay_order)
+	  	  !print*, "this is r_",ii,jj,"ij:", self%r_ij(ii,jj)
+		!end do
+	  !end do
 
       !Define the "properly ordered" r_ij
       do ii=1,size(self%fields_decay_order)
@@ -955,6 +992,9 @@ module modpk_reheat
             self%fields_decay_order(ii), &
             self%fields_decay_order(jj)) = &
             self%r_ij(ii,jj)
+			!print*, "r_proper[",self%fields_decay_order(ii)&
+			!		,",",self%fields_decay_order(jj)&
+			!		,"]=r_[",ii,",",jj,"]"
         end do
       end do
 
@@ -977,6 +1017,10 @@ module modpk_reheat
       do ii=1, num_inflaton
         self%W_i(self%fields_decay_order(ii)) = W_i_temp(ii)
       end do
+
+	  print*, "this is a_vector:",a_vect
+	  print*, "this is sum(a_vector):",sum(a_vect)
+	  print*, "this is sum(r_ij):",sum(self%r_ij)
 
       contains
 
@@ -1063,6 +1107,7 @@ module modpk_reheat
         (1.0e0_dp -  sum_term)
 
       !DEBUG
+	  !print*, "self%eta_horizcross" , self%eta_horizcross
       print*, "this is tensor:",self%pk%tensor
       print*, "this is adiab", self%pk%adiab
       print*, "this is tensor_hc:",self%pk_hc%tensor
@@ -1073,6 +1118,8 @@ module modpk_reheat
       print*, "this is W_i", self%W_i
       print*, "this is sum W_i", sum(self%W_i)
       !print*, "this is cij", self%c_ij_avg
+	  !print*, "size(c_ij(1))" , size(self%c_ij_avg,1)
+	  !print*, "size(c_ij(2))" , size(self%c_ij_avg,2)
 
       call self%observs%set_zero()
       self%observs%As = self%pk%adiab
@@ -1214,102 +1261,111 @@ module modpk_reheat
           status='old',action='read')
       end if
 
-      read(out_opt%out_reheaterfile,lform), self%reheating_phase
-      read(out_opt%out_reheaterfile,lform), self%inflation_ended
-      read(out_opt%out_reheaterfile,lform), self%evolving_fluids
+	  !real(dp), dimension(:), allocatable :: vparameters
 
-      call read_real_vector(self%phi_infl_end)
-      call read_real_vector(self%dphi_infl_end)
+	  !vparameters = vparams(1,:)
 
-      read(out_opt%out_reheaterfile,rform), self%h_horizcross
-      read(out_opt%out_reheaterfile,rform), self%eps_horizcross
-      read(out_opt%out_reheaterfile,rform), self%efolds_end
-      read(out_opt%out_reheaterfile,rform), self%h_end
 
-      read(out_opt%out_reheaterfile,iform), self%count_avg
-      read(out_opt%out_reheaterfile,iform), self%count_moving_avg
+	  call read_real_vector(self%phi_infl_end)
+	  call read_real_vector(self%dphi_infl_end)
+	  call read_real_vector(self%Gamma_i)
+	  call read_real_array(self%c_ij_avg)
+	  call read_real_vector(self%vaddedpar) !---------ADDED
+	  call read_real_vector(self%phi_pivot) !---------ADDED
 
-      call read_real_vector(self%dN)
-      call read_real_vector(self%W_i)
-      call read_real_vector(self%Gamma_i)
+	  !call read_real_vector(vparameters)
 
-      read(out_opt%out_reheaterfile,rform), self%hubble_prev
+	  !read(out_opt%out_reheaterfile,rform), self%efolds_end
+      !read(out_opt%out_reheaterfile,rform), self%h_end
 
-      call read_real_array(self%eta_horizcross)
-      call read_real_array(self%c_ij_avg)
-      call read_real_array(self%c_ij_min)
-      call read_real_array(self%c_ij_max)
-      call read_real_array(self%r_ij)
-      call read_real_array(self%rho_matter_decay)
-      call read_real_array(self%rho_radn_decay)
+      !read(out_opt%out_reheaterfile,rform), self%h_horizcross
+      !read(out_opt%out_reheaterfile,rform), self%eps_horizcross
+      !read(out_opt%out_reheaterfile,iform), self%count_avg
+      !read(out_opt%out_reheaterfile,iform), self%count_moving_avg
+
+      !call read_real_vector(self%dN)
+      !call read_real_vector(self%W_i)
+
+      !read(out_opt%out_reheaterfile,lform), self%reheating_phase
+	  !read(out_opt%out_reheaterfile,lform), self%inflation_ended
+      !read(out_opt%out_reheaterfile,lform), self%evolving_fluids
+
+      !read(out_opt%out_reheaterfile,rform), self%hubble_prev
+
+      !call read_real_array(self%eta_horizcross)
+      !call read_real_array(self%c_ij_min)
+      !call read_real_array(self%c_ij_max)
+      !call read_real_array(self%r_ij)
+      !call read_real_array(self%rho_matter_decay)
+      !call read_real_array(self%rho_radn_decay)
 
       !THESE DON'T WORK BECAUSE THEY'RE COMPLEX AND MULTIDIMENSIONAL
       !complex(dp), dimension(:, :), allocatable :: q_horizcross
 
-      call read_real_vector(self%rho_matter_prev)
-      call read_real_vector(self%rho_radn_prev)
+      !call read_real_vector(self%rho_matter_prev)
+      !call read_real_vector(self%rho_radn_prev)
 
-      call read_logical_vector(self%fields_decayed)
-      call read_int_vector(self%fields_decay_order)
+      !call read_logical_vector(self%fields_decayed)
 
-      call read_real_vector(self%y_radn_0)
+      !call read_int_vector(self%fields_decay_order)
 
-      read(out_opt%out_reheaterfile,rform), self%decay_factor_H
+      !call read_real_vector(self%y_radn_0)
 
-      call read_logical_vector(self%use_radnfluid_log)
+      !read(out_opt%out_reheaterfile,rform), self%decay_factor_H
 
-      call read_int_vector(self%use_radnfluid_counter)
+      !call read_logical_vector(self%use_radnfluid_log)
+      !call read_int_vector(self%use_radnfluid_counter)
 
-      read(out_opt%out_reheaterfile,rform), self%Omega_phi
-      read(out_opt%out_reheaterfile,rform), self%Omega_chi
+      !read(out_opt%out_reheaterfile,rform), self%Omega_phi
+      !read(out_opt%out_reheaterfile,rform), self%Omega_chi
 
-      read(out_opt%out_reheaterfile,lform), self%int_with_t
+      !read(out_opt%out_reheaterfile,lform), self%int_with_t
 
-      call read_real_vector(self%observs%ic)
-      read(out_opt%out_reheaterfile,rform), self%observs%As
-      read(out_opt%out_reheaterfile,rform), self%observs%A_iso
-      read(out_opt%out_reheaterfile,rform), self%observs%A_pnad
-      read(out_opt%out_reheaterfile,rform), self%observs%A_ent
-      read(out_opt%out_reheaterfile,rform), self%observs%A_cross_ad_iso
-      read(out_opt%out_reheaterfile,rform), self%observs%A_bundle
-      read(out_opt%out_reheaterfile,rform), self%observs%ns
-      read(out_opt%out_reheaterfile,rform), self%observs%nt
-      read(out_opt%out_reheaterfile,rform), self%observs%n_iso
-      read(out_opt%out_reheaterfile,rform), self%observs%n_pnad
-      read(out_opt%out_reheaterfile,rform), self%observs%n_ent
-      read(out_opt%out_reheaterfile,rform), self%observs%r
-      read(out_opt%out_reheaterfile,rform), self%observs%alpha_s
-      read(out_opt%out_reheaterfile,rform), self%observs%runofrun
-      read(out_opt%out_reheaterfile,rform), self%observs%f_NL
-      read(out_opt%out_reheaterfile,rform), self%observs%tau_NL
+      !call read_real_vector(self%observs%ic)
+      !read(out_opt%out_reheaterfile,rform), self%observs%As
+      !read(out_opt%out_reheaterfile,rform), self%observs%A_iso
+      !read(out_opt%out_reheaterfile,rform), self%observs%A_pnad
+      !read(out_opt%out_reheaterfile,rform), self%observs%A_ent
+      !read(out_opt%out_reheaterfile,rform), self%observs%A_cross_ad_iso
+      !read(out_opt%out_reheaterfile,rform), self%observs%A_bundle
+      !read(out_opt%out_reheaterfile,rform), self%observs%ns
+      !read(out_opt%out_reheaterfile,rform), self%observs%nt
+      !read(out_opt%out_reheaterfile,rform), self%observs%n_iso
+      !read(out_opt%out_reheaterfile,rform), self%observs%n_pnad
+      !read(out_opt%out_reheaterfile,rform), self%observs%n_ent
+      !read(out_opt%out_reheaterfile,rform), self%observs%r
+      !read(out_opt%out_reheaterfile,rform), self%observs%alpha_s
+      !read(out_opt%out_reheaterfile,rform), self%observs%runofrun
+      !read(out_opt%out_reheaterfile,rform), self%observs%f_NL
+      !read(out_opt%out_reheaterfile,rform), self%observs%tau_NL
 
-      read(out_opt%out_reheaterfile,rform), self%pk%k
+      !read(out_opt%out_reheaterfile,rform), self%pk%k
       !COMPLEX
       !complex(dp), dimension(:,:), allocatable :: phi_ij
-      read(out_opt%out_reheaterfile,rform), self%pk%adiab
-      read(out_opt%out_reheaterfile,rform), self%pk%tensor
-      read(out_opt%out_reheaterfile,rform), self%pk%powz
-      read(out_opt%out_reheaterfile,rform), self%pk%isocurv
-      read(out_opt%out_reheaterfile,rform), self%pk%cross_ad_iso
-      read(out_opt%out_reheaterfile,rform), self%pk%pnad
-      read(out_opt%out_reheaterfile,rform), self%pk%pressure
-      read(out_opt%out_reheaterfile,rform), self%pk%press_ad
-      read(out_opt%out_reheaterfile,rform), self%pk%entropy
-      read(out_opt%out_reheaterfile,rform), self%pk%bundle_exp_scalar
+      !read(out_opt%out_reheaterfile,rform), self%pk%adiab
+      !read(out_opt%out_reheaterfile,rform), self%pk%tensor
+      !read(out_opt%out_reheaterfile,rform), self%pk%powz
+      !read(out_opt%out_reheaterfile,rform), self%pk%isocurv
+      !read(out_opt%out_reheaterfile,rform), self%pk%cross_ad_iso
+      !read(out_opt%out_reheaterfile,rform), self%pk%pnad
+      !read(out_opt%out_reheaterfile,rform), self%pk%pressure
+      !read(out_opt%out_reheaterfile,rform), self%pk%press_ad
+      !read(out_opt%out_reheaterfile,rform), self%pk%entropy
+      !read(out_opt%out_reheaterfile,rform), self%pk%bundle_exp_scalar
 
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%k
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%k
       !COMPLEX
       !complex(dp), dimension(:,:), allocatable :: phi_ij
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%adiab
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%tensor
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%powz
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%isocurv
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%cross_ad_iso
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%pnad
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%pressure
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%press_ad
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%entropy
-      read(out_opt%out_reheaterfile,rform), self%pk_hc%bundle_exp_scalar
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%adiab
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%tensor
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%powz
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%isocurv
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%cross_ad_iso
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%pnad
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%pressure
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%press_ad
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%entropy
+      !read(out_opt%out_reheaterfile,rform), self%pk_hc%bundle_exp_scalar
 
       close(out_opt%out_reheaterfile)
 
@@ -1321,7 +1377,7 @@ module modpk_reheat
 
           if (allocated(vect)) deallocate(vect)
 
-          read(out_opt%out_reheaterfile,iform), vsize
+          !read(out_opt%out_reheaterfile,iform), vsize
           if (vsize>0) then
             allocate(vect(vsize))
             read(out_opt%out_reheaterfile,rform), vect
@@ -1371,9 +1427,9 @@ module modpk_reheat
           if ((size1==0 .and. size2 /=0) .or. &
             (size2==0 .and. size1 /=0)) then
             call raise%fatal_code(&
-              "An array in reheater file could not be read because "&
-              "of weird array sizes.",&
-              __FILE__,__LINE__)
+              &"An array in reheater file could not be read because "&
+              &"of weird array sizes.",&
+              &__FILE__,__LINE__)
 
           else if (size1 /=0 .and. size2 /=0) then
 
@@ -1395,106 +1451,112 @@ module modpk_reheat
       integer :: ii
       character(1024) :: cname
       logical :: adv
+	  !real(dp), dimension(:), allocatable :: vparameters
+	  !vparameters = vparams(1,:)
 
       character(5), parameter :: lform='(1L3)', iform='(I10)'
       character(13), parameter :: rform = '(50000G20.12)'
 
-      write(out_opt%out_reheaterfile,lform), self%reheating_phase
-      write(out_opt%out_reheaterfile,lform), self%inflation_ended
-      write(out_opt%out_reheaterfile,lform), self%evolving_fluids
-
       call write_real_vector(self%phi_infl_end)
       call write_real_vector(self%dphi_infl_end)
+	  call write_real_vector(self%Gamma_i)
+	  call write_real_array(self%c_ij_avg)
+      call write_real_vector(self%vaddedpar) !---------ADDED
+	  call write_real_vector(self%phi_pivot) !---------ADDED
 
-      write(out_opt%out_reheaterfile,rform), self%h_horizcross
-      write(out_opt%out_reheaterfile,rform), self%eps_horizcross
-      write(out_opt%out_reheaterfile,rform), self%efolds_end
-      write(out_opt%out_reheaterfile,rform), self%h_end
+	  !call write_real_vector(vparameters)
+	  !write(out_opt%out_reheaterfile,rform), self%efolds_end
+	  !write(out_opt%out_reheaterfile,rform), self%h_end
+	  !call write_real_vector(self%dN)
 
-      write(out_opt%out_reheaterfile,iform), self%count_avg
-      write(out_opt%out_reheaterfile,iform), self%count_moving_avg
+      !write(out_opt%out_reheaterfile,rform), self%h_horizcross
+      !write(out_opt%out_reheaterfile,rform), self%eps_horizcross
+      !write(out_opt%out_reheaterfile,iform), self%count_avg
+      !write(out_opt%out_reheaterfile,iform), self%count_moving_avg
 
-      call write_real_vector(self%dN)
-      call write_real_vector(self%W_i)
-      call write_real_vector(self%Gamma_i)
+      !call write_real_vector(self%dN)
+      !call write_real_vector(self%W_i)
 
-      write(out_opt%out_reheaterfile,rform), self%hubble_prev
+	  !write(out_opt%out_reheaterfile,lform), self%reheating_phase
+	  !write(out_opt%out_reheaterfile,lform), self%inflation_ended
+	  !write(out_opt%out_reheaterfile,lform), self%evolving_fluids
 
-      call write_real_array(self%eta_horizcross)
-      call write_real_array(self%c_ij_avg)
-      call write_real_array(self%c_ij_min)
-      call write_real_array(self%c_ij_max)
-      call write_real_array(self%r_ij)
-      call write_real_array(self%rho_matter_decay)
-      call write_real_array(self%rho_radn_decay)
+      !write(out_opt%out_reheaterfile,rform), self%hubble_prev
+
+      !call write_real_array(self%eta_horizcross)
+      !call write_real_array(self%c_ij_min)
+      !call write_real_array(self%c_ij_max)
+      !call write_real_array(self%r_ij)
+      !call write_real_array(self%rho_matter_decay)
+      !call write_real_array(self%rho_radn_decay)
 
       !THESE DON'T WORK BECAUSE THEY'RE COMPLEX AND MULTIDIMENSIONAL
       !complex(dp), dimension(:, :), allocatable :: q_horizcross
 
-      call write_real_vector(self%rho_matter_prev)
-      call write_real_vector(self%rho_radn_prev)
+      !call write_real_vector(self%rho_matter_prev)
+      !call write_real_vector(self%rho_radn_prev)
 
-      call write_logical_vector(self%fields_decayed)
+      !call write_logical_vector(self%fields_decayed)
 
-      call write_int_vector(self%fields_decay_order)
+      !call write_int_vector(self%fields_decay_order)
 
-      call write_real_vector(self%y_radn_0)
+      !call write_real_vector(self%y_radn_0)
 
-      write(out_opt%out_reheaterfile,rform), self%decay_factor_H
+      !write(out_opt%out_reheaterfile,rform), self%decay_factor_H
 
-      call write_logical_vector(self%use_radnfluid_log)
-      call write_int_vector(self%use_radnfluid_counter)
+      !call write_logical_vector(self%use_radnfluid_log)
+      !call write_int_vector(self%use_radnfluid_counter)
 
-      write(out_opt%out_reheaterfile,rform), self%Omega_phi
-      write(out_opt%out_reheaterfile,rform), self%Omega_chi
+      !write(out_opt%out_reheaterfile,rform), self%Omega_phi
+      !write(out_opt%out_reheaterfile,rform), self%Omega_chi
 
-      write(out_opt%out_reheaterfile,lform), self%int_with_t
+      !write(out_opt%out_reheaterfile,lform), self%int_with_t
 
-      call write_real_vector(self%observs%ic)
-      write(out_opt%out_reheaterfile,rform), self%observs%As
-      write(out_opt%out_reheaterfile,rform), self%observs%A_iso
-      write(out_opt%out_reheaterfile,rform), self%observs%A_pnad
-      write(out_opt%out_reheaterfile,rform), self%observs%A_ent
-      write(out_opt%out_reheaterfile,rform), self%observs%A_cross_ad_iso
-      write(out_opt%out_reheaterfile,rform), self%observs%A_bundle
-      write(out_opt%out_reheaterfile,rform), self%observs%ns
-      write(out_opt%out_reheaterfile,rform), self%observs%nt
-      write(out_opt%out_reheaterfile,rform), self%observs%n_iso
-      write(out_opt%out_reheaterfile,rform), self%observs%n_pnad
-      write(out_opt%out_reheaterfile,rform), self%observs%n_ent
-      write(out_opt%out_reheaterfile,rform), self%observs%r
-      write(out_opt%out_reheaterfile,rform), self%observs%alpha_s
-      write(out_opt%out_reheaterfile,rform), self%observs%runofrun
-      write(out_opt%out_reheaterfile,rform), self%observs%f_NL
-      write(out_opt%out_reheaterfile,rform), self%observs%tau_NL
+      !call write_real_vector(self%observs%ic)
+      !write(out_opt%out_reheaterfile,rform), self%observs%As
+      !write(out_opt%out_reheaterfile,rform), self%observs%A_iso
+      !write(out_opt%out_reheaterfile,rform), self%observs%A_pnad
+      !write(out_opt%out_reheaterfile,rform), self%observs%A_ent
+      !write(out_opt%out_reheaterfile,rform), self%observs%A_cross_ad_iso
+      !write(out_opt%out_reheaterfile,rform), self%observs%A_bundle
+      !write(out_opt%out_reheaterfile,rform), self%observs%ns
+      !write(out_opt%out_reheaterfile,rform), self%observs%nt
+      !write(out_opt%out_reheaterfile,rform), self%observs%n_iso
+      !write(out_opt%out_reheaterfile,rform), self%observs%n_pnad
+      !write(out_opt%out_reheaterfile,rform), self%observs%n_ent
+      !write(out_opt%out_reheaterfile,rform), self%observs%r
+      !write(out_opt%out_reheaterfile,rform), self%observs%alpha_s
+      !write(out_opt%out_reheaterfile,rform), self%observs%runofrun
+      !write(out_opt%out_reheaterfile,rform), self%observs%f_NL
+      !write(out_opt%out_reheaterfile,rform), self%observs%tau_NL
 
-      write(out_opt%out_reheaterfile,rform), self%pk%k
+      !write(out_opt%out_reheaterfile,rform), self%pk%k
       !COMPLEX
       !complex(dp), dimension(:,:), allocatable :: phi_ij
-      write(out_opt%out_reheaterfile,rform), self%pk%adiab
-      write(out_opt%out_reheaterfile,rform), self%pk%tensor
-      write(out_opt%out_reheaterfile,rform), self%pk%powz
-      write(out_opt%out_reheaterfile,rform), self%pk%isocurv
-      write(out_opt%out_reheaterfile,rform), self%pk%cross_ad_iso
-      write(out_opt%out_reheaterfile,rform), self%pk%pnad
-      write(out_opt%out_reheaterfile,rform), self%pk%pressure
-      write(out_opt%out_reheaterfile,rform), self%pk%press_ad
-      write(out_opt%out_reheaterfile,rform), self%pk%entropy
-      write(out_opt%out_reheaterfile,rform), self%pk%bundle_exp_scalar
+      !write(out_opt%out_reheaterfile,rform), self%pk%adiab
+      !write(out_opt%out_reheaterfile,rform), self%pk%tensor
+      !write(out_opt%out_reheaterfile,rform), self%pk%powz
+      !write(out_opt%out_reheaterfile,rform), self%pk%isocurv
+      !write(out_opt%out_reheaterfile,rform), self%pk%cross_ad_iso
+      !write(out_opt%out_reheaterfile,rform), self%pk%pnad
+      !write(out_opt%out_reheaterfile,rform), self%pk%pressure
+      !write(out_opt%out_reheaterfile,rform), self%pk%press_ad
+      !write(out_opt%out_reheaterfile,rform), self%pk%entropy
+      !write(out_opt%out_reheaterfile,rform), self%pk%bundle_exp_scalar
 
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%k
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%k
       !COMPLEX
       !complex(dp), dimension(:,:), allocatable :: phi_ij
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%adiab
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%tensor
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%powz
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%isocurv
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%cross_ad_iso
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%pnad
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%pressure
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%press_ad
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%entropy
-      write(out_opt%out_reheaterfile,rform), self%pk_hc%bundle_exp_scalar
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%adiab
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%tensor
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%powz
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%isocurv
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%cross_ad_iso
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%pnad
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%pressure
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%press_ad
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%entropy
+      !write(out_opt%out_reheaterfile,rform), self%pk_hc%bundle_exp_scalar
 
       contains
 
@@ -1502,7 +1564,7 @@ module modpk_reheat
           real(dp), dimension(:), allocatable, intent(in) :: vect
 
             if (allocated(vect)) then
-              write(out_opt%out_reheaterfile,iform), size(vect)
+              !write(out_opt%out_reheaterfile,iform), size(vect)
               write(out_opt%out_reheaterfile,rform), vect
             else
               write(out_opt%out_reheaterfile,iform), 0
@@ -1510,12 +1572,24 @@ module modpk_reheat
 
         end subroutine write_real_vector
 
+		!subroutine write_real_vector_concise(vect)
+		  !real(dp), dimension(:), allocatable, intent(in) :: vect
+
+			!if (allocated(vect)) then
+			  !write(out_opt%out_reheatconcise,iform), size(vect)
+			  !write(out_opt%out_reheatconcise,rform), vect
+			!else
+			  !write(out_opt%out_reheatconcise,iform), 0
+			!end if
+
+		!end subroutine write_real_vector_concise
+
         subroutine write_logical_vector(vect)
           logical, dimension(:), allocatable, intent(in) :: vect
 
             if (allocated(vect)) then
-              write(out_opt%out_reheaterfile,iform), size(vect)
-              write(out_opt%out_reheaterfile,iform), vect
+              !write(out_opt%out_reheaterfile,iform), size(vect)
+              !write(out_opt%out_reheaterfile,iform), vect
             else
               write(out_opt%out_reheaterfile,iform), 0
             end if
@@ -1526,7 +1600,7 @@ module modpk_reheat
           integer, dimension(:), allocatable, intent(in) :: vect
 
             if (allocated(vect)) then
-              write(out_opt%out_reheaterfile,iform), size(vect)
+              !write(out_opt%out_reheaterfile,iform), size(vect)
               write(out_opt%out_reheaterfile,iform), vect
             else
               write(out_opt%out_reheaterfile,iform), 0
@@ -1539,8 +1613,8 @@ module modpk_reheat
           real(dp), dimension(:,:), allocatable, intent(in) :: array
 
           if (allocated(array)) then
-            write(out_opt%out_reheaterfile,iform,advance='no'), size(array,1)
-            write(out_opt%out_reheaterfile,iform), size(array,2)
+            !write(out_opt%out_reheaterfile,iform,advance='no'), size(array,1)
+            !write(out_opt%out_reheaterfile,iform), size(array,2)
             do ii=1,size(array,1)
               write(out_opt%out_reheaterfile,rform), array(ii,:)
             end do
@@ -1549,6 +1623,20 @@ module modpk_reheat
           end if
         end subroutine write_real_array
 
+		!subroutine write_real_array_concise(array)
+	  	  !integer:: ii
+		  !real(dp), dimension(:,:), allocatable, intent(in) :: array
+
+			!if (allocated(array)) then
+			  !write(out_opt%out_reheatconcise,iform,advance='no'), size(array,1)
+			  !write(out_opt%out_reheatconcise,iform), size(array,2)
+			  !do ii=1,size(array,1)
+				!write(out_opt%out_reheatconcise,rform), array(ii,:)
+			  !end do
+			!else
+			  !write(out_opt%out_reheatconcise,iform), 0
+			!end if
+		!end subroutine write_real_array_concise
 
     end subroutine reheat_write_to_file
 

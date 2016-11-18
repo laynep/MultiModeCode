@@ -285,6 +285,7 @@ CONTAINS
         else
           hubble = reheater%getH_with_radn(phi, delphi, sum(rho_radn))
           dhubble = reheater%getdH_with_radn(phi, delphi, sum(rho_radn))
+		  !print*, "hubble = " , hubble
 
           rho_fields = 0.5e0_dp*hubble**2*delphi**2 + V_i_sum_sep(phi)
 

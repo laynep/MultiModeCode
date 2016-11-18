@@ -47,6 +47,7 @@ module modpk_io
     integer :: out_reheaterfile
     integer :: out_cij
     integer :: out_cij_avg
+	!integer :: out_reheatconcise
 
     !If first write, then make column headers
     logical :: first_trajout = .true.
@@ -127,8 +128,13 @@ module modpk_io
 
       if (self%save_reheat) then
         open(newunit=self%out_reheaterfile, &
-          file="out_reheaterfile.csv")
+          file="out_reheaterfile.txt")
       end if
+
+	 !if (self%save_reheat) then
+		!open(newunit=self%out_reheatconcise, &
+		  !file="out_reheatconcise.csv")
+	  !end if
 
       if (self%save_cij) then
         open(newunit=self%out_cij, &
@@ -175,6 +181,12 @@ module modpk_io
         if (file_open) &
           close(self%out_reheaterfile)
       end if
+
+	  !if (self%save_reheat) then
+		!inquire(unit=out_opt%out_reheatconcise,opened=file_open)
+		!if (file_open) &
+		  !close(self%out_reheatconcise)
+	  !end if
 
       if (self%save_cij) then
         inquire(unit=out_opt%out_cij,opened=file_open)

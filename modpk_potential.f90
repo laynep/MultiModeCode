@@ -1670,6 +1670,7 @@ contains
     eps = getEps(phi, dphidN)
     geteta = getdepsdalpha(phi, dphidN) / eps
 
+
   END FUNCTION geteta
 
   FUNCTION geteta_with_t(phi, dphidt)

@@ -121,6 +121,9 @@ contains
 
     DO nstp=1,MAXSTP
 
+	  print*, "---------------------nstp  = " , nstp
+	  print*, "---------------------- eps = " , getEps(y(IND_FIELDS),y(IND_VEL))
+	  print*, "--------- nefold_out------ = " , nefold_out
       if (reheat_opts%use_reheat) then
         !if (reheater%evolving_fluids .and. nstp>1) &
         if (reheater%evolving_fluids) then
@@ -148,6 +151,9 @@ contains
 
       IF (save_steps .AND. (ABS(x-xsav) > ABS(dxsav))) &
            CALL save_a_step
+
+	  !print*, " y =", y(1:(4*num_inflaton+1))
+	  !print*, " y'=", dydx(1:(4*num_inflaton+1))
 
       if (tech_opt%use_dvode_integrator) then
 
@@ -193,6 +199,7 @@ contains
       !MULTIFIELD
       phi = y(IND_FIELDS)
       dphi = y(IND_VEL)
+
 
       call check_inflation_started_properly()
 
@@ -397,7 +404,7 @@ contains
 
         if (use_fluid_eqns_firsttime) then
           !Initialize
-
+		  print*,"HERE WE BEGIN EVOLVING WITH FLUID EQUATIONS FOR THE FIRST TIME!!!!"
           !Hack for starting Gamma evolution a bit early
           !to bypass epsilon instability
           if (check_eps) then
@@ -732,7 +739,7 @@ contains
      end subroutine check_for_eternal_inflation
 
      subroutine check_inflation_started_properly()
-
+	   print*,"we are inside: check_inflation_started_properly"
        if (reheat_opts%use_reheat) then
          if (reheater%evolving_fluids) return
        end if
@@ -773,7 +780,7 @@ contains
        logical, intent(inout) :: leave
 
        leave = .false.
-
+	   print*,"we are inside: check_evolution_stop_properly"
        if (reheat_opts%use_reheat) then
          if (reheater%evolving_fluids) return
        end if
@@ -784,7 +791,7 @@ contains
                 infl_ended = .TRUE.
                 ystart(:) = y(:)
                 IF (save_steps) CALL save_a_step
-
+				print*,"we are inside: first if condition"
                 leave = .true.
                 RETURN
              ENDIF
@@ -794,7 +801,7 @@ contains
               infl_ended = .true.
               ystart(:) = y(:)
               if (save_steps) call save_a_step
-
+			  print*,"we are inside: next if condition (alternate_infl_end)"
               leave=.true.
               return
             end if
@@ -2197,10 +2204,15 @@ contains
 
       !If ending evolution, perform matching to dN/dphi_i
       !after evaluating the C_ij
-
       if (stopping .and. present(q_modes) .and. &
         .not. reheater%evolving_fluids) then
+		print *, "from inside alternate_infl_end"
+
+
+
+
         call reheat_match_to_dNdphi(reheater)
+		print *, "we are outside reheat_match_to_dNdphi"
       end if
 
       return
@@ -2365,6 +2377,8 @@ contains
     ode_ps_output = .false.
     ode_infl_end = .false.
     save_steps = .false.
+
+	print*, "reheat_match_to_dNdphi called! "
 
     call odeint(y,x1,x2, &
       accuracy,&
