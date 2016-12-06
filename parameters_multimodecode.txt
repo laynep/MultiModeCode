@@ -6,9 +6,9 @@ Parameters to control the major functionality of ModeCode
 Set potential and its derivatives in modpk_potential.f90
 
 &init
-  num_inflaton = 50
+  num_inflaton = 2
 
-  potential_choice = 1
+  potential_choice = 21
   vparam_rows = 3
   more_potential_params = .false.
 
@@ -68,8 +68,8 @@ Parameters to control how the ICs are sampled
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 1
-  numb_samples = 1
+  ic_sampling = 12
+  numb_samples = 100
 
   energy_scale = 1.0
 
@@ -114,58 +114,20 @@ NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 55.0
+  N_pivot = 57.2
   k_pivot = 0.002
   dlnk = 0.4
 
-  phi_init0 =  1.00000000e-02,   1.16779862e-02,   1.36375363e-02,
-         1.59258961e-02,   1.85982395e-02,   2.17189985e-02,
-         2.53634166e-02,   2.96193630e-02,   3.45894513e-02,
-         4.03935136e-02,   4.71714896e-02,   5.50868007e-02,
-         6.43302900e-02,   7.51248241e-02,   8.77306662e-02,
-         1.02451751e-01,   1.19643014e-01,   1.39718947e-01,
-         1.63163594e-01,   1.90542221e-01,   2.22514943e-01,
-         2.59852645e-01,   3.03455561e-01,   3.54374986e-01,
-         4.13838621e-01,   4.83280172e-01,   5.64373920e-01,
-         6.59075087e-01,   7.69666979e-01,   8.98816039e-01,
-         1.04963613e+00,   1.22576363e+00,   1.43144508e+00,
-         1.67163960e+00,   1.95213842e+00,   2.27970456e+00,
-         2.66223585e+00,   3.10895536e+00,   3.63063379e+00,
-         4.23984915e+00,   4.95129000e+00,   5.78210965e+00,
-         6.75233969e+00,   7.88537299e+00,   9.20852773e+00,
-         1.07537060e+01,   1.25581631e+01,   1.46654056e+01,
-         1.71262404e+01,   2.00000000e+01
 
-  vparams(1,:) = 1.00000000,  1.02040816,  1.04081633,  1.06122449,  1.08163265,
-        1.10204082,  1.12244898,  1.14285714,  1.16326531,  1.18367347,
-        1.20408163,  1.2244898 ,  1.24489796,  1.26530612,  1.28571429,
-        1.30612245,  1.32653061,  1.34693878,  1.36734694,  1.3877551 ,
-        1.40816327,  1.42857143,  1.44897959,  1.46938776,  1.48979592,
-        1.51020408,  1.53061224,  1.55102041,  1.57142857,  1.59183673,
-        1.6122449 ,  1.63265306,  1.65306122,  1.67346939,  1.69387755,
-        1.71428571,  1.73469388,  1.75510204,  1.7755102 ,  1.79591837,
-        1.81632653,  1.83673469,  1.85714286,  1.87755102,  1.89795918,
-        1.91836735,  1.93877551,  1.95918367,  1.97959184,  2.00000000               
+  vparams(1,:) = 1e-12,  0.485865135232383                 
 
-  vparams(2,:) =  0.001   0.001   0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001  0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001  0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001  0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001    
+  vparams(2,:) =  1.0   1.0       
+
+  phi_init0 =   16.0 0.499
 
 /
-   phi_init0 =  0.001   0.001   0.001   0.001   0.001   0.001   0.001   0.001 
-        	 0.001   0.001   0.001   0.001   0.001   0.001   0.001   0.001 
-        	 0.001   0.001   0.001   0.001	   0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001  0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001  0.001   0.001   0.001   0.001   0.001   0.001 
-        	  0.001   0.001   0.001   0.001
-
-
   N_pivot = 64.5
 
-  phi_init0 =   16.6 0.4999
 ----------------
 Priors on the IC and N_pivot ranges
 Uniform priors on fields and dphi/dt (NOT dphi/DN)
@@ -201,7 +163,7 @@ Options for output from the code.
 
 &print_out
 
-  out_opt%modpkoutput = .true.
+  out_opt%modpkoutput = .false.
   out_opt%output_reduced = .false.
   out_opt%output_badic =.false.
 
@@ -213,7 +175,7 @@ Options for output from the code.
   out_opt%modes = .false.
 
   out_opt%save_reheat = .true.
-  out_opt%save_cij = .true.
+  out_opt%save_cij = .false.
 
   out_opt%detailed%needmoreopts = .true.
   out_opt%detailed%write_Npiv = .true.
@@ -236,7 +198,7 @@ are sampled.
   reheat_opts%use_reheat = .true.
   reheat_opts%reheat_model = 1
 
-  reheat_opts%gamma_sampler = 2
+  reheat_opts%gamma_sampler = 1
 /
   reheat_opts%gamma_sampler = 2
 
@@ -287,3 +249,7 @@ Set atol_i where |y_i| is insignificant.
   tech_opt%dvode_dN_c = 1e-3
   tech_opt%dvode_dt = 1e16
 /
+
+
+
+

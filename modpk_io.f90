@@ -128,7 +128,7 @@ module modpk_io
 
       if (self%save_reheat) then
         open(newunit=self%out_reheaterfile, &
-          file="out_reheaterfile.txt")
+          file="out_reheaterfile.csv")
       end if
 
 	 !if (self%save_reheat) then

@@ -446,19 +446,32 @@ def calc_derivs(y,x,evolve,oc,reheat):
 			#
 			#############################################################
 			evolve.rho_fields = np.zeros(inflaton_number,dtype='float')
-			evolve.rho_fields[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
+			evolve.rho_fields = np.exp(y[index_matter])
+			
+			evolve.rho_matter = np.zeros(inflaton_number,dtype='float')
+			evolve.rho_matter = np.exp(y[index_matter])
+
+			#evolve.rho_fields = np.zeros(inflaton_number,dtype='float')
+			#evolve.rho_fields[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
+			#evolve.rho_matter = np.zeros(inflaton_number,dtype='float')
+			#evolve.rho_matter[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
 			#############################################################
 			# ^
 			# ^	NOT SURE: IF I SHOULD JUST EQUAL \rho_fields TO ZERO HERE INSTEAD
 			# ^
 			#############################################################
-
-			evolve.rho_matter = np.zeros(inflaton_number,dtype='float')
-			evolve.rho_matter[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
 			
+			#############################################################
+			#  ||
+			#  ||	THIS NEEDS CORRECTION
+			#  \/
+			#############################################################
 			y_prime[index_matter] = np.zeros(inflaton_number,dtype='float')
-			y_prime[index_matter[evolve.not_decayed]]= - 3.0 - evolve.gamma[evolve.not_decayed]/evolve.hubble
-			
+			y_prime[index_matter] = - 3.0 - evolve.gamma/evolve.hubble
+			#y_prime[index_matter] = np.zeros(inflaton_number,dtype='float')
+			#y_prime[index_matter[evolve.not_decayed]]= - 3.0 - evolve.gamma[evolve.not_decayed]/evolve.hubble
+			#print "y_prime[index_matter[evolve.not_decayed]] = " , y_prime[index_matter[evolve.not_decayed]]
+
 			#############################################################
 			#for i in range(0,inflaton_number):
 			#	if evolve.fields_decayed[i]:
@@ -505,7 +518,7 @@ def calc_derivs(y,x,evolve,oc,reheat):
 			evolve.rho_fields = 0.5*(evolve.hubble *
 									 evolve.dphidN)**2 + V_i_sum_sep(reheat.vparams[0,:],
 																				 evolve.phi)
-
+		
 			y_prime[index_phi] = evolve.dphidN
 			y_prime[index_dphi] = (-(3.0 + evolve.gamma/evolve.hubble +
 									 evolve.dhubble/evolve.hubble)*evolve.dphidN -
@@ -531,8 +544,17 @@ def calc_derivs(y,x,evolve,oc,reheat):
 		#############################################################
 		y_prime[index_radn] = -4.0*evolve.rho_radn + evolve.rho_fields * evolve.gamma/evolve.hubble
 
-	#print "yprime = " ,y_prime
 
+		#############################################################
+		#
+		#		calculating the derivate w.r.t the logarithm of the rho_fields if the value is very small.
+		#
+		#############################################################
+		#if ( not evolve.radn_withlog and np.min(evolve.rho_matter) < 1e-8 ):
+		#	evolve.radn_withlog = True
+		#if( evolve.withlog = True )
+
+	#print "yprime = " ,y_prime
 	return y_prime
 
 
@@ -663,7 +685,19 @@ def reheating_checks(reheat,evolve,oc,y):
 			#	 	this time to get a more accurate value.
 			#
 			#############################################################
-			if ( evolve.hubble <= evolve.gamma[j] ):
+			#############################################################
+			#
+			#	At the paper 1311.3972v2 --> The t_dec values are calculated when the
+			#	matter (scalar field) energy density are equal to the
+			#	radiation (decay product) energy density when doing the numerical
+			#	simulations. I implement that approach here in order to produce
+			#	similar plots as the Figs 4,5 in 1311.3972v2.
+			#
+			#	NOTE: this requires evolving the matter fluid approx. already.
+			#
+			#############################################################
+			#if ( evolve.hubble <= evolve.gamma[j] ):
+			if ( evolve.rho_matter[j] <= evolve.rho_radn[j] ):
 				if not evolve.fields_decayed[j]:
 					evolve.save_decay[j] = True
 
@@ -687,21 +721,6 @@ def reheating_checks(reheat,evolve,oc,y):
 																						 rho_matrix[k,:],
 																						evolve.gamma[j])
 					
-					#############################################################
-					#
-					# 		 		   This is addiational to the MODECODE:
-					#	 ||		As once a field has decayed, the following evolution
-					#	 ||		will see matter energy density as zero for the decayed
-					#	 \/		field and all energy will be radation. This matters
-					#			for the following evolution of the matter fluid eqns.
-					#
-					#############################################################
-					evolve.rho_radn[j]		= evolve.rho_radn[j] + evolve.rho_matter[j]
-					y[2*inflaton_number+1+j]= evolve.rho_radn[j]
-					evolve.rho_matter[j]	= 0.0
-					y[3*inflaton_number+1+j]= 0.0
-																						
-
 
 			else :
 				evolve.fields_decayed[j] = False
@@ -748,7 +767,7 @@ def reheating_checks(reheat,evolve,oc,y):
 		evolve.rho_matter = np.zeros(inflaton_number,dtype='float')
 		evolve.rho_matter[evolve.not_decayed] = np.exp(y[index_matter])[evolve.not_decayed]
 
-
+		print "evolve.rho_matter[evolve.not_decayed] = " , evolve.rho_matter[evolve.not_decayed]
 		#############################################################
 		#
 		#	If all fields have decayed, calculate the W_i and leave.
@@ -895,8 +914,8 @@ inflaton_number = reheater.phi_infl_end.size
 reheater.vparams = np.empty((2,inflaton_number),dtype=float)
 
 #reheater.Gamma_i		= reheater.Gamma_i*(reheater.vparams[0,:]**4)#+np.random.random(inflaton_number)*0.0001376
-# DONT REMEMBER IF TRANSPOSING WAS CORRECT TO DO?!?
 #################################################################
+
 #################################################################
 #reheater.c_ij_avg		= np.transpose(reheat_IC_data_file[3:(3+inflaton_number)])
 #reheater.vparams[0,:]	= reheat_IC_data_file[(3+inflaton_number)]
@@ -906,6 +925,7 @@ reheater.c_ij_avg		= np.zeros((inflaton_number,inflaton_number))
 reheater.vparams[0,:]	= reheat_IC_data_file[3]
 reheater.phi_pivot		= reheat_IC_data_file[4]
 #################################################################
+
 #################################################################
 #reheater.c_ij_avg		= reheat_IC_data_file[3::]
 reheater.efolds_end 	= 91.690
@@ -998,7 +1018,7 @@ gamma_sorted_index	= reheater.Gamma_i.argsort()
 
 #################################################################
 #################################################################
-reheater.Gamma_i	= reheater.Gamma_i * 100
+reheater.Gamma_i	= reheater.Gamma_i # * 100
 #################################################################
 #################################################################
 
@@ -1065,22 +1085,18 @@ y_nsd = y_init
 #-----------------------ADDED THE PART BELOW---------------------
 #----------------------------------------------------------------
 #################################################################
-############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
-############# MUCH TO IMPROVE (ESPECIALLY) HERE #################
-#reheater.phi_pivot =  np.array([9.34740E-03,  1.40309E-02,  2.09848E-02,  3.12745E-02,  4.64468E-02,  6.87384E-02,  1.01367E-01,  1.48939E-01,  2.18005E-01,  3.17826E-01,  4.61395E-01,  6.66790E-01,  9.58920E-01,  1.37174E+00,  1.95096E+00,  2.75718E+00,  3.86935E+00,  5.38822E+00,  7.43900E+00,  1.01724E+01])
-#reheater.phi_pivot = np.array([9.2670E-03,  1.2623E-02,  1.7180E-02,  2.3364E-02,  3.1742E-02,  4.3082E-02,  5.8406E-02,  7.9082E-02,  1.0693E-01,  1.4437E-01,  1.9459E-01,  2.6179E-01,  3.5150E-01,  4.7090E-01,  6.2932E-01,  8.3877E-01,  1.1146E+00,  1.4764E+00,  1.9485E+00,  2.5614E+00,  3.3525E+00,  4.3670E+00,  5.6584E+00,  7.2891E+00,  9.3297E+00]) #have 25 fields in this case.
 
 reheater.eps_pivot = getEps(0)
 reheater.eta_pivot = getEta(reheater.vparams[0,:],reheater.phi_pivot)
 reheater.P_inf_end = evolve_with_N.hubble**2/4.0*math.pi**2
 
 #####################  PRINTING THE DATA   #####################
-y_file			= open('y_data_reheating_gamma_En1_50.txt','w')
+#y_file			= open('y_data_reheating_gamma_En1_50.txt','w')
 #y_prime_file	= open('y_prime_data_reheating_gamma_En1_40.txt','w')
-rho_fields_file = open('rho_fields_data_reheating_gamma_En1_50.txt','w')
-rho_matter_file = open('rho_matter_data_reheating_gamma_En1_50.txt','w')
-hubble_file		= open('hubble_data_reheating_gamma_En1_50.txt','w')
-y_nsd_file		= open('y_nsd_data_reheating_gamma_En1_50.txt','w')
+#rho_fields_file = open('rho_fields_data_reheating_gamma_En1_50.txt','w')
+#rho_matter_file = open('rho_matter_data_reheating_gamma_En1_50.txt','w')
+#hubble_file		= open('hubble_data_reheating_gamma_En1_50.txt','w')
+#y_nsd_file		= open('y_nsd_data_reheating_gamma_En1_50.txt','w')
 ################################################################
 #print "evolve_with_N.phi = " , evolve_with_N.phi
 #print "evolve_with_N.dphidN = " , evolve_with_N.dphidN
@@ -1125,24 +1141,32 @@ while ( nsteps < maxstep and evolve_with_N.remain ):
 			   args=(evolve_with_N,
 					 oscillation_counter,
 					 reheater))[1,:]
+					 #############################################################
+					 #
+					 #			TODO: odeint calculations --> check for reheating errors are OK.
+					 #
+					 #############################################################
 	
 	#################################################################
 	#-----------------------ADDED THE PART BELOW---------------------
 	#  Numerically calculating evolution with NO SUDDEN DECAY (nsd).
 	#----------------------------------------------------------------
 	#################################################################
-	y_nsd = odeint(calc_derivs_nsd,
+	y_nsd, info = odeint(calc_derivs_nsd,
 				   y_nsd,
 				   x ,
 				   args=(oscillation_counter,
-							 reheater))[1,:]
-							 
+							 reheater),full_output=True)
+	y_nsd = y_nsd[1,:]
+	
+	print "info.hu  =  " , info['hu'][:]
+	print "info.imxer=  " , info['imxer']
 	###################  PRINTING THE DATA   ####################
-	np.savetxt(y_file, y ,delimiter=',',newline="\n")
+	#np.savetxt(y_file, y ,delimiter=',',newline="\n")
 	#np.savetxt(y_prime_file, y_prime_test ,delimiter=',',newline="\n")
-	np.savetxt(rho_fields_file, evolve_with_N.rho_fields, delimiter=',',newline="\n")
-	np.savetxt(rho_matter_file, evolve_with_N.rho_matter, delimiter=',',newline="\n")
-	np.savetxt(y_nsd_file,y_nsd,delimiter=',',newline="\n")
+	#np.savetxt(rho_fields_file, evolve_with_N.rho_fields, delimiter=',',newline="\n")
+	#np.savetxt(rho_matter_file, evolve_with_N.rho_matter, delimiter=',',newline="\n")
+	#np.savetxt(y_nsd_file,y_nsd,delimiter=',',newline="\n")
 	#############################################################
 
 	x = x + 0.001
@@ -1160,12 +1184,12 @@ while ( nsteps < maxstep and evolve_with_N.remain ):
 
 print reheater.Gamma_i
 ###################  PRINTING THE DATA   ####################
-y_file.close()
+#y_file.close()
 #y_prime_file.close()
-rho_fields_file.close()
-hubble_file.close()
-rho_matter_file.close()
-y_nsd_file.close()
+#rho_fields_file.close()
+#hubble_file.close()
+#rho_matter_file.close()
+#y_nsd_file.close()
 #############################################################
 
 

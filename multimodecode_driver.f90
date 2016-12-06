@@ -370,8 +370,7 @@ program multimodecode
       else
         write(*, out_opt%e_fmt) &
           "phi_pivot =", phi_pivot(:)
-		!write(*, out_opt%e_fmt) &
-		  !"dphi_pivot =", dphi_pivot(:)
+
       end if
       if (potential_choice==1) then
         write(*, out_opt%e2_fmt)&
@@ -468,9 +467,8 @@ program multimodecode
 
         !Open output files
         open(newunit=out_adiab,file="out_pk.csv")
-		print*,"we are inside this if condition"
+
         !Write the column header
-		print*, out_adiab
         call csv_write(&
           out_adiab,&
           (/&
@@ -485,19 +483,12 @@ program multimodecode
           'P_pressad', &
           'P_cross  '/), &
           advance=.true.)
-		print*,"we are inside this if condition"
 
-        !do i=1,size(pk_arr,1)
-		  !print*,"pk_arr(i,:) = ", pk_arr(i,:)
-		  !print*,"we are inside this if condition"
-
-          !call csv_write(out_adiab,&
-          !  pk_arr(i,:),&
-          !  advance=.true.)
-
-        !end do
-
-		print*,"we are inside this if condition"
+		do i=1,size(pk_arr,1)
+		  call csv_write(out_adiab,&
+					   pk_arr(i,:),&
+					   advance=.true.)
+		end do
 
         if (out_opt%modpkoutput)&
           write(*,*) "Full P(k) written to out_pk.csv"
@@ -837,7 +828,7 @@ program multimodecode
     !delta-N formalism in slow-roll
     subroutine calculate_SR_observables(observs_SR)
       use modpk_numerics, only : locate, array_polint, polint
-	  use modpk_reheat, only : reheater !---------------------------ADDED
+	  use modpk_reheat, only : reheater !----------ADDED
       type(observables), intent(inout) :: observs_SR
       integer :: j, i
       real(dp) :: ah, alpha_ik, dalpha, N_end, del_N, Npiv_renorm
@@ -877,8 +868,7 @@ program multimodecode
       observs_SR%A_bundle = field_bundle%exp_scalar
 
 	  reheater%phi_pivot = phi_pivot
-
-	  print*, "phi_pivot given as = " , phi_pivot !---------ADDED
+	  print*, "phi_pivot given as = " , phi_pivot
 
     end subroutine calculate_SR_observables
 
