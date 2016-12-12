@@ -68,7 +68,7 @@ Parameters to control how the ICs are sampled
   Setting set_Nisoref_by_Npivot defaults to N_iso_ref = N_pivot, which may vary
 
 &ic_sampling_nml
-  ic_sampling = 12
+  ic_sampling = 1
   numb_samples = 100
 
   energy_scale = 1.0
@@ -114,19 +114,26 @@ NB: If ic_sampling=parameter_loop_samp, then the smallest vparams equals
 the smallest mass; others are discarded.
 
 &params
-  N_pivot = 57.2
+  N_pivot = 57.16
   k_pivot = 0.002
   dlnk = 0.4
 
-
-  vparams(1,:) = 1e-12,  0.485865135232383                 
+  vparams(1,:) = 1e-12,  0.48586513523238                 
 
   vparams(2,:) =  1.0   1.0       
 
-  phi_init0 =   16.0 0.499
+  phi_init0 =   16.42 	0.499182
 
 /
-  N_pivot = 64.5
+  N_pivot = 65.1
+  k_pivot = 0.002
+  dlnk = 0.4
+
+  vparams(1,:) = 1e-12,  0.4614200                 
+
+  vparams(2,:) =  1.0   1.0       
+
+  phi_init0 =   17.0 	0.499100
 
 ----------------
 Priors on the IC and N_pivot ranges

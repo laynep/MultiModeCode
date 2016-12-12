@@ -61,7 +61,7 @@ module modpk_reheat
     real(dp) :: h_horizcross, eps_horizcross, efolds_end
     real(dp) :: h_end
 	real(dp), dimension( :), allocatable :: phi_pivot !------ ADDED
-	real(dp), dimension( :), allocatable :: vaddedpar !------ ADDED
+	real(dp), dimension( :), allocatable :: dphi_pivot !------ ADDED
 
 
     real(dp), dimension(:,:), allocatable :: c_ij_avg, c_ij_min, c_ij_max
@@ -460,6 +460,8 @@ module modpk_reheat
       self%h_horizcross = getH(phi,dphidN)
       self%eps_horizcross = getEps(phi,dphidN)
       self%eta_horizcross = d2Vdphi2(phi)/pot(phi)
+	  self%phi_pivot = phi
+	  self%dphi_pivot= dphidN
 	  !print*, "pot(phi) = " , pot(phi)
 	  !print*, "d2Vdphi2(phi) = " , d2Vdphi2(phi)
 
@@ -565,7 +567,6 @@ module modpk_reheat
       real(dp) :: A_var, B_var
       real(dp) :: m2_V(num_inflaton)
 
-	  self%vaddedpar = vparams(1,:) !-------- ADDED!
       !Don't have any Gamma_i yet
       if (.not. allocated(self%Gamma_i)) then
         allocate(self%Gamma_i(num_inflaton))
@@ -613,7 +614,7 @@ module modpk_reheat
         !print*, "This is A and B", A_var, B_var
         !print*, "This is Gamma_i", self%Gamma_i
         !print*, "This is H_end", self%H_end
-		print*, "This is vparams(1,:)", vparams(1,:)
+		!print*, "This is vparams(1,:)", vparams(1,:)
 		print*, "This is phi_pivot in reheater", self%phi_pivot
 		!print*, "This is phi_pivot " , phi_pivot
 		!print*, "This is dphi_pivot " , dphi_pivot
@@ -1083,6 +1084,7 @@ module modpk_reheat
       do jj=1,num_inflaton
         dN(:) = dN(:) + &
           self%W_i(jj)*self%c_ij_avg(jj,:)
+		print*, "self%c_ij_avg(jj,:)",self%c_ij_avg(jj,:)
       end do
 
       !Load the power spectrum attributes
@@ -1105,18 +1107,27 @@ module modpk_reheat
         -2.0e0_dp*self%eps_horizcross &
         -(2.0e0_dp/sum(dN**2))*&
         (1.0e0_dp -  sum_term)
+      print*, "this is W_i:",self%W_i
+	  print*, "this is dN_i:",dN
+	  print*, "this is eta_horizcross:",self%eta_horizcross
+	  print*, "this is sum_Neta:",sum_term
+	  print*, "this is gamma:",self%Gamma_i
+	  print*, "eps_horizcross:",self%eps_horizcross
+	  print*, "sum(dN**2):",sum(dN**2)
+	  print*, "c_ij_avg:",self%c_ij_avg
+	  print*, "r_ij:",self%r_ij
 
       !DEBUG
 	  !print*, "self%eta_horizcross" , self%eta_horizcross
-      print*, "this is tensor:",self%pk%tensor
-      print*, "this is adiab", self%pk%adiab
-      print*, "this is tensor_hc:",self%pk_hc%tensor
-      print*, "this is adiab_hc", self%pk_hc%adiab
-      print*, "this is eps_hc", self%eps_horizcross
-      print*, "this is dN", dN
-      print*, "this is sum(dN**2)", sum(dN**2)
-      print*, "this is W_i", self%W_i
-      print*, "this is sum W_i", sum(self%W_i)
+      !print*, "this is tensor:",self%pk%tensor
+      !print*, "this is adiab", self%pk%adiab
+      !print*, "this is tensor_hc:",self%pk_hc%tensor
+      !print*, "this is adiab_hc", self%pk_hc%adiab
+      !print*, "this is eps_hc", self%eps_horizcross
+      !print*, "this is dN", dN
+      !print*, "this is sum(dN**2)", sum(dN**2)
+      !print*, "this is W_i", self%W_i
+      !print*, "this is sum W_i", sum(self%W_i)
       !print*, "this is cij", self%c_ij_avg
 	  !print*, "size(c_ij(1))" , size(self%c_ij_avg,1)
 	  !print*, "size(c_ij(2))" , size(self%c_ij_avg,2)
@@ -1218,7 +1229,7 @@ module modpk_reheat
       else if (potential_choice==19) then
         phi_min = vparams(1,:)
       else if (potential_choice==21) then
-		phi_min = vparams(1,1)
+		phi_min = 0.0_dp
 	  else
         call raise%fatal_code(&
           'Need to specify the minimum of the potential here.', &
@@ -1263,16 +1274,8 @@ module modpk_reheat
           status='old',action='read')
       end if
 
-	  ! -- HAD THIS TEMPORARILY INSTEAD. 
-	  ! -- RE-ADDED THE LINES FROM BEFORE.
-	  !call read_real_vector(self%phi_infl_end)
-	  !call read_real_vector(self%dphi_infl_end)
-	  !call read_real_vector(self%Gamma_i)
-	  !call read_real_array(self%c_ij_avg)
-	  !call read_real_vector(self%vaddedpar) !-----ADDED
-	  !call read_real_vector(self%phi_pivot) !-----ADDED
-	  ! -- HAD THIS TEMPORARILY INSTEAD.
-	  ! -- RE-ADDED THE LINES FROM BEFORE.
+	  call read_real_vector(self%phi_pivot) !-----ADDED
+	  call read_real_vector(self%dphi_pivot) !-----ADDED
 
 	  read(out_opt%out_reheaterfile,lform), self%reheating_phase
 	  read(out_opt%out_reheaterfile,lform), self%inflation_ended
@@ -1462,14 +1465,8 @@ module modpk_reheat
       character(5), parameter :: lform='(1L3)', iform='(I10)'
       character(13), parameter :: rform = '(50000G20.12)'
 
-	  ! -- HAD THIS TEMPORARILY INSTEAD. RE-ADDED THE LINES FROM BEFORE ^ ~
-      !call write_real_vector(self%phi_infl_end)
-      !call write_real_vector(self%dphi_infl_end)
-	  !call write_real_vector(self%Gamma_i)
-	  !call write_real_array(self%c_ij_avg)
-      !call write_real_vector(self%vaddedpar) !---------ADDED
-	  !call write_real_vector(self%phi_pivot) !---------ADDED
-	  ! -- HAD THIS TEMPORARILY INSTEAD. RE-ADDED THE LINES FROM BEFORE ^ ~
+	  call write_real_vector(self%phi_pivot) !---------ADDED
+	  call write_real_vector(self%dphi_pivot) !---------ADDED
 
 	  write(out_opt%out_reheaterfile,lform), self%reheating_phase
 	  write(out_opt%out_reheaterfile,lform), self%inflation_ended
